@@ -28,7 +28,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="Python Server" exported="" />
     <orderEntry type="module" module-name="python-server" />
   </component>
 </module>
