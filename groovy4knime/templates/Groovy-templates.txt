@@ -1,0 +1,212 @@
+#######################################################################################
+# name: Connectivity Filter
+# author: Holger Brandl
+# category: Chemoinformatics
+
+Adds an addtional colum which specifies whether molecules are connected or not.
+
+You may want to adapt the name of the string-column which contains the chemical structure.
+######
+
+import de.mpicbg.tds.core.chemoinfo.CdkUtils;
+import org.openscience.cdk.graph.ConnectivityChecker;
+import org.openscience.cdk.interfaces.IMolecule;
+
+
+Attribute<String> moleculeInfo = new InputTableAttribute("molecule", input);
+Attribute<String> isConnectedAttribute = new InputTableAttribute("isConnected", StringCell.TYPE);
+
+TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());
+
+//iterate over all rows
+for (DataRow dataRow : input) {
+    IMolecule molecule = CdkUtils.parseMolecule(moleculeInfo.getValue(dataRow));
+
+    if (molecule == null) {
+        cache.add(dataRow, isConnectedAttribute, DataType.getMissingCell());
+
+    } else {
+        boolean isConnected = ConnectivityChecker.isConnected(molecule);
+        cache.add(dataRow, isConnectedAttribute, new StringCell(isConnected ? "true" : "false"));
+    }
+}
+
+// convert the plate collection into a knime-table
+return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);
+
+
+
+
+########################################################################################
+# name: Replace empty cells by missing cells
+# category: Utilities
+# author: Holger Brandl
+
+Replaces all cells in the selected columns with missing ones.
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+<gaprow height="1"/>
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+
+List replaceColumns = Arrays.asList(<panellistbox label="Input columns" items="$$$STR_ATTRIBUTES$$$" span="full"/>);
+
+</group>
+
+
+<![CDATA[
+
+        List<Attribute> attributes = AttributeUtils.compileSpecs(replaceColumns, input);
+        TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());
+
+        //iterate over all rows
+        for (DataRow dataRow : input) {
+            for (Attribute attribute : attributes) {
+
+                String value = attribute.getRawValue(dataRow);
+
+
+                if (value == null || value.isEmpty()) {
+                    cache.add(dataRow, attribute, DataType.getMissingCell());
+
+                } else {
+                    cache.add(dataRow, attribute, attribute.createCell(dataRow));
+                }
+            }
+        }
+
+        // convert the plate collection into a knime-table
+        return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);
+
+]]>
+
+</rgg>
+
+
+########################################################################################
+# name: Replace NaN values with missing cells
+# category: Utilities
+# author: Holger Brandl
+
+Replaces all NaN cells in the selected columns with missing ones.
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+<gaprow height="1"/>
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+
+List replaceColumns = Arrays.asList(<panellistbox label="Input columns" items="$$$NUM_ATTRIBUTES$$$" span="full"/>);
+
+</group>
+
+
+<![CDATA[
+
+        List<Attribute> attributes = AttributeUtils.compileSpecs(replaceColumns, input);
+        TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());
+
+        //iterate over all rows
+        for (DataRow dataRow : input) {
+            for (Attribute attribute : attributes) {
+
+
+                Object rowValue = attribute.getValue(dataRow);
+                
+                if (rowValue == null || rowValue.equals(Double.NaN)) {
+                    cache.add(dataRow, attribute, DataType.getMissingCell());
+
+                } else {
+                    cache.add(dataRow, attribute, attribute.createCell(dataRow));
+                }
+            }
+        }
+
+        // convert the plate collection into a knime-table
+        return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);
+
+]]>
+
+</rgg>
+
+
+
+########################################################################################
+# name: Induce order on factor
+# category: Utilities
+# author: Holger Brandl
+
+Allows to induce a custom order on a selected nominal attribute by selecting the factor-levels in the desired order.
+The node will create another colum with the same as the source-attribute but with an attached customizable suffix.
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+<gaprow height="1"/>
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+Attribute inputAttribute = new InputTableAttribute("treatment", input);
+
+List orderedLevels = Arrays.asList(<panellistbox label="Input columns" items="$$$DOMAIN('treatment')$$$" span="full"/>);
+
+String suffix =<textfield label="Name-suffix" data-type="text" default-value=".order" size="10" span="full"/>;
+
+</group>
+
+
+<![CDATA[
+
+TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());
+Attribute orderAttribute = new Attribute(inputAttribute.getName() + suffix, IntCell.TYPE);
+cache.registerAttribute(orderAttribute);
+
+
+//iterate over all rows
+for (DataRow dataRow : input) {
+    String value = (String) inputAttribute.getValue(dataRow);
+
+    if(orderedLevels.contains(value)) {
+        int position = 1 + orderedLevels.indexOf(value);
+        cache.add(dataRow, orderAttribute, orderAttribute.createCell(position));
+    }
+}
+
+// convert the plate collection into a knime-table
+return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);
+
+]]>
+
+</rgg>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./matlabicon.gif" type="Sink">
+
+    <name>Open in Matlab</name>
+
+    <shortDescription>
+        Rapid-prototyping in MATLAB for Knime.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <b>This node needs a MATLAB installation on the local machine!</b>
+            <br/>
+            <br/>
+            The node converts the input table into a MATLAB type variable (dataset, map or structure), and makes it
+            available
+            in MATLAB's workspace as a variable named "kIn". There is also a variable "names", that is a structure
+            allowing to associate the actual column names with the variabele names (not needed if the dataset type is
+            used).
+            <br/>
+            If matlab is not running, the node launches an instance of the MATLAB desktop.
+            It is recommended to let KNIME start MATLAB the first time. That way the working direcotry of MATLAB will
+            be changed to the location where KNIME stores the m-file to load the data in the workspace (manually
+            you'll have to change directory into the temp-dir of the JVM that runs KNIME). Also the
+            instruction. to re-load the data will be indicated in the Command Window at startup.
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+
+        <option name="Choose the MATLAB type">
+            Select the MATLAB type of the variable that will contain the KNIME table
+            in the MATLAB workspace
+        </option>
+
+        <option name="Run in a new MATLAB instance">
+            If checked, each time the node is executed it starts a new matlab
+            instance. If unchecked it only starts an MATLAB instance if none is running.
+            <br/>
+            To re-load the data in matlab type re-execute the m-file in the JVM's temp-dir.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which should be pushed to R.</inPort>
+    </ports>
+
+</knimeNode>

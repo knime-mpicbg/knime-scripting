@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./pythonicon.gif" type="Sink">
+
+    <name>Open in Python</name>
+
+    <shortDescription>
+        Rapid-prototyping in Python for Knime.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            Converts the input table into a Python dictionary and imports it into a Python session as a variable
+            named "kIn".
+            <br/>
+            <br/>
+            Make sure that KNIME has access to a local or remote Python installation (KNIME->Preferences)
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which should be pushed to Python.</inPort>
+    </ports>
+
+</knimeNode>

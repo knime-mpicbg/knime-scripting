@@ -1,0 +1,129 @@
+########################################################################################
+# name: 3D histogram
+# author: Felix Meyenhofer
+# category: statistics/multivariate
+# preview: 3D-histogram.png
+
+Generates a 3D histogram from two columns.
+
+######
+
+<rgg>
+
+<!-- 1. Title and short description -->
+
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration -->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+colName1 = '<combobox items="$$$NUM_ATTRIBUTES$$$" label="Numerical attribute x"/>';
+colName2 = '<combobox items="$$$NUM_ATTRIBUTES$$$" label="Numerical attribute y"/>';
+nBins = '<textfield label="number of bins" data-type="number" default-value="10" size="10" enabled="dfdf" span="full"/>';
+titleStr = '<textfield label="Title" data-type="text" default-value="-" size="10" enabled="dfdf" span="full"/>';
+</group>
+
+
+<!-- 3. Script -->
+
+<![CDATA[
+
+    % Fix the quotes to match the matlab convetions.
+    colName1 = regexprep(colName1, '"','');
+    colName2 = regexprep(colName2, '"','');
+    nBins = regexprep(nBins, '[^\d]','');
+    titleStr = regexprep(titleStr, '"','');
+    nBins = str2num(nBins);
+    nBins = [nBins nBins];
+
+    % Generate the plot
+    hist3([kIn.(colName1) kIn.(colName2)], nBins);
+    set(gcf,'renderer','opengl');
+    set(get(gca,'child'),'FaceColor','interp','CDataMode',...
+    'auto');
+    view(50,40)
+    axis tight
+
+    title(titleStr, 'interpreter', 'none')
+    xlabel(colName1, 'interpreter', 'none')
+    ylabel(colName2, 'interpreter', 'none')
+
+]]>
+
+</rgg>
+
+
+
+
+########################################################################################
+# name: Paralell Plot
+# author: Felix Meyenhofer
+# category: statistics/multivariate
+# preview: parallelcoords-plot.png
+
+Generates a paralell plot.
+
+1) Cathegorical attibute
+2) Parameter defining the multivariate space
+3) Standartization (on -> z-score, PCA -> principal componant scores, PACstd, standardized principal componants)
+4) Qantile plots only the 1-alpha quantiles and the median
+
+######
+
+<rgg>
+
+<!-- 1. Title and short description -->
+
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration -->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+grpColName = '<combobox items="$$$STR_ATTRIBUTES$$$" label="Grouping column"/>';
+paramNames = '<panellistbox items="$$$NUM_ATTRIBUTES$$$" label="Numerical attribute y"/>';
+normalize = '<combobox items=" ,on,PCA,PCAstd" label="Standartization method"/>';
+quantile = '<textfield data-type="text" default-value="1" label="Standartization method"/>';
+titleStr = '<textfield label="Title" data-type="text" default-value="-" size="10" enabled="dfdf" span="full"/>';
+
+</group>
+
+
+<!-- 3. Script -->
+
+<![CDATA[
+
+% This is to pass from double to single quotes (notice the single quotes above around the gui-xml tags).
+grpColName = regexprep(grpColName, '[" ]','');
+paramNames = regexprep(paramNames, '"', '');
+paramNames = regexp(paramNames, ',', 'split');
+normalize = regexprep(normalize, '"','');
+quantile = regexprep(quantile, '[^\d\.]','');
+quantile = str2num(quantile);
+titleStr = regexprep(titleStr, '"','');
+
+
+if isempty(normalize)
+    parallelcoords(double(kIn(:,paramNames)), 'Group', kIn.(grpColName), 'quantile', quantile)
+else
+    parallelcoords(double(kIn(:,paramNames)), 'Group', kIn.(grpColName), 'quantile', quantile, 'Standardize', normalize)
+end
+
+title(titleStr)
+
+]]>
+
+</rgg>

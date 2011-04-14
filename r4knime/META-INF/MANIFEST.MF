@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: RSnippet-Node extension for KNIME Workbench
+Bundle-SymbolicName: de.mpicbg.tds.knime.scripting.r; singleton:=true
+Bundle-Version: 1.1.0
+Bundle-ClassPath: rsnippet.jar,
+ lib/REngine.jar,
+ lib/RserveEngine.jar
+Bundle-Activator: de.mpicbg.tds.knime.scripting.r.R4KnimeBundleActivator
+Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base,
+ de.mpicbg.tds.knime.knutils,
+ de.mpicbg.tds.knime.scripting
+Eclipse-LazyStart: true
+Export-Package: de.mpicbg.tds.knime.scripting.r,
+ de.mpicbg.tds.knime.scripting.r.genericr,
+ de.mpicbg.tds.knime.scripting.r.plots,
+ de.mpicbg.tds.knime.scripting.r.templatenodes.rgg,
+ org.rosuda.REngine,
+ org.rosuda.REngine.Rserve
+

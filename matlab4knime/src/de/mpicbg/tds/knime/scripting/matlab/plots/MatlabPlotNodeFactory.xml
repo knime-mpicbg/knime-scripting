@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../matlabicon.gif" type="Visualizer">
+
+    <name>Matlab Plot</name>
+
+    <shortDescription>
+        Create figures with Matlab from within KNIME.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            The matlab plot node allows to produce any matlab plot with a script feeding the data from the kIn dataset
+            into a plot function.
+            <br/>
+            <br/>
+            Make sure that
+            <b>mpicbg-matlab</b>
+            is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+
+        <option name="width">The width of the image to be written into the file</option>
+        <option name="height">The height of the image to be written into the file</option>
+        <option name="filename">The output file name. The following placeholders are supported: $$DATE$$ for the current
+            date, $$USER$$ for the username, $$WS$$ for the workspace directory, and FLOWVAR(varname) to use flow
+            variable values in the file name
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which should be visualized with Matlab.</inPort>
+        <outPort index="0" name="Image Node Output">The plot wrapped in an image node output.</outPort>
+    </ports>
+
+    <views>
+        <view index="0" name="Matlab-Plot">The generated Matlab plot</view>
+    </views>
+
+</knimeNode>

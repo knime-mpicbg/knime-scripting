@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+
+    <extension point="org.knime.workbench.repository.nodes">
+        <node category-path="/community/groovy"
+              factory-class="de.mpicbg.tds.knime.scripting.groovy.GroovyScriptNodeFactory"
+              id="de.mpicbg.tds.knime.scripting.scripting.GroovyScriptNodeFactory"/>
+    </extension>
+
+    <extension point="org.knime.workbench.repository.categories">
+        <category icon="resources/groovyicon.png" level-id="groovy" name="Groovy Scripting" path="/community"/>
+    </extension>
+
+    <extension point="org.eclipse.core.runtime.preferences">
+        <initializer class="de.mpicbg.tds.knime.scripting.prefs.GroovyScriptingPreferenceInitializer"/>
+    </extension>
+
+    <extension point="org.eclipse.ui.preferencePages">
+        <page category="org.knime.workbench.ui.preferences"
+              class="de.mpicbg.tds.knime.scripting.prefs.GroovyScriptingPreferencePage"
+              id="de.mpicbg.tds.knime.scripting.prefs.GroovyScriptingPreferencePage"
+              name="Groovy Scripting">
+        </page>
+    </extension>
+
+    <extension point="org.knime.product.splashExtension">
+        <splashExtension
+                icon="resources/groovyicon.png"
+                id="Groovy"
+                tooltip="User-friendly Groovy-integration into Knime">
+        </splashExtension>
+    </extension>
+
+</plugin>

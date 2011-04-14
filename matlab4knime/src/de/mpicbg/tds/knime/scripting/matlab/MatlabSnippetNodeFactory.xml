@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./matlabicon.gif" type="Source">
+    <name>Matlab Snippet</name>
+
+    <shortDescription>
+        Matlab integration for KNIME.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            This node allows to process input tables by means of a Matlab-snippet. First the input is converted into
+            a matlab-dataset ("dataset" is part of the Statistics Toolbox!). It's variable name is "kIn".
+            Next the script is executed. KNIME takes the output from the script from the mOut variable which is
+            converted back from the MATLAB dataset into a Knime-table.
+            <br/>
+            <br/>
+            Make sure that
+            <b>mpicbg-matlab</b>
+            is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="In-Port name">The dat which matlab should process</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Out-Port name">The results of the matlab-snippet converted back into table.</outPort>
+        <!-- possibly more output ports here-->
+    </ports>
+
+</knimeNode>

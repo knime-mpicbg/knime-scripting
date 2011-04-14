@@ -1,0 +1,131 @@
+########################################################################################
+# name: Normal distribution tester
+# author: Felix Meyenhofer
+# category: statistics/univariate
+
+Tests each group of a numerical column for normality.
+The null hypothesis at confidence level alpha holds if H=1 and is rejected if H=0
+
+######
+
+ <rgg>
+
+ <!-- 1. Title and short description -->
+
+ <h3 text="Normal distribution tester" aligment="center" span="full"/>
+ <separator label="Description" span="full"/>
+ <labelarea span="full">Tests each group of a numerical column for normality.
+
+ </labelarea>
+ <gaprow height="1"/>
+
+
+ <!-- 2. Configuration -->
+
+ <separator label="Options" span="full"/>
+ <gaprow height="2"/>
+
+ <group>
+ strColName = '<combobox items="$$$STR_ATTRIBUTES$$$" label="Grouping column"/>';
+ numColName = '<combobox items="$$$NUM_ATTRIBUTES$$$" label="Numerical attribute"/>';
+ alpha = '<textfield label="alpha" data-type="text" default-value="0.05" size="10" enabled="dfdf" span="full"/>';
+ </group>
+
+
+ <!-- 3. Script -->
+
+ <![CDATA[
+
+     % This is to pass from double to single quotes (notice the single quotes above around the gui-xml tags).
+     strColName = regexprep(strColName, '[" ]','');
+     numColName = regexprep(numColName, '[" ]','');
+     alpha = regexprep(alpha, '[^\d\.]','');
+     alpha = str2num(alpha)
+
+     groups = unique(kIn.(strColName));
+     N = numel(groups)
+
+     jb_test_H = NaN(N,1);
+     jb_test_p = NaN(N,1);
+     lillie_test_H = NaN(N,1);
+     lillie_test_p = NaN(N,1);
+     ks_test_H = NaN(N,1);
+     ks_test_p = NaN(N,1);
+
+
+     for g = 1:N
+         I = strcmp(groups{g}, kIn.(strColName));
+         subset = double(kIn(I, numColName));
+    subset = subset(:);
+         [jb_test_H(g) jb_test_p(g)] = jbtest(subset, alpha);
+         [lillie_test_H(g) lillie_test_p(g)] = lillietest(subset, alpha);
+         [ks_test_H(g) ks_test_p(g)] = kstest(subset, [], alpha);
+     end
+
+     mOut = dataset(groups, jb_test_H, jb_test_p, lillie_test_H, lillie_test_p, ks_test_H, ks_test_p);
+
+ ]]>
+
+ </rgg>
+
+
+
+
+########################################################################################
+# name: ANOVA test
+# author: Felix Meyenhofer
+# category: statistics/univariate
+
+Tests each group of a numerical column for normality.
+
+performs balanced one-way ANOVA for comparing the means of two or more groups,
+where each group represents an independent sample containing mutually independent observations.
+
+######
+
+<rgg>
+
+<!-- 1. Title and short description -->
+
+<h3 text="Normal distribution tester" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">Tests each group of a numerical column for normality.
+
+</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration -->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+strColName = '<combobox items="$$$STR_ATTRIBUTES$$$" label="Grouping column"/>';
+numColName = '<combobox items="$$$NUM_ATTRIBUTES$$$" label="Numerical attribute"/>';
+</group>
+
+
+<!-- 3. Script -->
+
+<![CDATA[
+
+% This is to pass from double to single quotes (notice the single quotes above around the gui-xml tags).
+  strColName = regexprep(strColName, '[" ]','');
+  numColName = regexprep(numColName, '[" ]','');
+
+[p table stats] = anova1(kIn.(numColName), kIn.(strColName), 'off');
+[c,m,h,gnames] = multcompare(stats,'display', 'off');
+
+mOut = dataset();
+mOut.groupEntity1 = gnames(c(:,1));
+mOut.groupEntity2 = gnames(c(:,2));
+mOut.lower_ci = c(:,3);
+mOut.differenceOfMeans = c(:,4);
+mOut.upper_ci = c(:,5);
+
+mOut.different = double(sum(sign(c(:,[3,5])),2) ~= 0);
+
+]]>
+
+</rgg>

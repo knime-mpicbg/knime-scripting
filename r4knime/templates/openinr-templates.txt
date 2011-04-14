@@ -1,0 +1,95 @@
+
+########################################################################################
+# name: screen scatter plot collection
+# author: Holger Brandl
+# category: screening/qc
+
+This script will create a seriesof scatter plots (aka trend- or sequence-plot (cf "High-throughput screening in drug discovery, Hueser, 2006, Wiley"))
+
+Each scatter plot which displays all wells of the screen.
+
+Given a collection of readouts this will create a set of plots with on scatter-plot for each assay-parameters
+
+Inputs:
+1) The treatments of interest: Only wells with one of these treatments will show up (in different colors) in the plot
+2) The assay-parameters of interest: The script will create on plot per assay parameter
+
+######
+
+
+# 1) add here the treatments which you would like to include
+treatments = c("library", "dmso", "jak3 inhibitor", "nocodacol");
+# or use this if you would like to include all your treatments
+#treatments = levels(factor(kIn$treatment));
+
+screen = kIn;
+
+# 2) define your assay-parameters of interest here
+params = which(names(screen) %in% c("meannumberdroplets.zscore", "numberofdroplets.poc", "numberofdroplets.zscore"));
+
+# make the library-treatment the first in the list (if selected)
+if("library" %in% treatments){
+	treatments = treatments[- which("library" == treatments)];
+	treatments = c("library", treatments)
+}
+
+# iterate over all parameters and create plots for all of them
+lapply(params, FUN = function (param) {
+
+# should we rather use quartz() here
+# http://www.statmethods.net/graphs/creating.html
+#plot.new();
+quartz();
+
+title = paste("ScreenScatter: ", names(screen[param]));
+
+treatColors = c(185,121,150,100,48,490,98, round(runif(50,min=1, max = 600)));
+treatSymbols = c(1,21,21,21,21,22,rep(22,50)); # add more symbols here if necessary
+
+# iterate over all chosen treatments and
+for(treat in treatments){
+	treatIndex = which(treatments == treat)
+	if(treatIndex == 1){
+		plot(data=screen, screen[,param]~rownames(screen),subset=c(treatment==treat),main=title, xlab="well", ylab=names(screen[param]),col=colors()[treatColors[treatIndex]])
+	}else{
+		points(data= screen, screen[,param]~rownames(screen),subset=c(treatment == treat),col=colors()[treatColors[treatIndex]], pch=treatSymbols[treatIndex], bg=colors()[treatColors[treatIndex]])
+	}
+}
+
+# add the legend
+numTreatments = length(treatments);
+legend("topright",pch= treatSymbols[1:length(treatments)],treatments,col=colors()[treatColors],pt.bg=colors()[treatColors]);
+
+})
+
+
+########################################################################################
+# name: lilliefors
+# author: Holger Brandl2
+# category: tests/normality
+
+This is a basis template.
+
+It actually describes nothing
+
+######
+
+plot($$NUM_ATTRIBUTE$$);
+
+% what a day
+
+
+########################################################################################
+# name: t-test
+# author: Holger Brandl
+# category: tests/means
+
+This is a basis template.
+
+It actually describes nothing
+
+######
+
+boxplot($$NUM_ATTRIBUTE$$ ~ $$GROUPING_ATTRIBUTE$$);
+
+% what a day2

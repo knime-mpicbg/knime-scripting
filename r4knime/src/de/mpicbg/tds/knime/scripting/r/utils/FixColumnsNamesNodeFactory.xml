@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../ricon.png" type="Sink">
+    <name>Fix Colum Names</name>
+
+    <shortDescription>
+        Renames column to give valid data-frame column names. By default this is done by replacing all operator symbols
+        in the intial posistion of the each column name.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>Renames column to give valid data-frame column names.
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+
+
+        <option name="Use strict name matching">If enabled the node will use the method make.names of R to polish all
+            column names.
+        </option>
+        <!--<option name="short name of second option (like in the dialog)">description of second option</option>-->
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which might contains column names that are not compatible with R.</inPort>
+        <!--<inPort index="1" name="in2">Another table which should be pushed to R.</inPort>-->
+        <!--<inPort index="2" name="in3">Another table which should be pushed to R.</inPort>-->
+    </ports>
+
+</knimeNode>

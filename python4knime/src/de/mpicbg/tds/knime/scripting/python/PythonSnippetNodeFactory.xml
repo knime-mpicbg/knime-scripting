@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./pythonicon.gif" type="Source">
+    <name>Python Snippet</name>
+
+    <shortDescription>
+        Python integration for Knime.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            Allows processing an arbitrary input table by means of a Python snippet. First the input is transferred
+            to a Python session. Next the script is executed, and finally the data is read back from the Python session
+            into a Knime-table.
+            <br/>
+            <br/>
+            Make sure that KNIME has access to a local or remote Python installation (KNIME->Preferences)
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="In-Port name">The data which Python should process</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Out-Port name">The results of the Python-snippet converted back into table.</outPort>
+        <!-- possibly more output ports here-->
+    </ports>
+
+</knimeNode>
