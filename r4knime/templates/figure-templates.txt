@@ -129,6 +129,12 @@ lapply(params, FUN = function (param) {
 
 Displays a histogram (distribution) of a numerical attribute
 
+Parameter:
+variable of interest: vector from which the histgram is calculated.
+lower bound: ... is the lower bound of the x axis, default is minimum value found in the variable of interest.
+upper bound: ... is the upper bound of the x axis, default is maximum value found in the variable of interest.
+number of bins: the bin centers are linearly spaced between upper and lower bound.
+
 ######
 
 <rgg>
@@ -140,26 +146,35 @@ Displays a histogram (distribution) of a numerical attribute
     <labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
     <gaprow height="1"/>
 
+
     <!-- 2. Configuration-->
 
     <separator label="Options" span="full"/>
     <gaprow height="2"/>
 
     # 1. Parameter selection
-
     <group>
-
-numAttributeName = <combobox items="$$$NUM_ATTRIBUTES$$$" label="Variable of interest"/>;
-<textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value= "my plot" size="10" span="full"/>
+    numAttributeName = <combobox items="$$$NUM_ATTRIBUTES$$$" label="Variable of interest"/>;
+    <textfield label="Lower x axis bound" var="lowerBound" data-type="number" span="full"/>
+    <textfield label="Upper x axis bound" var="upperBound" data-type="number" span="full"/>
+    <textfield label="Number of bins" var="nBins" data-type="number" default-value="20" span="full"/>
+    <textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value= "my plot" size="10" span="full"/>
     </group>
 
 
-    # 2. r-code
+     <!-- 2. r code-->
 
     <![CDATA[
-numAttribute = eval(parse(text = paste("kIn$\"", numAttributeName, "\"", sep = '')))
-hist(numAttribute, density=30.0, angle=45, xlab=numAttributeName, main=plotTitle );
+    library('matlab')
 
+    numAttribute = eval(parse(text = paste("kIn$\"", numAttributeName, "\"", sep = '')))
+    lowerBound = as.numeric(lowerBound)
+    lowerBound[is.na(lowerBound)] = min(numAttribute)
+    upperBound = as.numeric(upperBound)
+    upperBound[is.na(upperBound)] = max(numAttribute)
+    breaks = linspace(lowerBound, upperBound, as.numeric(nBins));
+
+    hist(numAttribute, breaks, density=30.0, angle=45, xlab=numAttributeName, main=plotTitle );
     ]]>
 
 </rgg>
@@ -192,51 +207,44 @@ Displays a histogram (distribution) of a numerical attribute
     <separator label="Options" span="full"/>
     <gaprow height="2"/>
 
-# 1. Parameter selection
-
+    # 1. Parameter selection
     <group>
+    # a) Define the attribute of interest
+    numAttributeName = <combobox items="$$$NUM_ATTRIBUTES$$$" label="Variable of interest"/>;
 
-# a) Define the attribute of interest
-numAttributeName = <combobox items="$$$NUM_ATTRIBUTES$$$" label="Variable of interest"/>;
-
-
-# b) Define the number of bins
-numBins = as.numeric(<textfield label="Number of bins" var="" data-type="number" default-value= "30" size="10" span="full"/>);
-
-# c) the title of the plot
-<textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value= "my plot" size="10" span="full"/>
-
+    # c) the title of the plot
+    <textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value= "my plot" size="10" span="full"/>
     </group>
 
 
-# 2. r-code
+    # 2. r-code
 
     <![CDATA[
 
-library(ggplot2);
+    library(ggplot2);
 
 
-replaceInvalidVarNameChars <- function(x){
-    gsub("[)]", "_", gsub("[(]", "_", gsub("[/]", "_", gsub("[+]", "_", gsub("-", "_", gsub(" ", "_",x))))))
-}
+    replaceInvalidVarNameChars <- function(x){
+        gsub("[)]", "_", gsub("[(]", "_", gsub("[/]", "_", gsub("[+]", "_", gsub("-", "_", gsub(" ", "_",x))))))
+    }
 
-# convert operator chars in attribute names to underscores
-numAttributeNameFixed <- replaceInvalidVarNameChars(numAttributeName)
-names(kIn) <- replaceInvalidVarNameChars(names(kIn));
+    # convert operator chars in attribute names to underscores
+    numAttributeNameFixed <- replaceInvalidVarNameChars(numAttributeName)
+    names(kIn) <- replaceInvalidVarNameChars(names(kIn));
 
-    
-#calculate the range manually
-varVect = eval(parse(text = paste("kIn$\"", numAttributeNameFixed, "\"", sep = '')));
-dataRange = range(varVect, na.rm=TRUE);
-rangeWidth = dataRange[2] - dataRange[1];
 
-m <- ggplot(kIn, aes_string(x= numAttributeNameFixed)) + geom_histogram(binwidth= rangeWidth/numBins) + geom_density();
+    #calculate the range manually
+    varVect = eval(parse(text = paste("kIn$\"", numAttributeNameFixed, "\"", sep = '')));
+    dataRange = range(varVect, na.rm=TRUE);
+    rangeWidth = dataRange[2] - dataRange[1];
 
-# add title and proper label
-m <- m +  opts(title = plotTitle) + xlab(numAttributeName);
+    m <- ggplot(kIn, aes_string(x= numAttributeNameFixed)) + geom_histogram(binwidth= rangeWidth/numBins) + geom_density();
 
-# print it
-print(m, newpage=FALSE, pretty=FALSE)
+    # add title and proper label
+    m <- m +  opts(title = plotTitle) + xlab(numAttributeName);
+
+    # print it
+    print(m, newpage=FALSE, pretty=FALSE)
 
     ]]>
 
