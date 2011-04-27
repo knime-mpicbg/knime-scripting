@@ -292,3 +292,208 @@ else:
 ]]>
 
 </rgg>
+
+
+
+
+########################################################################################
+# name: 2D scatter plot
+# author: Felix Meyenhofer
+# category: scatter-plots
+# preview: scatterplot_2d.png
+
+Make a 2D scatter plot form 2 variables.
+
+Parameter:
+grouping column: column assotiating each measurement to a particular group.
+                 Per default this attribute is empty -> all measurments blong to the same group.
+x values: values displayed on the x-axis
+y values: values displayed on the y-axis
+
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="Steam graph" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">Generate a steam graph</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+# a) Grouping column
+gColName = <combobox label="Grouping column" items=" ,$$$STR_ATTRIBUTES$$$" span="full"/>
+
+# b) Define what numerical values to use
+xColName = <combobox label="X values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
+yColName = <combobox label="Y values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
+
+# c) Title.
+title = <textfield label="Title" var="" data-type="number" default-value= "scatter plot" size="10" span="full"/>
+show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
+
+</group>
+
+
+<!-- 3. Script-->
+
+<![CDATA[
+from pylab import hold
+import matplotlib.pyplot as plt
+
+# ensure the f. label does not find a reason to throw an error.
+if not title:
+    title = ' '
+
+# Prepare the data
+data = {}
+if kIn.has_key(gColName):
+    for group, xValue, yValue in zip(kIn[gColName], kIn[xColName], kIn[yColName]):
+        if data.has_key(group):
+            data[group][0].append(xValue)
+            data[group][1].append(yValue)
+        else:
+            data[group] = [[xValue], [yValue]]
+else:
+    data['data'] = [kIn[xColName], kIn[yColName]]
+
+# Get the group names
+groups = data.keys()
+numberOfGroups = len(groups)
+
+# Plot the data
+ax = plt.subplot(111)
+plt.hsv()
+for index, group in enumerate(groups):
+    x = data[group][0]
+    y = data[group][1]
+    color = [index for n in range(len(x))]
+    plt.scatter(x, y, c=color, s=20, vmin=0, vmax=numberOfGroups, label=group)
+
+ax.autoscale(tight=True)
+plt.xlabel(xColName)
+plt.ylabel(yColName)
+plt.title(title)
+plt.draw()
+if show_legend == "TRUE":
+    leg = plt.legend(loc='best', fancybox=True)
+    leg.get_frame().set_alpha(0.65)
+    #box = ax.get_position()
+    #ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+    #ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+plt.show()
+]]>
+
+</rgg>
+
+
+
+
+########################################################################################
+# name: 3D scatter plot
+# author: Felix Meyenhofer
+# category: scatter-plots
+# preview: scatterplot_3d.png
+
+Make a 3D scatter plot form 3 variables.
+
+Parameter:
+grouping column: column assotiating each measurement to a particular group.
+                 Per default this attribute is empty -> all measurments blong to the same group.
+x values: values displayed on the x-axis
+y values: values displayed on the y-axis
+z values: values displayed ...
+
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="Steam graph" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">Generate a steam graph</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+# a) Grouping column
+gColName = <combobox label="Grouping column" items=" ,$$$STR_ATTRIBUTES$$$" span="full"/>
+
+# b) Define what numerical values to use
+xColName = <combobox label="X values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
+yColName = <combobox label="Y values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
+zColName = <combobox label="Z values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
+
+# c) Title.
+title = <textfield label="Title" var="" data-type="number" default-value= "scatter plot" size="10" span="full"/>
+show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
+
+</group>
+
+
+<!-- 3. Script-->
+
+<![CDATA[
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+# ensure the f. label does not find a reason to throw an error.
+if not title:
+    title = ' '
+
+# Prepare the data
+data = {}
+if kIn.has_key(gColName):
+    for group, xValue, yValue, zValue in zip(kIn[gColName], kIn[xColName], kIn[yColName], kIn[zColName]):
+        if data.has_key(group):
+            data[group][0].append(xValue)
+            data[group][1].append(yValue)
+            data[group][2].append(zValue)
+        else:
+            data[group] = [[xValue], [yValue], [zValue]]
+else:
+    data['data'] = [kIn[xColName], kIn[yColName], kIn[zColName]]
+
+# Get the group names
+groups = data.keys()
+numberOfGroups = len(groups)
+
+# Plot the data
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+for index, group in enumerate(groups):
+    x = data[group][0]
+    y = data[group][1]
+    z = data[group][2]
+    ind = index*32#numberOfGroups/(index+1)
+    ax.scatter(x, y, z, s=20, c=cm.hsv(ind))
+    plt.plot([0.], [0.], ms=1,  c=cm.hsv(ind), label=group)
+
+ax.autoscale(tight=True)
+ax.set_xlabel(xColName)
+ax.set_ylabel(yColName)
+ax.set_zlabel(zColName)
+plt.title(title)
+plt.draw()
+if show_legend == "TRUE":
+    leg = plt.legend(loc='upper left', fancybox=True)
+    leg.get_frame().set_alpha(0.65)
+plt.show()
+]]>
+
+</rgg>
