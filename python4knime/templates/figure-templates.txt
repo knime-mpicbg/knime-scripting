@@ -337,8 +337,9 @@ yColName = <combobox label="Y values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
 
 # c) Title.
 title = <textfield label="Title" var="" data-type="number" default-value= "scatter plot" size="10" span="full"/>
-show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
 
+# d) Legend control
+show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
 </group>
 
 
@@ -439,8 +440,9 @@ zColName = <combobox label="Z values" items="$$$NUM_ATTRIBUTES$$$" span="full"/>
 
 # c) Title.
 title = <textfield label="Title" var="" data-type="number" default-value= "scatter plot" size="10" span="full"/>
-show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
 
+# d) Legend control
+show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
 </group>
 
 
@@ -493,6 +495,137 @@ plt.draw()
 if show_legend == "TRUE":
     leg = plt.legend(loc='upper left', fancybox=True)
     leg.get_frame().set_alpha(0.65)
+plt.show()
+]]>
+
+</rgg>
+
+
+########################################################################################
+# name: 3D PCA scatter plot
+# author: Felix Meyenhofer
+# category: scatter-plots
+# preview: pca_scatterplot_3d.png
+
+Take any number of numerical features, project it into an orthogonal space using
+principal componant analysis (PCA) and use the first three componants to create a 3D
+scatter plot.
+
+Parameter:
+features of interest: The featuers included into the PCA
+grouping column: column assotiating each measurement to a particular group.
+                 Per default this attribute is empty -> all measurments blong to the same group.
+
+
+######
+
+<rgg>
+
+<!--1. Title and short description -->
+
+<h3 text="Steam graph" aligment="center" span="full"/>
+<separator label="Description" span="full"/>
+<labelarea span="full">Generate a steam graph</labelarea>
+<gaprow height="1"/>
+
+
+<!-- 2. Configuration-->
+
+<separator label="Options" span="full"/>
+<gaprow height="2"/>
+
+<group>
+# a) Grouping column
+gColName = <combobox label="Grouping column" items=" ,$$$STR_ATTRIBUTES$$$" span="full"/>
+
+# b) Define what numerical values to use
+features = <panellistbox label="Features of interest" items="$$$NUM_ATTRIBUTES$$$" visible-row-count="5" span="full"/>
+
+# c) Title.
+title = <textfield label="Title" var="" data-type="number" default-value= "scatter plot" size="10" span="full"/>
+
+# d) Legend control
+show_legend = "<checkbox label="show legend" selected="true" span="full"/>"
+</group>
+
+
+<!-- 3. Script-->
+
+<![CDATA[
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib import mlab
+from numpy import array, vstack
+
+# ensure the f. label does not find a reason to throw an error.
+if not title:
+    title = ' '
+
+# Create matrix from the data
+for f,feature in enumerate(features):
+    if f == 0:
+        x = array(kIn[feature])
+    else:
+        x = vstack((x, array(kIn[feature])))
+x = x.transpose()
+
+# Principal componant analysis
+pca = mlab.PCA(x)
+expVar =pca.fracs[0:3].sum()
+
+# Prepare the data
+data = {}
+if kIn.has_key(gColName):
+    for group, xValue, yValue, zValue in zip(kIn[gColName], pca.Y[:,0], pca.Y[:,1], pca.Y[:,2]):
+        if data.has_key(group):
+            data[group][0].append(xValue)
+            data[group][1].append(yValue)
+            data[group][2].append(zValue)
+        else:
+            data[group] = [[xValue], [yValue], [zValue]]
+else:
+    data['data'] = [pca.Y[:,0], pca.Y[:,1], pca.Y[:,2]]
+
+# Get the group names
+groups = data.keys()
+numberOfGroups = len(groups)
+
+# Plot the componant scatter plot
+fig = plt.figure(figsize=(10,4))
+ax = fig.add_subplot(121, projection='3d')
+for index, group in enumerate(groups):
+    x = data[group][0]
+    y = data[group][1]
+    z = data[group][2]
+    ind = index*32
+    ax.scatter(x, y, z, s=20, c=cm.hsv(ind))
+    plt.plot([0.], [0.], ms=1,  c=cm.hsv(ind), label=group)
+plt.draw()
+ax.autoscale(tight=True)
+for a in ax.w_xaxis.get_ticklabels()+ax.w_yaxis.get_ticklabels()+ax.w_zaxis.get_ticklabels():
+    a.set_fontsize(8)
+plt.draw()
+if show_legend == "TRUE":
+    leg = plt.legend(loc='upper left', fancybox=True)
+    plt.setp(leg.get_texts(), fontsize="small")
+    leg.get_frame().set_alpha(0.5)
+
+# Plot the loadings
+axl = fig.add_subplot(122, projection='3d')
+for feature, w in zip(features, pca.Wt):
+    axl.plot([0., w[0]], [0., w[1]], [0., w[2]], 'b-')
+    axl.plot([w[0]], [w[1]], [w[2]], 'b.')
+    axl.text(w[0], w[1], w[2], feature, fontsize=8)
+plt.draw()
+# cosmetics
+for a in axl.w_xaxis.get_ticklines()+axl.w_xaxis.get_ticklabels()+axl.w_yaxis.get_ticklines()+axl.w_yaxis.get_ticklabels()+axl.w_zaxis.get_ticklines()+axl.w_zaxis.get_ticklabels():
+    a.set_visible(False)
+axl.set_xlabel("component 1", fontsize=10, color='b')
+axl.set_ylabel("component 2", fontsize=10, color='b')
+axl.set_zlabel("component 3", fontsize=10, color='b')
+title = "PCA plot (explains %s%% of the variance)" % int(expVar*100)
+axl.text2D(1.2, 0.96, title, verticalalignment='bottom', transform=ax.transAxes)
 plt.show()
 ]]>
 
