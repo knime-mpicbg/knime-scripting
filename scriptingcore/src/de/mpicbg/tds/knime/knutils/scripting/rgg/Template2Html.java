@@ -48,6 +48,40 @@ public class Template2Html {
                 "\n" +
                 "<p>Hallo Antje.</p>\n");
 
+
+        out.print("<table border=\"1\">\n" +
+                "<tr>\n" +
+                "<th>Name</th>\n" +
+                "<th>Category</th>\n" +
+                "<th>Author</th>\n" +
+                "<th>Description</th>\n" +
+                "<th>Language</th>\n" +
+                "<th>Preview</th>\n" +
+                "</tr>\n");
+        //    write table header
+        for (ScriptTemplate scriptTemplate : scriptTemplates) {
+            out.print("<tr>\n" +
+                    "<td>" + scriptTemplate.getName() + "</td>\n" +
+                    "<td>" + scriptTemplate.getCategories().toString().replace("[", "").replace("]", "").trim() + "</td>\n" +
+                    "<td>" + scriptTemplate.getAuthor() + "</td>\n" +
+                    "<td>" + scriptTemplate.getDescription() + "</td>\n" +
+                    "<td> R </td>\n");
+
+
+            String previewURL = scriptTemplate.getPreviewURL();
+            if (previewURL != null) {
+                out.print("<td> <a href=\"" + previewURL + "\"><img src=\"" + previewURL + "\" width=\"300\" height=\"200\"/> </a> </td>\n");
+            } else {
+                out.print("<td>No Preview</td>");
+            }
+
+            out.print("</tr>\n");
+        }
+
+
+        // write table footer
+        out.print("</table>");
+
         out.print("\n" +
                 "</body>\n" +
                 "</html>");

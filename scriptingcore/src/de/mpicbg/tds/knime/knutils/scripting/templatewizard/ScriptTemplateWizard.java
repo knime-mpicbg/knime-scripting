@@ -310,8 +310,11 @@ public class ScriptTemplateWizard extends JSplitPane {
                 String line = reader.readLine();
 
                 if (line.startsWith("##########")) {
-                    templates.add(ScriptTemplate.parse(templateBuffer.toString(), templateFile));
-                    templateBuffer = new StringBuffer();
+                    if (!templateBuffer.toString().trim().isEmpty()) {
+                        templates.add(ScriptTemplate.parse(templateBuffer.toString(), templateFile));
+                        templateBuffer = new StringBuffer();
+                    }
+
                     continue;
                 }
 
