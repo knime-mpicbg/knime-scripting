@@ -4,6 +4,8 @@
 
 package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
+import de.mpicbg.tds.knime.knutils.scripting.rgg.Template2Html;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -20,12 +22,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.List;
 
 
@@ -371,6 +373,22 @@ public class ScriptTemplateWizard extends JSplitPane {
     }
 
 
+    private void galleryButtonActionPerformed() {
+        Map<URL, String> urls = new HashMap<URL, String>();
+        for (URL templateDefinitionURL : templateDefinitionURLs) {
+            urls.put(templateDefinitionURL, "");
+        }
+
+        try {
+            File galleryFile = Template2Html.exportToHtmlFile(urls);
+
+            Desktop.getDesktop().edit(galleryFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
@@ -381,7 +399,9 @@ public class ScriptTemplateWizard extends JSplitPane {
         searchPanel = new JPanel();
         label2 = new JLabel();
         searchTemplatesTextField = new JTextField();
+        panel5 = new JPanel();
         helpButton = new JButton();
+        galleryButton = new JButton();
         templateDetailsPanel = new JPanel();
         useTemplate = new JButton();
         panel4 = new JPanel();
@@ -418,7 +438,7 @@ public class ScriptTemplateWizard extends JSplitPane {
 
                 //======== scrollPane1 ========
                 {
-                    scrollPane1.setBorder(new TitledBorder("Template Categories"));
+                    scrollPane1.setBorder(new TitledBorder(null, "Template Categories", TitledBorder.LEADING, TitledBorder.TOP));
 
                     //---- categoryTree ----
                     categoryTree.addMouseListener(new MouseAdapter() {
@@ -451,14 +471,29 @@ public class ScriptTemplateWizard extends JSplitPane {
             }
             panel1.add(panel7, BorderLayout.CENTER);
 
-            //---- helpButton ----
-            helpButton.setText("help");
-            helpButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    helpButtonActionPerformed(e);
-                }
-            });
-            panel1.add(helpButton, BorderLayout.SOUTH);
+            //======== panel5 ========
+            {
+                panel5.setLayout(new BorderLayout());
+
+                //---- helpButton ----
+                helpButton.setText("Help");
+                helpButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        helpButtonActionPerformed(e);
+                    }
+                });
+                panel5.add(helpButton, BorderLayout.CENTER);
+
+                //---- galleryButton ----
+                galleryButton.setText("Gallery");
+                galleryButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        galleryButtonActionPerformed();
+                    }
+                });
+                panel5.add(galleryButton, BorderLayout.EAST);
+            }
+            panel1.add(panel5, BorderLayout.SOUTH);
         }
         setLeftComponent(panel1);
 
@@ -546,7 +581,7 @@ public class ScriptTemplateWizard extends JSplitPane {
 
                                 //======== previewPanel ========
                                 {
-                                    previewPanel.setBorder(new TitledBorder("Preview (Double-click to enlarge)"));
+                                    previewPanel.setBorder(new TitledBorder(null, "Preview (Double-click to enlarge)", TitledBorder.LEADING, TitledBorder.TOP));
                                     previewPanel.setLayout(new BorderLayout());
                                     previewPanel.add(previewImagePanel, BorderLayout.CENTER);
                                 }
@@ -600,7 +635,9 @@ public class ScriptTemplateWizard extends JSplitPane {
     private JPanel searchPanel;
     private JLabel label2;
     private JTextField searchTemplatesTextField;
+    private JPanel panel5;
     private JButton helpButton;
+    private JButton galleryButton;
     private JPanel templateDetailsPanel;
     private JButton useTemplate;
     private JPanel panel4;

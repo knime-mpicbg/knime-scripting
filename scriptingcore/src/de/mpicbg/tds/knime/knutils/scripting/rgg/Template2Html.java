@@ -28,6 +28,15 @@ public class Template2Html {
         urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Matlab/figure-templates.txt"), "Matlab");
         urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Python/figure-templates.txt"), "Python");
 //
+        File galleryFile = exportToHtmlFile(urls);
+
+        Desktop.getDesktop().edit(galleryFile);
+
+        System.err.println("file is " + galleryFile);
+    }
+
+
+    public static File exportToHtmlFile(Map<URL, String> urls) throws IOException {
         List<ExportTemplate> scriptTemplates = new ArrayList<ExportTemplate>();
         for (URL url : urls.keySet()) {
             List<ScriptTemplate> basicTemplates = ScriptTemplateWizard.parseTemplateFile(url);
@@ -87,10 +96,7 @@ public class Template2Html {
 
         out.flush();
         out.close();
-
-        Desktop.getDesktop().edit(galleryFile);
-
-        System.err.println("file is " + galleryFile);
+        return galleryFile;
     }
 }
 
