@@ -299,7 +299,7 @@ public class ScriptTemplateWizard extends JSplitPane {
     }
 
 
-    private List<ScriptTemplate> parseTemplateFile(URL templateFile) {
+    public static List<ScriptTemplate> parseTemplateFile(URL templateFile) {
         List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(templateFile.openStream()));
@@ -586,6 +586,7 @@ public class ScriptTemplateWizard extends JSplitPane {
         setRightComponent(templateDetailsPanel);
         // JFormDesigner - End of component initialization  //GEN-END:initComponents
     }
+
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
     // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
