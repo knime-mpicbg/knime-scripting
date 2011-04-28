@@ -77,9 +77,9 @@ public class RPreferenceInitializer extends AbstractPreferenceInitializer {
 //        store.setDefault(R_PLOT_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt");
 //        store.setDefault(R_SNIPPET_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/snippet-templates.txt");
 //        store.setDefault(R_OPENINR_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/openinr-templates.txt");
-        store.setDefault(R_PLOT_TEMPLATES, "http://dl.dropbox.com/u/18607042/knime-sripting-templates/R/figure-templates.txt");
-        store.setDefault(R_SNIPPET_TEMPLATES, "http://dl.dropbox.com/u/18607042/knime-sripting-templates/R/snippet-templates.txt");
-        store.setDefault(R_OPENINR_TEMPLATES, "http://dl.dropbox.com/u/18607042/knime-sripting-templates/R/openinr-templates.txt");
+        store.setDefault(R_PLOT_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt");
+        store.setDefault(R_SNIPPET_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt");
+        store.setDefault(R_OPENINR_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/openinr-templates.txt");
 
         String defaultRPath = "R";
 
