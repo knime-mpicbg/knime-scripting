@@ -44,52 +44,46 @@ import java.util.Map;
 public class Template2Html {
 
     public static void main(String[] args) throws IOException {
-        Map<URL, String> urls = new HashMap<URL, String>();
-//        urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/R/figure-templates.txt"), "R");
-//        urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Matlab/figure-templates.txt"), "Matlab");
-//        urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Python/figure-templates.txt"), "Python");
-
 
         // Figure templates
-        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt"), "Matlab");
-        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt"), "Python");
-        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt"), "R");
-        // Comment these for producing the external list.
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/Matlab/TDS_figure-templates.txt"), "Matlab");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/Python/TDS_figure-templates.txt"), "Python");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/R/TDS_figure-templates.txt"), "R");
+        Map<URL, String> figurls = new HashMap<URL, String>();
+        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt"), "Matlab");
+        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt"), "Python");
+        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt"), "R");
 
+        File figureGalleryFile = new File("/Volumes/knime/scripting-templates_public/figure-template-gallery.html");
+        exportToHtmlFile(figurls, figureGalleryFile);
+        Desktop.getDesktop().edit(figureGalleryFile);
+        System.err.println("file is " + figureGalleryFile);
 
-//        // Script templates
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt"), "Matlab");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/script-templates.txt"), "Python");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt"), "R");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Groovy/Groovy-templates.txt"), "Groovy");
-//        // Comment these for producing the external list.
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/Matlab/TDS_script-templates.txt"), "Matlab");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/Python/TDS_script-templates.txt"), "Python");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/R/TDS_snippet-templates.txt"), "R");
-//        urls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/Groovy/TDS_Groovy-templates.txt"), "Groovy");
+        // Script templates
+        Map<URL, String> scrurls = new HashMap<URL, String>();
+        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt"), "Matlab");
+        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/script-templates.txt"), "Python");
+        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt"), "R");
+        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Groovy/Groovy-templates.txt"), "Groovy");
 
-
-        File galleryFile = exportToHtmlFile(urls);
-
-        Desktop.getDesktop().edit(galleryFile);
-
-        System.err.println("file is " + galleryFile);
+        File scriptGalleryFile = new File("/Volumes/knime/scripting-templates_public/script-template-gallery.html");
+        exportToHtmlFile(scrurls, scriptGalleryFile);
+        Desktop.getDesktop().edit(scriptGalleryFile);
+        System.err.println("file is " + scriptGalleryFile);
     }
 
 
     public static File exportToHtmlFile(Map<URL, String> urls) throws IOException {
+        File galleryFile = File.createTempFile("templateGallery", ".html");
+        exportToHtmlFile(urls, galleryFile);
+        return galleryFile;
+    }
+
+    public static void exportToHtmlFile(Map<URL, String> urls, File outputFileName) throws IOException {
         List<ExportTemplate> scriptTemplates = new ArrayList<ExportTemplate>();
         for (URL url : urls.keySet()) {
             List<ScriptTemplate> basicTemplates = ScriptTemplateWizard.parseTemplateFile(url);
             scriptTemplates.addAll(ExportTemplate.convert(urls.get(url), basicTemplates));
         }
 
-
-        File galleryFile = File.createTempFile("templateGallery", ".html");
-        FileWriter outFile = new FileWriter(galleryFile);
+        FileWriter outFile = new FileWriter(outputFileName);
         PrintWriter out = new PrintWriter(outFile);
 
         out.print("<html>\n" +
@@ -141,7 +135,6 @@ public class Template2Html {
 
         out.flush();
         out.close();
-        return galleryFile;
     }
 }
 
