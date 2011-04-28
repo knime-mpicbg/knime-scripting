@@ -3,8 +3,31 @@ Knime provides powerful and flexible means to mine data. However, as many method
 1 RGG: A general GUI Framework for R scripts; Ilhami Visne, Bioinformatics, 2009, 10:74
 
 
-Useful Links:
+
+USEFUL LINKS
+
 The framework these plugins are for: www.knime.org
-The official RGG website: http://www.biomedcentral.com/1471-2105/10/74
+The official RGG website: http://rgg.r-forge.r-project.org/docs.html
+RGG fork: https://github.com/holgerbrandl/rgg
 Templates gallery: http://dl.dropbox.com/u/18607042/knime-sripting-templates/templateGallery.html
 Scripting Extension Wiki: https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting
+
+
+
+INSTALLATION
+
+Once KNIME is installed you have the following possibilities:
+1) The easiest is to use the p2 update mechanism of KNIME (Help > Install new Software). Find the detailed instructions on the KNIME community site: site: http://tech.knime.org/community-contributions-info.
+2) Use eclipse to build the plugins yourself and add them to the plugin directory of the KNIME installation.
+
+
+
+LICENSE
+
+Copyright (c) 2010, Max Planck Institute of Molecular Cell Biology and Genetics, Dresden
+All rights reserved.
+
+Source code contained in the directories groovy4knime, python-server, pyhton4knime and r4knime is distributed under GPL3 license.
+
+Source code contained in the directories matlab-server and the "matlab4knime" nodes are distributed under the BSD license.
+
