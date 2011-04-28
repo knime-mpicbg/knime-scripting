@@ -1,0 +1,10 @@
+Knime provides powerful and flexible means to mine data. However, as many methods are implemented just for data modeling languages like R or Matlab, it is crucial to integrate these languages into Knime. To some extent this is already possible. However, from our daily work we’ve learned that many users need to use scripts without having any background in scripting. Thus we implemented a new open source scripting integration framework for Knime, which is based on RGG templates [1]. Its main purpose is to hide the script complexity behind a user-friendly graphical interface. Furthermore, our approach goes beyond the existing integration of R as it provides better and more flexible graphics support, flow variable support and an easy-to-extend server-based script template repository.
+
+1 RGG: A general GUI Framework for R scripts; Ilhami Visne, Bioinformatics, 2009, 10:74
+
+
+Useful Links:
+The framework these plugins are for: www.knime.org
+The official RGG website: http://www.biomedcentral.com/1471-2105/10/74
+Templates gallery: http://dl.dropbox.com/u/18607042/knime-sripting-templates/templateGallery.html
+Scripting Extension Wiki: https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting 
