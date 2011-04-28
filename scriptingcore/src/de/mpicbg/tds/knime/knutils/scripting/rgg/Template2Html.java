@@ -24,7 +24,7 @@ public class Template2Html {
 
     public static void main(String[] args) throws IOException {
         Map<URL, String> urls = new HashMap<URL, String>();
-        urls.put(new URL("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt"), "R");
+        urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/R/figure-templates.txt"), "R");
         urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Matlab/figure-templates.txt"), "Matlab");
         urls.put(new URL("http://dl.dropbox.com/u/18607042/knime-sripting-templates/Python/figure-templates.txt"), "Python");
 //
