@@ -250,9 +250,12 @@ rOut <- sort.pd[order(sort.pd[,groupIndex]),];
 ########################################################################################
 # name: Outlier removal
 # author: Felix Meyenhofer
-# category:pre-processing
+# category: pre-processing
 
-Calculates the outliers for each group it find in the grouping column. A row is removed if it contains an outlier for any of the specified parameter.
+Calculates the outliers for each group it find in the grouping column.
+A row is removed if it contains an outlier for any of the specified parameter.
+The method whisker uses the "boxplot-technique" to determine outliers. The remaining data is contained in [q25%-1.5*iqr...q75% + 1.5*iqr].
+The meanStd removes all the points further than 3SD from the mean. The remaining data is contained in [mean-3*SD...mean+3*SD]
 
 ######
 
@@ -260,12 +263,9 @@ Calculates the outliers for each group it find in the grouping column. A row is 
 
 <!--1. Title and short description -->
 
-<h3 text="Outlier removal per condition" aligment="center" span="full"/>
+<h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
 <separator label="Description" span="full"/>
-<labelarea span="full">Calculates the outliers for each group it find in the grouping column.
-A row is removed if it contains an outlier for any of the specified parameter.
-The method whisker uses the "boxplot-technique" to determine outliers. The remaining data is contained in [q25%-1.5*iqr...q75% + 1.5*iqr].
-The meanStd removes all the points further than 3SD from the mean. The remaining data is contained in [mean-3*SD...mean+3*SD]</labelarea>
+<labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
 <gaprow height="1"/>
 
 

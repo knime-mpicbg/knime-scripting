@@ -1579,3 +1579,150 @@ print(m)
     ]]>
 
 </rgg>
+
+
+
+
+########################################################################################
+# name: density-scatter-matrix
+# author: Felix Meyenhofer
+# category: relations
+# preview: density-scatter-matrix.png
+
+Displays a scatter matrix where the color code reflect the density of points.
+The densities are log2-scaled.
+
+Parameter:
+Grouping column: cathegorical column that associates the observation to a group.
+Feature space: a set of variables (columns) where each feature is plotted in a
+               scatter plot against all other features.
+
+######
+
+<rgg>
+
+    <!--1. Title and short description -->
+
+    <h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+    <separator label="Description" span="full"/>
+    <labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+    <gaprow height="1"/>
+    <separator label="Options" span="full"/>
+    <gaprow height="2"/>
+
+
+    <!-- 2. Configuration -->
+
+    <group>
+        # a) Define the feature space
+        numericColumns= c(<panellistbox items="$$$NUM_ATTRIBUTES$$$" label="Feature space" aligment="center" span="full"/>);
+
+        # b) the title of the plot
+        <textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value="my plot" size="10" aligment="center" span="full"/>
+    </group>
+
+
+    <!-- 2. Code -->
+
+    <![CDATA[
+        library(IDPmisc)
+
+
+        labels <- names(kIn);
+        numericColumns <- which(labels %in% numericColumns);
+        labels <- labels[numericColumns];
+
+        M <- kIn[,numericColumns];
+
+        graph <- ipairs(M, ztransf = function(x){x[x<1] <- 1; log2(x)}, lab.diag=labels, main=plotTitle)
+
+        print(graph)
+    ]]>
+
+</rgg>
+
+
+
+
+########################################################################################
+# name: grouped-scatter-matrix
+# author: Felix Meyenhofer
+# category: relations
+# preview: grouped-scatter-matrix.png
+
+Diplays a scatter matrix where all the groups found in the grouping column get their
+own color.
+
+Parameter:
+Grouping column: cathegorical column that associates the observation to a group.
+Feature space: a set of variables (columns) where each feature is plotted in a
+               scatter plot against all other features.
+Alpha value: defines the alpha value of the points. this is useful if there is a lot of
+             data. The more data the lower you can set the value.
+
+######
+
+<rgg>
+
+    <!--1. Title and short description -->
+
+    <h3 text="$$$TEMPLATE_NAME$$$" aligment="center" span="full"/>
+    <separator label="Description" span="full"/>
+    <labelarea span="full">$$$TEMPLATE_DESC$$$</labelarea>
+    <gaprow height="1"/>
+    <separator label="Options" span="full"/>
+    <gaprow height="2"/>
+
+
+    <!-- 2. Configuration -->
+
+    <group>
+        # a) Define the grouping column
+        groupColumn= <combobox items="$$$STR_ATTRIBUTES$$$" label="Grouping column"/>;
+
+        # 2) Define the feature space
+        numericColumns= c(<panellistbox items="$$$NUM_ATTRIBUTES$$$" label="Feature space" aligment="center" span="full"/>);
+
+        # c) the title of the plot
+        <textfield label="Title of the plot:" var="plotTitle" data-type="text" default-value="my plot" size="10" aligment="center" span="full"/>
+
+        # d) Alpha value
+        <textfield label="Alpha value" var="alphaValue" data-type="number" default-value="0.75" aligment="center" span="full"/>
+    </group>
+
+
+    <!-- 2. Code -->
+
+    <![CDATA[
+        library(reshape)
+        library(ggplot2)
+
+        params <- numericColumns
+        alphaValue = as.numeric(alphaValue)
+        completeDF <- kIn[complete.cases(kIn[,params]),]
+
+        dat <- data.frame(t(combn(params, 2)))
+        names(dat) <- c("X","Y")
+
+        clevels <- unique(c(as.character(dat$X),as.character(dat$Y)))
+
+        dat$X <- factor(dat$X, levels = clevels)
+        dat$Y <- factor(dat$Y, levels = clevels)
+
+        dat <- ddply(dat, c('X', 'Y'), function(d) {
+           xd <- as.character(d$X[1])
+           yd <- as.character(d$Y[1])
+           data.frame(x = completeDF[,xd], y = completeDF[,yd], group = completeDF[,groupColumn])
+        })
+
+        theme <- opts(panel.background = theme_rect(fill = "gray95"),
+                      panel.grid.minor = theme_blank(),
+                      legend.background = theme_rect(fill = "gray85"),
+                      axis.title.x = theme_text(colour = NA),
+                      axis.title.y = theme_text(colour = NA))
+
+        p <- ggplot(dat, aes(x = x, y = y, colour = group)) + geom_point(alpha=alphaValue) + scale_colour_brewer(pal = "Spectral") + facet_grid(Y ~ X, scales='free') +theme
+        print(p)
+    ]]>
+
+</rgg>

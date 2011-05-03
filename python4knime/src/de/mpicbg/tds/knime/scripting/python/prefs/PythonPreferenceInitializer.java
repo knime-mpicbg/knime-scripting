@@ -54,8 +54,8 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PYTHON_EXECUTABLE, "python");
 
-        store.setDefault(PYTHON_TEMPLATE_RESOURCES, "http://dl.dropbox.com/u/18607042/knime-sripting-templates/Python/script-templates.txt");
-        store.setDefault(PYTHON_PLOT_TEMPLATE_RESOURCES, "http://dl.dropbox.com/u/18607042/knime-sripting-templates/Python/figure-templates.txt");
+        store.setDefault(PYTHON_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/script-templates.txt");
+        store.setDefault(PYTHON_PLOT_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt");
 
     }
 }
