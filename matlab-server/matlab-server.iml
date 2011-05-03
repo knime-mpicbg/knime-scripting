@@ -14,6 +14,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: matlab-jmi:matlab-jmi:2009b" level="project" />
     <orderEntry type="library" name="Maven: jmatlink:jmatlink:1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-math:2.0" level="project" />
+    <orderEntry type="library" name="Maven: matlab-jmi:matlab-jmi:2009b" level="project" />
+    <orderEntry type="library" name="Maven: jmatlink:jmatlink:1.3" level="project" />
     <orderEntry type="library" name="Maven: gnu.cajo:cajo:1.134" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-math:2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.7" level="project" />

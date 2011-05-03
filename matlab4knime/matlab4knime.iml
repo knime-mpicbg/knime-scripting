@@ -46,6 +46,7 @@
     </orderEntry>
     <orderEntry type="library" name="knimedeps" level="project" />
     <orderEntry type="module" module-name="scriptingcore" exported="" />
+    <orderEntry type="module" module-name="matlab-server" exported="" />
   </component>
 </module>
 
