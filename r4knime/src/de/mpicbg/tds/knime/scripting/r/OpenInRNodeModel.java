@@ -70,7 +70,7 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
                 workspaceFile = File.createTempFile("rplugin", ".RData");
                 workspaceFile.deleteOnExit();
 
-                REXP xp = connection.parseAndEval("r=readBin(tmpwfile,'raw'," + estimateNumValues(inData) + "); unlink(tmpwfile); r");
+                REXP xp = connection.parseAndEval("r=readBin(tmpwfile,'raw',file.info(tmpwfile)$size); unlink(tmpwfile); r");
                 FileOutputStream oo = new FileOutputStream(workspaceFile);
                 oo.write(xp.asBytes());
                 oo.close();
@@ -119,8 +119,9 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
 
     /**
      * Attempts to find an upper bound of the number of values of node input.
+     * USAGE IN 'execute' method HAS BEEN REPLACED BY AN R-COMMAND - CAN BE DELETED AT SOME POINT
      */
-    private int estimateNumValues(BufferedDataTable[] pushTable) {
+    /* private int estimateNumValues(BufferedDataTable[] pushTable) {
 
         int inputSize = 0;
 
@@ -133,10 +134,10 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
 
         return (int) (10.1 * inputSize); // add some size for meta data like table headers
 
-    }
+    } */
 
 
-    private int calcTableSize(BufferedDataTable bufferedDataTable) {
+    /* private int calcTableSize(BufferedDataTable bufferedDataTable) {
         return bufferedDataTable.getDataTableSpec().getNumColumns() * bufferedDataTable.getRowCount();
-    }
+    } */
 }
