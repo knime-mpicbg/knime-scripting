@@ -45,7 +45,7 @@ public class RTests {
     public static String transferCharset = "UTF-8";
 
 
-    public static void main(String[] args) throws RserveException, REXPMismatchException, REngineException, UnsupportedEncodingException {
+    public static void main3(String[] args) throws RserveException, REXPMismatchException, REngineException, UnsupportedEncodingException {
 //        RConnection connection = new RConnection("localhost", 6311);
 
 
@@ -86,6 +86,22 @@ public class RTests {
 //        System.err.println("done: " + Arrays.toString(rexp.isNA()));
     }
 
+    public static void main(String[] args) throws RserveException, REXPMismatchException, REngineException, UnsupportedEncodingException {
+        RConnection c = new RConnection("localhost", 6311);
+
+        // test factors and levels
+        c.assign("x", new int[]{1, 2, 3, 4});
+        REXP result = c.eval("mean(x)");
+        RList rList = new RList(2, true);
+        rList.put("a", new REXPFactor(new int[]{1, 2, 3, 1, 2, 3}, new String[]{"blue", "red", "green"}));
+        rList.put("x", new REXPDouble(new double[]{0.1, 0.1, 0.5, 0.7, 0.9, 0.6}));
+        c.assign("mylist", REXP.createDataFrame(rList));
+        REXP levels = c.eval("levels(mylist$a)");
+        REXP tapply = c.eval("tapply(mylist$x, mylist$a, mean)");
+
+        c.close();
+        System.err.println("done: " + result.asString() + " +++ " + levels.asString());
+    }
 
     public static Map<String, Map<String, Object>> convertToSerializable(Map<String, REXP> pushTable) {
         try {
