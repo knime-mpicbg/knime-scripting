@@ -7,11 +7,9 @@ Knime provides powerful and flexible means to mine data. However, as many method
 USEFUL LINKS
 
 The framework these plugins are for: www.knime.org
-The official RGG website: http://rgg.r-forge.r-project.org/docs.html
-RGG fork: https://github.com/holgerbrandl/rgg
+RGG fork: https://github.com/knime-mpicbg/rgg
 Templates galleries: http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/figure-template-gallery.html
                      http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/script-template-gallery.html
-Scripting Extension  Wiki: https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting
 
 
 
