@@ -11,6 +11,6 @@ public class GroovyColReformatter implements ColNameReformater {
 
     public String reformat(String name, DataType type, boolean altDown) {
         // todo replace the double with something type-specific
-        return "new Attribute(\"" + name + "\", input)";
+        return "new InputTableAttribute(\"" + name + "\", input)";
     }
 }
