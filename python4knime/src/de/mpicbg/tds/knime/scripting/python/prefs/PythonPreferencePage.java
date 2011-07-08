@@ -25,6 +25,7 @@
  */
 package de.mpicbg.tds.knime.scripting.python.prefs;
 
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplateTableEditor;
 import de.mpicbg.tds.knime.scripting.python.PythonScriptingBundleActivator;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -60,8 +61,10 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
         addField(new BooleanFieldEditor(PythonPreferenceInitializer.PYTHON_LOCAL, "Run python scripts on local system (ignores host/port settings)", parent));
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_EXECUTABLE, "The path to the local python executable", parent));
 
-        addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
-        addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));
+        /*addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
+        addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));*/
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", parent));
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", parent));
     }
 
 

@@ -30,7 +30,8 @@ Require-Bundle:  org.eclipse.core.runtime,
 Eclipse-LazyStart: true
 Export-Package: 
  de.mpicbg.tds.knime.knutils.scripting,
- de.mpicbg.tds.knime.knutils.scripting.templatewizard,
- de.mpicbg.tds.knime.knutils.scripting.rgg
+ de.mpicbg.tds.knime.knutils.scripting.prefs,
+ de.mpicbg.tds.knime.knutils.scripting.rgg,
+ de.mpicbg.tds.knime.knutils.scripting.templatewizard
 
 

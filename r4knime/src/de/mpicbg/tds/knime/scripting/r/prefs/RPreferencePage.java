@@ -25,6 +25,7 @@
  */
 package de.mpicbg.tds.knime.scripting.r.prefs;
 
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplateTableEditor;
 import de.mpicbg.tds.knime.scripting.r.R4KnimeBundleActivator;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -59,9 +60,14 @@ public class RPreferencePage extends FieldEditorPreferencePage implements IWorkb
         addField(new IntegerFieldEditor(RPreferenceInitializer.R_PORT, "The port on which Rserve is listening", parent));
         addField(new BooleanFieldEditor(RPreferenceInitializer.REPAINT_ON_RESIZE, "Repaint on resize", parent));
 
-        addField(new StringFieldEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Template resource for the R-Snippet-node", parent));
+        /*addField(new StringFieldEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Template resource for the R-Snippet-node", parent));
         addField(new StringFieldEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Template resource for the R-Plot-node", parent));
-        addField(new StringFieldEditor(RPreferenceInitializer.R_OPENINR_TEMPLATES, "Template resource for the OpenInR-node", parent));
+        //addField(new StringFieldEditor(RPreferenceInitializer.R_OPENINR_TEMPLATES, "Template resource for the OpenInR-node", parent));
+
+        addField(new TemplateTableEditor(RPreferenceInitializer.R_OPENINR_TEMPLATES, "Template resource for the OpenInR-node", parent));*/
+
+        addField(new TemplateTableEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Snippet template resource", parent));
+        addField(new TemplateTableEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Plot template resource", parent));
 
         addField(new StringFieldEditor(RPreferenceInitializer.LOCAL_R_PATH, "Location of R on your computer", parent));
 
