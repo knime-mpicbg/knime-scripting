@@ -44,7 +44,7 @@ public class MatlabSnippetNodeFactory
     @Override
     public NodeDialogPane createNodeDialogPane() {
         IPreferenceStore prefStore = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
-        String templateResources = prefStore.getString(MatlabPreferenceInitializer.MATLB_TEMPLATE_RESOURCES);
+        String templateResources = prefStore.getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES);
 
         return new ScriptingNodeDialog(MatlabSnippetNodeModel.DEFAULT_SCRIPT, new MatlabColReformatter(), templateResources, true, true);
     }

@@ -120,7 +120,6 @@ public class PluginClassLoader extends URLClassLoader {
     public static void main(String[] args) throws MalformedURLException, ClassNotFoundException {
 
         URL[] urls = new URL[]{new File("/Volumes/tds/software+tools/KNIME/tdsbuilds/knime_2.1.2_current/plugins/de.mpicbg.tds.knime.hcstools_1.0.0.jar").toURL()};
-//        URL[] urls = new URL[]{new File("/Users/brandl/projects/knime/hcstools/lib/tdscore-1.0.jar").toURL()};
 
         PluginClassLoader loader = new PluginClassLoader(urls, PluginClassLoader.class.getClassLoader());
 

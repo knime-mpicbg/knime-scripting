@@ -198,7 +198,6 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
             }
         }
 
-//        URL[] urls = new URL[]{new File("/Users/brandl/projects/knime/knimedists/debugknime/plugins/de.mpicbg.tds.knime.hcstools_1.0.0.jar").toURL()};
 //        ClassLoader loader = new PluginClassLoader(urls, this.getClass().getClassLoader());
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }

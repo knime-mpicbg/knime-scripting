@@ -22,5 +22,5 @@ Require-Bundle: org.eclipse.core.runtime,
  de.mpicbg.tds.knime.knutils,
  de.mpicbg.tds.knime.scripting
 Eclipse-LazyStart: true
-Export-Package: de.mpicbg.tds.knime.scripting
+Export-Package: de.mpicbg.tds.knime.scripting.groovy
 
