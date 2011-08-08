@@ -21,6 +21,7 @@ public class TemplateUtils {
     public static final String RGG_NUM_PARNAMES = "$$$NUM_ATTRIBUTES$$$";
     public static final String RGG_STR_PARNAMES = "$$$STR_ATTRIBUTES$$$";
     public static final String RGG_ALL_PARNAMES = "$$$ALL_ATTRIBUTES$$$";
+    public static final String RGG_FLOWVARS = "$$$FLOWVARS$$$";
 
     // Outdated definitions, kept only for backward compatibility
     public static final String RGG_CAT_PARNAMES = "$$$FACTORS$$$";
