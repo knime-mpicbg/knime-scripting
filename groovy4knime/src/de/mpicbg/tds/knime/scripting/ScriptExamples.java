@@ -22,6 +22,26 @@ import java.util.List;
  */
 public class ScriptExamples {
 
+    public static BufferedDataTable execut2e(ExecutionContext exec, BufferedDataTable input) throws CanceledExecutionException, SQLException {
+
+        TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());
+
+// get an existing input attribute by name
+//  Attribute attribute = new Attribute("$$INPUT_COLUMN", input);
+
+// create a new attribute with a name and a type
+        Attribute attribute = new Attribute("new attribute", StringCell.TYPE);
+
+
+        for (DataRow dataRow : input) {
+            cache.add(dataRow, attribute, new StringCell("hello knime"));
+        }
+
+        return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);
+
+    }
+
+
     public static BufferedDataTable execute(ExecutionContext exec) throws CanceledExecutionException, SQLException {
 
 
