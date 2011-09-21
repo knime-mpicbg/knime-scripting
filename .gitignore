@@ -1,0 +1,9 @@
+groovy4knime/bin/
+knutils/bin/
+matlab-server/target/
+matlab4knime/bin/
+python-server/target/
+python4knime/bin/
+r4knime/bin/
+scriptingcore/bin/
+
