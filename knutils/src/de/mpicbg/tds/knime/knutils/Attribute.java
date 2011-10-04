@@ -21,17 +21,17 @@ import java.util.GregorianCalendar;
 public class Attribute<AttributeType> {
 
     private final String attributeName;
-    private final DataType attributType;
+    private final DataType attributeType;
 
 
     public Attribute(String attributeName, DataType type) {
         this.attributeName = attributeName;
-        this.attributType = type;
+        this.attributeType = type;
     }
 
 
     public DataType getType() {
-        return attributType;
+        return attributeType;
     }
 
 

@@ -32,19 +32,23 @@ public class AttributeUtils {
         return list;
     }
 
-
+    /**
+    * Input table will be split according to unique values of the factor column (keyset = String)
+    */
     public static Map<String, List<DataRow>> splitRows(BufferedDataTable table, Attribute factor) {
         Map<Object, List<DataRow>> groupedRows = splitRowsGeneric(table, factor);
 
-        Map<String, List<DataRow>> stringfiedGrouping = new LinkedHashMap<String, List<DataRow>>();
+        Map<String, List<DataRow>> groupedRowsStringKeys = new LinkedHashMap<String, List<DataRow>>();
         for (Object o : groupedRows.keySet()) {
-            stringfiedGrouping.put(o.toString(), groupedRows.get(o));
+            groupedRowsStringKeys.put(o.toString(), groupedRows.get(o));
         }
 
-        return stringfiedGrouping;
+        return groupedRowsStringKeys;
     }
 
-
+    /**
+    * Input table will be split according to unique values of the factor column (keyset = Object)
+    */
     public static Map<Object, List<DataRow>> splitRowsGeneric(BufferedDataTable table, Attribute factor) {
         Map<Object, List<DataRow>> splitScreen = new LinkedHashMap<Object, List<DataRow>>();
 
@@ -113,6 +117,9 @@ public class AttributeUtils {
     }
 
 
+    /**
+     * Method takes table spec in KNIME format and returns it as attributes list
+     */
     public static List<Attribute> convert(DataTableSpec dataTableSpec) {
         List<Attribute> attributes = new ArrayList<Attribute>();
         for (DataColumnSpec columnSpec : dataTableSpec) {
