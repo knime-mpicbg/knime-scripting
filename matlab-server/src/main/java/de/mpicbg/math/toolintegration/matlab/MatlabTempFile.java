@@ -50,7 +50,7 @@ public class MatlabTempFile {
     }
 
     public String getServerPath() {
-        return serverFile.getAbsolutePath();
+        return matlab.getFilePath(serverFile);
     }
 
     public void upload() {

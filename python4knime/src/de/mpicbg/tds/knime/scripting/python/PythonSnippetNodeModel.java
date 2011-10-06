@@ -70,7 +70,7 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         kInFile.upload();
 
         // Execute script
-        logger.info("Creating a executing python script: " + scriptFile.getClientPath());
+        logger.info("Creating and executing python script: " + scriptFile.getClientPath());
 
         String script = prepareScript();
 

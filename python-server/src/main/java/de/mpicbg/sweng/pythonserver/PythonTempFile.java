@@ -45,7 +45,7 @@ public class PythonTempFile {
     }
 
     public String getServerPath() {
-        return serverFile.getAbsolutePath();
+        return python.getFilePath(serverFile);
     }
 
     public void upload() {
