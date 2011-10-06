@@ -24,6 +24,10 @@ public class LocalPythonClient implements Python {
         server.createTempFile(prefix, suffix);
     }
 
+    public String getFilePath(File file) {
+        return server.getFilePath(file);
+    }
+
     public boolean deleteFile(File file) {
         return
         server.deleteFile(file);
