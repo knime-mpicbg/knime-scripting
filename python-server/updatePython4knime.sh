@@ -17,6 +17,6 @@ mvn dependency:copy-dependencies
 
 rm $knimeRoot/python4knime/lib/*.jar
 cp target/dependency/* $knimeRoot/python4knime/lib/
-cp target/mpicbg-python-1.0.jar $knimeRoot/python4knime/lib/
+cp target/mpicbg-python-1.1.jar $knimeRoot/python4knime/lib/
 
 # remove missing jars from lib-folder   http://codesnippets.joyent.com/posts/show/551
