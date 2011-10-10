@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Utilities for KNIME
 Bundle-SymbolicName: de.mpicbg.tds.knime.scripting.groovy; singleton:=true
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.0.qualifier
 Bundle-ClassPath: groovyscripting.jar,
  lib/antlr-2.7.7.jar,
  lib/asm-3.2.jar,

@@ -1,12 +1,12 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Python Integration for KNIME
+Bundle-Name: Ptyhon Integration for KNIME
 Bundle-SymbolicName: de.mpicbg.tds.knime.scripting.python; singleton:=true
-Bundle-Version: 1.1.1
+Bundle-Version: 1.1.0.qualifier
 Bundle-ClassPath: python4knime.jar,
  lib/cajo-1.134.jar,
  lib/opencsv-2.1.jar,
- lib/mpicbg-python-1.1.jar
+ lib/mpicbg-python-1.0.jar
 Bundle-Activator: de.mpicbg.tds.knime.scripting.python.PythonScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
