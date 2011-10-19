@@ -72,6 +72,8 @@ public interface MatlabWeb {
     //
     public File createTempFile(String prefix, String suffix);
 
+    public String getFilePath(File file);
+
     public boolean deleteFile(File file);
 
     public int openFile(File file) throws IOException;

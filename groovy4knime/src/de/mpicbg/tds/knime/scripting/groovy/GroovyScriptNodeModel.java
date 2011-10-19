@@ -36,18 +36,24 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
             "return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);";
 
 
-    public static final String DEFAULT_SCRIPT = "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
+    public static final String DEFAULT_SCRIPT = "//initialize output table:\n" +
+            "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
             "\n" +
-            "// get an existing input attribute by name\n" +
-            "//  Attribute attribute = new Attribute(\"$$INPUT_COLUMN\", input);\n" +
+            "// get an existing input attribute by name:\n" +
+            "//  Attribute attribute = new InputTableAttribute(\"$$INPUT_COLUMN\", input);\n" +
             "\n" +
-            "// create a new attribute with a name and a type\n" +
+            "// create a new attribute with a name and a type:\n" +
             "Attribute attribute = new Attribute(\"new attribute\", StringCell.TYPE);\n" +
             "\n" +
             "\n" +
             "for (DataRow dataRow : input) {\n" +
+            "    // get an attribute value:\n" +
+            "    // Double value = (Double) attribute.getValue(dataRow);\n" +
+            "\n" +
+            "    // Put stuff into table\n" +
             "    cache.add(dataRow, attribute, new StringCell(\"hello knime\"));\n" +
             "}\n" +
+            "\n" +
             "\n" +
             "return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);";
 
@@ -170,28 +176,28 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
             // replace patterns
             classPathEntry = classPathEntry.replace("{KNIME.HOME}", System.getProperty("osgi.syspath"));
 
-
-            if (classPathEntry.endsWith("*")) {
-
-                FilenameFilter jarFilter = new FilenameFilter() {
-                    public boolean accept(File file, String s) {
-                        return s.endsWith(".jar");
+            try {
+                if (classPathEntry.endsWith("*")) {
+                    FilenameFilter jarFilter = new FilenameFilter() {
+                        public boolean accept(File file, String s) {
+                            return s.endsWith(".jar");
+                        }
+                    };
+                    for (File file : new File(classPathEntry).getParentFile().listFiles(jarFilter)) {
+                        urls.add(file.toURL());
                     }
-                };
 
-                for (File file : new File(classPathEntry).getParentFile().listFiles(jarFilter)) {
-                    urls.add(file.toURL());
+                } else {
+                    File file = new File(classPathEntry);
+                    if (file.exists()) {
+                        urls.add(file.toURL());
+                    }
                 }
-
-            } else {
-                File file = new File(classPathEntry);
-                if (file.exists()) {
-                    urls.add(file.toURL());
-                }
+            } catch (Throwable t) {
+                logger.error("The url '" + classPathEntry + "' does not exist. Please correct the entry in Preferences > KNIME > Groovy Scripting");
             }
         }
 
-//        URL[] urls = new URL[]{new File("/Users/brandl/projects/knime/knimedists/debugknime/plugins/de.mpicbg.tds.knime.hcstools_1.0.0.jar").toURL()};
 //        ClassLoader loader = new PluginClassLoader(urls, this.getClass().getClassLoader());
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }

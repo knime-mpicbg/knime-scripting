@@ -194,6 +194,10 @@ public class MatlabWebClient implements MatlabWeb {
         return matlab.createTempFile(prefix, suffix);
     }
 
+    public String getFilePath(File file) {
+        return matlab.getFilePath(file);
+    }
+
     public boolean deleteFile(File file) {
         return matlab.deleteFile(file);
     }

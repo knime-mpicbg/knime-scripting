@@ -40,7 +40,7 @@ public class MatlabPlotNodeFactory extends NodeFactory<MatlabPlotNodeModel> {
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        String templateResources = MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLB_PLOT_TEMPLATE_RESOURCES);
+        String templateResources = MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES);
         return new MatlabPlotNodeDialog(templateResources, MatlabPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
     }
 

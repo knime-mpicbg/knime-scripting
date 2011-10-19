@@ -25,6 +25,7 @@
  */
 package de.mpicbg.tds.knime.scripting.matlab.prefs;
 
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplateTableEditor;
 import de.mpicbg.tds.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
@@ -56,8 +57,10 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST, "The host where the Matlab-server is running", parent));
         addField(new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT, "The port on which Matlab-server is listening", parent));
 
-        addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
-        addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));
+        /*addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
+        addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));*/
+        addField(new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES, "Snippet template resources", parent));
+        addField(new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES, "Plot template resource", parent));
     }
 
 

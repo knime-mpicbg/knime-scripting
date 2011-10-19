@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Utilities for KNIME
 Bundle-SymbolicName: de.mpicbg.tds.knime.knutils; singleton:=true
-Bundle-Version: 1.1.0
+Bundle-Version: 1.1.0.qualifier
 Bundle-ClassPath: knutils.jar
 Bundle-Activator: de.mpicbg.tds.knime.knutils.KnutilsBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
@@ -11,6 +11,19 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
  org.knime.workbench.repository,
  org.knime.base
-Eclipse-LazyStart: true
-Export-Package: de.mpicbg.tds.knime.knutils,
- de.mpicbg.tds.knime.knutils.ui
+Bundle-ActivationPolicy: lazy
+Export-Package: de.mpicbg.tds.knime.knutils;
+  uses:="org.knime.core.node,
+   org.knime.core.node.util,
+   org.knime.core.data.container,
+   org.eclipse.ui.plugin,
+   org.knime.core.data,
+   org.knime.core.node.port,
+   org.knime.core.node.defaultnodesettings",
+ de.mpicbg.tds.knime.knutils.ui;
+  uses:="de.mpicbg.tds.knime.knutils,
+   org.knime.core.node,
+   javax.swing,
+   javax.swing.filechooser,
+   javax.swing.event,
+   org.knime.core.node.defaultnodesettings"

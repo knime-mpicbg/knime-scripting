@@ -41,6 +41,10 @@ public class PythonClient implements Python {
         return python.createTempFile(prefix, suffix);
     }
 
+    public String getFilePath(File file) {
+        return python.getFilePath(file);
+    }
+
     public boolean deleteFile(File file) {
         return python.deleteFile(file);
     }

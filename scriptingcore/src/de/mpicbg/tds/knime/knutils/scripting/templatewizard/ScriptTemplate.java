@@ -31,9 +31,36 @@ public class ScriptTemplate implements Cloneable {
 
     private String previewURL;
 
+    private String templateURL;
+
     public static final String DESCRIPTION_PATTERN = "$$$TEMPLATE_DESC$$$";
     public static final String NAME_PATTERN = "$$$TEMPLATE_NAME$$$";
 
+    public static void main(String[] args) {
+        // test equals()
+        ScriptTemplate o1 = new ScriptTemplate();
+        o1.setAuthor("me");
+        o1.setLinkedToScript(true);
+
+        ScriptTemplate o2 = (ScriptTemplate) o1.clone();
+        ScriptTemplate o3 = (ScriptTemplate) o1.clone();
+        o3.setAuthor("you");
+
+        boolean result = o1.equals(o2);
+        System.out.println(result);
+        System.out.println(o1.hashCode() + " = " + o2.hashCode());
+        System.out.println(o1.equals(o3));
+        System.out.println(o1.hashCode() + " = " + o3.hashCode());
+    }
+
+
+    public String getTemplateURL() {
+        return templateURL;
+    }
+
+    public void setTemplateURL(String templateURL) {
+        this.templateURL = templateURL;
+    }
 
     public void setName(String name) {
         this.name = name;
@@ -110,6 +137,8 @@ public class ScriptTemplate implements Cloneable {
 
 
         ScriptTemplate template = new ScriptTemplate();
+
+        template.setTemplateURL(templateFile.toString());
 
         int rowCounter = 0;
         if (lines[rowCounter].contains("name")) {
@@ -225,6 +254,7 @@ public class ScriptTemplate implements Cloneable {
 
         ScriptTemplate that = (ScriptTemplate) o;
 
+        if (templateURL != null ? !templateURL.equals(that.templateURL) : that.templateURL != null) return false;
         if (linkedToScript != that.linkedToScript) return false;
         if (author != null ? !author.equals(that.author) : that.author != null) return false;
         if (categories != null ? !categories.equals(that.categories) : that.categories != null) return false;
@@ -242,6 +272,7 @@ public class ScriptTemplate implements Cloneable {
     @Override
     public int hashCode() {
         int result = author != null ? author.hashCode() : 0;
+        result = 31 * result + (templateURL != null ? templateURL.hashCode() : 0);
         result = 31 * result + (categories != null ? categories.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + (template != null ? template.hashCode() : 0);

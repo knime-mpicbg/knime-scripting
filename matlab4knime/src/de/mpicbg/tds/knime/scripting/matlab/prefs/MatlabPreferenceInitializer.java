@@ -35,8 +35,8 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
     public static final String MATLAB_HOST = "r.host";
     public static final String MATLAB_PORT = "r.port";
 
-    public static final String MATLB_TEMPLATE_RESOURCES = "template.resources";
-    public static final String MATLB_PLOT_TEMPLATE_RESOURCES = "plot.template.resources";
+    public static final String MATLAB_TEMPLATE_RESOURCES = "template.resources";
+    public static final String MATLAB_PLOT_TEMPLATE_RESOURCES = "plot.template.resources";
 
 
     @Override
@@ -47,7 +47,7 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(MATLAB_PORT, 1198);
 
 //        store.setDefault(MATLB_TEMPLATE_RESOURCES, "file:///Volumes/tds/software+tools/KNIME/script-templates/Matlab/script-templates.txt");
-        store.setDefault(MATLB_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt");
-        store.setDefault(MATLB_PLOT_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt");
+        store.setDefault(MATLAB_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt");
+        store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt");
     }
 }

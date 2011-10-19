@@ -16,6 +16,8 @@ public interface Python {
 
     public File createTempFile(String prefix, String suffix);
 
+    public String getFilePath(File file);
+
     public boolean deleteFile(File file);
 
     public CommandOutput executeCommand(String[] command);

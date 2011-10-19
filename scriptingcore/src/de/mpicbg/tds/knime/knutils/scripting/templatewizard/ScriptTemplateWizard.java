@@ -4,6 +4,8 @@
 
 package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplatePref;
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplatePrefString;
 import de.mpicbg.tds.knime.knutils.scripting.rgg.Template2Html;
 
 import javax.imageio.ImageIO;
@@ -43,14 +45,8 @@ public class ScriptTemplateWizard extends JSplitPane {
     public List<ScriptTemplate> templates;
     private List<URL> templateDefinitionURLs;
 
-
-    public ScriptTemplateWizard(String templateFilePaths) {
-        this(parseConcatendatedURLs(templateFilePaths));
-    }
-
-
     private static List<URL> parseConcatendatedURLs(String templateFilePaths) {
-        List<URL> urls = new ArrayList<URL>();
+        /*List<URL> urls = new ArrayList<URL>();
         for (String path : templateFilePaths.split(";")) {
             try {
                 URL url = new URL(path);
@@ -67,16 +63,31 @@ public class ScriptTemplateWizard extends JSplitPane {
             }
         }
 
+        return urls;*/
+
+        TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
+        List<TemplatePref> templateList = tString.parsePrefString();
+        List<URL> urls = new ArrayList<URL>();
+
+        for (TemplatePref pref : templateList) {
+            if (pref.isActive()) {
+                try {
+                    URL newURL = new URL(pref.getUri());
+                    urls.add(newURL);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         return urls;
     }
 
 
     public static void main(String[] args) throws MalformedURLException {
-        List<URL> urls = new ArrayList<URL>();
-        urls.add(new URL("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt"));
-//        urls.add(new URL("file:///Volumes/tds/software+tools/KNIME/script-templates/Groovy/tds-groovy-templates.txt"));
+        //String templateFilePath = new String("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt" + ";" + "file:///Volumes/tds/software+tools/KNIME/script-templates/Groovy/tds-groovy-templates.txt");
+        String templateFilePath = new String("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/R/TDS_snippet-templates.txt");
 
-        ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(urls);
+        ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(templateFilePath);
 
         JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
@@ -87,8 +98,8 @@ public class ScriptTemplateWizard extends JSplitPane {
     }
 
 
-    public ScriptTemplateWizard(java.util.List<URL> templateCollections) {
-        templateDefinitionURLs = templateCollections;
+    public ScriptTemplateWizard(String templateFilePaths) {
+        templateDefinitionURLs = parseConcatendatedURLs(templateFilePaths);
 
         initComponents();
 
@@ -180,7 +191,7 @@ public class ScriptTemplateWizard extends JSplitPane {
         // Traverse children
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
-            for (Enumeration e = node.children(); e.hasMoreElements();) {
+            for (Enumeration e = node.children(); e.hasMoreElements(); ) {
                 TreeNode n = (TreeNode) e.nextElement();
                 TreePath path = parent.pathByAddingChild(n);
                 expandAll(tree, path, expand);
@@ -308,19 +319,16 @@ public class ScriptTemplateWizard extends JSplitPane {
 
             StringBuffer templateBuffer = new StringBuffer();
 
-            while (reader.ready()) {
-                String line = reader.readLine();
-
+            String line = reader.readLine();
+            while (line != null) {
                 if (line.startsWith("##########")) {
                     if (!templateBuffer.toString().trim().isEmpty()) {
                         templates.add(ScriptTemplate.parse(templateBuffer.toString(), templateFile));
                         templateBuffer = new StringBuffer();
                     }
+                } else templateBuffer.append(line + "\n");
 
-                    continue;
-                }
-
-                templateBuffer.append(line + "\n");
+                line = reader.readLine();
             }
 
             // don't forget the last template
@@ -328,7 +336,7 @@ public class ScriptTemplateWizard extends JSplitPane {
 
 
         } catch (IOException e) {
-            throw new RuntimeException("Pasing of r-template failed: " + templateFile, e);
+            throw new RuntimeException("Parsing of template failed: " + templateFile, e);
         }
 
         return templates;

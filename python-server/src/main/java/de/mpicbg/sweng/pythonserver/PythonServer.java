@@ -46,6 +46,10 @@ public class PythonServer implements Python {
         return tempFile;
     }
 
+    public String getFilePath(File file) {
+        return file.getAbsolutePath();
+    }
+
     public boolean deleteFile(File file) {
         return file != null ? file.delete() : true;
     }

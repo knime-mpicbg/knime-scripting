@@ -25,6 +25,7 @@
  */
 package de.mpicbg.tds.knime.scripting.prefs;
 
+import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplateTableEditor;
 import de.mpicbg.tds.knime.scripting.GroovyScriptingBundleActivator;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
@@ -53,7 +54,8 @@ public class GroovyScriptingPreferencePage extends FieldEditorPreferencePage imp
         Composite parent = getFieldEditorParent();
 
         addField(new StringFieldEditor(GroovyScriptingPreferenceInitializer.GROOVY_CLASSPATH_ADDONS, "Additional scripting classpath (;-separated)", parent));
-        addField(new StringFieldEditor(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES, "Template resources (;-separated)", parent));
+        //addField(new StringFieldEditor(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES, "Template resources (;-separated)", parent));
+        addField(new TemplateTableEditor(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES, "Snippet template resource", parent));
     }
 
 

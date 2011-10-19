@@ -21,6 +21,7 @@ public class TemplateUtils {
     public static final String RGG_NUM_PARNAMES = "$$$NUM_ATTRIBUTES$$$";
     public static final String RGG_STR_PARNAMES = "$$$STR_ATTRIBUTES$$$";
     public static final String RGG_ALL_PARNAMES = "$$$ALL_ATTRIBUTES$$$";
+    public static final String RGG_FLOWVARS = "$$$FLOWVARS$$$";
 
     // Outdated definitions, kept only for backward compatibility
     public static final String RGG_CAT_PARNAMES = "$$$FACTORS$$$";
@@ -99,10 +100,11 @@ public class TemplateUtils {
         if (templateText.contains(RGG_NUM_PARNAMES))
             templateText = templateText.replace(RGG_NUM_PARNAMES, concatNumParNames(inputAttributes.get(0)));
         if (templateText.contains(RGG_STR_PARNAMES))
-            templateText = templateText.replace(RGG_STR_PARNAMES, concatParNames(inputAttributes.get(0)));
+            templateText = templateText.replace(RGG_STR_PARNAMES, concatCatParNames(inputAttributes.get(0)));
         if (templateText.contains(RGG_ALL_PARNAMES))
-            templateText = templateText.replace(RGG_ALL_PARNAMES, concatCatParNames(inputAttributes.get(0)));
+            templateText = templateText.replace(RGG_ALL_PARNAMES, concatParNames(inputAttributes.get(0)));
 
+        // support outdated definitions
         if (templateText.contains(RGG_CAT_PARNAMES))
             templateText = templateText.replace(RGG_CAT_PARNAMES, concatCatParNames(inputAttributes.get(0)));
         if (templateText.contains(RGG_PARNAMES))
@@ -117,9 +119,9 @@ public class TemplateUtils {
             if (templateText.contains(createInputSpecificVarPattern(enduserIndex, RGG_NUM_PARNAMES)))
                 templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_NUM_PARNAMES), concatNumParNames(tableInputModel));
             if (templateText.contains(createInputSpecificVarPattern(enduserIndex, RGG_STR_PARNAMES)))
-                templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_STR_PARNAMES), concatParNames(tableInputModel));
+                templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_STR_PARNAMES), concatCatParNames(tableInputModel));
             if (templateText.contains(createInputSpecificVarPattern(enduserIndex, RGG_ALL_PARNAMES)))
-                templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_ALL_PARNAMES), concatCatParNames(tableInputModel));
+                templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_ALL_PARNAMES), concatParNames(tableInputModel));
 
             if (templateText.contains(createInputSpecificVarPattern(enduserIndex, RGG_CAT_PARNAMES)))
                 templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_CAT_PARNAMES), concatCatParNames(tableInputModel));
