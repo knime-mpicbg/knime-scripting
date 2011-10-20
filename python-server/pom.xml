@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.mpicbg.sweng</groupId>
-    <artifactId>mpicbg-python</artifactId>
+    <artifactId>python-server</artifactId>
     <version>1.1</version>
 
     <dependencies>

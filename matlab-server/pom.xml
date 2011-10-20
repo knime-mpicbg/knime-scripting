@@ -6,7 +6,7 @@
 
     <groupId>de.mpicbg.sweng</groupId>
     <artifactId>matlab-server</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <dependencies>
 
