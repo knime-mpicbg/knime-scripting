@@ -55,7 +55,7 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
 
             String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
 
-            connection.voidEval("tmpwfile = tempfile('openinrnode');");
+            connection.voidEval("tmpwfile = tempfile('openinrnode', fileext='.RData');");
             connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
 
 
