@@ -16,6 +16,8 @@ import java.util.Map;
  */
 public class ScriptTemplate implements Cloneable {
 
+    private String scriptingLanguage = "";
+
     private String author;
 
     private List<String> categories = new ArrayList<String>();
@@ -127,6 +129,13 @@ public class ScriptTemplate implements Cloneable {
         return name;
     }
 
+    public String getScriptingLanguage() {
+        return scriptingLanguage;
+    }
+
+    public void setScriptingLanguage(String scriptingLanguage) {
+        this.scriptingLanguage = scriptingLanguage;
+    }
 
     public static ScriptTemplate parse(String rawTemplateText, URL templateFile) {
 

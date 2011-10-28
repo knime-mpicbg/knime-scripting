@@ -1,6 +1,5 @@
 package de.mpicbg.tds.knime.scripting.python;
 
-import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
 import de.mpicbg.tds.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeDialogPane;
@@ -46,7 +45,7 @@ public class PythonSnippetNodeFactory
         IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
         String templateResources = prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
 
-        return new ScriptingNodeDialog(PythonSnippetNodeModel.DEFAULT_SCRIPT, new PythonColReformatter(), templateResources, true, true);
+        return new PythonSnippetNodeDialog(PythonSnippetNodeModel.DEFAULT_SCRIPT, true, true);
     }
 }
 

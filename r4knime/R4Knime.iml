@@ -9,7 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" name="knimedeps" level="project" />
-    <orderEntry type="module" module-name="scriptingcore" exported="" />
+    <orderEntry type="module" module-name="scriptingcore" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>

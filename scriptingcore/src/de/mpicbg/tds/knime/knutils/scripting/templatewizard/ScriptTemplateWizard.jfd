@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?> 
-<java version="1.6.0_24" class="java.beans.XMLDecoder"> 
+<java version="1.6.0_26" class="java.beans.XMLDecoder"> 
  <object class="com.jformdesigner.model.FormModel"> 
   <void property="contentType"> 
    <string>form/swing</string> 
@@ -176,16 +176,16 @@
             <string>javax.swing.JButton</string> 
             <void method="setProperty"> 
              <string>text</string> 
-             <string>Help</string> 
+             <string>Refresh</string> 
             </void> 
             <void property="name"> 
-             <string>helpButton</string> 
+             <string>refreshButton</string> 
             </void> 
             <void method="addEvent"> 
              <object class="com.jformdesigner.model.FormEvent"> 
               <string>java.awt.event.ActionListener</string> 
               <string>actionPerformed</string> 
-              <string>helpButtonActionPerformed</string> 
+              <string>refreshButtonActionPerformed</string> 
               <boolean>true</boolean> 
              </object> 
             </void> 

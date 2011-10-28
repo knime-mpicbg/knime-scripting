@@ -4,9 +4,6 @@
  */
 package de.mpicbg.tds.knime.scripting.groovy;
 
-import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
-import de.mpicbg.tds.knime.scripting.GroovyScriptingBundleActivator;
-import de.mpicbg.tds.knime.scripting.prefs.GroovyScriptingPreferenceInitializer;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -59,8 +56,8 @@ public class GroovyScript21NodeFactory extends NodeFactory {
      */
     public NodeDialogPane createNodeDialogPane() {
 
-        String templateResources = GroovyScriptingBundleActivator.getDefault().getPreferenceStore().getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES);
-        return new ScriptingNodeDialog(GroovyScriptNodeModel.DEFAULT_SCRIPT, new GroovyColReformatter(), templateResources, true, true);
+        //String templateResources = GroovyScriptingBundleActivator.getDefault().getPreferenceStore().getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES);
+        return new GroovyScriptNodeDialog(GroovyScriptNodeModel.DEFAULT_SCRIPT, true, true);
     }
 
 }

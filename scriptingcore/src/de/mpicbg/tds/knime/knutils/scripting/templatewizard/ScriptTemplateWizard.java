@@ -4,8 +4,8 @@
 
 package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
-import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplatePref;
-import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplatePrefString;
+import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
+import de.mpicbg.tds.knime.knutils.scripting.TemplateCache;
 import de.mpicbg.tds.knime.knutils.scripting.rgg.Template2Html;
 
 import javax.imageio.ImageIO;
@@ -23,13 +23,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 
@@ -43,27 +42,54 @@ public class ScriptTemplateWizard extends JSplitPane {
 
     private List<UseTemplateListener> useTemplateListeners = new ArrayList<UseTemplateListener>();
     public List<ScriptTemplate> templates;
-    private List<URL> templateDefinitionURLs;
+    //private List<URL> templateDefinitionURLs;
 
-    private static List<URL> parseConcatendatedURLs(String templateFilePaths) {
-        /*List<URL> urls = new ArrayList<URL>();
-        for (String path : templateFilePaths.split(";")) {
-            try {
-                URL url = new URL(path);
+    private ScriptingNodeDialog parentDialog;
 
-                // make sure that the url is valid
-                url.openStream().close();
+    public ScriptTemplateWizard(ScriptingNodeDialog parent, List<ScriptTemplate> templates) {
+        this.templates = templates;
+        this.parentDialog = parent;
 
-                urls.add(url);
+        initComponents();
 
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+        categoryTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode());
+        categoryTree.setRootVisible(false);
+        categoryTree.setModel(categoryTreeModel);
+
+        repopulateTemplateTree(null);
+
+        descContainerSplitPanel.setDividerLocation(0.0);
+
+        // register the selection listener
+        categoryTree.addTreeSelectionListener(new TreeSelectionListener() {
+            public void valueChanged(TreeSelectionEvent evt) {
+                // Get all nodes whose selection status has changed
+
+                TreePath selectionPath = categoryTree.getSelectionPath();
+                if (selectionPath == null) { // this will be the case when the tree is beeing reloaded
+                    setCurrentTemplate(null);
+                    return;
+                }
+
+                Object selectedPathElement = selectionPath.getLastPathComponent();
+                if (selectedPathElement == null) {
+                    setCurrentTemplate(null);
+                    return;
+                }
+
+                Object userObject = ((DefaultMutableTreeNode) selectedPathElement).getUserObject();
+
+                if (userObject instanceof ScriptTemplate) {
+                    ScriptTemplate scriptTemplate = (ScriptTemplate) userObject;
+                    setCurrentTemplate(scriptTemplate);
+                } else {
+                    setCurrentTemplate(null);
+                }
             }
-        }
+        });
+    }
 
-        return urls;*/
+    /*private static List<URL> parseConcatendatedURLs(String templateFilePaths) {
 
         TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
         List<TemplatePref> templateList = tString.parsePrefString();
@@ -80,25 +106,35 @@ public class ScriptTemplateWizard extends JSplitPane {
             }
         }
         return urls;
-    }
+    } */
 
 
     public static void main(String[] args) throws MalformedURLException {
         //String templateFilePath = new String("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt" + ";" + "file:///Volumes/tds/software+tools/KNIME/script-templates/Groovy/tds-groovy-templates.txt");
         String templateFilePath = new String("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/R/TDS_snippet-templates.txt");
 
-        ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(templateFilePath);
+        TemplateCache templateCache = TemplateCache.getInstance();
 
-        JFrame frame = new JFrame();
-        frame.setLayout(new BorderLayout());
-        frame.getContentPane().add(templateWizard);
+        List<URL> urlList = new ArrayList<URL>();
+        urlList.add(new URL(templateFilePath));
+        try {
+            List<ScriptTemplate> templates = templateCache.getTemplateCache(new URL(templateFilePath));
 
-        frame.setSize(new Dimension(800, 700));
-        frame.setVisible(true);
+            ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(null, templates);
+
+            JFrame frame = new JFrame();
+            frame.setLayout(new BorderLayout());
+            frame.getContentPane().add(templateWizard);
+
+            frame.setSize(new Dimension(800, 700));
+            frame.setVisible(true);
+        } catch (IOException e) {
+            System.out.println(e);
+        }
     }
 
 
-    public ScriptTemplateWizard(String templateFilePaths) {
+    /*public ScriptTemplateWizard(String templateFilePaths) {
         templateDefinitionURLs = parseConcatendatedURLs(templateFilePaths);
 
         initComponents();
@@ -138,7 +174,7 @@ public class ScriptTemplateWizard extends JSplitPane {
                 }
             }
         });
-    }
+    }     */
 
 
     private void repopulateTemplateTree(String searchTerm) {
@@ -297,62 +333,39 @@ public class ScriptTemplateWizard extends JSplitPane {
         return node;
     }
 
-
-    private void reloadTemplateTree() {
+    /*private void reloadTemplateTree() {
         List<ScriptTemplate> allTemplates = new ArrayList<ScriptTemplate>();
+        List<String> warnings = new ArrayList<String>();
 
         // parse all files into the view
         for (URL templateFile : templateDefinitionURLs) {
+
+            try {
             allTemplates.addAll(parseTemplateFile(templateFile));
+            } catch (IOException e) {
+                warnings.add(templateFile.toString());
+            }
+
+        }
+
+        if(!warnings.isEmpty()) {
         }
 
         templates = allTemplates;
 
         repopulateTemplateTree(null);
-    }
+    }  */
 
-
-    public static List<ScriptTemplate> parseTemplateFile(URL templateFile) {
-        List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
-        try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(templateFile.openStream()));
-
-            StringBuffer templateBuffer = new StringBuffer();
-
-            String line = reader.readLine();
-            while (line != null) {
-                if (line.startsWith("##########")) {
-                    if (!templateBuffer.toString().trim().isEmpty()) {
-                        templates.add(ScriptTemplate.parse(templateBuffer.toString(), templateFile));
-                        templateBuffer = new StringBuffer();
-                    }
-                } else templateBuffer.append(line + "\n");
-
-                line = reader.readLine();
-            }
-
-            // don't forget the last template
-            templates.add(ScriptTemplate.parse(templateBuffer.toString(), templateFile));
-
-
-        } catch (IOException e) {
-            throw new RuntimeException("Parsing of template failed: " + templateFile, e);
-        }
-
-        return templates;
-    }
-
-
-    private void helpButtonActionPerformed(ActionEvent e) {
+    /*private void helpButtonActionPerformed(ActionEvent e) {
 
         if ((e.getModifiers() & ActionEvent.META_MASK) != 0) {
-            reloadTemplateTree();
+            repopulateTemplateTree(null);
         } else {
             JOptionPane.showMessageDialog(this,
                     "The template-tree is being constructed by parsing the template files as defined in your Knime-preferences.\n" +
                             "You can add or modify the template by simply adopting those files.");
         }
-    }
+    } */
 
 
     private void useTemplateActionPerformed() {
@@ -380,15 +393,13 @@ public class ScriptTemplateWizard extends JSplitPane {
         repopulateTemplateTree(searchTerm);
     }
 
-
+    /**
+     * generates a html-file which provides a template script gallery
+     */
     private void galleryButtonActionPerformed() {
-        Map<URL, String> urls = new HashMap<URL, String>();
-        for (URL templateDefinitionURL : templateDefinitionURLs) {
-            urls.put(templateDefinitionURL, "");
-        }
 
         try {
-            File galleryFile = Template2Html.exportToHtmlFile(urls);
+            File galleryFile = Template2Html.exportToHtmlFile(templates);
 
             Desktop.getDesktop().edit(galleryFile);
         } catch (IOException e) {
@@ -396,10 +407,20 @@ public class ScriptTemplateWizard extends JSplitPane {
         }
     }
 
+    /**
+     * Button "Refresh" pressed: Refresh templates from Preference settings
+     *
+     * @param e
+     */
+    private void refreshButtonActionPerformed(ActionEvent e) {
+        parentDialog.updateUrlList(parentDialog.getTemplatesFromPreferences());
+        templates = parentDialog.updateTemplates();
+        repopulateTemplateTree(null);
+    }
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
-        // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
+        // Generated using JFormDesigner non-commercial license
         panel1 = new JPanel();
         panel7 = new JPanel();
         scrollPane1 = new JScrollPane();
@@ -408,7 +429,7 @@ public class ScriptTemplateWizard extends JSplitPane {
         label2 = new JLabel();
         searchTemplatesTextField = new JTextField();
         panel5 = new JPanel();
-        helpButton = new JButton();
+        refreshButton = new JButton();
         galleryButton = new JButton();
         templateDetailsPanel = new JPanel();
         useTemplate = new JButton();
@@ -483,14 +504,14 @@ public class ScriptTemplateWizard extends JSplitPane {
             {
                 panel5.setLayout(new BorderLayout());
 
-                //---- helpButton ----
-                helpButton.setText("Help");
-                helpButton.addActionListener(new ActionListener() {
+                //---- refreshButton ----
+                refreshButton.setText("Refresh");
+                refreshButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        helpButtonActionPerformed(e);
+                        refreshButtonActionPerformed(e);
                     }
                 });
-                panel5.add(helpButton, BorderLayout.CENTER);
+                panel5.add(refreshButton, BorderLayout.CENTER);
 
                 //---- galleryButton ----
                 galleryButton.setText("Gallery");
@@ -635,7 +656,7 @@ public class ScriptTemplateWizard extends JSplitPane {
 
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
-    // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
+    // Generated using JFormDesigner non-commercial license
     private JPanel panel1;
     private JPanel panel7;
     private JScrollPane scrollPane1;
@@ -644,7 +665,7 @@ public class ScriptTemplateWizard extends JSplitPane {
     private JLabel label2;
     private JTextField searchTemplatesTextField;
     private JPanel panel5;
-    private JButton helpButton;
+    private JButton refreshButton;
     private JButton galleryButton;
     private JPanel templateDetailsPanel;
     private JButton useTemplate;

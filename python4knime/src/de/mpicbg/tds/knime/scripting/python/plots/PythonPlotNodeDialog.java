@@ -2,6 +2,8 @@ package de.mpicbg.tds.knime.scripting.python.plots;
 
 import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
 import de.mpicbg.tds.knime.scripting.python.PythonColReformatter;
+import de.mpicbg.tds.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.tds.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
@@ -17,7 +19,7 @@ import javax.swing.*;
 public class PythonPlotNodeDialog extends ScriptingNodeDialog {
 
     public PythonPlotNodeDialog(String templateResources, String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new PythonColReformatter(), templateResources, false, useTemplateRepository);
+        super(defaultScript, new PythonColReformatter(), false, useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentNumber(PythonPlotNodeFactory.createPropFigureWidth(), "Width", 10));
@@ -41,5 +43,10 @@ public class PythonPlotNodeDialog extends ScriptingNodeDialog {
 
 //            addDialogComponent(new DialogComponentStringSelection(createPropOutputType(), "Type", Arrays.asList("png", "jpg", "pdf", "svg")));
 
+    }
+
+    @Override
+    public String getTemplatesFromPreferences() {
+        return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES);
     }
 }

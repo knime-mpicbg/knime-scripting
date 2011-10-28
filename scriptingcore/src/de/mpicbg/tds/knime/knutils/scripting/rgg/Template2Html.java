@@ -21,8 +21,8 @@
 
 package de.mpicbg.tds.knime.knutils.scripting.rgg;
 
+import de.mpicbg.tds.knime.knutils.scripting.ScriptTemplateFile;
 import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplate;
-import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplateWizard;
 
 import java.awt.*;
 import java.io.File;
@@ -43,6 +43,12 @@ import java.util.Map;
  */
 public class Template2Html {
 
+    private Map<URL, String> templateUrls;
+
+    public Template2Html(Map<URL, String> figurls) {
+        this.templateUrls = figurls;
+    }
+
     public static void main(String[] args) throws IOException {
 
         // Figure templates
@@ -51,10 +57,8 @@ public class Template2Html {
         figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt"), "Python");
         figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt"), "R");
 
-        File figureGalleryFile = new File("/Volumes/knime/scripting-templates_public/figure-template-gallery.html");
-        exportToHtmlFile(figurls, figureGalleryFile);
-        Desktop.getDesktop().edit(figureGalleryFile);
-        System.err.println("file is " + figureGalleryFile);
+        Template2Html templateUrls = new Template2Html(figurls);
+        templateUrls.exportTemplates(args[0] + "/figure-template-gallery.html");
 
         // Script templates
         Map<URL, String> scrurls = new HashMap<URL, String>();
@@ -63,27 +67,39 @@ public class Template2Html {
         scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt"), "R");
         scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Groovy/Groovy-templates.txt"), "Groovy");
 
-        File scriptGalleryFile = new File("/Volumes/knime/scripting-templates_public/script-template-gallery.html");
-        exportToHtmlFile(scrurls, scriptGalleryFile);
-        Desktop.getDesktop().edit(scriptGalleryFile);
-        System.err.println("file is " + scriptGalleryFile);
+        templateUrls = new Template2Html(scrurls);
+        templateUrls.exportTemplates(args[0] + "/script-template-gallery.html");
+    }
+
+    public void exportTemplates(String destinationFile) throws IOException {
+        File figureGalleryFile = new File(destinationFile);
+        writeToHtmlFile(getTemplateList(templateUrls), figureGalleryFile);
+        Desktop.getDesktop().edit(figureGalleryFile);
+        System.err.println("file is " + figureGalleryFile);
     }
 
 
-    public static File exportToHtmlFile(Map<URL, String> urls) throws IOException {
+    public static File exportToHtmlFile(List<ScriptTemplate> scriptTemplates) throws IOException {
         File galleryFile = File.createTempFile("templateGallery", ".html");
-        exportToHtmlFile(urls, galleryFile);
+
+        writeToHtmlFile(scriptTemplates, galleryFile);
         return galleryFile;
     }
 
+    public static List<ScriptTemplate> getTemplateList(Map<URL, String> urls) throws IOException {
 
-    public static void exportToHtmlFile(Map<URL, String> urls, File outputFileName) throws IOException {
-        List<ExportTemplate> scriptTemplates = new ArrayList<ExportTemplate>();
+        List scriptTemplates = new ArrayList<ScriptTemplate>();
         for (URL url : urls.keySet()) {
-            List<ScriptTemplate> basicTemplates = ScriptTemplateWizard.parseTemplateFile(url);
-            scriptTemplates.addAll(ExportTemplate.convert(urls.get(url), basicTemplates));
+            ScriptTemplateFile scriptTemplateFile = new ScriptTemplateFile(url);
+            if (!scriptTemplateFile.isEmpty()) {
+                scriptTemplateFile.setScriptingLanguage(urls.get(url));
+                scriptTemplates.addAll(scriptTemplateFile.templates);
+            }
         }
+        return scriptTemplates;
+    }
 
+    public static void writeToHtmlFile(List<ScriptTemplate> scriptTemplates, File outputFileName) throws IOException {
         FileWriter outFile = new FileWriter(outputFileName);
         PrintWriter out = new PrintWriter(outFile);
 
@@ -92,7 +108,7 @@ public class Template2Html {
                 "\n" +
                 "<h1>Scripting Template Gallery</h1>\n" +
                 "\n" +
-                "<p>This page lists all scripting templates available for the various scripting plot nodes in Knime.</p>\n");
+                "<p>This page lists all scripting templates available for the various scripting nodes in Knime.</p>\n");
 
 
         out.print("<table border=\"1\">\n" +
@@ -105,8 +121,7 @@ public class Template2Html {
                 "<th>Language</th>\n" +
                 "</tr>\n");
 
-        for (ExportTemplate exportTemplate : scriptTemplates) {
-            ScriptTemplate scriptTemplate = exportTemplate.template;
+        for (ScriptTemplate scriptTemplate : scriptTemplates) {
             if (scriptTemplate != null) {
                 out.print("<tr>\n" + "<td width=\"200\">" + scriptTemplate.getName() + "</td>\n");
 
@@ -120,7 +135,7 @@ public class Template2Html {
                 out.print("<td>" + scriptTemplate.getDescription() + "</td>\n" +
                         "<td>" + scriptTemplate.getCategories().toString().replace("[", "").replace("]", "").trim() + "</td>\n" +
                         "<td>" + scriptTemplate.getAuthor() + "</td>\n" +
-                        "<td>" + exportTemplate.scriptingLanguage + " </td>\n");
+                        "<td>" + scriptTemplate.getScriptingLanguage() + " </td>\n");
 
                 out.print("</tr>\n");
             }
@@ -140,7 +155,7 @@ public class Template2Html {
 }
 
 
-class ExportTemplate {
+/*class ExportTemplate {
 
     String scriptingLanguage;
     ScriptTemplate template;
@@ -161,3 +176,4 @@ class ExportTemplate {
         return exTemplates;
     }
 }
+    */

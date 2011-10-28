@@ -6,10 +6,7 @@ import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplate;
 import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplateWizard;
 import de.mpicbg.tds.knime.knutils.scripting.templatewizard.UseTemplateListenerImpl;
 import org.apache.commons.lang.StringUtils;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -19,7 +16,11 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static de.mpicbg.tds.knime.knutils.scripting.AbstractTableScriptingNodeModel.*;
 
@@ -29,9 +30,11 @@ import static de.mpicbg.tds.knime.knutils.scripting.AbstractTableScriptingNodeMo
  *
  * @author Holger Brandl
  */
-public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
+public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     public static final String SCRIPT_TAB_NAME = "Script Editor";
+
+    private static final NodeLogger logger = NodeLogger.getLogger(ScriptingNodeDialog.class);
 
     private JTable table;
     private int outTableDefCounter = 1;
@@ -40,6 +43,7 @@ public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     private String defaultScript;
     private boolean hasOutput;
+    private List<URL> urlList;
 
     // the two main user interface elements: the template editor/configurator and the template repository browser
     private ScriptProvider scriptProvider;
@@ -60,7 +64,7 @@ public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     /**
      * New pane for configuring ScriptedNode node dialog
      */
-    public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, String templateResources, boolean hasOutput, boolean enableTemplateRepository) {
+    public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean hasOutput, boolean enableTemplateRepository) {
         this.defaultScript = defaultScript;
         this.hasOutput = hasOutput;
 
@@ -74,7 +78,26 @@ public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         // create the template repository browser tab (if enabled)
         if (enableTemplateRepository) {
-            templateWizard = new ScriptTemplateWizard(templateResources);
+
+            // parse URLs and update the cache
+            /*TemplateCache templateCache = TemplateCache.getInstance();
+            List<URL> urlList = templateCache.parseConcatendatedURLs(templateResources);
+            List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
+            List<String> warnings = new ArrayList<String>();
+            for(URL filePath : urlList) {
+                try {
+                    templates.addAll(templateCache.getTemplateCache(filePath));
+                } catch (IOException e) { warnings.add(e.getMessage()); }
+            }
+            // show warning if files are empty or could not be read
+            if(!warnings.isEmpty()) {
+                logger.warn(warnings);
+            }     */
+            updateUrlList(getTemplatesFromPreferences());
+            List<ScriptTemplate> templates = updateTemplates();
+
+            //templateWizard = new ScriptTemplateWizard(templateResources);
+            templateWizard = new ScriptTemplateWizard(this, templates);
             templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
             this.addTabAt(1, "Templates", templateWizard);
         }
@@ -86,6 +109,16 @@ public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         removeTab("Options");
         selectTab(SCRIPT_TAB_NAME);
+    }
+
+    /**
+     * parses a preference string and fills list of URLs
+     *
+     * @param templatesFromPreferences
+     */
+    public void updateUrlList(String templatesFromPreferences) {
+        TemplateCache templateCache = TemplateCache.getInstance();
+        urlList = templateCache.parseConcatendatedURLs(templatesFromPreferences);
     }
 
 
@@ -334,5 +367,28 @@ public class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public void setHardwiredTemplate(ScriptTemplate predefinedTemplate) {
         scriptProvider.getTemplateConfigurator().enableConfigureTemplateButton(false);
         this.hardwiredTemplate = predefinedTemplate;
+    }
+
+    public abstract String getTemplatesFromPreferences();
+
+    public List<ScriptTemplate> updateTemplates() {
+        TemplateCache templateCache = TemplateCache.getInstance();
+
+        List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
+        List<String> warnings = new ArrayList<String>();
+        for (URL filePath : urlList) {
+            try {
+                templates.addAll(templateCache.getTemplateCache(filePath));
+            } catch (IOException e) {
+                warnings.add(e.getMessage());
+            }
+        }
+
+        // show warning if files are empty or could not be read
+        if (!warnings.isEmpty()) {
+            logger.warn(warnings);
+        }
+
+        return templates;
     }
 }

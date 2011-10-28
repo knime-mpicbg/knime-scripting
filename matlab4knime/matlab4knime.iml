@@ -8,45 +8,23 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/cajo-1.134.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
+    <orderEntry type="module" module-name="scriptingcore" exported="" />
+    <orderEntry type="library" name="knimedeps" level="project" />
+    <orderEntry type="module-library">
+      <library name="matlab4knime">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/matlab-jmi-2009b.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/commons-math-2.0.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/cajo-1.134.jar!/" />
           <root url="jar://$MODULE_DIR$/lib/jmatlink-1.3.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/commons-math-2.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/junit-4.7.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/matlab-server-1.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="knimedeps" level="project" />
-    <orderEntry type="module" module-name="scriptingcore" exported="" />
-    <orderEntry type="module" module-name="matlab-server" exported="" />
+    <orderEntry type="module" module-name="matlab-server" />
   </component>
 </module>
 

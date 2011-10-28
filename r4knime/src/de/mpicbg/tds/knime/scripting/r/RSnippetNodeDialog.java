@@ -1,8 +1,7 @@
 package de.mpicbg.tds.knime.scripting.r;
 
-import de.mpicbg.tds.knime.knutils.scripting.ColNameReformater;
 import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
-import org.knime.core.data.DataType;
+import de.mpicbg.tds.knime.scripting.r.prefs.RPreferenceInitializer;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 
 
@@ -17,34 +16,21 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
  */
 public class RSnippetNodeDialog extends ScriptingNodeDialog {
 
-
     /**
      * New pane for configuring ScriptedNode node dialog
      *
      * @param defaultScript
-     * @param templateResources
      * @param hasOutput
      * @param useTemplateRepository
      */
-    public RSnippetNodeDialog(String defaultScript, String templateResources, boolean hasOutput, boolean useTemplateRepository) {
-        super(defaultScript, new RColNameReformater(), templateResources, hasOutput, useTemplateRepository);
+    public RSnippetNodeDialog(String defaultScript, boolean hasOutput, boolean useTemplateRepository) {
+        super(defaultScript, new RColNameReformater(), hasOutput, useTemplateRepository);
+    }
+
+    @Override
+    public String getTemplatesFromPreferences() {
+        return R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);
     }
 
 
-    private static class RColNameReformater implements ColNameReformater {
-
-        public String reformat(String name, DataType type, boolean altDown) {
-
-            if (altDown) {
-                if (name.contains(" ")) {
-                    return RSnippetNodeModel.R_INVAR_BASE_NAME + "$\"" + name + "\"";
-                } else {
-                    return RSnippetNodeModel.R_INVAR_BASE_NAME + "$" + name + "";
-                }
-
-            } else {
-                return "\"" + name + "\"";
-            }
-        }
-    }
 }

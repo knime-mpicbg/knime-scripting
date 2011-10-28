@@ -1,7 +1,5 @@
 package de.mpicbg.tds.knime.scripting.r.plots;
 
-import de.mpicbg.tds.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.tds.knime.scripting.r.prefs.RPreferenceInitializer;
 import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -38,8 +36,9 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_PLOT_TEMPLATES);
-        return new RPlotNodeDialog(templateResources, AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
+        //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_PLOT_TEMPLATES);
+        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), false, enableTemplateRepository());
+        //return new RPlotNodeDialog(templateResources, AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
     }
 
 

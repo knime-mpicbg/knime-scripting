@@ -1,5 +1,6 @@
 package de.mpicbg.tds.knime.knutils.scripting.prefs;
 
+import de.mpicbg.tds.knime.knutils.scripting.TemplateCache;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -135,6 +136,11 @@ public class TemplateTableEditor extends FieldEditor {
         emptyLabel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1));
     }
 
+    /**
+     * Event handling method to make template active or inactive
+     *
+     * @param event
+     */
     private void checkBoxClicked(Event event) {
         TableItem checkedItem = (TableItem) event.item;
         boolean isChecked = checkedItem.getChecked();
@@ -151,6 +157,8 @@ public class TemplateTableEditor extends FieldEditor {
             TemplatePref tPref = iterator.next();
             if (tPref.getUri().equals(templateTable.getItem(tIdx).getText(0))) {
                 tPref.setActive(isChecked);
+                if (isChecked) addFileToCache(tPref.getUri());
+                else removeFileFromCache(tPref.getUri());
             }
         }
     }
@@ -183,6 +191,8 @@ public class TemplateTableEditor extends FieldEditor {
                 TemplatePref tPref = iterator.next();
                 if (tPref.getUri().equals(templateTable.getItem(tIdx[i]).getText(0))) {
                     toRemove.add(tPref);
+
+                    removeFileFromCache(tPref.getUri());
                 }
             }
         }
@@ -193,8 +203,10 @@ public class TemplateTableEditor extends FieldEditor {
     }
 
     private void addURI(String newURI) {
+
         try {
             validateURI(newURI);
+
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
             messageDialog.setText("Exception");
@@ -209,6 +221,8 @@ public class TemplateTableEditor extends FieldEditor {
         newTemplate.setActive(true);
 
         templateList.add(newTemplate);
+
+        addFileToCache(newURI);
 
         fillTable();
     }
@@ -249,6 +263,9 @@ public class TemplateTableEditor extends FieldEditor {
         fillTable();
     }
 
+    /**
+     * update graphical representation
+     */
     private void fillTable() {
         templateTable.removeAll();
 
@@ -258,7 +275,41 @@ public class TemplateTableEditor extends FieldEditor {
             TableItem tItem = new TableItem(templateTable, SWT.NONE);
             tItem.setText(tPref.getUri());
             tItem.setChecked(tPref.isActive());
+
+            if (tPref.isActive()) tItem.setForeground(black);
+            else tItem.setForeground(gray);
         }
+    }
+
+    /**
+     * adds the given file to the template cache
+     *
+     * @param uri
+     */
+    private void addFileToCache(String uri) {
+        // add script to cache
+        try {
+            URL newUrl = new URL(uri);
+            TemplateCache templateCache = TemplateCache.getInstance();
+            templateCache.getTemplateCache(newUrl);
+        } catch (IOException e) {
+            MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
+            messageDialog.setText("Exception");
+            messageDialog.setMessage("Failed to add file to template cache\n\n" + e.getMessage());
+            messageDialog.open();
+            return;
+        }
+    }
+
+    /**
+     * removes a given file from the template cache
+     *
+     * @param uri
+     */
+    private void removeFileFromCache(String uri) {
+        // remove script from cache
+        TemplateCache templateCache = TemplateCache.getInstance();
+        if (templateCache.contains(uri)) templateCache.remove(uri);
     }
 
     @Override

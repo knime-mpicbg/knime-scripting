@@ -1,6 +1,5 @@
 package de.mpicbg.tds.knime.scripting.matlab;
 
-import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
 import de.mpicbg.tds.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeDialogPane;
@@ -46,7 +45,7 @@ public class MatlabSnippetNodeFactory
         IPreferenceStore prefStore = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
         String templateResources = prefStore.getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES);
 
-        return new ScriptingNodeDialog(MatlabSnippetNodeModel.DEFAULT_SCRIPT, new MatlabColReformatter(), templateResources, true, true);
+        return new MatlabSnippetNodeDialog(MatlabSnippetNodeModel.DEFAULT_SCRIPT, true, true);
     }
 }
 
