@@ -2,7 +2,6 @@ package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
 import org.apache.commons.lang.StringUtils;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -137,7 +136,7 @@ public class ScriptTemplate implements Cloneable {
         this.scriptingLanguage = scriptingLanguage;
     }
 
-    public static ScriptTemplate parse(String rawTemplateText, URL templateFile) {
+    public static ScriptTemplate parse(String rawTemplateText, String templateFile) {
 
         String[] lines = rawTemplateText.split("\n");
 
@@ -147,7 +146,7 @@ public class ScriptTemplate implements Cloneable {
 
         ScriptTemplate template = new ScriptTemplate();
 
-        template.setTemplateURL(templateFile.toString());
+        template.setTemplateURL(templateFile);
 
         int rowCounter = 0;
         if (lines[rowCounter].contains("name")) {
@@ -170,7 +169,7 @@ public class ScriptTemplate implements Cloneable {
             String previewURL = lines[rowCounter++].split("preview[:]")[1];
             if (!StringUtils.isBlank(previewURL)) {
                 // add a prefix if relative url
-                String rootLocation = templateFile.toString().substring(0, templateFile.toString().lastIndexOf("/") + 1);
+                String rootLocation = templateFile.substring(0, templateFile.lastIndexOf("/") + 1);
                 previewURL = previewURL.contains("://") ? previewURL : rootLocation + previewURL.trim();
 
                 template.setPreviewURL(previewURL);

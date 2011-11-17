@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,29 +42,29 @@ import java.util.Map;
  */
 public class Template2Html {
 
-    private Map<URL, String> templateUrls;
+    private Map<String, String> templateUrls;
 
-    public Template2Html(Map<URL, String> figurls) {
+    public Template2Html(Map<String, String> figurls) {
         this.templateUrls = figurls;
     }
 
     public static void main(String[] args) throws IOException {
 
         // Figure templates
-        Map<URL, String> figurls = new HashMap<URL, String>();
-        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt"), "Matlab");
-        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt"), "Python");
-        figurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt"), "R");
+        Map<String, String> figurls = new HashMap<String, String>();
+        figurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt", "Matlab");
+        figurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/figure-templates.txt", "Python");
+        figurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt", "R");
 
         Template2Html templateUrls = new Template2Html(figurls);
         templateUrls.exportTemplates(args[0] + "/figure-template-gallery.html");
 
         // Script templates
-        Map<URL, String> scrurls = new HashMap<URL, String>();
-        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt"), "Matlab");
-        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/script-templates.txt"), "Python");
-        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt"), "R");
-        scrurls.put(new URL("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Groovy/Groovy-templates.txt"), "Groovy");
+        Map<String, String> scrurls = new HashMap<String, String>();
+        scrurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt", "Matlab");
+        scrurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Python/script-templates.txt", "Python");
+        scrurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt", "R");
+        scrurls.put("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Groovy/Groovy-templates.txt", "Groovy");
 
         templateUrls = new Template2Html(scrurls);
         templateUrls.exportTemplates(args[0] + "/script-template-gallery.html");
@@ -86,10 +85,10 @@ public class Template2Html {
         return galleryFile;
     }
 
-    public static List<ScriptTemplate> getTemplateList(Map<URL, String> urls) throws IOException {
+    public static List<ScriptTemplate> getTemplateList(Map<String, String> urls) throws IOException {
 
         List scriptTemplates = new ArrayList<ScriptTemplate>();
-        for (URL url : urls.keySet()) {
+        for (String url : urls.keySet()) {
             ScriptTemplateFile scriptTemplateFile = new ScriptTemplateFile(url);
             if (!scriptTemplateFile.isEmpty()) {
                 scriptTemplateFile.setScriptingLanguage(urls.get(url));

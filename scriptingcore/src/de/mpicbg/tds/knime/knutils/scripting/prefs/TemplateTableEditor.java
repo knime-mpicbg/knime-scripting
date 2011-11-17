@@ -289,9 +289,8 @@ public class TemplateTableEditor extends FieldEditor {
     private void addFileToCache(String uri) {
         // add script to cache
         try {
-            URL newUrl = new URL(uri);
             TemplateCache templateCache = TemplateCache.getInstance();
-            templateCache.getTemplateCache(newUrl);
+            templateCache.getTemplateCache(uri);
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
             messageDialog.setText("Exception");

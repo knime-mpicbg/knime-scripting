@@ -5,8 +5,6 @@ import de.mpicbg.tds.knime.knutils.scripting.prefs.TemplatePrefString;
 import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplate;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +23,8 @@ import java.util.Map;
 public class TemplateCache {
     private static TemplateCache ourInstance = new TemplateCache();
 
-    private Map<URL, ScriptTemplateFile> templateCache = new HashMap<URL, ScriptTemplateFile>();
+    private Map<String, ScriptTemplateFile> templateCache = new HashMap<String, ScriptTemplateFile>();
+    //private Map<URL, ScriptTemplateFile> templateCache = new HashMap<URL, ScriptTemplateFile>();
 
     public static TemplateCache getInstance() {
         return ourInstance;
@@ -40,7 +39,7 @@ public class TemplateCache {
      * @param filePath
      * @return list of templates
      */
-    public List<ScriptTemplate> getTemplateCache(URL filePath) throws IOException {
+    public List<ScriptTemplate> getTemplateCache(String filePath) throws IOException {
         List<ScriptTemplate> templates = null;
         // test if file already has been loaded
         if (!templateCache.containsKey(filePath)) {
@@ -60,16 +59,20 @@ public class TemplateCache {
     /**
      * reloads all given templateFiles into the Cache
      *
-     * @param templateFiles
+     * @param filePath
      */
-    public void updateTemplateCache(List<URL> templateFiles) throws IOException {
+    public List<ScriptTemplate> updateTemplateCache(String filePath) throws IOException {
 
-        for (URL filePath : templateFiles) {
-            ScriptTemplateFile reloadedTemplate = new ScriptTemplateFile(filePath);
-            if (!reloadedTemplate.isEmpty()) {
-                templateCache.put(filePath, reloadedTemplate);
-            } else throw new IOException(filePath + " is empty or cannot be accessed.");
-        }
+        List<ScriptTemplate> templates = null;
+
+        templateCache.remove(filePath);
+        ScriptTemplateFile reloadedTemplate = new ScriptTemplateFile(filePath);
+        if (!reloadedTemplate.isEmpty()) {
+            templateCache.put(filePath, reloadedTemplate);
+            templates = templateCache.get(filePath).templates;
+        } else throw new IOException(filePath + " is empty or cannot be accessed.");
+
+        return templates;
     }
 
     /**
@@ -79,20 +82,21 @@ public class TemplateCache {
      * @return List of active URLs
      * @see TemplatePrefString
      */
-    public List<URL> parseConcatendatedURLs(String templateFilePaths) {
+    public List<String> parseConcatendatedURLs(String templateFilePaths) {
 
         TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
         List<TemplatePref> templateList = tString.parsePrefString();
-        List<URL> urls = new ArrayList<URL>();
+        List<String> urls = new ArrayList<String>();
 
         for (TemplatePref pref : templateList) {
             if (pref.isActive()) {
-                try {
+                urls.add(pref.getUri());
+                /*try {
                     URL newURL = new URL(pref.getUri());
                     urls.add(newURL);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-                }
+                }    */
             }
         }
         return urls;

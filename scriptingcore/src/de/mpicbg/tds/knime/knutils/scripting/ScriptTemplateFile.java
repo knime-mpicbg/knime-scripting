@@ -19,13 +19,13 @@ import java.util.List;
  */
 public class ScriptTemplateFile {
 
-    private URL filePath;
+    private String filePath;
     public List<ScriptTemplate> templates;
 
     /**
      * @param filePath location of template file
      */
-    public ScriptTemplateFile(URL filePath) {
+    public ScriptTemplateFile(String filePath) {
         this.filePath = filePath;
         parseTemplateFile();
     }
@@ -36,8 +36,10 @@ public class ScriptTemplateFile {
     private void parseTemplateFile() {
         templates = new ArrayList<ScriptTemplate>();
 
+
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(filePath.openStream()));
+            URL fileUrl = new URL(filePath);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(fileUrl.openStream()));
 
             StringBuffer templateBuffer = new StringBuffer();
 

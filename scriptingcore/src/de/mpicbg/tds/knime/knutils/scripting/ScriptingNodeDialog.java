@@ -17,7 +17,6 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +42,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     private String defaultScript;
     private boolean hasOutput;
-    private List<URL> urlList;
+    private List<String> urlList;
 
     // the two main user interface elements: the template editor/configurator and the template repository browser
     private ScriptProvider scriptProvider;
@@ -376,9 +375,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
         List<String> warnings = new ArrayList<String>();
-        for (URL filePath : urlList) {
+
+        for (String filePath : urlList) {
             try {
-                templates.addAll(templateCache.getTemplateCache(filePath));
+                templates.addAll(templateCache.updateTemplateCache(filePath));
             } catch (IOException e) {
                 warnings.add(e.getMessage());
             }

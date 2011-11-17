@@ -118,7 +118,7 @@ public class ScriptTemplateWizard extends JSplitPane {
         List<URL> urlList = new ArrayList<URL>();
         urlList.add(new URL(templateFilePath));
         try {
-            List<ScriptTemplate> templates = templateCache.getTemplateCache(new URL(templateFilePath));
+            List<ScriptTemplate> templates = templateCache.getTemplateCache(templateFilePath);
 
             ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(null, templates);
 
@@ -274,7 +274,8 @@ public class ScriptTemplateWizard extends JSplitPane {
                     descContainerSplitPanel.setDividerLocation(0.5);
 
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    //throw new RuntimeException(e);
+                    previewImagePanel.setImage(null);
                 }
 
             } else {
