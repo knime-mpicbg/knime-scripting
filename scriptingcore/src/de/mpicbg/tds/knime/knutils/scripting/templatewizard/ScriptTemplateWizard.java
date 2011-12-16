@@ -6,7 +6,7 @@ package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
 import de.mpicbg.tds.knime.knutils.scripting.ScriptingNodeDialog;
 import de.mpicbg.tds.knime.knutils.scripting.TemplateCache;
-import de.mpicbg.tds.knime.knutils.scripting.rgg.Template2Html;
+import de.mpicbg.tds.knime.knutils.scripting.utils.Template2Html;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

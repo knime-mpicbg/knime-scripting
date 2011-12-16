@@ -19,7 +19,7 @@
  *     also see <http://www.gnu.org/licenses/>.
  */
 
-package de.mpicbg.tds.knime.knutils.scripting.rgg;
+package de.mpicbg.tds.knime.knutils.scripting.utils;
 
 import de.mpicbg.tds.knime.knutils.scripting.ScriptTemplateFile;
 import de.mpicbg.tds.knime.knutils.scripting.templatewizard.ScriptTemplate;
