@@ -55,9 +55,9 @@ public class PythonTableConverter {
 
                     // Create the cell based on the column type
                     try {
-                        if (colSpec.getType().equals(IntCell.TYPE)) {
+                        if (colSpec.getType().isCompatible(IntValue.class)) {
                             cells[i] = new IntCell(Integer.parseInt(line[i]));
-                        } else if (colSpec.getType().equals(DoubleCell.TYPE))
+                        } else if (colSpec.getType().isCompatible(DoubleValue.class))
                             cells[i] = new DoubleCell(Double.parseDouble(line[i]));
                         else cells[i] = new StringCell(line[i]);
                     } catch (NumberFormatException e) {

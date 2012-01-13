@@ -292,7 +292,7 @@ public class RUtils {
                         specCreator.setDomain(new DataColumnDomainCreator(domain).createDomain());
                     }
 
-                } else if (colSpec.getType().equals(IntCell.TYPE) || curColumn.isLogical()) {    // there's no boolean-cell-type in knime, thus we use int
+                } else if (colSpec.getType().isCompatible(IntValue.class) || curColumn.isLogical()) {    // there's no boolean-cell-type in knime, thus we use int
                     int[] intColumn = curColumn.asIntegers();
 
                     for (int i = 0; i < numExamples; i++) {

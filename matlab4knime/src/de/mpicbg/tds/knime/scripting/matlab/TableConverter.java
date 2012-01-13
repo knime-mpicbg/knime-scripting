@@ -179,14 +179,14 @@ public class TableConverter {
             DataColumnSpec colSpec = colSpecs[colIndex];
             Object curColumn = columnData.get(colSpec);
 
-            if (colSpec.getType().equals(DoubleCell.TYPE)) {
+            if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 double[] doubleColumn = (double[]) curColumn;
 
                 for (int rowIndex = 0; rowIndex < numExamples; rowIndex++) {
                     cells[rowIndex][colIndex] = new DoubleCell(doubleColumn[rowIndex]);
                 }
 
-            } else if (colSpec.getType().equals(StringCell.TYPE)) {
+            } else if (colSpec.getType().isCompatible(StringValue.class)) {
                 String[] stringColumn = (String[]) curColumn;
 
                 for (int rowIndex = 0; rowIndex < numExamples; rowIndex++) {
@@ -317,11 +317,11 @@ public class TableConverter {
         int numSamples = -1;
         Attribute firstAttribute = colAttributes.get(0);
         Object colData = dataFromMatlab.get(firstAttribute.getName());
-        if (firstAttribute.getType().equals(DoubleCell.TYPE)) {
+        if (firstAttribute.getType().isCompatible(DoubleValue.class)) {
             numSamples = ((double[]) colData).length;
-        } else if ((firstAttribute.getType().equals(IntCell.TYPE))) {
+        } else if ((firstAttribute.getType().isCompatible(IntValue.class))) {
             numSamples = ((int[]) colData).length;
-        } else if (firstAttribute.getType().equals(StringCell.TYPE)) {
+        } else if (firstAttribute.getType().isCompatible(StringValue.class)) {
             numSamples = ((String[]) colData).length;
         }
 
@@ -334,19 +334,19 @@ public class TableConverter {
             Attribute columnAttribute = colAttributes.get(colIndex);
             Object curColumn = dataFromMatlab.get(columnAttribute.getName());
 
-            if (columnAttribute.getType().equals(DoubleCell.TYPE)) {
+            if (columnAttribute.getType().isCompatible(DoubleValue.class)) {
                 double[] doubleColumn = (double[]) curColumn;
                 columnLength = doubleColumn.length;
                 for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
                     cells[rowIndex][colIndex] = new DoubleCell(doubleColumn[rowIndex]);
                 }
-            } else if (columnAttribute.getType().equals(IntCell.TYPE)) {
+            } else if (columnAttribute.getType().isCompatible(IntValue.class)) {
                 int[] intColumn = (int[]) curColumn;
                 columnLength = intColumn.length;
                 for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
                     cells[rowIndex][colIndex] = new IntCell(intColumn[rowIndex]);
                 }
-            } else if (columnAttribute.getType().equals(StringCell.TYPE)) {
+            } else if (columnAttribute.getType().isCompatible(StringValue.class)) {
                 String[] stringColumn = (String[]) curColumn;
                 columnLength = stringColumn.length;
                 for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {

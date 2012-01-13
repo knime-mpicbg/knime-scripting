@@ -1,7 +1,7 @@
 package de.mpicbg.tds.knime.knutils;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.util.ColumnFilter;
 
 
@@ -13,7 +13,7 @@ import org.knime.core.node.util.ColumnFilter;
 public class StringFilter implements ColumnFilter {
 
     public boolean includeColumn(DataColumnSpec dataColumnSpec) {
-        return dataColumnSpec.getType().equals(StringCell.TYPE);
+        return dataColumnSpec.getType().isCompatible(StringValue.class);
     }
 
 

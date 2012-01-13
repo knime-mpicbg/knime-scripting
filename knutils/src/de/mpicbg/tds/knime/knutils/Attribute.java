@@ -1,7 +1,9 @@
 package de.mpicbg.tds.knime.knutils;
 
 import org.knime.core.data.*;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -14,8 +16,6 @@ import java.util.GregorianCalendar;
 
 
 /**
- * Document me!
- *
  * @author Holger Brandl
  */
 public class Attribute<AttributeType> {
@@ -62,7 +62,7 @@ public class Attribute<AttributeType> {
             return DataType.getMissingCell();
         }
 
-        if (getType().equals(DoubleCell.TYPE)) {
+        if (getType().isCompatible(DoubleValue.class)) {
             if (value instanceof String) {
                 if (((String) value).trim().isEmpty()) {
                     return DataType.getMissingCell();
@@ -77,7 +77,7 @@ public class Attribute<AttributeType> {
 
             return new DoubleCell((Double) value);
 
-        } else if (getType().equals(IntCell.TYPE)) {
+        } else if (getType().isCompatible(IntValue.class)) {
             if (value instanceof String) {
                 if (((String) value).trim().isEmpty()) {
                     return DataType.getMissingCell();
@@ -88,11 +88,11 @@ public class Attribute<AttributeType> {
 
             return postProcessCreatedCell(new IntCell((Integer) value));
 
-        } else if (getType().equals(StringCell.TYPE)) {
+        } else if (getType().isCompatible(StringValue.class)) {
 
             return postProcessCreatedCell(new StringCell("" + value));
 
-        } else if (getType().equals(DateAndTimeCell.TYPE)) {
+        } else if (getType().isCompatible(DateAndTimeValue.class)) {
             Date date = (Date) value;
             Calendar cal = GregorianCalendar.getInstance();
             cal.setTime(date);
@@ -185,18 +185,20 @@ public class Attribute<AttributeType> {
 
 
     public boolean isNumerical() {
-        DataType columnType = getType();
-        return columnType.equals(DoubleCell.TYPE) || columnType.equals(IntCell.TYPE);
+        return isDoubleType() || isIntegerType();
     }
 
+    public boolean isDoubleType() {
+        return getType().isCompatible(DoubleValue.class);
+    }
 
-    public boolean isInteger() {
-        return getType().equals(IntCell.TYPE);
+    public boolean isIntegerType() {
+        return getType().isCompatible(IntValue.class);
     }
 
 
     public boolean isDateAttribute() {
-        return getColumnSpec().getType().equals(DateAndTimeCell.TYPE);
+        return getColumnSpec().getType().isCompatible(DateAndTimeValue.class);
     }
 
 
@@ -209,7 +211,7 @@ public class Attribute<AttributeType> {
         // todo that's the proper way to do it; we should adapt this everywhere!
 //        return getColumnSpec().getType().getValueClasses().contains(StringValue.class);
 
-        return getColumnSpec().getType().equals(StringCell.TYPE);
+        return getColumnSpec().getType().isCompatible(StringValue.class);
     }
 
 
@@ -218,7 +220,7 @@ public class Attribute<AttributeType> {
             return (AttributeType) getNominalAttribute(dataRow);
         } else if (isDateAttribute()) {
             return (AttributeType) getDateAttribute(dataRow);
-        } else if (isInteger()) {
+        } else if (isIntegerType()) {
             Integer intAttribute = getIntAttribute(dataRow);
             return intAttribute != null ? (AttributeType) new Integer(intAttribute) : null;
         } else if (isNumerical()) {

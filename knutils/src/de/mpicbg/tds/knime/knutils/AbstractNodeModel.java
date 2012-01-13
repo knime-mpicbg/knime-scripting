@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -22,21 +23,34 @@ public abstract class AbstractNodeModel extends NodeModel {
 
     protected final NodeLogger logger = NodeLogger.getLogger(this.getClass());
 
+    // flag is used to test a new implementation of the settings list (as hashmap, to retrieve back settings from the list)
+    protected final boolean useNewSettingsHashmap;
+
     private List<SettingsModel> allSettings = new ArrayList<SettingsModel>();
+
+    protected HashMap<String, SettingsModel> modelSettings = new HashMap<String, SettingsModel>();
 
 
     protected AbstractNodeModel() {
         super(1, 1);
+        this.useNewSettingsHashmap = false;
     }
 
 
     public AbstractNodeModel(int numInputs, int numOutputs) {
         super(numInputs, numOutputs);
+        this.useNewSettingsHashmap = false;
+    }
+
+    public AbstractNodeModel(int numInputs, int numOutputs, boolean useNewSettingsHashmap) {
+        super(numInputs, numOutputs);
+        this.useNewSettingsHashmap = useNewSettingsHashmap;
     }
 
 
     public AbstractNodeModel(PortType[] inPorts, PortType[] outPorts) {
         super(inPorts, outPorts);
+        this.useNewSettingsHashmap = false;
     }
 
 
@@ -69,6 +83,25 @@ public abstract class AbstractNodeModel extends NodeModel {
         allSettings.add(settingModel);
     }
 
+    /**
+     * ================================================================================
+     * implements an alternative to the array list of model settings
+     * advantage: settings can be retrieved by name and do not have to be stored again as member of the child class
+     *
+     * @param settingName
+     * @param settingsModel
+     */
+    protected void addModelSetting(String settingName, SettingsModel settingsModel) {
+        modelSettings.put(settingName, settingsModel);
+    }
+
+    protected SettingsModel getModelSetting(String settingName) {
+        return modelSettings.get(settingName);
+    }
+
+    /**
+     * ================================================================================
+     */
 
     @Override
     protected void reset() {
@@ -99,9 +132,16 @@ public abstract class AbstractNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
 
-        for (SettingsModel uiProperty : allSettings) {
-            uiProperty.saveSettingsTo(settings);
+        if (!useNewSettingsHashmap) {
+            for (SettingsModel uiProperty : allSettings) {
+                uiProperty.saveSettingsTo(settings);
+            }
+        } else {
+            for (SettingsModel uiProperty : modelSettings.values()) {
+                uiProperty.saveSettingsTo(settings);
+            }
         }
+
 
     }
 
@@ -110,14 +150,27 @@ public abstract class AbstractNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
-        for (SettingsModel uiProperty : allSettings) {
-            try {
-                uiProperty.loadSettingsFrom(settings);
-            } catch (InvalidSettingsException ise) {
-                String message = "Could not load property '" + uiProperty.toString() + "'of node " + this.getClass().getSimpleName();
+        if (!useNewSettingsHashmap) {
+            for (SettingsModel uiProperty : allSettings) {
+                try {
+                    uiProperty.loadSettingsFrom(settings);
+                } catch (InvalidSettingsException ise) {
+                    String message = "Could not load property '" + uiProperty.toString() + "'of node " + this.getClass().getSimpleName();
 
-                setWarningMessage(message);
-                logger.warn(message + ". \nPlease re-execute the node to get rid of this problem!");
+                    setWarningMessage(message);
+                    logger.warn(message + ". \nPlease re-execute the node to get rid of this problem!");
+                }
+            }
+        } else {
+            for (SettingsModel uiProperty : modelSettings.values()) {
+                try {
+                    uiProperty.loadSettingsFrom(settings);
+                } catch (InvalidSettingsException ise) {
+                    String message = "Could not load property '" + uiProperty.toString() + "'of node " + this.getClass().getSimpleName();
+
+                    setWarningMessage(message);
+                    logger.warn(message + ". \nPlease re-execute the node to get rid of this problem!");
+                }
             }
         }
 
