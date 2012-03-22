@@ -19,7 +19,7 @@ import java.util.List;
  */
 public abstract class AbstractConfigDialog extends DefaultNodeSettingsPane {
 
-    DataTableSpec tableSpecs;
+    DataTableSpec[] tableSpecs;
 
 
     List<SettingsModel> swingUISettings = new ArrayList<SettingsModel>();
@@ -46,11 +46,14 @@ public abstract class AbstractConfigDialog extends DefaultNodeSettingsPane {
 
 
     @Override
-    public void loadAdditionalSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs) throws NotConfigurableException {
-        super.loadAdditionalSettingsFrom(settings, specs);
+    protected void loadSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, specs);
 
-        if (specs.length > 0)
-            tableSpecs = specs[0];
+        updateSpecs(specs);
+        updateSettings(settings);
+    }
+
+    private void updateSettings(NodeSettingsRO settings) {
 
         for (SettingsModel swingUISetting : swingUISettings) {
             try {
@@ -59,6 +62,18 @@ public abstract class AbstractConfigDialog extends DefaultNodeSettingsPane {
                 throw new RuntimeException("Problem while loading settings of " + swingUISetting);
             }
         }
+    }
+
+    private void updateSpecs(DataTableSpec[] specs) {
+        tableSpecs = specs;
+    }
+
+    @Override
+    public void loadAdditionalSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+
+        updateSpecs(specs);
+        updateSettings(settings);
     }
 
 
@@ -72,13 +87,22 @@ public abstract class AbstractConfigDialog extends DefaultNodeSettingsPane {
     }
 
 
-    public DataTableSpec getSpecs() {
-        return tableSpecs;
+    public DataTableSpec getFirstSpec() {
+        if (tableSpecs == null) return null;
+        if (tableSpecs.length < 1) return null;
+        return tableSpecs[0];
     }
 
 
-    public void setTableSpecs(DataTableSpec tableSpecs) {
-        this.tableSpecs = tableSpecs;
+    public void setFirstTableSpecs(DataTableSpec tableSpecs) {
+        if (this.tableSpecs == null) this.tableSpecs = new DataTableSpec[]{tableSpecs};
+        else this.tableSpecs[0] = tableSpecs;
+    }
+
+    public DataTableSpec getSpec(int idx) {
+        if (tableSpecs == null) return null;
+        if (tableSpecs.length < idx) return null;
+        return tableSpecs[idx];
     }
 
 

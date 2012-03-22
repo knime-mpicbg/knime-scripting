@@ -26,8 +26,10 @@ public abstract class AbstractNodeModel extends NodeModel {
     // flag is used to test a new implementation of the settings list (as hashmap, to retrieve back settings from the list)
     protected final boolean useNewSettingsHashmap;
 
+    // old implementation to store setting
     private List<SettingsModel> allSettings = new ArrayList<SettingsModel>();
 
+    // new implementation to store settings
     protected HashMap<String, SettingsModel> modelSettings = new HashMap<String, SettingsModel>();
 
 
@@ -78,7 +80,12 @@ public abstract class AbstractNodeModel extends NodeModel {
     @Override
     protected abstract BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
 
-
+    /**
+     * add settings to a list
+     *
+     * @param settingModel
+     * @deprecated
+     */
     protected void addSetting(SettingsModel settingModel) {
         allSettings.add(settingModel);
     }
