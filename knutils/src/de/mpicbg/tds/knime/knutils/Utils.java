@@ -30,7 +30,12 @@ public class Utils {
         return os != null && os.equals("Mac OS X");
     }
 
-
+    /**
+     * retrieves the KNIME DataType corresponding to a java class
+     *
+     * @param intStrOrDouble
+     * @return
+     */
     public static DataType mapType(Class intStrOrDouble) {
         if (intStrOrDouble.equals(Integer.class)) {
             return IntCell.TYPE;
