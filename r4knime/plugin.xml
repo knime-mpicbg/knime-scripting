@@ -59,9 +59,9 @@
               factory-class="de.mpicbg.tds.knime.scripting.r.utils.FixColumnsNamesNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.utils.FixColumnsNamesNodeFactory"/>
 
-        <node category-path="/community/r/utils"
+        <!-- <node category-path="/community/r/utils"
               factory-class="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"/>
+              id="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"/> -->
 
         <node category-path="/community/r/utils" factory-class="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>

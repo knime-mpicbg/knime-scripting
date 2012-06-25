@@ -5,41 +5,91 @@
     <name>Matlab Plot</name>
 
     <shortDescription>
-        Create figures with Matlab from within KNIME.
+        Creates plot with Matlab within Knime.
     </shortDescription>
 
     <fullDescription>
         <intro>
-            The matlab plot node allows to produce any matlab plot with a script feeding the data from the kIn dataset
-            into a plot function.
-            <br/>
-            <br/>
-            Make sure that
-            <b>mpicbg-matlab</b>
-            is running somewhere, and Knime is accordingly configured (Knime->Preferences).
-            <br/>
-            <br/>
-            Detailed documentation about the scripting integration:
-            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
-                MPI-CBG SWEG Wiki
-            </a>
+            <p>
+                This node creates plots using an Matlab server. The script for Matlab can be selected from a plot
+                template repository.
+                RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
+                is used to configure the Matlab code using a graphical user interface in a way that the user does not
+                need to know scripting in Matlab.
+                URL of the template file can be set in Knime->Preferences->Knime->Matlab Scripting.
+                The plot window can be rescaled and replotted by double-clicking onto the plot.
+                <br/>
+                The input data table is sent to Matlab as a matlab-dataset named "kIn". The plot from Matlab is sent
+                back to Knime as the output.
+            </p>
+            <p>
+                Script Editor:
+                <br/>
+                Copy, cut or paste and Matlab code to the editor and/or select the columns from your data table. If a
+                template is loaded used the GUI to adapt the script to the input data.
+            </p>
+            <p>
+                Templates:
+                Select a plot template from the template repository (double-click or "Use this template") to use that
+                script and see the GUI.
+                The description shows you an example plot than can be done using this template.
+                Then configure the GUI according to your input data.
+            </p>
+            <p>
+                Output Options:
+                Specify the image dimensions of the plot and the type and location where to save that image.
+            </p>
+            <p>
+                IMPORTANT :
+                <br/>
+                This node is using Matlab as backend, make sure that Matlab server is running somewhere, and Knime is
+                accordingly
+                configured (Knime->Preferences->Knime->Matlab Scripting).
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Matlab-server-for-knime">Scripting
+                    integration Wiki (Matlab server)
+                </a>
+            </p>
         </intro>
 
-        <option name="width">The width of the image to be written into the file</option>
-        <option name="height">The height of the image to be written into the file</option>
-        <option name="filename">The output file name. The following placeholders are supported: $$DATE$$ for the current
-            date, $$USER$$ for the username, $$WS$$ for the workspace directory, and FLOWVAR(varname) to use flow
-            variable values in the file name
+        <option name="Scipt Editor/Unlink from Template">Gives access to the Matlab script after adaptation by the GUI.
         </option>
+        <option name="Scipt Editor/Edit Template">Gives access to the RGG script.
+        </option>
+        <option name="Templates/Refresh">Loads again the template file.
+        </option>
+        <option name="Templates/Gallery">Generate a temporary webpage shown in a browser which gives an overview about
+            all available templates.
+        </option>
+        <option name="Templates/Description,Source">Desciption shows some plot options and an example plot. Source
+            displays the RGG script.
+        </option>
+        <option name="Templates/Use this template">Click to load the GUI (or double-click onto the template)
+        </option>
+        <option name="Output Options/File Type">Select .png or .jpeg
+        </option>
+        <option name="Output Options/Width, Height">Width and height of the plot in pixels, which is also used when the
+            imges is saved as a file.
+        </option>
+        <option name="Output Options/Selected File">Set the file name to save the plot as an image.
+            <br/>
+            The following placeholders are supported: $$DATE$$ for the current date, $$USER$$ for the username, $$WS$$
+            for the workspace directory, and FLOWVAR(variablename) to use flow
+            variable values in the file name.
+        </option>
+
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="in1">A table which should be visualized with Matlab.</inPort>
-        <outPort index="0" name="Image Node Output">The plot wrapped in an image node output.</outPort>
+        <inPort index="0" name="Data table">A table which should be visualized with Matlab.
+        </inPort>
+        <outPort index="0" name="Matlab plot as in image in Knime">The generated Matlab plot as image column
+        </outPort>
     </ports>
 
     <views>
-        <view index="0" name="Matlab-Plot">The generated Matlab plot</view>
+        <view index="0" name="Matlab plot">The generated Matlab plot. Can be can be rescaled and replotted by
+            double-clicking.
+        </view>
     </views>
 
 </knimeNode>
