@@ -18,9 +18,13 @@ public class RangeRowFilter extends AttrValueRowFilter {
 
     private DataCell m_upperBound;
 
+    // handling of missing values:
+    // if yes a missing cell will 'match' the range otherwise not
+    private final boolean m_missing;
+
     private DataValueComparator m_comparator;
 
-    public RangeRowFilter(String colName, final DataCell lowerBound, final DataCell upperBound) {
+    public RangeRowFilter(String colName, final DataCell lowerBound, final DataCell upperBound, final boolean missingValuesMatch) {
         super(colName, true);
 
         if (lowerBound == null && upperBound == null) {
@@ -30,6 +34,7 @@ public class RangeRowFilter extends AttrValueRowFilter {
 
         m_lowerBound = lowerBound;
         m_upperBound = upperBound;
+        m_missing = missingValuesMatch;
         m_comparator = null;
     }
 
@@ -40,7 +45,7 @@ public class RangeRowFilter extends AttrValueRowFilter {
         boolean match;
 
         if (theCell.isMissing()) {
-            match = false;
+            match = m_missing;
         } else {
             if (m_lowerBound != null) {
                 match = (m_comparator.compare(m_lowerBound, theCell) <= 0);
@@ -59,25 +64,7 @@ public class RangeRowFilter extends AttrValueRowFilter {
     public DataTableSpec configure(DataTableSpec inSpec) throws InvalidSettingsException {
         super.configure(inSpec);
 
-        // check if data type of bounds and the column are equal
         DataType colType = inSpec.getColumnSpec(getColIdx()).getType();
-        if (m_lowerBound != null) {
-            if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
-                throw new InvalidSettingsException("Column value filter: "
-                        + "Specified lower bound of range doesn't fit "
-                        + "column type. (Col#:" + getColIdx() + ",ColType:"
-                        + colType + ",RangeType:" + m_lowerBound.getType());
-            }
-        }
-        if (m_upperBound != null) {
-            if (!colType.isASuperTypeOf(m_upperBound.getType())) {
-                throw new InvalidSettingsException("Column value filter: "
-                        + "Specified upper bound of range doesn't fit "
-                        + "column type. (Col#:" + getColIdx() + ",ColType:"
-                        + colType + ",RangeType:" + m_upperBound.getType());
-            }
-        }
-
         m_comparator = colType.getComparator();
 
         return inSpec;
