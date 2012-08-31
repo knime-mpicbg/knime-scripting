@@ -25,6 +25,9 @@
         <node category-path="/community/r" factory-class="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
 
+        <node category-path="/community/r" factory-class="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"
+              id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>
+
 
         <!-- register the generic R nodes -->
 
@@ -63,8 +66,6 @@
               factory-class="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"/> -->
 
-        <node category-path="/community/r/utils" factory-class="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"
-              id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>
 
         <!-- examples of node-deployed templates -->
         <!--TODO disable these before going to production -->
