@@ -1,11 +1,19 @@
 package de.mpicbg.tds.knime.knutils;
 
+import net.imglib2.img.ImagePlusAdapter;
+import net.imglib2.img.Img;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.NumericType;
 import org.knime.core.data.*;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.image.png.PNGImageBlobCell;
+import org.knime.core.data.image.png.PNGImageCell;
+import org.knime.core.data.image.png.PNGImageContent;
 
+import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -182,6 +190,21 @@ public class Attribute<AttributeType> {
     }
 
 
+    public PNGImageCell getImageAttribute(DataRow dataRow) {
+        if ( !isImageAttribute() ) {
+            throw new RuntimeException(("Could not cast attribute to Image value."));
+        }
+
+        DataCell cell = dataRow.getCell(getColumnIndex());
+        if ( cell.isMissing() ) {
+            return null;
+        }
+
+        PNGImageCell pngCell = (PNGImageCell) cell;
+        return pngCell;
+    }
+
+
     public boolean isNumerical() {
         return isDoubleType() || isIntegerType();
     }
@@ -210,6 +233,12 @@ public class Attribute<AttributeType> {
 //        return getColumnSpec().getType().getValueClasses().contains(StringValue.class);
 
         return getColumnSpec().getType().equals(StringCell.TYPE);
+    }
+
+
+    public boolean isImageAttribute() {
+        return getColumnSpec().getType().equals(PNGImageContent.TYPE);
+        // TODO check for third party types. KNIP
     }
 
 
