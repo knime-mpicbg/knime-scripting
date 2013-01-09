@@ -1,19 +1,13 @@
 package de.mpicbg.tds.knime.knutils;
 
-import net.imglib2.img.ImagePlusAdapter;
-import net.imglib2.img.Img;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.NumericType;
 import org.knime.core.data.*;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.image.png.PNGImageBlobCell;
 import org.knime.core.data.image.png.PNGImageCell;
 import org.knime.core.data.image.png.PNGImageContent;
 
-import java.awt.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
