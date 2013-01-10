@@ -5,6 +5,7 @@ import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.image.ImageValue;
 import org.knime.core.data.image.png.PNGImageCell;
 import org.knime.core.data.image.png.PNGImageContent;
 
@@ -184,7 +185,14 @@ public class Attribute<AttributeType> {
     }
 
 
-    public PNGImageCell getImageAttribute(DataRow dataRow) {
+    /**
+     * This is a hacky approach to get image cells. The data is kept in the DataCell form to stay generic
+     * since different plugins have different methods to access the image data.
+     *
+     * @param dataRow row from the {@link DataTable}
+     * @return cell of the row.
+     */
+    public DataCell getImageAttribute(DataRow dataRow) {
         if ( !isImageAttribute() ) {
             throw new RuntimeException(("Could not cast attribute to Image value."));
         }
@@ -194,8 +202,7 @@ public class Attribute<AttributeType> {
             return null;
         }
 
-        PNGImageCell pngCell = (PNGImageCell) cell;
-        return pngCell;
+        return cell;
     }
 
 
@@ -231,8 +238,9 @@ public class Attribute<AttributeType> {
 
 
     public boolean isImageAttribute() {
-        return getColumnSpec().getType().equals(PNGImageContent.TYPE);
-        // TODO check for third party types. KNIP
+        // hack to recognise the KNIME Image Processing Toolbox CellTypes without the dependency.
+        return getColumnSpec().getType().isCompatible(ImageValue.class) ||
+                getColumnSpec().getType().getPreferredValueClass().getName().contains("org.knime.knip.base.data");
     }
 
 
