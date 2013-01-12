@@ -6,8 +6,6 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.image.ImageValue;
-import org.knime.core.data.image.png.PNGImageCell;
-import org.knime.core.data.image.png.PNGImageContent;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
