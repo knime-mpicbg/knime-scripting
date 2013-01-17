@@ -5,6 +5,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ColorHandler;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
@@ -168,4 +169,24 @@ public class AttributeUtils {
 
         filterString.setExcludeList(excludeList);
     }
+
+
+    /**
+     * Method that returns the Attribute belonging to the column that holds the {@link ColorHandler}.
+     * Only one column can hold the column handler (multiple consecutive {@link org.knime.base.node.viz.property.color.ColorAppender2NodeModel}
+     * overwrite the previous {@link ColorHandler} (tested with org.knime.base 2.6.2))
+     *
+     * @param spec of the table of which you want to find the color handler attribute
+     * @return attribute belonging to the column holding the {@link ColorHandler}
+     */
+    public static Attribute<Object> getKnimeColorAttribute(DataTableSpec spec) {
+        for (int index = 0; index < spec.getNumColumns(); index++) {
+            DataColumnSpec cspec = spec.getColumnSpec(index);
+            if ( cspec.getColorHandler() != null ) {
+                return new Attribute<Object>(cspec.getName(), cspec.getType());
+            }
+        }
+        return null;
+    }
+
 }
