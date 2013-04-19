@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Python" name="Python">
+      <configuration sdkName="Python 2.7.1 (/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7)" />
+    </facet>
+  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
@@ -8,8 +13,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="scriptingcore" exported="" />
-    <orderEntry type="library" name="knimedeps" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -28,7 +31,9 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="python-server" />
+    <orderEntry type="module" module-name="Scriptingcore" exported="" />
+    <orderEntry type="library" name="knimedeps_2.6.3" level="project" />
+    <orderEntry type="library" name="Python 2.7.1 (/System/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7) interpreter library" level="application" />
   </component>
 </module>
 

@@ -8,9 +8,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="knimedeps" level="project" />
-    <orderEntry type="module" module-name="scriptingcore" />
-    <orderEntry type="library" name="groovy4knime" level="project" />
+    <orderEntry type="module" module-name="Scriptingcore" />
+    <orderEntry type="library" name="groovylib" level="project" />
+    <orderEntry type="library" name="eclipsedeps_2.6" level="project" />
+    <orderEntry type="library" name="knimedeps_2.6.3" level="project" />
   </component>
 </module>
 
