@@ -49,10 +49,14 @@ public abstract class AbstractNodeModel extends NodeModel {
         this.useNewSettingsHashmap = useNewSettingsHashmap;
     }
 
-
     public AbstractNodeModel(PortType[] inPorts, PortType[] outPorts) {
         super(inPorts, outPorts);
         this.useNewSettingsHashmap = false;
+    }
+
+    public AbstractNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
+        super(inPorts, outPorts);
+        this.useNewSettingsHashmap = useNewSettingsHashmap;
     }
 
 
