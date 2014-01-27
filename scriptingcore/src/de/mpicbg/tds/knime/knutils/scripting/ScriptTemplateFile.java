@@ -45,9 +45,12 @@ public class ScriptTemplateFile {
 
             String line = reader.readLine();
             while (line != null) {
+            	// at least 10 times '#' mark the beginning of a new template
                 if (line.startsWith("##########")) {
                     if (!templateBuffer.toString().trim().isEmpty()) {
-                        templates.add(ScriptTemplate.parse(templateBuffer.toString(), filePath));
+                    	ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
+                    	// template text might not contain a valid template structure
+                        if(newTemplate != null) templates.add(newTemplate);
                         templateBuffer = new StringBuffer();
                     }
                 } else templateBuffer.append(line + "\n");
@@ -55,8 +58,11 @@ public class ScriptTemplateFile {
                 line = reader.readLine();
             }
             // don't forget the last template
-            if (templateBuffer.length() > 0) templates.add(ScriptTemplate.parse(templateBuffer.toString(), filePath));
-
+            if (templateBuffer.length() > 0) {
+            	ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
+            	// template text might not contain a valid template structure
+                if(newTemplate != null) templates.add(newTemplate);
+            }
         } catch (IOException e) {
         }
     }
