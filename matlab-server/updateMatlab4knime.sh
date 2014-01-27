@@ -1,6 +1,6 @@
 #!/bin/sh
 
-knimeRoot=$1
+matlabRoot=$1
 matlabJar="matlab-server-1.1.jar"
 
 echo " "
@@ -15,11 +15,11 @@ echo " "
 echo "Removing old binaries in 'matlab4knime/lib/'"
 echo " "
 mvn dependency:copy-dependencies
-rm $knimeRoot/matlab4knime/lib/*.jar
+rm $matlabRoot/lib/*.jar
 echo " "
 echo "Copying new binaries into 'matlab4knime/lib/'"
-cp target/dependency/* $knimeRoot/matlab4knime/lib/
-cp target/$matlabJar $knimeRoot/matlab4knime/lib/
+cp target/dependency/* $matlabRoot/lib/
+cp target/$matlabJar $matlabRoot/lib/
 echo " "
 echo "Copying new binaries into 'target/bin/'"
 mkdir target/bin/

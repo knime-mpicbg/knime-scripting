@@ -1,6 +1,6 @@
 #!/bin/sh
 
-knimeRoot=$1
+pythonRoot=$1
 pythonJar="python-server-1.1.jar"
 
 echo " "
@@ -15,11 +15,11 @@ echo " "
 echo "Removing old binaries in 'python4knime/lib/'"
 echo " "
 mvn dependency:copy-dependencies
-rm $knimeRoot/python4knime/lib/*.jar
+rm $pyhtonRoot/lib/*.jar
 echo " "
 echo "Copying new binaries into 'python4knime/lib/'"
-cp target/dependency/* $knimeRoot/python4knime/lib/
-cp target/$pythonJar $knimeRoot/python4knime/lib/
+cp target/dependency/* $pythonRoot/lib/
+cp target/$pythonJar $pythonRoot/lib/
 echo " "
 echo "Copying new binaries into 'target/bin/'"
 mkdir target/bin/
