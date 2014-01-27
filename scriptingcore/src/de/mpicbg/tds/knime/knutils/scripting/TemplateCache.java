@@ -70,7 +70,7 @@ public class TemplateCache {
         if (!reloadedTemplate.isEmpty()) {
             templateCache.put(filePath, reloadedTemplate);
             templates = templateCache.get(filePath).templates;
-        } else throw new IOException(filePath + " is empty or cannot be accessed.");
+        } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 
         return templates;
     }
