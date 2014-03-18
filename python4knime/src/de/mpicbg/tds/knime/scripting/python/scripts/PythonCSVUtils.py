@@ -2,6 +2,14 @@ import csv
 import array
 from types import *
 
+# test if pandas is available
+try:
+    import pandas as pd
+    import np as np
+    have_pandas = True    
+except:
+    have_pandas = False
+
 #
 #  Reads the first 'count' lines from a CSV file and determines the type of
 #  each column.  Returns a dictionary that maps column names to their data type.
@@ -52,7 +60,13 @@ def create_empty_table(csv_filename, types, header_lines):
     count = line_count(csv_filename) - header_lines
 
     for item in types:
-        table[item] = count * [None]
+        # init table with empty lists. The previous approach to init it with 
+        # count * [None] entries led to problems with multi-line CSVs. For 
+        # example, if there was only one entry in the CSV but this entry was
+        # a multi-line string of n lines, the previous approach would have
+        # created a size n list, but create_data_table would have only filled
+        # the first entry, leaving entries 1..n as None. 
+        table[item] = []
 
     return table
 
@@ -94,32 +108,43 @@ def get_column_types(csv_filename):
 #  is a dictionary mapping the column name to its type as created by get_column_types
 #
 def create_data_table(csv_filename, types, header_lines):
-    table = create_empty_table(csv_filename, types, header_lines)
-
-    csv_file = open(csv_filename, 'rb')
-
-    csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
-
-    current = -header_lines
-    for row in csv_reader:
-        if current >= 0:
-            index = 0
-            for item in types:
-                array = table[item]
-                type = types[item]
-                value = row[index]
-
-                if value == "":
-                    value = None
-                elif type == FloatType:
-                    value = float(value)
-                elif type == IntType:
-                    value = int(value)
-
-                array[current] = value
-
-                index += 1
-        current += 1
+    
+    # if pandas is available, use it!
+    if have_pandas:
+        skip = range(1, header_lines)
+        d = pd.read_csv(csv_filename, skiprows=skip).to_dict()
+        d = {k: d[k].values() for k in d} # convert to dict of lists (as used by the python snippet)
+        return d
+    else:
+        table = create_empty_table(csv_filename, types, header_lines)
+    
+        csv_file = open(csv_filename, 'rb')
+    
+        csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
+    
+        current = -header_lines
+        for row in csv_reader:
+            if current >= 0:
+                index = 0
+                for item in types:
+                    array = table[item]
+                    type = types[item]
+                    value = row[index]
+    
+                    if value == "":
+                        value = None
+                    elif type == FloatType:
+                        value = float(value)
+                    elif type == IntType:
+                        value = int(value)
+    
+                    # Instead of setting array[current]=value we append
+                    # to the array since the array was initialized as an
+                    # empty list in create_empty_table
+                    array.append(value)
+    
+                    index += 1
+            current += 1
 
     return table
 
@@ -177,13 +202,21 @@ def write_csv(csv_filename, table, write_types):
             # Find the first non-missing value
             while type(column[index]) is NoneType:
                 index += 1
-
-            if type(column[index]) is IntType or type(column[index]) is LongType:
-                types.append("INT")
-            elif type(column[index]) is FloatType:
-                types.append("FLOAT")
+                
+            if have_pandas: # pandas is using np types
+                if np.issubdtype(column[index], np.int) or np.issubdtype(column[index], np.long):
+                    types.append("INT")
+                elif np.issubdtype(column[index], np.float):
+                    types.append("FLOAT")
+                else:
+                    types.append("STRING")
             else:
-                types.append("STRING")
+                if type(column[index]) is IntType or type(column[index]) is LongType:
+                    types.append("INT")
+                elif type(column[index]) is FloatType:
+                    types.append("FLOAT")
+                else:
+                    types.append("STRING")
 
         csv_writer.writerow(types)
 
