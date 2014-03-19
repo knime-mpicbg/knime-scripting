@@ -204,9 +204,9 @@ def write_csv(csv_filename, table, write_types):
                 index += 1
                 
             if have_pandas: # pandas is using np types
-                if np.issubdtype(column[index], np.int) or np.issubdtype(column[index], np.long):
+                if np.issubdtype(type(column[index]), np.int) or np.issubdtype(type(column[index]), np.long):
                     types.append("INT")
-                elif np.issubdtype(column[index], np.float):
+                elif np.issubdtype(type(column[index]), np.float):
                     types.append("FLOAT")
                 else:
                     types.append("STRING")
