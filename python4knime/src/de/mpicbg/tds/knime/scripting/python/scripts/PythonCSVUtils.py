@@ -2,6 +2,27 @@ import csv
 import array
 from types import *
 
+# For some large CSV files one may get the exception
+# Error: field larger than field limit (131072)
+# This is a quick and dirty solution to adapt the csv field_size_limit.
+#
+# Taken from:
+# http://stackoverflow.com/questions/15063936/csv-error-field-larger-than-field-limit-131072
+import sys
+maxInt = sys.maxsize if sys.version_info >= (3, 0) else sys.maxint
+decrement = True
+
+while decrement:
+    # decrease the maxInt value by factor 10 
+    # as long as the OverflowError occurs.
+
+    decrement = False
+    try:
+        csv.field_size_limit(maxInt)
+    except OverflowError:
+        maxInt = int(maxInt/10)
+        decrement = True
+
 #
 #  Reads the first 'count' lines from a CSV file and determines the type of
 #  each column.  Returns a dictionary that maps column names to their data type.
