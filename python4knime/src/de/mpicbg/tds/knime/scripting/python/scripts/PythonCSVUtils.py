@@ -5,7 +5,7 @@ from types import *
 # test if pandas is available
 try:
     import pandas as pd
-    import np as np
+    import numpy as np
     have_pandas = True    
 except:
     have_pandas = False
