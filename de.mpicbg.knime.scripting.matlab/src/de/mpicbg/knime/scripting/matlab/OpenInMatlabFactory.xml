@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./matlabicon.gif" type="Sink">
+    <name>Open in Matlab</name>
+
+    <shortDescription>
+        Opens Matlab session with data table from Knime.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+                This node opens a local Matlab session and pushes the data table from Knime into Matlab. If a
+                snippet/script is selected and the GUI configured, it is automatically available from the clipboad and
+                can be pasted into Matlab. This enables quick prototyping of a script in Matlab.
+                <br/>
+                The input data table is converted into a Matlab type variable (dataset, map or structure), and made
+                available
+                in the Matlab workspace as a variable named "kIn". There is also a variable "names", that is a structure
+                allowing to associate the actual column names with the variabele names (not needed if the dataset type
+                is
+                used). If the optional input ports are used then data frames are named "kIn1", "kIn2" and "kIn3".
+                <br/>
+                <b>This node needs a Matlab installation on the local machine!</b>
+                <br/>
+                If Matlab is not running, the node launches an instance of the Matlab desktop.
+                It is recommended to let KNIME start Matlab the first time. That way the working direcotry of Matlab
+                will
+                be changed to the location where KNIME stores the m-file to load the data in the workspace (manually
+                you'll have to change directory into the temp-dir of the JVM that runs KNIME). Also the
+                instructions to re-load the data will be indicated in the Command Window at startup.
+            </p>
+            <p>
+                IMPORTANT :
+                <br/>
+                This node is using Matlab as backend, make sure that a Matlab server is running somewhere, and Knime is
+                accordingly
+                configured (Knime->Preferences->Knime->Matlab Scripting).
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Matlab-server-for-knime">Scripting
+                    integration Wiki (Matlab server)
+                </a>
+            </p>
+        </intro>
+
+        <option name="Choose the Matlab type">
+            Select the Matlab type of the variable that will contain the KNIME table in the Matlab workspace
+        </option>
+        <option name="Run in a new Matlab instance">
+            If checked, each time the node is executed a new Matlab instance will be started. If unchecked a Matlab
+            instance will be started if none is running.
+            <br/>
+            To re-load the data in Matlab type re-execute the m-file in the JVM's temp-dir.
+        </option>
+
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Data table">A data table pushed to Matlab
+        </inPort>
+        <inPort index="1" name="Optional data table 1">First optional data table pushed to Matlab
+        </inPort>
+        <inPort index="2" name="Optional data table 2">Second optional data table pushed to Matlab
+        </inPort>
+    </ports>
+
+</knimeNode>

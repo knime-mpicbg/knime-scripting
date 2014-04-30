@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./ricon.png" type="Visualizer" deprecated="true">
+    <name>R Plot (with Image Port)</name>
+
+    <shortDescription>
+        Create figures with R from within Knime.
+    </shortDescription>
+
+    <fullDescription>
+
+        <intro>Improved R-graphics Integration for KNIME (better repainting and rescaling). Given an R-script this node
+            will create a single view.
+
+            <br/>
+            To use other ploting engines like ggplot or lattice you need to export the final plot from within your
+            script using the 'print' command.
+            <br/>
+
+            Make sure that Rserve is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+
+            Repainting behavior cam be also configured in the preferences.
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+
+
+        <option name="width">The width of the image to be written into the file</option>
+        <option name="height">The height of the image to be written into the file</option>
+        <option name="filename">The output file name. The following placeholders are supported: $$DATE$$ for the current
+            date, $$USER$$ for the username, $$WS$$ for the workspace directory, and FLOWVAR(varname) to use flow
+            variable values in the file name
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which should be visualized with R.</inPort>
+    </ports>
+
+    <views>
+        <view index="0" name="R-Plot">The generated R-figure</view>
+    </views>
+
+</knimeNode>

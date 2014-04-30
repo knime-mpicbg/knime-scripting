@@ -1,0 +1,55 @@
+<rgg>
+
+
+    # 1. Parameter selection
+
+    <group>
+
+        # a) Define your treatments of interest
+        treatments = c(<listbox label="Treatments of interest" items="$$$DOMAIN('treatment')$$$" span="full"
+                                visible-row-count="15"/>);
+        ## or use all
+        #treatments = levels(factor(R$treatment));
+
+
+        # b) Define which parameter you would like to visualize
+        param = which(names(R) ==<combobox items="$$$NUM_ATTRIBUTES$$$" label="Assay parameter of interest"
+                                           span="full"/>);
+
+    </group>
+
+
+    # 2. R-code
+
+    <![CDATA[
+
+screen = R;
+
+# make the library-treatment the first in the list (if selected)
+if("library" %in% treatments){
+	treatments = treatments[- which("library" == treatments)];
+	treatments = c("library", treatments)
+}
+
+title = paste("ScreenScatter: ", names(screen[param]));
+
+treatColors = c(185,121,150,100,48,490,98, round(runif(50,min=1, max = 600)));
+treatSymbols = c(1,21,21,21,21,22,rep(22,50)); #note: add more symbols here if necessary
+
+# iterate over all chosen treatments and
+for(treat in treatments){
+	treatIndex = which(treatments == treat)
+	if(treatIndex == 1){
+		plot(data=screen, screen[,param]~rownames(screen),subset=c(treatment==treat), ylim=1.1*range(screen[,param]), main=title, xlab="well", ylab=names(screen[param]),col=colors()[treatColors[treatIndex]])
+	}else{
+		points(data= screen, screen[,param]~rownames(screen),subset=c(treatment == treat),col=colors()[treatColors[treatIndex]], pch=treatSymbols[treatIndex], bg=colors()[treatColors[treatIndex]])
+	}
+}
+
+# add the legend
+numTreatments = length(treatments);
+legend("topright",pch= treatSymbols[1:length(treatments)],treatments,col=colors()[treatColors],pt.bg=colors()[treatColors]);
+
+]]>
+
+</rgg>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./ricon.png" type="Sink">
+    <name>Scatter Plot Grid</name>
+
+    <shortDescription>
+        Rapid-prototyping in R for Knime.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>Converts the input into a R-dataframe, which is subsequently saved in a temporary file on your computer
+            and becomes opened by a new R-process.
+
+            Make sure that Rserve is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+        </intro>
+
+
+        <!--<option name="short name of first option (like in the dialog)">description of first option</option>-->
+        <!--<option name="short name of second option (like in the dialog)">description of second option</option>-->
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in1">A table which should be pushed to R.</inPort>
+        <!--<inPort index="1" name="in2">Another table which should be pushed to R.</inPort>-->
+        <!--<inPort index="2" name="in3">Another table which should be pushed to R.</inPort>-->
+    </ports>
+
+    <views>
+        <view index="0" name="R-Plot">R-Plot</view>
+    </views>
+
+</knimeNode>

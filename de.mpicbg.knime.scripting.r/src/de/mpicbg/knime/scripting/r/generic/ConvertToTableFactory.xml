@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../ricon.png" type="Sink">
+    <name>Convert to Table</name>
+
+    <shortDescription>
+        Takes a generic R port as input and converts it into a data table. This requires the content of the genericR
+        port to be a R data-frame. Other objects than data-frames can not be converted back into a Knime-table.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>Takes a generic R port as input and converts it into a data table.
+
+            Make sure that Rserve is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+            <br/>
+            <br/>
+            Detailed documentation about the scripting integration:
+            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+                MPI-CBG SWEG Wiki
+            </a>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="in">A generic R object which is a data-frame.</inPort>
+        <outPort index="0" name="out">The data-frame converted back into a knime table.</outPort>
+    </ports>
+
+</knimeNode>

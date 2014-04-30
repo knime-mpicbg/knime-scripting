@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Ptyhon Integration for KNIME
+Bundle-SymbolicName: de.mpicbg.tds.knime.scripting.python; singleton:=true
+Bundle-Version: 1.1.0.qualifier
+Bundle-ClassPath: python4knime.jar,
+ lib/cajo-1.134.jar,
+ lib/opencsv-2.1.jar,
+ lib/python-server-1.1.jar
+Bundle-Activator: de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator
+Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base,
+  de.mpicbg.knime.knutils,
+  de.mpicbg.knime.scripting.core
+Eclipse-LazyStart: true
+Export-Package: de.mpicbg.knime.scripting.python
+
