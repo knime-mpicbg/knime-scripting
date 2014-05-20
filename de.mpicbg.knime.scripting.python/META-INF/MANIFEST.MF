@@ -16,6 +16,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.base,
   de.mpicbg.knime.knutils,
   de.mpicbg.knime.scripting.core
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.python
 

@@ -27,7 +27,7 @@ Require-Bundle:  org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.base,
  de.mpicbg.knime.knutils
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Export-Package: 
  de.mpicbg.knime.scripting.core,
  de.mpicbg.knime.scripting.core.prefs,
