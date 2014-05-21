@@ -18,15 +18,15 @@
     <extension point="org.knime.workbench.repository.nodes">
         <node category-path="community/matlab"
               factory-class="de.mpicbg.knime.scripting.matlab.MatlabSnippetNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.matlab.MatlabSnippetNodeFactory"/>
+              id="de.mpicbg.knime.scripting.matlab.MatlabSnippetNodeFactory"/>
 
         <node category-path="/community/matlab"
               factory-class="de.mpicbg.knime.scripting.matlab.OpenInMatlabFactory"
-              id="de.mpicbg.tds.knime.scripting.matlab.OpenInMatlabFactory"/>
+              id="de.mpicbg.knime.scripting.matlab.OpenInMatlabFactory"/>
 
         <node category-path="/community/matlab"
               factory-class="de.mpicbg.knime.scripting.matlab.plots.MatlabPlotNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.matlab.plots.MatlabPlotNodeFactory"/>
+              id="de.mpicbg.knime.scripting.matlab.plots.MatlabPlotNodeFactory"/>
     </extension>
 
     <extension point="org.knime.workbench.repository.categories">
@@ -42,7 +42,7 @@
     <extension point="org.eclipse.ui.preferencePages">
         <page category="org.knime.workbench.ui.preferences"
               class="de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferencePage"
-              id="de.mpicbg.tds.knime.scripting.matlab.prefs.MatlabPreferencePage"
+              id="de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferencePage"
               name="Matlab Scripting">
         </page>
     </extension>

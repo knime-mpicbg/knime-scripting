@@ -1,6 +1,6 @@
 package de.mpicbg.knime.scripting.matlab.plots;
 
-import de.mpicbg.math.toolintegration.matlab.MatlabWebClient;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabWebClient;
 
 
 /**

@@ -4,7 +4,7 @@ import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.TableConverter;
-import de.mpicbg.math.toolintegration.matlab.MatlabTempFile;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabTempFile;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.*;

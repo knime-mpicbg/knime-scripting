@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * An lean interface to matlab. The used implmentation depends on the current context and is configurable by the user.
+ * An lean interface to Matlab. The used implementation depends on the current context and is configurable by the user.
  *
  * @author Holger Brandl, Tom Haux
  */
