@@ -6,15 +6,15 @@
     <extension point="org.knime.workbench.repository.nodes">
         <node category-path="/community/python"
               factory-class="de.mpicbg.knime.scripting.python.PythonSnippetNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.python.PythonSnippetNodeFactory"/>
+              id="de.mpicbg.knime.scripting.python.PythonSnippetNodeFactory"/>
 
         <node category-path="/community/python"
               factory-class="de.mpicbg.knime.scripting.python.OpenInPythonFactory"
-              id="de.mpicbg.tds.knime.scripting.python.OpenInPythonFactory"/>
+              id="de.mpicbg.knime.scripting.python.OpenInPythonFactory"/>
 
         <node category-path="/community/python"
               factory-class="de.mpicbg.knime.scripting.python.plots.PythonPlotNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.python.plots.PythonPlotNodeFactory"/>
+              id="de.mpicbg.knime.scripting.python.plots.PythonPlotNodeFactory"/>
     </extension>
 
     <extension point="org.knime.workbench.repository.categories">
@@ -30,7 +30,7 @@
     <extension point="org.eclipse.ui.preferencePages">
         <page category="org.knime.workbench.ui.preferences"
               class="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
-              id="de.mpicbg.tds.knime.scripting.python.prefs.PythonPreferencePage"
+              id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
               name="Python Scripting">
         </page>
     </extension>

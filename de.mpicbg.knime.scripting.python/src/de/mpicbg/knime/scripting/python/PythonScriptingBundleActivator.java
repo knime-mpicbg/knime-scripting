@@ -20,7 +20,7 @@ public class PythonScriptingBundleActivator extends AbstractUIPlugin {
     /**
      * Make sure that this *always* matches the ID in plugin.xml.
      */
-    public static final String PLUGIN_ID = "de.mpicbg.tds.knime.scripting.python";
+    public static final String PLUGIN_ID = "de.mpicbg.knime.scripting.python";
 
     // The shared instance.
     private static PythonScriptingBundleActivator plugin;

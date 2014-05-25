@@ -1,9 +1,9 @@
 package de.mpicbg.knime.scripting.python;
 
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-import de.mpicbg.sweng.pythonserver.CommandOutput;
-import de.mpicbg.sweng.pythonserver.LocalPythonClient;
-import de.mpicbg.sweng.pythonserver.PythonClient;
+import de.mpicbg.knime.scripting.python.srv.CommandOutput;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.PythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;

@@ -2,7 +2,7 @@ package de.mpicbg.knime.scripting.python;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-import de.mpicbg.sweng.pythonserver.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;

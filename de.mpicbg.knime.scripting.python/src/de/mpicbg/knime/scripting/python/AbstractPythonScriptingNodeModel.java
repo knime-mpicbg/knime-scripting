@@ -3,8 +3,8 @@ package de.mpicbg.knime.scripting.python;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.python.scripts.PythonScripts;
-import de.mpicbg.sweng.pythonserver.Python;
-import de.mpicbg.sweng.pythonserver.PythonTempFile;
+import de.mpicbg.knime.scripting.python.srv.Python;
+import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.port.PortType;
 
