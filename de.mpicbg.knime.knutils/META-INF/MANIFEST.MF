@@ -27,3 +27,4 @@ Export-Package: de.mpicbg.knime.knutils;
    javax.swing.filechooser,
    javax.swing.event,
    org.knime.core.node.defaultnodesettings"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

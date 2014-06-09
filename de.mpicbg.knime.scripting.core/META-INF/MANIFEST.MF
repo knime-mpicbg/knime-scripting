@@ -34,5 +34,6 @@ Export-Package:
  de.mpicbg.knime.scripting.core.rgg,
  de.mpicbg.knime.scripting.core.rgg.wizard,
  de.mpicbg.knime.scripting.core.utils
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 
 

@@ -15,11 +15,12 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.base,
  de.mpicbg.knime.knutils,
  de.mpicbg.knime.scripting.core
-Eclipse-LazyStart: true
 Export-Package: de.mpicbg.knime.scripting.r,
  de.mpicbg.knime.scripting.r.generic,
  de.mpicbg.knime.scripting.r.plots,
  de.mpicbg.knime.scripting.r.rgg,
  org.rosuda.REngine,
  org.rosuda.REngine.Rserve
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
 
