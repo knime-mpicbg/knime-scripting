@@ -13,6 +13,22 @@ Templates galleries: http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_publ
 
 
 
+DEVELOPMENT
+
+Since KNIME is an Eclipse application it is easiest to use that IDE.
+1) Clone this repository
+2) In Eclipse Import>General>Existing Project into Workspace
+3) Make sure the project is compiled with Java SE 1.6 (Preferences>Compiler)
+
+Debug Configuration:
+Main Tab:
+	Run a Product: org.knime.product.KNIME_PRODUCT
+	Runtime JRE: 1.6
+Arguments Tab:
+	Add “-XX:MaxPermSize=256m “ to the VM Arguments
+
+
+
 INSTALLATION
 
 Once KNIME is installed you have the following possibilities:
