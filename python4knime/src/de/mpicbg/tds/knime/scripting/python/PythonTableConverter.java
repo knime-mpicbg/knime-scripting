@@ -123,6 +123,7 @@ public class PythonTableConverter {
                 if (type.equals(IntCell.TYPE)) outputTypes.add("INT");
                 else if (type.equals(DoubleCell.TYPE)) outputTypes.add("FLOAT");
                 else if (type.equals(StringCell.TYPE)) outputTypes.add("STRING");
+                else if (type.isCompatible(StringCell.getPreferredValueClass())) outputTypes.add("STRING");
             }
 
             // The second line is the column types
@@ -146,7 +147,9 @@ public class PythonTableConverter {
                         rowValues.add(a.getDoubleAttribute(dataRow).toString());
                     } else if (colType.equals(IntCell.TYPE)) {
                         rowValues.add(a.getIntAttribute(dataRow).toString());
-                    }
+                    } else {
+                    	rowValues.add(a.getRawValue(dataRow));
+                    }                    
                 }
 
                 // All the columns have been added so write it out
