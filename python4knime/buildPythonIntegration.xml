@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project default="plugin_export" name="python">
-	<target name="plugin_export">
-		<pde.exportPlugins destination="/Users/brandl/projects/knime/knimedists/knimecomplete" exportSource="false" exportType="directory" plugins="de.mpicbg.tds.knime.scripting.python" useJARFormat="true"/>
-	</target>
-</project>

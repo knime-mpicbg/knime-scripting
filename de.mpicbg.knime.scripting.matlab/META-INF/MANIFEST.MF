@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ManifestVersion: 2
+Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
+Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
+Bundle-Version: 1.1.0.qualifier
+Bundle-ClassPath: matlabsnippet.jar,
+ lib/commons-math-2.0.jar
+Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
+Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+Bundle-Localization: plugin
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base,
+ de.mpicbg.knime.knutils,
+ de.mpicbg.knime.scripting.core,
+ de.mpicbg.knime.scripting.matlab.srv;visibility:=reexport
+Export-Package: de.mpicbg.knime.scripting.matlab,
+ de.mpicbg.knime.scripting.matlab.prefs
+
