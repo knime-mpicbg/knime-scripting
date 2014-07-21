@@ -157,10 +157,13 @@ public class TemplateTableEditor extends FieldEditor {
             TemplatePref tPref = iterator.next();
             if (tPref.getUri().equals(templateTable.getItem(tIdx).getText(0))) {
                 tPref.setActive(isChecked);
-                if (isChecked) addFileToCache(tPref.getUri());
+                if (isChecked) 
+                	if(!addFileToCache(tPref.getUri())) tPref.setActive(false);
                 else removeFileFromCache(tPref.getUri());
             }
         }
+        
+        fillTable();
     }
 
     private void browseForFile() {
@@ -215,14 +218,14 @@ public class TemplateTableEditor extends FieldEditor {
             return;
         }
 
-        TemplatePref newTemplate = new TemplatePref();
+        if(addFileToCache(newURI)) {
+        	TemplatePref newTemplate = new TemplatePref();
 
-        newTemplate.setUri(newURI);
-        newTemplate.setActive(true);
+            newTemplate.setUri(newURI);
+            newTemplate.setActive(true);
 
-        templateList.add(newTemplate);
-
-        addFileToCache(newURI);
+            templateList.add(newTemplate);
+        }
 
         fillTable();
     }
@@ -285,8 +288,9 @@ public class TemplateTableEditor extends FieldEditor {
      * adds the given file to the template cache
      *
      * @param uri
+     * @return true, if file was added successfully; otherwise false
      */
-    private void addFileToCache(String uri) {
+    private boolean addFileToCache(String uri) {
         // add script to cache
         try {
             TemplateCache templateCache = TemplateCache.getInstance();
@@ -296,8 +300,9 @@ public class TemplateTableEditor extends FieldEditor {
             messageDialog.setText("Exception");
             messageDialog.setMessage("Failed to add file to template cache\n\n" + e.getMessage());
             messageDialog.open();
-            return;
+            return false;
         }
+        return true;
     }
 
     /**

@@ -1,5 +1,6 @@
 package de.mpicbg.tds.knime.knutils.scripting.templatewizard;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class ScriptTemplate implements Cloneable {
     private Map<String, Object> persistedConfig;
 
     private String name;
+    
     private boolean linkedToScript = true;
 
     private String previewURL;
@@ -36,23 +38,6 @@ public class ScriptTemplate implements Cloneable {
 
     public static final String DESCRIPTION_PATTERN = "$$$TEMPLATE_DESC$$$";
     public static final String NAME_PATTERN = "$$$TEMPLATE_NAME$$$";
-
-    public static void main(String[] args) {
-        // test equals()
-        ScriptTemplate o1 = new ScriptTemplate();
-        o1.setAuthor("me");
-        o1.setLinkedToScript(true);
-
-        ScriptTemplate o2 = (ScriptTemplate) o1.clone();
-        ScriptTemplate o3 = (ScriptTemplate) o1.clone();
-        o3.setAuthor("you");
-
-        boolean result = o1.equals(o2);
-        System.out.println(result);
-        System.out.println(o1.hashCode() + " = " + o2.hashCode());
-        System.out.println(o1.equals(o3));
-        System.out.println(o1.hashCode() + " = " + o3.hashCode());
-    }
 
 
     public String getTemplateURL() {
@@ -147,72 +132,68 @@ public class ScriptTemplate implements Cloneable {
         ScriptTemplate template = new ScriptTemplate();
 
         template.setTemplateURL(templateFile);
-
+        
+        // parse meta information, template name is required
         int rowCounter = 0;
-        if (lines[rowCounter].contains("name")) {
-            template.setName(lines[rowCounter++].split("name[:]")[1].trim());
-        } else {
-            throw new RuntimeException("R-templates must start with a line with the scheme # name: blabla");
+        while(lines[rowCounter].startsWith("#")) {
+        	String currentLine = lines[rowCounter];
+        	if(currentLine.matches("^# *name *: *.*$")) template.setName(currentLine.split("name *:")[1].trim());
+        	if(currentLine.matches("^# *author *: *.*$")) template.setAuthor(currentLine.split("author *:")[1].trim());
+        	       	
+        	if(currentLine.matches("^# *category *: *.*$")) {
+        		String[] categories = currentLine.split("category *:")[1].split("/");
+        		ArrayList<String> categoryList = new ArrayList<String>(Arrays.asList(categories));
+        		template.setCategories(categoryList);
+        	}
+        	
+        	if(currentLine.matches("^# *preview *: *.*$")) {
+        		String previewURL = currentLine.split("preview *:")[1].trim();
+                if (!StringUtils.isBlank(previewURL)) {
+                    // add a prefix if relative url
+                    String rootLocation = templateFile.substring(0, templateFile.lastIndexOf("/") + 1);
+                    previewURL = previewURL.contains("://") ? previewURL : rootLocation + previewURL.trim();
+
+                    template.setPreviewURL(previewURL);
+                }
+        	}
+        	rowCounter++;
         }
-
-        if (lines[rowCounter].contains("author")) {
-            template.setAuthor(lines[rowCounter++].split("author[:]")[1].trim());
-        }
-
-        if (lines[rowCounter].contains("category")) {
-            template.setCategories(Arrays.asList(lines[rowCounter++].split("category[:]")[1].split(";")));
-        } else {
-            template.setCategories(new ArrayList<String>());
-        }
-
-        if (lines[rowCounter].contains("preview")) {
-            String previewURL = lines[rowCounter++].split("preview[:]")[1];
-            if (!StringUtils.isBlank(previewURL)) {
-                // add a prefix if relative url
-                String rootLocation = templateFile.substring(0, templateFile.lastIndexOf("/") + 1);
-                previewURL = previewURL.contains("://") ? previewURL : rootLocation + previewURL.trim();
-
-                template.setPreviewURL(previewURL);
-            }
-        }
-
 
         // read the description
-        StringBuffer description = new StringBuffer();
-        for (int i = rowCounter; i < lines.length; i++) {
-            rowCounter++;
-            String line = lines[i];
-
-            if (line.startsWith("######")) {
-                template.setDescription(description.toString());
-                break;
-            }
-
-            if (line.trim().isEmpty() && description.length() == 0)
-                continue;
-
-            description.append(line + "\n");
+        StringBuffer descBuffer = new StringBuffer();
+        String line = lines[rowCounter];
+        while(!line.matches("^[#]{6}") && rowCounter < lines.length){
+        	descBuffer.append(line + "\n");
+        	line = lines[rowCounter++];
         }
-
-        StringBuffer rcode = new StringBuffer();
-        for (int i = rowCounter; i < lines.length; i++) {
-            String line = lines[i];
-
-            if (line.trim().isEmpty() && rcode.length() == 0)
-                continue;
-
-            rcode.append(line + "\n");
+        
+        if(descBuffer.length() > 0) {
+        	String description = descBuffer.toString();
+        	description = StringUtils.trim(description);
+        	if(!StringUtils.isBlank(description)) template.setDescription(description);
         }
-
-        String templateText = rcode.toString();
-
-        // prepare the template by insertion the description into it if necessary
-        templateText = templateText.replace(DESCRIPTION_PATTERN, template.getDescription());
-        templateText = templateText.replace(NAME_PATTERN, template.getName());
-
-        template.setTemplate(templateText);
-
-        return template;
+        
+        // template can be an rgg-template or raw R code
+        StringBuffer templateBuffer = new StringBuffer();
+        for (int i = rowCounter; i < lines.length; i++) {
+            templateBuffer.append(lines[i] + "\n");
+        }
+        
+        if(templateBuffer.length() > 0) {
+        	String templateText = templateBuffer.toString();
+        	templateText = StringUtils.trim(templateText);
+        	
+        	// prepare the template by insertion the description into it if necessary
+        	if(template.getDescription() != null) 
+        		templateText = templateText.replace(DESCRIPTION_PATTERN, template.getDescription());
+        	if(template.getName() != null)
+        		templateText = templateText.replace(NAME_PATTERN, template.getName());
+            
+        	if(!StringUtils.isBlank(templateText)) template.setTemplate(templateText);
+        }
+        
+        if(template.getName() != null && template.getTemplate() != null) return template;
+        else return null;
     }
 
 
@@ -289,5 +270,22 @@ public class ScriptTemplate implements Cloneable {
         result = 31 * result + (linkedToScript ? 1 : 0);
         result = 31 * result + (previewURL != null ? previewURL.hashCode() : 0);
         return result;
+    }
+    
+    public static void main(String[] args) {
+        // test equals()
+        ScriptTemplate o1 = new ScriptTemplate();
+        o1.setAuthor("me");
+        o1.setLinkedToScript(true);
+
+        ScriptTemplate o2 = (ScriptTemplate) o1.clone();
+        ScriptTemplate o3 = (ScriptTemplate) o1.clone();
+        o3.setAuthor("you");
+
+        boolean result = o1.equals(o2);
+        System.out.println(result);
+        System.out.println(o1.hashCode() + " = " + o2.hashCode());
+        System.out.println(o1.equals(o3));
+        System.out.println(o1.hashCode() + " = " + o3.hashCode());
     }
 }

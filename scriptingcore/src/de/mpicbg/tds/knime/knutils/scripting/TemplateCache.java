@@ -47,7 +47,7 @@ public class TemplateCache {
             ScriptTemplateFile newTemplateFile = new ScriptTemplateFile(filePath);
             if (!newTemplateFile.isEmpty()) {
                 templateCache.put(filePath, newTemplateFile);
-            } else throw new IOException(filePath + " is empty or cannot be accessed.");
+            } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
         }
 
         // then load the content from the cache
@@ -70,7 +70,7 @@ public class TemplateCache {
         if (!reloadedTemplate.isEmpty()) {
             templateCache.put(filePath, reloadedTemplate);
             templates = templateCache.get(filePath).templates;
-        } else throw new IOException(filePath + " is empty or cannot be accessed.");
+        } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 
         return templates;
     }

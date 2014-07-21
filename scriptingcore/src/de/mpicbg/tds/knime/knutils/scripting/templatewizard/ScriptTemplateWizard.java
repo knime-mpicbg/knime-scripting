@@ -42,7 +42,6 @@ public class ScriptTemplateWizard extends JSplitPane {
 
     private List<UseTemplateListener> useTemplateListeners = new ArrayList<UseTemplateListener>();
     public List<ScriptTemplate> templates;
-    //private List<URL> templateDefinitionURLs;
 
     private ScriptingNodeDialog parentDialog;
 
@@ -89,25 +88,6 @@ public class ScriptTemplateWizard extends JSplitPane {
         });
     }
 
-    /*private static List<URL> parseConcatendatedURLs(String templateFilePaths) {
-
-        TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
-        List<TemplatePref> templateList = tString.parsePrefString();
-        List<URL> urls = new ArrayList<URL>();
-
-        for (TemplatePref pref : templateList) {
-            if (pref.isActive()) {
-                try {
-                    URL newURL = new URL(pref.getUri());
-                    urls.add(newURL);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return urls;
-    } */
-
 
     public static void main(String[] args) throws MalformedURLException {
         //String templateFilePath = new String("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt" + ";" + "file:///Volumes/tds/software+tools/KNIME/script-templates/Groovy/tds-groovy-templates.txt");
@@ -133,53 +113,9 @@ public class ScriptTemplateWizard extends JSplitPane {
         }
     }
 
-
-    /*public ScriptTemplateWizard(String templateFilePaths) {
-        templateDefinitionURLs = parseConcatendatedURLs(templateFilePaths);
-
-        initComponents();
-
-        categoryTreeModel = new DefaultTreeModel(new DefaultMutableTreeNode());
-        categoryTree.setRootVisible(false);
-        categoryTree.setModel(categoryTreeModel);
-
-        reloadTemplateTree();
-
-        descContainerSplitPanel.setDividerLocation(0.0);
-
-        // register the selection listener
-        categoryTree.addTreeSelectionListener(new TreeSelectionListener() {
-            public void valueChanged(TreeSelectionEvent evt) {
-                // Get all nodes whose selection status has changed
-
-                TreePath selectionPath = categoryTree.getSelectionPath();
-                if (selectionPath == null) { // this will be the case when the tree is beeing reloaded
-                    setCurrentTemplate(null);
-                    return;
-                }
-
-                Object selectedPathElement = selectionPath.getLastPathComponent();
-                if (selectedPathElement == null) {
-                    setCurrentTemplate(null);
-                    return;
-                }
-
-                Object userObject = ((DefaultMutableTreeNode) selectedPathElement).getUserObject();
-
-                if (userObject instanceof ScriptTemplate) {
-                    ScriptTemplate scriptTemplate = (ScriptTemplate) userObject;
-                    setCurrentTemplate(scriptTemplate);
-                } else {
-                    setCurrentTemplate(null);
-                }
-            }
-        });
-    }     */
-
-
     private void repopulateTemplateTree(String searchTerm) {
-        DefaultMutableTreeNode mutableTreeNode = (DefaultMutableTreeNode) categoryTreeModel.getRoot();
-        mutableTreeNode.removeAllChildren();
+        DefaultMutableTreeNode mutableTreeRoot = (DefaultMutableTreeNode) categoryTreeModel.getRoot();
+        mutableTreeRoot.removeAllChildren();
 
         searchTerm = searchTerm == null ? null : searchTerm.toLowerCase();
 
@@ -196,13 +132,15 @@ public class ScriptTemplateWizard extends JSplitPane {
                 }
             }
 
+            DefaultMutableTreeNode parent = mutableTreeRoot;
             for (String category : scriptTemplate.getCategories()) {
-                DefaultMutableTreeNode parent = getOrCreateParentNode(categoryTreeModel, category);
-                parent.add(new DefaultMutableTreeNode(scriptTemplate));
+                parent = getOrCreateParentNode(parent, category);
+                //parent.add(new DefaultMutableTreeNode(scriptTemplate));
             }
+            parent.add(new DefaultMutableTreeNode(scriptTemplate));
         }
 
-        categoryTreeModel.nodeStructureChanged((TreeNode) categoryTreeModel.getRoot());
+        categoryTreeModel.nodeStructureChanged((TreeNode) mutableTreeRoot);
 
         if (searchTerm != null) {
             expandAll(categoryTree, true);
@@ -295,79 +233,21 @@ public class ScriptTemplateWizard extends JSplitPane {
     }
 
 
-    private DefaultMutableTreeNode getOrCreateParentNode(DefaultTreeModel categoryTreeModel, String category) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) categoryTreeModel.getRoot();
-
-        // remove leading and trailing /
-        if (category.startsWith("/")) {
-            category = category.substring(1, category.length());
-        }
-
-        if (category.endsWith("/")) {
-            category = category.substring(category.length() - 1, category.length());
-        }
-
-        String[] catHierarchy = category.split("/");
-
-        catLoop:
-        for (String subCategory : catHierarchy) {
-            Enumeration enumeration = node.children();
-
-            while (enumeration.hasMoreElements()) {
-                DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
-                if (childNode.getUserObject().equals(subCategory)) {
-                    node = childNode;
-                    continue catLoop;
-                }
-            }
-
-            // there was no such sub-category, so just create it
-
-            DefaultMutableTreeNode subcatNode = new DefaultMutableTreeNode(subCategory);
-            node.add(subcatNode);
-
-            node = subcatNode;
-
-
-        }
-
-        return node;
+    private DefaultMutableTreeNode getOrCreateParentNode(DefaultMutableTreeNode parent, String category) {
+        
+    	// is category already available?
+		Enumeration<?> enumeration = parent.children();
+    	while (enumeration.hasMoreElements()) {
+    		DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
+            if (childNode.getUserObject().equals(category)) return childNode;
+    	}
+    	
+    	// category is not yet available
+    	// add category
+    	DefaultMutableTreeNode categoryNode = new DefaultMutableTreeNode(category);
+    	parent.add(categoryNode);
+    	return categoryNode;
     }
-
-    /*private void reloadTemplateTree() {
-        List<ScriptTemplate> allTemplates = new ArrayList<ScriptTemplate>();
-        List<String> warnings = new ArrayList<String>();
-
-        // parse all files into the view
-        for (URL templateFile : templateDefinitionURLs) {
-
-            try {
-            allTemplates.addAll(parseTemplateFile(templateFile));
-            } catch (IOException e) {
-                warnings.add(templateFile.toString());
-            }
-
-        }
-
-        if(!warnings.isEmpty()) {
-        }
-
-        templates = allTemplates;
-
-        repopulateTemplateTree(null);
-    }  */
-
-    /*private void helpButtonActionPerformed(ActionEvent e) {
-
-        if ((e.getModifiers() & ActionEvent.META_MASK) != 0) {
-            repopulateTemplateTree(null);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                    "The template-tree is being constructed by parsing the template files as defined in your Knime-preferences.\n" +
-                            "You can add or modify the template by simply adopting those files.");
-        }
-    } */
-
 
     private void useTemplateActionPerformed() {
         if (curSelection != null) {

@@ -8,8 +8,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortType;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.Writer;
 
 
@@ -52,12 +54,26 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
 
         // Create and execute script
         String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+        
+        // get the full path of the python executable for MacOS
+        String pythonExecPathFull = pythonExecPath;
+        try {
+	        if (Utils.isMacOSPlatform()) {
+		        Runtime r = Runtime.getRuntime();
+		        Process p = r.exec("which " + pythonExecPath);
+		        p.waitFor();
+		        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		        pythonExecPathFull = reader.readLine();
+	        }
+        } catch (Exception e) {
+        	logger.error(e);
+        }
 
         try {
             Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
             try {
                 // Write a shebang to invoke the python interpreter 
-                writer.write("#! " + pythonExecPath + " -i\n");
+                writer.write("#! " + pythonExecPathFull + " -i\n");
                 super.prepareScript(writer);
             } finally {
                 writer.close();
@@ -67,7 +83,7 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
 
             // Run the script
             if (Utils.isMacOSPlatform()) {
-                Runtime.getRuntime().exec("open -a Terminal " + scriptFile.getClientPath());
+                Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
             } else if (Utils.isWindowsPlatform()) {
                 Runtime.getRuntime().exec(pythonExecPath + " " + scriptFile.getClientPath());
             } else logger.error("Unsupported platform");
