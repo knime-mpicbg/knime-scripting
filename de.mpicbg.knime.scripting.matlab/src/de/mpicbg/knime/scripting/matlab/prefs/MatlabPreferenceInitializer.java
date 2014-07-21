@@ -33,8 +33,9 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
 
-    public static final String MATLAB_HOST = "r.host";
-    public static final String MATLAB_PORT = "r.port";
+	public static final String MATLAB_LOCAL = "matlab.local";
+    public static final String MATLAB_HOST = "matlab.host";
+    public static final String MATLAB_PORT = "matlab.port";
 
     public static final String MATLAB_TEMPLATE_RESOURCES = "template.resources";
     public static final String MATLAB_PLOT_TEMPLATE_RESOURCES = "plot.template.resources";
@@ -44,6 +45,7 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
     public void initializeDefaultPreferences() {
         IPreferenceStore store = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
 
+        store.setDefault(MATLAB_LOCAL, Boolean.TRUE);
         store.setDefault(MATLAB_HOST, "localhost");
         store.setDefault(MATLAB_PORT, 1198);
 

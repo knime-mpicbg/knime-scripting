@@ -27,7 +27,9 @@ package de.mpicbg.knime.scripting.matlab.prefs;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
+import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
@@ -55,6 +57,7 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
 
+        addField(new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL, "Run scripts on local MATLAB installation (ignores host/port settings)", parent));
         addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST, "The host where the Matlab-server is running", parent));
         addField(new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT, "The port on which Matlab-server is listening", parent));
 

@@ -2,7 +2,13 @@ package de.mpicbg.knime.scripting.matlab;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
+import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxyFactory;
+import matlabcontrol.MatlabProxyFactoryOptions;
+
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -11,6 +17,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
@@ -32,6 +39,16 @@ public class OpenInMatlab extends AbstractNodeModel {
     public SettingsModelString matlabType = OpenInMatlabFactory.matlabTypeSetting();
     public SettingsModelBoolean openMatlab = OpenInMatlabFactory.executionModeSetting();
 
+    /** Fields containing the MATLAB proxy object */
+//    private MatlabProxy matlabProxy;
+    private final AtomicReference<MatlabProxy> matlabProxyHolder = new AtomicReference<MatlabProxy>();
+    
+    /** Field holding the port number from the preference panel */
+    protected int port = MatlabScriptingBundleActivator
+    		.getDefault()
+    		.getPreferenceStore()
+    		.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
+    
 
     /**
      * Constructor for the node model.
@@ -57,15 +74,70 @@ public class OpenInMatlab extends AbstractNodeModel {
 
         // Save the object
         TableConverter.writeHashMapToTempFolder(tmpPath + binaryFileName, serializableTable);
+        
+        // Create a local MATLAB proxy.
+        
+        //Create proxy factory
+        MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
+                .setUsePreviouslyControlledSession(true)
+                .setPort(port)
+                .build();
+        MatlabProxyFactory matlabProxyFactory = new MatlabProxyFactory(options);
+        
+        
+      //Request a proxy
+        matlabProxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback()
+        {
+            @Override
+            public void proxyCreated(final MatlabProxy proxy)
+            {
+                matlabProxyHolder.set(proxy);
+            
+                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener()
+                {
+                    @Override
+                    public void proxyDisconnected(MatlabProxy proxy)
+                    {
+                        matlabProxyHolder.set(null); 
+                    }
+                });
+        
+		        if (proxy.isExistingSession())
+		        {
+		            System.out.println("Connected to existing MATLAB session\n");
+		        }
+		        else
+		        {
+		            System.out.println("Launed new MATLAB session\n");
+		        }
+            }
+        });
+        
+//        matlabProxy = matlabProxyFactory.getProxy();
+        
+        // Copy the MATLAB script to the temp folder
+        File resourceFile = copyResourceToFolder(resourceFilePath, tmpPath);
+        
+        // Get the file name with the random string in it
+        String functionName = TemplateUtils.fileNameTrunk(resourceFile.getName());
+        
+        // Generate the string that will be evaluated in MATLAB
+        String cmd = "cd " + tmpPath + ";[kIn names]=" + functionName + "('" + binaryFileName + "','" + matlabType.getStringValue() + "','showMessage');";
+        
+        matlabProxyHolder.get().eval(cmd);
+        matlabProxyHolder.get().disconnect();
+//        matlabProxy.exit();
+        
+        
 
-        // Launch Matlab
-        if (openMatlab.getBooleanValue() || (checkMacOsxForRunningMatlabInstance() < 1)) {
-            // Copy the matlab file
-            File resourceFile = copyResourceToFolder(resourceFilePath, tmpPath);
-            String functionName = TemplateUtils.fileNameTrunk(resourceFile.getName());
-            // Launch matlab.
-            launchMacOsxMatlab(tmpPath, functionName, binaryFileName, matlabType.getStringValue());
-        }
+//        // Launch Matlab
+//        if (openMatlab.getBooleanValue() || (checkMacOsxForRunningMatlabInstance() < 1)) {
+//            // Copy the matlab file
+//            File resourceFile = copyResourceToFolder(resourceFilePath, tmpPath);
+//            String functionName = TemplateUtils.fileNameTrunk(resourceFile.getName());
+//            // Launch matlab.
+//            launchMacOsxMatlab(tmpPath, functionName, binaryFileName, matlabType.getStringValue());
+//        }
 
         return new BufferedDataTable[0];
     }
