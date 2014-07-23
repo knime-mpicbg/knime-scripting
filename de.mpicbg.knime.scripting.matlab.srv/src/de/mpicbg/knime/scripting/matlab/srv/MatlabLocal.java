@@ -76,9 +76,9 @@ public class MatlabLocal {
 	 * @throws MatlabConnectionException
 	 */	
 	public synchronized void connect() throws MatlabConnectionException {
+		System.out.println("MATLAB: starting...");
 		if (proxyQueue.size() == 0) {
 			// Use the factory to get a running MATLAB session
-			System.out.println("MATLAB: starting...");
 			proxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback() {
 	            @Override
 	            public void proxyCreated(MatlabProxy proxy) {
@@ -106,8 +106,9 @@ public class MatlabLocal {
 			} catch (InterruptedException e2) {
 				e2.printStackTrace();
 			}
+            System.out.println("...running.");
 		} else {
-			System.out.println("MATLAB: already running.");
+			System.out.println("...already running.");
 		}
 	}
 	
