@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.matlab.srv;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
@@ -14,8 +15,8 @@ class RunnableBee extends Thread {
 	private Thread t;
 	private String threadName;
 	
-	static MatlabProxyFactory factory;
-	static ArrayBlockingQueue<MatlabProxy> proxyQueue;
+	static MatlabProxyFactory proxyFactory;
+	static final ArrayBlockingQueue<MatlabProxy> proxyHolder = new ArrayBlockingQueue<MatlabProxy>(1);	
 
 	
 	RunnableBee( String name) throws MatlabConnectionException {
@@ -25,24 +26,28 @@ class RunnableBee extends Thread {
 	
 	
 	public synchronized void initialize() throws MatlabConnectionException {
-//		synchronized(this) {
-			if (factory == null) {
-				System.out.println("Starting MATLAB.");
-				proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);		
+		if (proxyFactory == null) {
+			System.out.println("Starting MATLAB.");
 			
-				MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
-				factory = new MatlabProxyFactory(options);
-				factory.requestProxy(new MatlabProxyFactory.RequestCallback() {
-		            @Override
-		            public void proxyCreated(MatlabProxy proxy)
-		            {
-		                proxyQueue.add(proxy);
-		            }
-		        });
-			} else {
-				System.out.println("Been there done that.");
-			}
-//		}
+			MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
+			proxyFactory = new MatlabProxyFactory(options);
+			proxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback() {
+	            @Override
+	            public void proxyCreated(MatlabProxy proxy)
+	            {
+	                proxyHolder.add(proxy);
+	                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener() {
+						
+						@Override
+						public void proxyDisconnected(MatlabProxy proxy) {
+							proxyHolder.remove(proxy);	
+						}
+					});
+	            }
+	        });
+		} else {
+			System.out.println("Been there done that.");
+		}
 	}
 	
 //	public synchronized MatlabProxyFactory getFactory() {
@@ -50,7 +55,7 @@ class RunnableBee extends Thread {
 //	}
 //	
 	public synchronized ArrayBlockingQueue<MatlabProxy> getQueue() {
-		return proxyQueue;
+		return proxyHolder;
 	}
 	
 	@Override
