@@ -1,23 +1,17 @@
 package de.mpicbg.knime.scripting.matlab;
 
-//import de.mpicbg.tds.knime.scripting.r.prefs.RPreferenceInitializer;
-
 import de.mpicbg.knime.knutils.AbstractConfigDialog;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
 import java.util.ArrayList;
 
-/**
- * @author Felix Meyenhofer (MPI-CBG)
- */
 
+/**
+ * @author Felix Meyenhofer
+ */
 public class OpenInMatlabFactory extends NodeFactory<OpenInMatlab> {
 
     /**
@@ -64,36 +58,30 @@ public class OpenInMatlabFactory extends NodeFactory<OpenInMatlab> {
     public NodeDialogPane createNodeDialogPane() {
 
         return new AbstractConfigDialog() {
-
             @Override
             protected void createControls() {
-//                // path to put the temporary data
-                DialogComponentStringSelection matlabType = new DialogComponentStringSelection(matlabTypeSetting(), "Choose the MATLAB type", matlabTypeOptions());
-                addDialogComponent(matlabType);
-                // checkbox to run a new instance or not.
-                DialogComponentBoolean newMatlabInstance = new DialogComponentBoolean(executionModeSetting(), "Run in a new MATLAB instance");
-                addDialogComponent(newMatlabInstance);
+                // path to put the temporary data
+                addDialogComponent(new DialogComponentStringSelection(
+                		OpenInMatlab.createMatlabTypeSetting(), 
+                		"Choose the MATLAB type",
+                		matlabTypeOptions()));
             }
         };
     }
 
-
-    public static ArrayList matlabTypeOptions() {
+    
+    /**
+     * Create the options for the pop-up menu defining the MATLAB type in the configuration dialog
+     * 
+     * @return Options
+     */
+    public static ArrayList<String> matlabTypeOptions() {
         ArrayList<String> list = new ArrayList<String>();
         list.add("dataset");
         list.add("map");
         list.add("structure");
         return list;
 
-    }
-
-    public static SettingsModelString matlabTypeSetting() {
-        return new SettingsModelString("matlabType", "dataset");
-    }
-
-
-    public static SettingsModelBoolean executionModeSetting() {
-        return new SettingsModelBoolean("new.instance", true);
     }
 
 }

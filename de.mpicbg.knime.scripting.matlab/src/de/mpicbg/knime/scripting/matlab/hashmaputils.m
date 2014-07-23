@@ -32,7 +32,7 @@
 % Institution: Max Planck Institut fo Cell Biology and Genetics
 
 
-function [kIn names] = hashmaputils(filePath, data, varargin)
+function [kIn, names] = hashmaputils(filePath, data, varargin)
 
 % Handle the input
 parser = inputParser();
@@ -45,7 +45,7 @@ input = parser.Results();
 
 % Infer the action to take.
 if ischar(input.data) % No inputdata -> see if we can load something.
-    [kIn names] = loadhashmap(input.filePath, input.data, input.message);
+    [kIn, names] = loadhashmap(input.filePath, input.data, input.message);
 else                  % If we have data -> save it.
     savehashmap(input.data, input.filePath);
 end
@@ -114,11 +114,10 @@ function savehashmap(mTable, filePath)
     
     
     
-function [kIn names] = loadhashmap(filePath, dataType, msg)
+function [kIn, names] = loadhashmap(filePath, dataType, msg)
 
     if strcmp(msg, 'showMessage')
-        fprintf('\n------------------------------------------------------------------------------------\n\n')
-        fprintf('Loading data from KNIME .')
+        fprintf('Loading data table from KNIME...')
     end
 
 
@@ -201,13 +200,9 @@ function [kIn names] = loadhashmap(filePath, dataType, msg)
     end
 
     if strcmp(msg, 'showMessage')
-        disp('The data is available as the following variables in the Workspace:')
+        fprintf('\nThe data is available as the following variables in the Workspace:\n')
         fprintf('"kIn" is a %s containing the table.\n', dataType)
         fprintf('"names" is a structure containing column header information\n')
-        fprintf('        (this is useful if "kIn" is something else than a dataset).\n\n')
-        fprintf('If the data was updated by KNIME by re-executing the OpenInMatlab node while it''s\n')
-        fprintf('checkbox "Run a new MATLAB instance" in its configuration dialog was unticked,\n')
-        fprintf('re-load the KNIME data table with the command:\n\n')
-        fprintf('\t[kIn names] = hashmaputils(''%s'', ''%s'')\n\n', filePath, dataType)
-        fprintf('------------------------------------------------------------------------------------\n\n')
+        fprintf('        (this is useful if "kIn" is something else than a dataset).\n')
+        fprintf('To reload the KNIME table simply re-execute the "Open in Matlab" node.\n')
     end
