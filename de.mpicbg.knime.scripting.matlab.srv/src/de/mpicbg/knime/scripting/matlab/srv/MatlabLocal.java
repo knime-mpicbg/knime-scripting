@@ -19,10 +19,10 @@ import matlabcontrol.PermissiveSecurityManager;
  */
 public class MatlabLocal {
 
-	/** Session number (for identification during debugging) */
-	private Integer sessionNumber;
-	/** Total count of MATLAB sessions */
-	static Integer sessionCount;
+	/** Thread number (for identification during debugging) */
+	private Integer threadNumber;
+	/** Total count of threads connecting to MATLAB */
+	static Integer threadCount;
 	/** Factory to control the MATLAB session */
 	static MatlabProxyFactory proxyFactory;
 	/** MATLAB access queue */
@@ -46,12 +46,12 @@ public class MatlabLocal {
 		synchronized(this) {
 			
 			// Determine the total number of threads and the number of this thread
-			if (sessionCount == null) {
-				sessionCount = 1;
+			if (threadCount == null) {
+				threadCount = 1;
 			} else {
-				sessionCount++;
+				threadCount++;
 			}
-			sessionNumber = sessionCount;
+			threadNumber = threadCount;
 			
 			// Create the proxy factory (exactly once).
 			if (proxyFactory == null) {
@@ -64,7 +64,7 @@ public class MatlabLocal {
 		
 		// Establish a session connection
 		connect();
-		System.out.println("MATLAB: created thread " +  sessionNumber );
+		System.out.println("MATLAB: created thread " +  threadNumber );
 	}
 	
 	
@@ -114,12 +114,22 @@ public class MatlabLocal {
 	
 	
 	/**
-	 * Getter for the MATLAB connector queue.
+	 * Getter for the MATLAB connector queue
 	 * 
 	 * @return
 	 */
 	public synchronized ArrayBlockingQueue<MatlabProxy> getQueue() {
 		return proxyQueue;
+	}
+	
+	
+	/**
+	 * Getter for the thread number
+	 * 
+	 * @return
+	 */
+	public Integer getThreadNumber() {
+		return this.threadNumber;
 	}
 	
 	
@@ -130,27 +140,26 @@ public class MatlabLocal {
 	 */
 	public void execute(String cmd) {
 		try {
-			System.out.println("MATLAB thread " +  sessionNumber + ": acquiring control...");
+			System.out.println("MATLAB thread " +  threadNumber + ": acquiring control...");
 			// Make sure we have a connection
 			connect();
 			// Acquire proxy from the queue
 			ArrayBlockingQueue<MatlabProxy> queue = getQueue();
 			MatlabProxy proxy = queue.take();
 			// Executing MATLAB command
-			System.out.println("MATLAB thread " +  sessionNumber + ": executing...");
-			proxy.eval("disp('session " + sessionNumber + ":')");
+			System.out.println("MATLAB thread " +  threadNumber + ": executing...");
 			proxy.eval(cmd);
 			// Returning the proxy to the queue
-			System.out.println("MATLAB thread " +  sessionNumber + ": finished!");
+			System.out.println("MATLAB thread " +  threadNumber + ": finished!");
 			queue.put(proxy);
 		} catch (InterruptedException e) {
-			System.err.println("MATLAB: thread " +  sessionNumber + ": interrupted!");
+			System.err.println("MATLAB: thread " +  threadNumber + ": interrupted!");
 			e.printStackTrace();
 		} catch (MatlabInvocationException e2) {
-			System.err.println("MATLAB: in thread " +  sessionNumber + " the execution string contains syntax error(s)!");
+			System.err.println("MATLAB: in thread " +  threadNumber + " the execution string contains syntax error(s)!");
 			e2.printStackTrace();
 		} catch (MatlabConnectionException e3) {
-			System.err.println("MATLAB: thread " +  sessionNumber + "  was unable to connect to matlab");
+			System.err.println("MATLAB: thread " +  threadNumber + "  was unable to connect to matlab");
 			e3.printStackTrace();
 		}
 	}
