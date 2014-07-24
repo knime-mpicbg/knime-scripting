@@ -3,6 +3,7 @@ package de.mpicbg.knime.scripting.matlab;
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabLocal;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabUtilities;
 import matlabcontrol.MatlabConnectionException;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -84,7 +85,7 @@ public class OpenInMatlab extends AbstractNodeModel {
         File resourceFile = copyResourceToFolder(resourceFilePath, tmpPath);
         
         // Get the file name with the random string in it
-        String functionName = TemplateUtils.fileNameTrunk(resourceFile.getName());
+        String functionName = MatlabUtilities.getFileNameTrunk(resourceFile.getName());
         
         // Generate the string that will be evaluated in MATLAB
         String type = ((SettingsModelString)getModelSetting(MATLAB_TYPE_SETTING_NAME)).getStringValue();

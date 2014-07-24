@@ -13,6 +13,7 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabTempFile;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabUtilities;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabWebClient;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
@@ -75,7 +76,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
         copyResourceToFolder("hashmaputils.m", hashMapScript.getClientPath());
         hashMapScript.upload();
         workingDir = hashMapScript.getServerFile().getParent();
-        functionName = TemplateUtils.fileNameTrunk(hashMapScript.getServerFile().getName());
+        functionName = MatlabUtilities.getFileNameTrunk(hashMapScript.getServerFile().getName());
     }
 
 
