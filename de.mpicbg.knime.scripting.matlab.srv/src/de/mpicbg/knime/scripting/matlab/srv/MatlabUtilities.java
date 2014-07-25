@@ -73,7 +73,7 @@ public class MatlabUtilities {
 		// Create the output file		
 		File outfile = new File(destinationDirectory, resfile.getName());
 		
-		if (!outfile.exists()) {
+//		if (!outfile.exists()) {
 			outfile.deleteOnExit();
 	        
 	        // Get the thread class loader to access the resource file
@@ -87,7 +87,7 @@ public class MatlabUtilities {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
+//		}
         
         return outfile;
     }

@@ -1,5 +1,7 @@
+function [kIn, names] = hashmaputils(filePath, data, varargin)
 %
 % HASHMAPUTILS
+%
 % Depending on the input data this utility Reads a the file of a 
 % serialized java hasmap (produced by KNIME) and transforms it into a 
 % common matlab object or it converts matlabdata in a LinkedHashMap and
@@ -32,7 +34,7 @@
 % Institution: Max Planck Institut fo Cell Biology and Genetics
 
 
-function [kIn, names] = hashmaputils(filePath, data, varargin)
+
 
 % Handle the input
 parser = inputParser();
