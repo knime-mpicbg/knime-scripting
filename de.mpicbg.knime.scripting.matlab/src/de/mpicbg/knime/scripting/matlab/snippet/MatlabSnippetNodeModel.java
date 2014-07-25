@@ -1,9 +1,12 @@
-package de.mpicbg.knime.scripting.matlab;
+package de.mpicbg.knime.scripting.matlab.snippet;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+
+import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
+import de.mpicbg.knime.scripting.matlab.TableConverter;
 
 
 /**

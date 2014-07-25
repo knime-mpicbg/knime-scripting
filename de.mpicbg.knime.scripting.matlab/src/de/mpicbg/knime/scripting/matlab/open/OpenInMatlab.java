@@ -1,7 +1,8 @@
-package de.mpicbg.knime.scripting.matlab;
+package de.mpicbg.knime.scripting.matlab.open;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
+import de.mpicbg.knime.scripting.matlab.TableConverter;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabLocal;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabUtilities;
 import matlabcontrol.MatlabConnectionException;
@@ -81,11 +82,8 @@ public class OpenInMatlab extends AbstractNodeModel {
         // Save the object
         TableConverter.writeHashMapToTempFolder(tmpPath + binaryFileName, serializableTable);       
         
-        // Copy the MATLAB script to the temp-directory
-        File resourceFile = copyResourceToFolder(resourceFilePath, tmpPath);
-        
-        // Get the file name with the random string in it
-        String functionName = MatlabUtilities.getFileNameTrunk(resourceFile.getName());
+        // Copy the MATLAB script to the temp-directory and get the file name with the random string in it
+        String functionName = MatlabUtilities.transferHashMapMFile(tmpPath);
         
         // Generate the string that will be evaluated in MATLAB
         String type = ((SettingsModelString)getModelSetting(MATLAB_TYPE_SETTING_NAME)).getStringValue();

@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.matlab;
+package de.mpicbg.knime.scripting.matlab.open;
 
 import de.mpicbg.knime.knutils.AbstractConfigDialog;
 

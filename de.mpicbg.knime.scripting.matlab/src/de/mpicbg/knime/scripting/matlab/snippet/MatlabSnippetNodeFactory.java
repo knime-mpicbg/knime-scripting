@@ -1,5 +1,6 @@
-package de.mpicbg.knime.scripting.matlab;
+package de.mpicbg.knime.scripting.matlab.snippet;
 
+import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
 import org.eclipse.jface.preference.IPreferenceStore;

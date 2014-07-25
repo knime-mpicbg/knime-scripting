@@ -17,11 +17,11 @@
 
     <extension point="org.knime.workbench.repository.nodes">
         <node category-path="community/matlab"
-              factory-class="de.mpicbg.knime.scripting.matlab.MatlabSnippetNodeFactory"
+              factory-class="de.mpicbg.knime.scripting.matlab.snippet.MatlabSnippetNodeFactory"
               id="de.mpicbg.knime.scripting.matlab.MatlabSnippetNodeFactory"/>
 
         <node category-path="/community/matlab"
-              factory-class="de.mpicbg.knime.scripting.matlab.OpenInMatlabFactory"
+              factory-class="de.mpicbg.knime.scripting.matlab.open.OpenInMatlabFactory"
               id="de.mpicbg.knime.scripting.matlab.OpenInMatlabFactory"/>
 
         <node category-path="/community/matlab"
