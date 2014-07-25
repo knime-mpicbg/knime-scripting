@@ -129,6 +129,39 @@ public class MatlabController {
 	
 	
 	/**
+	 * Get a proxy from the queue.
+	 * This should be succeeded by a call to {@link #putToQueue(MatlabProxy)}
+	 * 
+	 * @return Proxy object
+	 */
+	public synchronized MatlabProxy getFromQueue() {
+		try {
+			return proxyQueue.take();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * Put the proxy back into the queue.
+	 * This should be preceded by a call to {@link #getFromQueue()}
+	 * 
+	 * @param proxy
+	 */
+	public synchronized void putToQueue(MatlabProxy proxy) {
+		try {
+			proxyQueue.put(proxy);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+
+	/**
 	 * Getter for the thread number
 	 * 
 	 * @return
