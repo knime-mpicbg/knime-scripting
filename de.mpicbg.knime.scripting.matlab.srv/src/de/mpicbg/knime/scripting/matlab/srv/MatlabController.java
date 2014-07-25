@@ -15,6 +15,11 @@ import matlabcontrol.PermissiveSecurityManager;
  * plugin for KNIME. It manages a single running MATLAB application that can be controlled
  * by the KNIME nodes.
  * 
+ * TODO: add connection timeout
+ * TODO: The proxy queue has currently a length of 1. I should be fairly easy to pass a parameter
+ * from node dialog that controls the number of MATLAB instances. This way the task could be distributed
+ * on several MATLAB applications
+ * 
  * @author Felix Meyenhofer
  */
 public class MatlabController {
