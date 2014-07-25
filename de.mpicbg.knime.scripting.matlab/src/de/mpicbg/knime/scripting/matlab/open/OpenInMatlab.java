@@ -90,7 +90,7 @@ public class OpenInMatlab extends AbstractNodeModel {
         String cmd = "cd " + tmpPath + ";disp(' ');disp('Thread "+ this.matlab.getThreadNumber() +":');[kIn names]=" + functionName + "('" + binaryFileName + "','" + type + "','showMessage');";
         
         // Execute the command in MATLAB
-        matlab.execute(cmd);
+        matlab.evaluate(cmd);
         logger.info("The data is now loaded in MATLAB. Switch to the MATLAB command window.");
 
         return new BufferedDataTable[0];

@@ -138,7 +138,7 @@ public class MatlabController {
 	 * 
 	 * @param cmd String to execute on the MATLAB command line
 	 */
-	public void execute(String cmd) {
+	public void evaluate(String cmd) {
 		try {
 			System.out.println("MATLAB thread " +  threadNumber + ": acquiring control...");
 			// Make sure we have a connection

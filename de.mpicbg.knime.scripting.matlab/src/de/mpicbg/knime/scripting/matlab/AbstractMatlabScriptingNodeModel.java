@@ -27,6 +27,11 @@ import java.io.InputStream;
 import java.util.LinkedHashMap;
 
 
+/**
+ * 
+ * @author Holger Brandl, Felix Meyenhofer
+ *
+ */
 public abstract class AbstractMatlabScriptingNodeModel extends AbstractScriptingNodeModel {
 
 
@@ -76,7 +81,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
         copyResourceToFolder("hashmaputils.m", hashMapScript.getClientPath());
         hashMapScript.upload();
         workingDir = hashMapScript.getServerFile().getParent();
-        functionName = MatlabUtilities.getFileNameTrunk(hashMapScript.getServerFile().getName());
+        functionName = MatlabUtilities.fileName2functionName(hashMapScript.getServerFile().getName());
     }
 
 

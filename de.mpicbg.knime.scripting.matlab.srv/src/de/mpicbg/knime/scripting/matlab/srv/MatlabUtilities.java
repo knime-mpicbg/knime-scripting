@@ -30,6 +30,7 @@ public class MatlabUtilities {
 	/** Name of the m-file to load the hashmap object dump from KNIME */
 	public final static String MATLAB_HASHMAP_SCRIPT = "hashmaputils.m";
 	
+	
 	/**
 	 * Converts an array of doubles to the MATLAB array declaration string.
 	 * 
@@ -55,7 +56,7 @@ public class MatlabUtilities {
      */
     public static String transferHashMapMFile(String destinationDirectory) {
     	copyResource(MATLAB_HASHMAP_SCRIPT, destinationDirectory);
-    	return getFileNameTrunk(MATLAB_HASHMAP_SCRIPT);
+    	return fileName2functionName(MATLAB_HASHMAP_SCRIPT);
     }
     
     
@@ -112,8 +113,14 @@ public class MatlabUtilities {
         out.close();
     }
     
-    
-    public static String getFileNameTrunk(String str) {
+    /**
+     * Clip the extension of the file name so it can be used as a function name 
+     * in MATLAB. 
+     * 
+     * @param str file name
+     * @return	function name
+     */
+    public static String fileName2functionName(String str) {
         File tmp = new File(str);
         str = tmp.getName();
         int index = str.indexOf(".");
