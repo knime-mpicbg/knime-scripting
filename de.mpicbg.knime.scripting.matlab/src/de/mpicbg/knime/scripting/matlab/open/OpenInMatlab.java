@@ -3,7 +3,7 @@ package de.mpicbg.knime.scripting.matlab.open;
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.matlab.TableConverter;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabLocal;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabController;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabUtilities;
 import matlabcontrol.MatlabConnectionException;
 import org.knime.core.node.BufferedDataTable;
@@ -32,7 +32,7 @@ public class OpenInMatlab extends AbstractNodeModel {
     public final String tmpPath = System.getProperty("java.io.tmpdir") + "/";
 
     /** Object to access the MATLAB session */
-    private MatlabLocal matlab;
+    private MatlabController matlab;
     
 
     /**
@@ -48,7 +48,7 @@ public class OpenInMatlab extends AbstractNodeModel {
         // Instantiate the local MATLAB server
         try {
         	logger.info("Starting MATLAB...");
-			matlab = new MatlabLocal();
+			matlab = new MatlabController();
 		} catch (MatlabConnectionException e) {
 			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 					" to use KNIME's MATLAB scripting integration.");

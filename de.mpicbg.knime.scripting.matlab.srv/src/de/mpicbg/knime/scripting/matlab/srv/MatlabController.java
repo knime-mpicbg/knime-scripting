@@ -17,7 +17,7 @@ import matlabcontrol.PermissiveSecurityManager;
  * 
  * @author Felix Meyenhofer
  */
-public class MatlabLocal {
+public class MatlabController {
 
 	/** Thread number (for identification during debugging) */
 	private Integer threadNumber;
@@ -39,7 +39,7 @@ public class MatlabLocal {
 	 * @param name of the thread
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabLocal() throws MatlabConnectionException {
+	public MatlabController() throws MatlabConnectionException {
 		// Set a very permissive security manager (beware this could be an entry point for abuse)
 		System.setSecurityManager(new PermissiveSecurityManager());
 		
