@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.knutils.AttributeUtils;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.generic.RPortObject;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -374,16 +375,16 @@ public class RUtils {
     }
 
 
-    public static RConnection createConnection() {
+    public static RConnection createConnection() throws KnimeScriptingException {
 
         String host = getHost();
         int port = getPort();
-
+        
         try {
             return new RConnection(host, port);
         } catch (RserveException e) {
-            throw new RuntimeException("Could not connect to R. Probably, the R-Server is not running.\nHere's what you need to do:\n 1) Check what R-server-host is configured in your Knime preferences.\n 2) If your host is set to be 'localhost' start R and run the following command\n library(Rserve); Rserve(args = \"--vanilla\")");
-
+        	e.printStackTrace();
+        	throw new KnimeScriptingException("Could not connect to R. Probably, the R-Server is not running.\nHere's what you need to do:\n 1) Check what R-server-host is configured in your Knime preferences.\n 2) If your host is set to be 'localhost' start R and run the following command\n library(Rserve); Rserve(args = \"--vanilla\")");
         }
     }
 
