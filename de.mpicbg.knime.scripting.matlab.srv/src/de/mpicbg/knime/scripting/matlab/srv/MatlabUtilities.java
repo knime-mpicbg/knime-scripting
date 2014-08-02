@@ -24,7 +24,7 @@ import java.io.OutputStream;
  * 
  * @author Holger Brandl, Felix Meyenhofer
  */
-
+@Deprecated
 public class MatlabUtilities {
 	
 	/** Name of the m-file to load the hashmap object dump from KNIME */
