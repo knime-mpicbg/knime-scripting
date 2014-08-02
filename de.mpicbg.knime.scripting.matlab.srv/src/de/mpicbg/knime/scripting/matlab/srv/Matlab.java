@@ -28,6 +28,9 @@ public interface Matlab {
 	/** Default MATLAB snippet script */
 	public final static String DEFAULT_SNIPPET = OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME; 
 	
+	/** Default MATLAB plot script */
+    public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)' will be run prior to these commands.\nplot(kIn);";
+	
 	/** Default MATLAB type to hold the KNIME table data */
 	public final static String DEFAULT_TYPE = "dataset";
 	

@@ -25,7 +25,7 @@ import java.util.Map;
 public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
     /**
-     * The propety for the string.
+     * The property for the string.
      */
     protected final SettingsModelString script;
     protected final SettingsModelString template;
@@ -38,7 +38,11 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-        super(inPorts, outPorts);
+    	this(inPorts, outPorts, false);
+    }
+    
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
+        super(inPorts, outPorts, useNewSettingsHashmap);
 
         numInputs = inPorts.length;
         numOutputs = outPorts.length;

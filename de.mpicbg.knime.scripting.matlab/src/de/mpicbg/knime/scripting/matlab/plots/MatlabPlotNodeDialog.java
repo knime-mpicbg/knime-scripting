@@ -23,10 +23,12 @@ public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
         super(defaultScript, new MatlabColReformatter(), useTemplateRepository);
 
         createNewTab("Output Options");
-        addDialogComponent(new DialogComponentNumber(MatlabPlotNodeFactory.createPropFigureWidth(), "Width", 10));
-        addDialogComponent(new DialogComponentNumber(MatlabPlotNodeFactory.createPropFigureHeight(), "Height", 10));
+        addDialogComponent(new DialogComponentNumber(MatlabPlotNodeModel.createPropFigureWidthSetting(), "Width", 10));
+        addDialogComponent(new DialogComponentNumber(MatlabPlotNodeModel.createPropFigureHeightSetting(), "Height", 10));
 
-        DialogComponentFileChooser chooser = new DialogComponentFileChooser(MatlabPlotNodeFactory.createPropOutputFile(), "matlabplot.output.file", JFileChooser.SAVE_DIALOG, "png") {
+        DialogComponentFileChooser chooser = new DialogComponentFileChooser(MatlabPlotNodeModel.createPropOutputFileSetting(), 
+        		"matlabplot.output.file", 
+        		JFileChooser.SAVE_DIALOG, "png") {
 
             // override this method to make the file-selection optional
             @Override
@@ -37,10 +39,9 @@ public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
 
         };
 
-
         addDialogComponent(chooser);
 
-        addDialogComponent(new DialogComponentBoolean(MatlabPlotNodeFactory.createOverwriteFile(), "Overwrite existing file"));
+        addDialogComponent(new DialogComponentBoolean(MatlabPlotNodeModel.createOverwriteFileSetting(), "Overwrite existing file"));
 
 //            addDialogComponent(new DialogComponentStringSelection(createPropOutputType(), "Type", Arrays.asList("png", "jpg", "pdf", "svg")));
 
