@@ -26,12 +26,15 @@ public class MatlabController {
 
 	/** Thread number (for identification during debugging) */
 	private Integer threadNumber;
+	
 	/** Total count of threads connecting to MATLAB */
 	static Integer threadCount;
+	
 	/** Factory to control the MATLAB session */
 	static MatlabProxyFactory proxyFactory;
+	
 	/** MATLAB access queue */
-	static ArrayBlockingQueue<MatlabProxy> proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
+	static ArrayBlockingQueue<MatlabProxy> proxyQueue;// = new ArrayBlockingQueue<MatlabProxy>(1);
 
 	
 	/**
@@ -67,8 +70,6 @@ public class MatlabController {
 			} 
 		}
 		
-		// Establish a session connection
-		connect();
 		System.out.println("MATLAB: created thread " +  threadNumber );
 	}
 	
@@ -82,7 +83,8 @@ public class MatlabController {
 	 */	
 	public synchronized void connect() throws MatlabConnectionException {
 		System.out.println("MATLAB: starting...");
-		if (proxyQueue.size() == 0) {
+		if (proxyQueue == null) {
+			proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
 			// Use the factory to get a running MATLAB session
 			proxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback() {
 	            @Override
@@ -94,7 +96,7 @@ public class MatlabController {
 	                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener() {				
 						@Override
 						public void proxyDisconnected(MatlabProxy proxy) {
-							proxyQueue.remove(proxy);
+							proxyQueue = null;
 						}
 					});
 	            }
@@ -130,15 +132,19 @@ public class MatlabController {
 	
 	/**
 	 * Get a proxy from the queue.
-	 * This should be succeeded by a call to {@link #putToQueue(MatlabProxy)}
+	 * This should be succeeded by a call to {@link #returnProxyToQueue}
 	 * 
 	 * @return Proxy object
+	 * @throws MatlabConnectionException 
 	 */
-	public synchronized MatlabProxy getFromQueue() {
+	public synchronized MatlabProxy acquireProxyFromQueue() throws MatlabConnectionException {
+		// Establish a session connection
+		connect();
+		// Get access to the session
 		try {
 			return proxyQueue.take();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			System.err.println("This is bad. The queue is probably corrupted. You need to reopen the Workflow.");
 			e.printStackTrace();
 			return null;
 		}
@@ -147,15 +153,15 @@ public class MatlabController {
 	
 	/**
 	 * Put the proxy back into the queue.
-	 * This should be preceded by a call to {@link #getFromQueue()}
+	 * This should be preceded by a call to {@link #acquireProxyFromQueue()}
 	 * 
 	 * @param proxy
 	 */
-	public synchronized void putToQueue(MatlabProxy proxy) {
+	public synchronized void returnProxyToQueue(MatlabProxy proxy) {
 		try {
 			proxyQueue.put(proxy);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			System.err.println("This is bad. The queue is probably corrupted. You need to reopen the Workflow.");
 			e.printStackTrace();
 		}
 	}
@@ -168,38 +174,6 @@ public class MatlabController {
 	 */
 	public Integer getThreadNumber() {
 		return this.threadNumber;
-	}
-	
-	
-	/**
-	 * Execute a string in the command line of the running MATLAB application.
-	 * 
-	 * @param cmd String to execute on the MATLAB command line
-	 */
-	public void evaluate(String cmd) {
-		try {
-			System.out.println("MATLAB thread " +  threadNumber + ": acquiring control...");
-			// Make sure we have a connection
-			connect();
-			// Acquire proxy from the queue
-			ArrayBlockingQueue<MatlabProxy> queue = getQueue();
-			MatlabProxy proxy = queue.take();
-			// Executing MATLAB command
-			System.out.println("MATLAB thread " +  threadNumber + ": executing...");
-			proxy.eval(cmd);
-			// Returning the proxy to the queue
-			System.out.println("MATLAB thread " +  threadNumber + ": finished!");
-			queue.put(proxy);
-		} catch (InterruptedException e) {
-			System.err.println("MATLAB: thread " +  threadNumber + ": interrupted!");
-			e.printStackTrace();
-		} catch (MatlabInvocationException e2) {
-			System.err.println("MATLAB: in thread " +  threadNumber + " the execution string contains syntax error(s)!");
-			e2.printStackTrace();
-		} catch (MatlabConnectionException e3) {
-			System.err.println("MATLAB: thread " +  threadNumber + "  was unable to connect to matlab");
-			e3.printStackTrace();
-		}
 	}
 	
 }

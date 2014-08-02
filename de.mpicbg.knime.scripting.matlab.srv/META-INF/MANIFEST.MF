@@ -16,3 +16,4 @@ Bundle-ClassPath: matlab-srv4knime.jar,
  lib/junit-4.7.jar,
  lib/matlab-jmi-2009b.jar,
  lib/matlabcontrol-4.1.0.jar
+Import-Package: de.mpicbg.knime.knutils
