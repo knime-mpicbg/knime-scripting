@@ -9,7 +9,7 @@ function [kIn, names] = hashmaputils(filePath, data, varargin)
 % The script hat to be launched in the directory where it lies and expects
 % the oject-file to lie in the same directory too.
 %
-% [data names] = loadKNIMEtable(filePath, data, <Option>)
+% [data names] = loadKNIMEtable(filePath, data)
 %
 %       filePath: String indicating the path to a temp-file (for loading or
 %                 saving data).
@@ -18,11 +18,6 @@ function [kIn, names] = hashmaputils(filePath, data, varargin)
 %             can be a matlab object containing the data to be converted
 %             into a LinkedHashMap. The action (load or save) is inferred
 %             from the object type of 'data'.
-%
-%       Option:
-%       message: String indicating wether to display the message on the
-%                command line output during loading. 'showMessage'
-%                activates the display. default is '' (empty string).
 %
 %       Output:
 %       kIn: ouput matlab object.
@@ -34,21 +29,18 @@ function [kIn, names] = hashmaputils(filePath, data, varargin)
 % Institution: Max Planck Institut fo Cell Biology and Genetics
 
 
-
-
 % Handle the input
 parser = inputParser();
 parser.addRequired('filePath', @(x)exist(x, 'file'));
 parser.addRequired('data', @(x)validatedata(x));
-parser.addOptional('message', '', @(x)strcmp(x, 'showMessage'))
 parser.parse(filePath, data, varargin{:});
 input = parser.Results();
 
 
 % Infer the action to take.
 if ischar(input.data) % No inputdata -> see if we can load something.
-    [kIn, names] = loadhashmap(input.filePath, input.data, input.message);
-else                  % If we have data -> save it.
+    [kIn, names] = loadhashmap(input.filePath, input.data);
+else                  % We have data -> save it.
     savehashmap(input.data, input.filePath);
 end
    
@@ -59,11 +51,10 @@ end
 
 
 function out = validatedata(in)
-    c = class(in);
-    if strcmp(c, 'char')
+    if ischar(in)
         out = ismember(in, {'dataset', 'map', 'struct'});
     else
-        out = ismember(c, {'dataset', 'map', 'struct'});
+        out = ismember(class(in), {'dataset', 'map', 'struct'});
     end
     
     
@@ -101,7 +92,7 @@ function savehashmap(mTable, filePath)
     % convert the columns.
     for c = 1:numel(mColNames)
         jTable.put(kColNames{c}, eval(command));
-        eval([command '=[]']); % Free the memory
+        eval([command '=[];']); % Free the memory
     end
 
     % create a file.
@@ -116,12 +107,7 @@ function savehashmap(mTable, filePath)
     
     
     
-function [kIn, names] = loadhashmap(filePath, dataType, msg)
-
-    if strcmp(msg, 'showMessage')
-        fprintf('Loading data table from KNIME...')
-    end
-
+function [kIn, names] = loadhashmap(filePath, dataType)
 
     % Load the the object dump of the KNIME table.
     inputStream = java.io.FileInputStream(filePath);
@@ -142,9 +128,10 @@ function [kIn, names] = loadhashmap(filePath, dataType, msg)
             else
                 warning('TDS:loadKNIMEtable', 'The Statistics Toolbox is not available, changed the datatype form "dataset" to "map".')
                 kIn = containers.Map();
+                dataType = 'map';
             end
         otherwise
-            error('TDS:loadKNIMEtable', ['Unknown option: "' dataTpe '".'])
+            error('KNIME:loadKNIMEtable', ['Unknown option: "' dataTpe '".'])
     end
 
 
@@ -159,6 +146,7 @@ function [kIn, names] = loadhashmap(filePath, dataType, msg)
     end
     variableNames = genvarname(variableNames);
 
+    
     % Convert data Type.
     for n = 1:numel(columnNames)
         % Get the data and convert it to double or cell array.
@@ -199,12 +187,4 @@ function [kIn, names] = loadhashmap(filePath, dataType, msg)
         index = cellstr(num2str(index(:)));
         kIn = set(kIn, 'ObsNames', index);
         kIn = set(kIn, 'VarDescription', columnNames);
-    end
-
-    if strcmp(msg, 'showMessage')
-        fprintf('\nThe data is available as the following variables in the Workspace:\n')
-        fprintf('"kIn" is a %s containing the table.\n', dataType)
-        fprintf('"names" is a structure containing column header information\n')
-        fprintf('        (this is useful if "kIn" is something else than a dataset).\n')
-        fprintf('To reload the KNIME table simply re-execute the "Open in Matlab" node.\n')
     end
