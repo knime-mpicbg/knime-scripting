@@ -9,6 +9,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
+import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
 
 
@@ -55,14 +56,21 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	BufferedDataTable[] outData = new BufferedDataTable[1];
     	
     	try {
+            // Get the MATLAB type
+            this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+            
+            // Get the code
     		String snippet = prepareScript();
     		exec.checkCanceled();
     		
-    		BufferedDataTable table = this.matlab.client.snippetTask(inData[0], exec, snippet, Matlab.DEFAULT_TYPE);
-    		this.matlab.cleanup();
+    		// Execute it
+    		BufferedDataTable table = this.matlab.client.snippetTask(inData[0], exec, snippet, this.type);
+    		outData[0] = table;
     		exec.checkCanceled();
     		
-    		outData[0] = table;
+    		// Housekeeping
+    		this.matlab.cleanup();
+    		exec.checkCanceled();
     	} catch (CanceledExecutionException e) {
     		throw e;
     	} catch (InterruptedException e) {

@@ -113,7 +113,7 @@ public class MatlabCode {
 	private String addPlotCode(String code, Integer plotWidth, Integer plotHeight) {
     	return "figureHandle = figure('visible', 'off', 'units', 'pixels', 'position', [0, 0, " + plotWidth + ", " + plotHeight + "]);\n" +
         		"set(gcf,'PaperPositionMode','auto');\n" +
-        		code +
+        		code + "\n" +
         		"print(figureHandle, '-dpng', '" + this.plotfile + "');\n" + 
         		Matlab.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
 	}

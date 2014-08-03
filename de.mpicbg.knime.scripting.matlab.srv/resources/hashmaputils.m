@@ -1,4 +1,4 @@
-function [kIn, names] = hashmaputils(filePath, data, varargin)
+function [kIn, names] = hashmaputils(filePath, data)
 %
 % HASHMAPUTILS
 %
@@ -13,11 +13,12 @@ function [kIn, names] = hashmaputils(filePath, data, varargin)
 %
 %       filePath: String indicating the path to a temp-file (for loading or
 %                 saving data).
-%       data: can be a string indicating the matlab data type the
-%             LinkedHashMap has to be converted to (default dataset) or it
-%             can be a matlab object containing the data to be converted
-%             into a LinkedHashMap. The action (load or save) is inferred
-%             from the object type of 'data'.
+%       data: Can be a string indicating the matlab data type of the table
+%             variable {dataset (default), map, struct}.
+%             Or it can be a matlab object containing the data to be saved
+%             as a LinkedHashMap.
+%             The action (load or save) is inferred from the object type 
+%             of this input.
 %
 %       Output:
 %       kIn: ouput matlab object.
@@ -33,7 +34,7 @@ function [kIn, names] = hashmaputils(filePath, data, varargin)
 parser = inputParser();
 parser.addRequired('filePath', @(x)exist(x, 'file'));
 parser.addRequired('data', @(x)validatedata(x));
-parser.parse(filePath, data, varargin{:});
+parser.parse(filePath, data);
 input = parser.Results();
 
 
@@ -54,7 +55,7 @@ function out = validatedata(in)
     if ischar(in)
         out = ismember(in, {'dataset', 'map', 'struct'});
     else
-        out = ismember(class(in), {'dataset', 'map', 'struct'});
+        out = ismember(class(in), {'dataset', 'containers.Map', 'struct'});
     end
     
     

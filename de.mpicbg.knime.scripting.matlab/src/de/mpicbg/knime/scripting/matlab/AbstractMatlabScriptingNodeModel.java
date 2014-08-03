@@ -30,6 +30,9 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 
     /** Holds the MATLAB client object */
     protected MatlabClient matlab; 
+    
+    /** Matlab type */
+    protected String type;
 
     
     /**

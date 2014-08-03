@@ -5,8 +5,6 @@ import de.mpicbg.knime.knutils.AbstractConfigDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
-import java.util.ArrayList;
 
 
 /**
@@ -60,28 +58,9 @@ public class OpenInMatlabFactory extends NodeFactory<OpenInMatlab> {
         return new AbstractConfigDialog() {
             @Override
             protected void createControls() {
-                // path to put the temporary data
-                addDialogComponent(new DialogComponentStringSelection(
-                		OpenInMatlab.createMatlabTypeSetting(), 
-                		"Choose the MATLAB type",
-                		matlabTypeOptions()));
+            	removeTab("Options");
             }
         };
-    }
-
-    
-    /**
-     * Create the options for the pop-up menu defining the MATLAB type in the configuration dialog
-     * 
-     * @return Options
-     */
-    public static ArrayList<String> matlabTypeOptions() {
-        ArrayList<String> list = new ArrayList<String>();
-        list.add("dataset");
-        list.add("map");
-        list.add("structure");
-        return list;
-
     }
 
 }

@@ -3,6 +3,7 @@ package de.mpicbg.knime.scripting.matlab.plots;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
+import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
 
 import org.knime.core.data.DataTableSpec;
@@ -117,6 +118,9 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	PortObject[] outPorts = new PortObject[1];
     	
     	try {
+            // Get the MATLAB type
+            this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+            
 	    	// Get the input table
 	    	BufferedDataTable inputTable = (BufferedDataTable)inData[0];
 	    	
@@ -125,7 +129,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	        exec.checkCanceled();
 	
 	        // Execute the script
-	        File plotFile = matlab.client.plotTask(inputTable, snippet, getDefWidth(), getDefHeight(), "dataset");
+	        File plotFile = matlab.client.plotTask(inputTable, snippet, getDefWidth(), getDefHeight(), this.type);
 	        exec.checkCanceled();
 	        
 	        // Fetch the image file form the server and load it
