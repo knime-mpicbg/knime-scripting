@@ -12,6 +12,8 @@
 package de.mpicbg.knime.scripting.matlab.srv;
 
 import com.mathworks.jmi.CompletionObserver;
+
+import de.mpicbg.knime.scripting.matlab.srv.utils.MatlabUtilities;
 import gnu.cajo.invoke.Remote;
 import gnu.cajo.utils.ItemServer;
 

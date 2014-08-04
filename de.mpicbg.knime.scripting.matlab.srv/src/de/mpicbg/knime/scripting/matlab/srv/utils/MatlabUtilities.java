@@ -9,7 +9,7 @@
  * NETWORK CONCURRENT USER ACTIVATION type to use MATLAB as a remote engine with static scripts.
  */
 
-package de.mpicbg.knime.scripting.matlab.srv;
+package de.mpicbg.knime.scripting.matlab.srv.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
