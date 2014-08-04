@@ -15,6 +15,8 @@ import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
 import matlabcontrol.MatlabConnectionException;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.knime.core.node.port.PortType;
 
 
@@ -31,7 +33,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
     /** Holds the MATLAB client object */
     protected MatlabClient matlab; 
     
-    /** Matlab type */
+    /** MALTLAB type */
     protected String type;
 
     
@@ -48,7 +50,32 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
         // Get the flag from the preference pane
         boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
         
+        // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
+        preferences.addPropertyChangeListener(new IPropertyChangeListener() {
+			String flag;
+			boolean newlocal;
+			@Override
+			public void propertyChange(PropertyChangeEvent event) {
+				if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_LOCAL) {
+					flag = event.getNewValue().toString();
+					newlocal = (flag == "true") ? true : false;
+					logger.info("MATLAB: server property (MATLAB_LOCAL) was changed to " + flag + ". Re-initializing MATLAB client.");
+					initializeMatlabClient(newlocal);
+				}
+			}
+		});
+        
         // Initialize the MATLAB client
+        initializeMatlabClient(local);
+    }
+    
+    
+    /**
+     * Initialize the Matlab client
+     * 
+     * @param local Flag to choose local or remote execution
+     */
+    private void initializeMatlabClient(boolean local) {
         try {
 			matlab = new MatlabClient(local);
 		} catch (MatlabConnectionException e) {

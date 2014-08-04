@@ -64,8 +64,7 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         final Composite parent = getFieldEditorParent();
 
         BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
-        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow\n"+
-        				"The workflow needs to be re-loaded that changes of this parameter take effect\n",
+        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
         		parent);
         
         StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,

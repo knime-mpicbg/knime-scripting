@@ -30,10 +30,13 @@ public class MatlabClient {
 	/** MATLAB client object (can either use a remote or a local MATLAB session) */
 	public final Matlab client;
 	
+	/** Store the local/remote flag for information purposes */
+	public final boolean local;
+	
 	
 	/**
 	 * Constructor of the MATLAB client.
-	 * It uses the local flag to determine wether to use a local
+	 * It uses the local flag to determine weather to use a local
 	 * MATLAB session or to communicate with a remote session on another
 	 * machine.
 	 * 
@@ -41,6 +44,7 @@ public class MatlabClient {
 	 * @throws MatlabConnectionException
 	 */
 	public MatlabClient(boolean local) throws MatlabConnectionException {
+		this.local = local;
 		
 		if (local) {
 			client = new Local();
