@@ -77,9 +77,9 @@ public class MatlabClient {
 	private class Local implements Matlab{
 		
 		/** MATLAB controller object */
-		private MatlabController controller;
+		private MatlabController matlabController;
 		
-		private ArrayList<MatlabProxy> proxyHolder = new ArrayList<MatlabProxy>(1);
+		private ArrayList<MatlabProxy> matlabProxyHolder = new ArrayList<MatlabProxy>(1);
 		
 		/** Object to generate the MATLAB code needed for a particular task */ 
 		private MatlabCode code;
@@ -95,7 +95,7 @@ public class MatlabClient {
 		 * @throws MatlabConnectionException
 		 */
 		public Local() throws MatlabConnectionException {
-			controller = new MatlabController();
+			matlabController = new MatlabController();
 		}
 
 		
@@ -177,10 +177,10 @@ public class MatlabClient {
 		 */
 		@Override
 		public void rollback() throws InterruptedException {
-			if (this.proxyHolder.size() > 0) {
-				MatlabProxy proxy = this.proxyHolder.remove(0);
+			if (this.matlabProxyHolder.size() > 0) {
+				MatlabProxy proxy = this.matlabProxyHolder.remove(0);
 				if (proxy != null) {
-					this.controller.returnProxyToQueue(proxy);
+					this.matlabController.returnProxyToQueue(proxy);
 					System.out.println("Emergency proxy return");
 				} else {
 					System.out.println("No proxy to return");
@@ -210,9 +210,9 @@ public class MatlabClient {
 		 * @throws MatlabConnectionException 
 		 */
 		private MatlabProxy acquireMatlabProxy() throws MatlabInvocationException, MatlabConnectionException {
-			MatlabProxy proxy = controller.acquireProxyFromQueue();
-			proxyHolder.add(proxy);
-			proxy.eval("disp(' ');disp('Thread "+ controller.getThreadNumber() +":');");
+			MatlabProxy proxy = matlabController.acquireProxyFromQueue();
+			matlabProxyHolder.add(proxy);
+			proxy.eval("disp(' ');disp('Thread "+ matlabController.getThreadNumber() +":');");
 	        return proxy;
 		}
 		
@@ -222,22 +222,38 @@ public class MatlabClient {
 		 * @param proxy
 		 */
 		private void returnMatlabProxy(MatlabProxy proxy) {
-			controller.returnProxyToQueue(proxy);
-			proxyHolder.remove(proxy);
+			matlabController.returnProxyToQueue(proxy);
+			matlabProxyHolder.remove(proxy);
 		}
 		
 	}
 	
 	
+	
 	/**
 	 * Implementation of the client talking to a remote MATLAB session.
 	 */
-	private class Remote implements Matlab {
+	private class Remote implements Matlab, MatlabRemote {
+		
+		/** Object to generate the MATLAB code needed for a particular task */ 
+		private MatlabCode code;
+		
+		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
+		private MatlabTable table;
+		
+		
+		
 
 		/**
 		 * Constructor
 		 */
-		public Remote() {
+		public Remote(String serverName, int serverPort) {
+	        try {
+	            String url = "//" + serverName + ":" + serverPort + "/" + MatlabWeb.REGISTRY_NAME;
+	            matlab = (MatlabWeb) TransparentItemProxy.getItem(url, new Class[]{MatlabWeb.class});
+	        } catch (Throwable e) {
+	            throw new RuntimeException(e);
+	        }
 			
 		}
 		
