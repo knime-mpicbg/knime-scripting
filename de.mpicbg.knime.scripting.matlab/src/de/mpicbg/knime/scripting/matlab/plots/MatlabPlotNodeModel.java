@@ -5,6 +5,7 @@ import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
+import de.mpicbg.knime.scripting.matlab.srv.utils.UnsupportedCellTypeException;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
@@ -159,6 +160,9 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     		throw e;
     	} catch (InterruptedException e) {
     		throw e;    		
+    	} catch (UnsupportedCellTypeException e) {
+    		logger.error("MATLAB scripting integration: Table contains unsupported cell types. Consider column filtering.");
+    		throw e;
     	} catch (Exception e) {
     		throw e;
     	} finally {

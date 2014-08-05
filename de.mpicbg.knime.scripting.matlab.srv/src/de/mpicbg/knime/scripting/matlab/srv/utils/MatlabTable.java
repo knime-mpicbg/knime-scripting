@@ -103,8 +103,9 @@ public class MatlabTable {
      * 
      * @param table Input table form KNIME
      * @return {@link LinkedHashMap}
+	 * @throws UnsupportedCellTypeException 
      */
-    public void knimeTable2LinkedHashMap() {
+    public void knimeTable2LinkedHashMap() throws UnsupportedCellTypeException {
         DataTableSpec tableSpec = this.table.getDataTableSpec();
         
         // Initialize the hash.
@@ -126,16 +127,19 @@ public class MatlabTable {
 
                 DataColumnSpec columnSpec = tableSpec.getColumnSpec(j);
 
-                if (columnSpec.getType().isCompatible(StringValue.class)) {
+                if (columnSpec.getType().equals(StringCell.TYPE)) {
                     String[] str = (String[]) hashTable.get(columnSpec.getName());
                     Attribute<StringValue> readoutAttribute = new InputTableAttribute<StringValue>(columnSpec.getName(), this.table);
                     str[i] = readoutAttribute.getNominalAttribute(row);
                     hashTable.put(columnSpec.getName(), str);
-                } else {
+                } else if (columnSpec.getType().isCompatible(IntValue.class) || 
+                		(columnSpec.getType().isCompatible(DoubleValue.class))) {
                     Double[] num = (Double[]) hashTable.get(columnSpec.getName());
                     Attribute<DoubleValue> readoutAttribute = new InputTableAttribute<DoubleValue>(columnSpec.getName(), this.table);
                     num[i] = readoutAttribute.getDoubleAttribute(row);
                     hashTable.put(columnSpec.getName(), num);
+                } else {
+                	throw(new UnsupportedCellTypeException("Unsupported cell type."));
                 }
             }
             i++;
@@ -227,8 +231,9 @@ public class MatlabTable {
 	 * java object.
 	 * 
 	 * @throws IOException
+	 * @throws UnsupportedCellTypeException 
 	 */
-    public void writeHashMapToTempFolder() throws IOException {
+    public void writeHashMapToTempFolder() throws IOException, UnsupportedCellTypeException {
     	if (this.hash == null)
     		knimeTable2LinkedHashMap();
     	

@@ -11,6 +11,7 @@ import org.knime.core.node.InvalidSettingsException;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
+import de.mpicbg.knime.scripting.matlab.srv.utils.UnsupportedCellTypeException;
 
 
 /**
@@ -75,6 +76,9 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     		throw e;
     	} catch (InterruptedException e) {
     		throw e;    		
+    	} catch (UnsupportedCellTypeException e) {
+    		logger.error("MATLAB scripting integration: Table contains unsupported cell types. Consider column filtering.");
+    		throw e;
     	} finally {
     		this.matlab.rollback();
     	}
