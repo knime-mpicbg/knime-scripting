@@ -19,6 +19,7 @@ import de.mpicbg.knime.scripting.matlab.srv.MatlabWeb;
 /**
  * Encapsulates client and server temp files to simplify create/delete/copy operations
  */
+@Deprecated
 public class MatlabTempFile {
 
     private File clientFile, serverFile;
