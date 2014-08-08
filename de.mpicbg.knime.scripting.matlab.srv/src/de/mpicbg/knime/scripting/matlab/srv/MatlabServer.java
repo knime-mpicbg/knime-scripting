@@ -15,14 +15,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import matlabcontrol.MatlabConnectionException;
-import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 
 
 /**
- * 
+ * This is the MATLAB server for the KNIME scripting integration.
+ * It can be run on a remote machine where the KNIME clients access it
+ * using JVM-to-JVM communication with the cajo library
+ *  
  * @author Holger Brandl, Tom Haux, Felix Meyenhofer
  */
 public class MatlabServer implements MatlabRemote {
@@ -37,6 +48,11 @@ public class MatlabServer implements MatlabRemote {
 	private ArrayList<MatlabProxy> matlabProxyHolder = new ArrayList<MatlabProxy>(1);
 	
 	
+	/**
+	 * Constructor
+	 * 
+	 * @param port
+	 */
 	public MatlabServer(int port) {
 		try {
             System.out.println("Configuring on port: " + port);
@@ -55,17 +71,78 @@ public class MatlabServer implements MatlabRemote {
 			e.printStackTrace();
 		}
 	}
+	
+	
+	/**
+	 * Makes the MATLAB server runnable form the command line
+	 * 
+	 * @param args
+	 */
+	@SuppressWarnings("static-access")
+	public static void main(String[] args) {
+		 
+		// Default values
+		int port = MatlabRemote.DEFAULT_PORT;
+		int threads = 1;
+		
+		// Create options
+		Options options = new Options();
+		options.addOption(new Option("h", "print help"));
+		options.addOption(OptionBuilder.withArgName("port")
+				.hasArg()
+				.withDescription("server port")
+				.create("p"));
+		options.addOption(OptionBuilder.withArgName("threads")
+				.hasArg()
+				.withDescription("number of server threads (running MATLAB applications))")
+				.create("t"));
+		
+		 // create the parser
+	    CommandLineParser parser = new GnuParser();
+	    try {
+	        // parse the command line arguments
+	        CommandLine line = parser.parse(options, args);
+	        
+	        if (line.hasOption("h")) {
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp("MatlabServer", options);
+                System.exit(0);
+            } else {
+            	if (line.hasOption("p")) 
+            		port = Integer.parseInt(line.getOptionValue("p"));
+            	if(line.hasOption("t"))
+            		threads = Integer.parseInt(line.getOptionValue("t"));
+            }
+	    }
+	    catch( ParseException exp ) {
+	        // oops, something went wrong
+	        System.err.println( "Parsing failed.  Reason: " + exp.getMessage() );
+	    }
 
+		
+	    // Welcome message
+	    System.out.println("***************************************************************\n" +
+	    		"      MATLAB server for the KNIME scripting integrations\n" +
+	    		"***************************************************************");
+		
+	    // Start the server
+	    new MatlabServer(port);
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public MatlabProxy acquireMatlabProxy() throws MatlabConnectionException {
 		MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 		matlabProxyHolder.add(proxy);
-		System.out.println("MATLAB Proxy acquired.");
+		System.out.println("MATLAB Proxy acquired by thread " + matlabController.getThreadNumber());
 		return proxy;
 	}
 
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void releaseMatlabProxy(MatlabProxy proxy) {
 		if (proxy == null) {
@@ -78,33 +155,13 @@ public class MatlabServer implements MatlabRemote {
 		} else {
 			this.matlabController.returnProxyToQueue(proxy);
 			this.matlabProxyHolder.remove(proxy);
-			System.out.println("The proxy released");
+			System.out.println("The proxy released by thread " + matlabController.getThreadNumber());
 		}
 	}
-
-
-//	@Override
-//	public void eval(String cmd) throws MatlabInvocationException {
-//		if (matlabProxyHolder.size() == 0)
-//			throw new RuntimeException("Currently there is no proxy at disposel. ");
-//		
-//		MatlabProxy proxy = matlabProxyHolder.get(1);
-//		proxy.eval(cmd);
-//	}
-//
-//
-//	@Override
-//	public Object getVariable(String var) throws MatlabInvocationException {
-//		if (matlabProxyHolder.size() == 0)
-//			throw new RuntimeException("Currently there is no proxy at disposel. ");
-//		
-//		MatlabProxy proxy = matlabProxyHolder.get(0);
-//		return proxy.getVariable(var);
-//	}
 	
-	
-	
-	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public File createTempFile(String prefix, String suffix) throws IOException {
 		File tempFile = File.createTempFile(prefix, suffix);
@@ -112,33 +169,51 @@ public class MatlabServer implements MatlabRemote {
         return tempFile;
     }
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String getFilePath(File file) {
         return file.getAbsolutePath();
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public boolean deleteFile(File file) {
         return file != null ? file.delete() : true;
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public int openFile(File file) throws IOException {
         return fileMap.add(file);
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public byte[] readFile(int descriptor) throws IOException {
         ServerFile file = fileMap.get(descriptor);
         return file.read();
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public void writeFile(int descriptor, byte[] bytes) throws IOException {
         ServerFile file = fileMap.get(descriptor);
         file.write(bytes);
     }
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
     public void closeFile(int descriptor) throws IOException {
         ServerFile file = fileMap.get(descriptor);
@@ -230,7 +305,6 @@ public class MatlabServer implements MatlabRemote {
             this.file = file;
         }
 
-
         /**
          * Read the server file
          * 
@@ -239,12 +313,16 @@ public class MatlabServer implements MatlabRemote {
          */
         public byte[] read() throws IOException {
             // Create the stream if this is the first file operation
-            if (input == null) input = new BufferedInputStream(new FileInputStream(file));
+            if (input == null)
+            	input = new BufferedInputStream(new FileInputStream(file));
 
             int n = input.read(buffer);
             byte[] b = buffer;
-            if (n == -1) b = new byte[0];
-            else if (n < buffer.length) b = Arrays.copyOf(buffer, n);
+            
+            if (n == -1)
+            	b = new byte[0];
+            else if (n < buffer.length) 
+            	b = Arrays.copyOf(buffer, n);
 
             return b;
         }
@@ -257,7 +335,8 @@ public class MatlabServer implements MatlabRemote {
          */
         public void write(byte[] bytes) throws IOException {
             // Create the stream if this is the first file operation
-            if (output == null) output = new BufferedOutputStream(new FileOutputStream(file));
+            if (output == null) 
+            	output = new BufferedOutputStream(new FileOutputStream(file));
             output.write(bytes);
         }
 
@@ -268,8 +347,10 @@ public class MatlabServer implements MatlabRemote {
          */
         public void close() throws IOException {
             // Close whichever stream was created
-            if (input != null) input.close();
-            if (output != null) output.close();
+            if (input != null) 
+            	input.close();
+            if (output != null) 
+            	output.close();
         }
     }
 

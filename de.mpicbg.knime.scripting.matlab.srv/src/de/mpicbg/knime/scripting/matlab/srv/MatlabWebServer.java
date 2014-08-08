@@ -30,7 +30,7 @@ import java.util.concurrent.Semaphore;
  * Date: 2/23/11
  * Time: 4:54 PM
  */
-
+@Deprecated
 public class MatlabWebServer implements MatlabWeb {
 
     com.mathworks.jmi.Matlab matlab;

@@ -55,7 +55,9 @@ public class MatlabClient {
 	
 	
 	/**
-	 * 
+	 * Constructor of the MATLAB client.
+	 * The additional parameters allow to access a non-default host running
+	 * a {@link MatlabServer}
 	 * 
 	 * @param local
 	 * @param host
@@ -95,7 +97,7 @@ public class MatlabClient {
 	/**
 	 * Implementation of a local MATLAB client
 	 */
-	private class Local implements Matlab{
+	private class Local implements Matlab {
 		
 		/** MATLAB controller object */
 		private MatlabController matlabController;
@@ -326,6 +328,7 @@ public class MatlabClient {
 	
 	
 	
+	
 	/**
 	 * Implementation of the client talking to a remote MATLAB session.
 	 */
@@ -463,59 +466,57 @@ public class MatlabClient {
 			matlabServer.releaseMatlabProxy(proxy);
 		}
 		
-//		/**
-//		 * {@inheritDoc} 
-//		 */
-//		@Override
-//		public void eval(String cms) throws MatlabInvocationException {
-//			matlabServer.eval(cms);
-//		}
-//
-//
-//		@Override
-//		public Object getVariable(String var) throws MatlabInvocationException {
-//			return matlabServer.getVariable(var);
-//		}
-
-
-		
-		
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public File createTempFile(String prefix, String suffix) throws IOException {
 			return matlabServer.createTempFile(prefix, suffix);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public String getFilePath(File file) {
 			return matlabServer.getFilePath(file);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public boolean deleteFile(File file) {
 			return matlabServer.deleteFile(file);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public int openFile(File file) throws IOException {
 			return matlabServer.openFile(file);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public byte[] readFile(int descriptor) throws IOException {
 			 return matlabServer.readFile(descriptor);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public void writeFile(int descriptor, byte[] bytes) throws IOException {
 			matlabServer.writeFile(descriptor, bytes);
 		}
 
-
+		/**
+		 * {@inheritDoc}  
+		 */
 		@Override
 		public void closeFile(int descriptor) throws IOException {
 			matlabServer.closeFile(descriptor);
@@ -525,3 +526,4 @@ public class MatlabClient {
 
 	
 }
+

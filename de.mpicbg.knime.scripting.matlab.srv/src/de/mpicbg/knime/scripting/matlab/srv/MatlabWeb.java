@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author Holger Brandl, Tom Haux
  */
-
+@Deprecated
 public interface MatlabWeb {
 
     public int DEFAULT_PORT = 1198;

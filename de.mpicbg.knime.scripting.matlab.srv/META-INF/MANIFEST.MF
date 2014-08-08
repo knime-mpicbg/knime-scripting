@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Main-Class: de.mpicbg.knime.scripting.matlab.srv.MatlabServer
 Bundle-ManifestVersion: 2
 Bundle-Name: Server for the Matlab scripting integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab.srv; singleton:=true
@@ -16,5 +17,6 @@ Bundle-ClassPath: matlab-srv4knime.jar,
  lib/jmatlink-1.3.jar,
  lib/junit-4.7.jar,
  lib/matlab-jmi-2009b.jar,
- lib/matlabcontrol-4.1.0.jar
+ lib/matlabcontrol-4.1.0.jar,
+ lib/commons-cli-1.2.jar
 Import-Package: de.mpicbg.knime.knutils
