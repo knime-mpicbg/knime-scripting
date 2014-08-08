@@ -146,6 +146,7 @@ public class MatlabServer implements MatlabRemote {
         fileMap.remove(descriptor);
     }
 
+	
 
     /**
      * Maintain a map of descriptors to ServerFile references.
@@ -159,31 +160,51 @@ public class MatlabServer implements MatlabRemote {
         private Hashtable<String, ServerFile> map = new Hashtable<String, ServerFile>();
 
 
-
+        /**
+         * Constructor of the file map
+         * 
+         * @param descriptor
+         * @return
+         */
         public ServerFile get(int descriptor) {
             return map.get(Integer.toString(descriptor));
         }
 
+        /**
+         * Add a file to the map
+         * 
+         * @param file
+         * @return
+         */
         public int add(File file) {
             return add(new ServerFile(file));
         }
 
+        /**
+         * Add a file to the map
+         * 
+         * @param file
+         * @return
+         */
         public int add(ServerFile file) {
             String descriptor = Integer.toString(currentDescriptor);
             map.put(descriptor, file);
             return currentDescriptor++;
         }
 
+        /**
+         * Remove a file form the map
+         * 
+         * @param descriptor
+         */
         public void remove(int descriptor) {
             map.remove(Integer.toString(descriptor));
         }
-
     }
 
 
     /**
-     * 
-     *
+     * Wrapper for the File object with write and read methods
      */
     class ServerFile {
 
@@ -201,7 +222,7 @@ public class MatlabServer implements MatlabRemote {
 
 
         /**
-         * Constructor
+         * Constructor of the ServerFile
          * 
          * @param file
          */
@@ -210,6 +231,12 @@ public class MatlabServer implements MatlabRemote {
         }
 
 
+        /**
+         * Read the server file
+         * 
+         * @return
+         * @throws IOException
+         */
         public byte[] read() throws IOException {
             // Create the stream if this is the first file operation
             if (input == null) input = new BufferedInputStream(new FileInputStream(file));
@@ -222,19 +249,28 @@ public class MatlabServer implements MatlabRemote {
             return b;
         }
 
+        /**
+         * Write the server file
+         * 
+         * @param bytes
+         * @throws IOException
+         */
         public void write(byte[] bytes) throws IOException {
             // Create the stream if this is the first file operation
             if (output == null) output = new BufferedOutputStream(new FileOutputStream(file));
             output.write(bytes);
         }
 
+        /**
+         * Close the server file
+         * 
+         * @throws IOException
+         */
         public void close() throws IOException {
             // Close whichever stream was created
             if (input != null) input.close();
             if (output != null) output.close();
         }
-
     }
-	
 
 }

@@ -108,9 +108,9 @@ public class MatlabTable {
      * 
      * @param table Input table form KNIME
      * @return {@link LinkedHashMap}
-	 * @throws UnsupportedCellTypeException 
+	 * @throws MatlabCellTypeException 
      */
-    public void knimeTable2LinkedHashMap() throws UnsupportedCellTypeException {
+    public void knimeTable2LinkedHashMap() {
         DataTableSpec tableSpec = this.table.getDataTableSpec();
         
         // Initialize the hash.
@@ -144,7 +144,7 @@ public class MatlabTable {
                     num[i] = readoutAttribute.getDoubleAttribute(row);
                     hashTable.put(columnSpec.getName(), num);
                 } else {
-                	throw(new UnsupportedCellTypeException("Unsupported cell type."));
+                	throw new RuntimeException("Unsupported cell type.");
                 }
             }
             i++;
@@ -236,9 +236,9 @@ public class MatlabTable {
 	 * java object.
 	 * 
 	 * @throws IOException
-	 * @throws UnsupportedCellTypeException 
+	 * @throws MatlabCellTypeException 
 	 */
-    public void writeHashMapToTempFolder() throws IOException, UnsupportedCellTypeException {
+    public void writeHashMapToTempFolder() throws IOException {
     	if (this.hash == null)
     		knimeTable2LinkedHashMap();
     	
@@ -314,12 +314,12 @@ public class MatlabTable {
     }
 
     
-    public void pushTable2MatlabWorkspace(MatlabProxy proxy, String matlabType, BufferedDataTable table) throws MatlabInvocationException {
+    public void pushTable2MatlabWorkspace(MatlabProxy proxy, String matlabType) throws MatlabInvocationException {
     	
     	// Get the column names
     	List<String> colNames = new ArrayList<String>();
     	List<DataType> colTypes = new ArrayList<DataType>();
-        for (DataColumnSpec colSpec : table.getDataTableSpec()) {
+        for (DataColumnSpec colSpec : this.table.getDataTableSpec()) {
             colNames.add(colSpec.getName());
             colTypes.add(colSpec.getType());
         }
@@ -332,7 +332,7 @@ public class MatlabTable {
         
         // Push the data line by line
         String appendRowCmd;
-        for (DataRow dataRow : table) {
+        for (DataRow dataRow : this.table) {
         	appendRowCmd = MatlabCode.getAppendRowCommand(matlabType, dataRow, varNames);
         	proxy.eval(appendRowCmd);
         }
@@ -346,7 +346,7 @@ public class MatlabTable {
 	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabProxy proxy, String matlabType) throws MatlabInvocationException {
 		// Fetch the column names and types
 		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputVariableNamesCommand(matlabType));
-		String[] varDescr = (String[]) proxy.getVariable(MatlabCode.getOutputVariableDescriptionsCommand(matlabType));
+//		String[] varDescr = (String[]) proxy.getVariable(MatlabCode.getOutputVariableDescriptionsCommand(matlabType));
 		String[] varTypes = (String[]) proxy.getVariable(MatlabCode.getOutputVariableTypesCommand(matlabType));
 		
 		// Get the number of rows
@@ -357,11 +357,11 @@ public class MatlabTable {
 		DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
 		for (int i = 0; i < numCols; i++) {
 			if (varTypes[i].equals("double"))
-				colSpecs[i] = new DataColumnSpecCreator(varDescr[i], DoubleCell.TYPE).createSpec();
+				colSpecs[i] = new DataColumnSpecCreator(varNames[i], DoubleCell.TYPE).createSpec();
 			else if (varTypes[i].equals("char") || varTypes[i].equals("cell"))
-				colSpecs[i] = new DataColumnSpecCreator(varDescr[i], StringCell.TYPE).createSpec();
+				colSpecs[i] = new DataColumnSpecCreator(varNames[i], StringCell.TYPE).createSpec();
 			else
-				throw new RuntimeException("Unsupported MATLAB type '" + varTypes[i] + "' in columnn '" + varDescr[i] + "' (#." + i + ").");
+				throw new RuntimeException("Unsupported MATLAB type '" + varTypes[i] + " (#." + i + ").");
 		}
 		
 		// Pull the table data
@@ -400,7 +400,5 @@ public class MatlabTable {
 			hashTempFile.delete();
 		hash = null;
 	}
-
-
 	
 }

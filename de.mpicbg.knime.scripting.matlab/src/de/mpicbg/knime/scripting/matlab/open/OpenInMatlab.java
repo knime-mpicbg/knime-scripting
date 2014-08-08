@@ -4,11 +4,9 @@ import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
-import de.mpicbg.knime.scripting.matlab.srv.utils.UnsupportedCellTypeException;
 import matlabcontrol.MatlabConnectionException;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
 
@@ -62,15 +60,11 @@ public class OpenInMatlab extends AbstractNodeModel {
         	
         	// Housekeeping
         	matlab.cleanup();
-        } catch (CanceledExecutionException e) {
-    		throw e;
-    	} catch (InterruptedException e) {
-    		throw e; 
-    	} catch (UnsupportedCellTypeException e) {
-    		logger.error("MATLAB scripting integration: Table contains unsupported cell types. Consider column filtering.");
-    		throw e;
+
+        } catch (Exception e) {
+        	throw e;
     	} finally {
-    		this.matlab.rollback();
+    		this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
     	}
         
         logger.info("The data is now loaded in MATLAB. Switch to the MATLAB command window.");

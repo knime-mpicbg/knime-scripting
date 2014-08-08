@@ -1,17 +1,13 @@
 package de.mpicbg.knime.scripting.matlab.snippet;
 
-import java.lang.InterruptedException;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
-import de.mpicbg.knime.scripting.matlab.srv.utils.UnsupportedCellTypeException;
 
 
 /**
@@ -72,15 +68,11 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     		// Housekeeping
     		this.matlab.cleanup();
     		exec.checkCanceled();
-    	} catch (CanceledExecutionException e) {
-    		throw e;
-    	} catch (InterruptedException e) {
-    		throw e;    		
-    	} catch (UnsupportedCellTypeException e) {
-    		logger.error("MATLAB scripting integration: Table contains unsupported cell types. Consider column filtering.");
+
+    	} catch (Exception e) {
     		throw e;
     	} finally {
-    		this.matlab.rollback();
+    		this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
     	}
     	
     	return outData;

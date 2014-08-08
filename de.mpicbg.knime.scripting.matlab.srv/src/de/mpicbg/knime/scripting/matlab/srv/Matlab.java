@@ -30,6 +30,9 @@ public interface Matlab {
 	/** Name of the variable in the MATLAB workspace where the column names will be stored (necessary for 'struct' MATLAB type) */
 	public final static String COLUMNS_VARIABLE_NAME = "columnNames";
 	
+	/** Name of the variable to store the snippet error */
+	public final static String ERROR_VARIABLE_NAME = "snippetError";
+	
 	/** Default MATLAB snippet script */
 	public final static String DEFAULT_SNIPPET = OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME; 
 	

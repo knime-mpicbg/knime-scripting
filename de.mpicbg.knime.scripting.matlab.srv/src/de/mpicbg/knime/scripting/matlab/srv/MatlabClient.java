@@ -63,7 +63,7 @@ public class MatlabClient {
 	 * @throws MatlabConnectionException
 	 */
 	public MatlabClient(boolean local, String host, int port) throws MatlabConnectionException {
-		this.method = 1;
+		this.method = 2;
 		this.local = local;
 		if (local) {
 			client = new Local(this.method);
@@ -177,6 +177,7 @@ public class MatlabClient {
 				// Run it in MATLAB
 				MatlabProxy proxy = acquireMatlabProxy();
 				proxy.eval(cmd);
+				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
 				returnMatlabProxy(proxy);
 
@@ -192,7 +193,7 @@ public class MatlabClient {
 				table = new MatlabTable(inputTable);
 
 				// Push the table to the input variable in the MATLAB workspace.
-				table.pushTable2MatlabWorkspace(proxy, matlabType, inputTable);
+				table.pushTable2MatlabWorkspace(proxy, matlabType);
 				
 				// Create a script from the snippet
 				code = new MatlabCode(snippet, matlabType);
@@ -200,6 +201,7 @@ public class MatlabClient {
 
 				// Run the snippet it in MATLAB
 				proxy.eval(cmd);
+				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('exectuted snippet and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.OUTPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + "')");
 
 				// Pull the data from the output variable in the MATLAB workspace
@@ -233,9 +235,10 @@ public class MatlabClient {
 				// Execute 
 				MatlabProxy proxy = acquireMatlabProxy();
 				proxy.eval(cmd);
+				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('created plot.')");
 			    returnMatlabProxy(proxy);
-				
+
 			    // Return the png-image
 				return code.getPlotFile();
 			} else if (this.method == 2) {
@@ -244,7 +247,7 @@ public class MatlabClient {
 
 				// Push the table to the input variable in the MATLAB workspace.
 				table = new MatlabTable(inputTable);
-				table.pushTable2MatlabWorkspace(proxy, matlabType, inputTable);
+				table.pushTable2MatlabWorkspace(proxy, matlabType);
 
 				// Create a server file for the output plot-image
 				code = new MatlabCode(snippet, matlabType);
@@ -252,6 +255,7 @@ public class MatlabClient {
 				
 				// Run the snippet it in MATLAB
 				proxy.eval(cmd);
+				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
 				
 				// Release the proxy
@@ -379,7 +383,7 @@ public class MatlabClient {
 			table = new MatlabTable(inputTable);
 
 			// Push the table to the input variable in the MATLAB workspace.
-			table.pushTable2MatlabWorkspace(proxy, matlabType, inputTable);
+			table.pushTable2MatlabWorkspace(proxy, matlabType);
 				
 			// Run the snippet it in MATLAB
 			proxy.eval(snippet);
@@ -404,7 +408,7 @@ public class MatlabClient {
 
 			// Push the table to the input variable in the MATLAB workspace.
 			table = new MatlabTable(inputTable);
-			table.pushTable2MatlabWorkspace(proxy, matlabType, inputTable);
+			table.pushTable2MatlabWorkspace(proxy, matlabType);
 
 			// Create a server file for the output plot-image
 			plot = new MatlabFileTransfer(matlabServer, Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
