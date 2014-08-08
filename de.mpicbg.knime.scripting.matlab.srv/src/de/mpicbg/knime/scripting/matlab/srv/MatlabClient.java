@@ -132,16 +132,27 @@ public class MatlabClient {
 		public void openTask(BufferedDataTable inputTable, String matlabType) 
 				throws Exception {
 	       
-			// Transfer the KNIME table as hash map object dump to the JVM temp-folder	        
-	        table = new MatlabTable(inputTable);
-	        table.writeHashMapToTempFolder();
-	        
-	        // Copy the MATLAB script to the temp-directory and get the file name with the random string in it
-	        code = new MatlabCode(table.getTempFile(), matlabType);
-	        String cmd = code.prepareOpenCode();
+			MatlabProxy proxy;
+			
+			// Transfer the KNIME table as hash map object dump to the JVM temp-folder
+			table = new MatlabTable(inputTable);
+			String cmd;
+			if (this.method == 1) {
+		        table.writeHashMapToTempFolder();
+		        code = new MatlabCode(table.getTempFile(), matlabType);
+		        cmd = code.prepareOpenCode(false);
+		        proxy = acquireMatlabProxy();
+			} else if (this.method == 2){
+				code = new MatlabCode(matlabType);
+				proxy = acquireMatlabProxy();
+				table.pushTable2MatlabWorkspace(proxy, matlabType);
+				cmd = code.prepareOpenCode(false);
+			} else {
+				throw new RuntimeException("Unknown method: " + this.method);
+			}
+			
 	        
 			// Execute 
-	        MatlabProxy proxy = acquireMatlabProxy();
 	        proxy.eval(cmd);
 	        returnMatlabProxy(proxy);
 	        
