@@ -1,18 +1,18 @@
-function [kIn, names] = hashmaputils(filePath, data)
+function [kIn, columnNames] = hashmaputils(filePath, data)
 %
 % HASHMAPUTILS
 %
-% Depending on the input data this utility Reads a the file of a 
+% Depending on the input data this utility reads a the file of a 
 % serialized java hasmap (produced by KNIME) and transforms it into a 
-% common matlab object or it converts matlabdata in a LinkedHashMap and
-% serializes the object.
-% The script hat to be launched in the directory where it lies and expects
-% the oject-file to lie in the same directory too.
+% common matlab object. It also allows to convert matlabdata into a 
+% LinkedHashMap and to serialize the object.
+% The script has to be launched in the directory where it lies and expects
+% the data-file to lie in the same directory too.
 %
-% [data names] = loadKNIMEtable(filePath, data)
+% [data columnNames] = loadKNIMEtable(filePath, data)
 %
-%       filePath: String indicating the path to a temp-file (for loading or
-%                 saving data).
+%       filePath: String indicating the path to a data temp-file (for 
+%                        loading or saving data).
 %       data: Can be a string indicating the matlab data type of the table
 %             variable {dataset (default), map, struct}.
 %             Or it can be a matlab object containing the data to be saved
@@ -21,8 +21,10 @@ function [kIn, names] = hashmaputils(filePath, data)
 %             of this input.
 %
 %       Output:
-%       kIn: ouput matlab object.
-%       names: column names.
+%       kIn: KIME data table
+%       columnNames: column names of the KNIME table (useful if struct is
+%                    used since this type does not allow all the characters
+%                    that can appear in the KNIME table column header.
 %
 
 % Author: Felix Meyenhofer
@@ -40,7 +42,7 @@ input = parser.Results();
 
 % Infer the action to take.
 if ischar(input.data) % No inputdata -> see if we can load something.
-    [kIn, names] = loadhashmap(input.filePath, input.data);
+    [kIn, columnNames] = loadhashmap(input.filePath, input.data);
 else                  % We have data -> save it.
     savehashmap(input.data, input.filePath);
 end
@@ -181,7 +183,7 @@ function [kIn, names] = loadhashmap(filePath, dataType)
 
     end
 
-    names = struct('variable', variableNames, 'column', columnNames);
+    names = struct('matlab', variableNames, 'knime', columnNames);
 
     if strcmp(dataType, 'dataset')
         index = 1:length(kIn);

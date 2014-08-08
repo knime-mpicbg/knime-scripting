@@ -2,13 +2,15 @@ package de.mpicbg.knime.scripting.matlab.srv;
 
 import java.io.File;
 
+import matlabcontrol.MatlabConnectionException;
+
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
 
 /**
  * This interface defines on one hand some conventions in the MATLAB scripting integration
- * for KNIME, such as input and output variable names, default ports etc.
+ * for KNIME, such as input and output variable names etc.
  * On the other hand it defines the tasks that the nodes what to get the done by MATLAB.
  * This is important, because of the way the KNIME-MATLAB-interaction works: We want each
  * task to be an atomic operation, that can not be interrupted or interfered by 
@@ -25,6 +27,9 @@ public interface Matlab {
 	/** Name of the variable in the MATLAB workspace where the output data will be stored in */
 	public final static String OUTPUT_VARIABLE_NAME = "mOut";
 	
+	/** Name of the variable in the MATLAB workspace where the column names will be stored (necessary for 'struct' MATLAB type) */
+	public final static String COLUMNS_VARIABLE_NAME = "columnNames";
+	
 	/** Default MATLAB snippet script */
 	public final static String DEFAULT_SNIPPET = OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME; 
 	
@@ -33,12 +38,6 @@ public interface Matlab {
 	
 	/** Default MATLAB type to hold the KNIME table data */
 	public final static String DEFAULT_TYPE = "dataset";
-	
-	/** Default port the MATLAB server will listen to */
-	public int DEFAULT_PORT = 1198;
-	
-	/** Registry name */
-	public String REGISTRY_NAME = "MatlabServer";
 	
 	/** Temp-path of the JVM (used to store KNIME-MATLAB transfer data) */
 	public final String TEMP_PATH = System.getProperty("java.io.tmpdir") + "/";
@@ -107,8 +106,9 @@ public interface Matlab {
 	 * steps to restore the MATLAB server to a point that it can be executed again.
 	 * 
 	 * @throws InterruptedException
+	 * @throws MatlabConnectionException 
 	 */
-	public void rollback() throws InterruptedException;
+	public void rollback() throws InterruptedException, MatlabConnectionException;
 
 	
 	/**

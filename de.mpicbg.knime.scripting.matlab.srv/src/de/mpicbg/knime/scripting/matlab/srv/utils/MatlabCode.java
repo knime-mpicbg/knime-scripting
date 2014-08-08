@@ -7,6 +7,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
 
@@ -46,6 +52,17 @@ public class MatlabCode {
 	/** Function name of the MATLAB script that handles the data loading */
 	private final String hashfun = fileName2functionName(this.hashresource);
 	
+	
+	
+	/**
+	 * 
+	 * @param code
+	 * @param matlabType
+	 */
+	public MatlabCode(String code, String matlabType) {
+		this.snippet = code;
+		this.type = matlabType;
+	}
 	
 	/**
 	 * Constructor 
@@ -87,18 +104,36 @@ public class MatlabCode {
 	 * @return Modified code
 	 * @throws Exception 
 	 */
-	private String addFunctionCode(boolean hasOutput) throws Exception {
+	private String addFunctionSignatureToCode(boolean hasInput, boolean hasOutput) throws Exception {
 		if (this.snippetfile == null)
 			throw new Exception("Before addning the function header to the snippet, A file needs to be created.");
 		
 		this.snippetfun = fileName2functionName(this.snippetfile.getName());
 		
-		if (hasOutput) {
-			return "function "+ Matlab.OUTPUT_VARIABLE_NAME +"=" + this.snippetfun + "()\n" + 
-					this.snippet;
-		} else {
-			return "function " + this.snippetfun + "()\n" + this.snippet;
-		}
+		return "function " + createFunctionSignature(hasInput, hasOutput) + "\n" + this.snippet + "\n";
+	}
+	
+	/**
+	 * Create a function signature so the snippet can be packed in a m-file and called as a
+	 * function
+	 * 
+	 * @param hasInput
+	 * @param hasOutput
+	 * @return
+	 */
+	private String createFunctionSignature(boolean hasInput, boolean hasOutput) {
+		String signature = "";
+		if (hasOutput)
+			signature += Matlab.OUTPUT_VARIABLE_NAME +"=" + this.snippetfun;
+		else
+			signature += this.snippetfun;
+		
+		if (hasInput)
+			signature += "(" + Matlab.INPUT_VARIABLE_NAME + ")";
+		else
+			signature += "()";
+		
+		return signature;
 	}
 	
 	/**
@@ -119,6 +154,17 @@ public class MatlabCode {
 	}
 	
 	/**
+	 * Add the plot code (Remote version)
+	 * 
+	 * @param plotWidth
+	 * @param plotHeight
+	 * @return
+	 */
+	public String addPlotCode(Integer plotWidth, Integer plotHeight) {
+		return addPlotCode(this.snippet, plotWidth, plotHeight);
+	}
+	
+	/**
 	 * Add a message to be displayed in the MATLAB command window informing the user
 	 * on what happened after the execution of the {@link OpenInMatlab} node
 	 *  
@@ -128,7 +174,8 @@ public class MatlabCode {
 	private String addOpenMessage(String code) {
 		return "disp('The data is available as the following variables in the Workspace:');" +
         		"disp('kIn :  " + this.type + " containing the KNIME table.');" + 
-        		"disp('names: structure containing column header information.');" +
+        		"disp('columnNames: structure containing column header information.');" +
+        		"disp('             Depending on the MATLAB data type strings used KNIME might need slight modification!');" +
         		"disp('To reload the KNIME table simply re-execute the OpenInMatlab node.');" +
         		code;
 	}
@@ -143,10 +190,12 @@ public class MatlabCode {
 	 */
 	private String addLoadCode(String code) throws Exception {
 		if (this.tablefile == null)
-			throw new Exception("Table file name is missing!");
+			return code;
+//			throw new Exception("Table file name is missing!");
 		
 		return "cd " + this.temppath+ ";\n" + 
-				"[" + Matlab.INPUT_VARIABLE_NAME +",names]=" + this.hashfun + "('" + this.tablefile.getAbsolutePath() + "','" + this.type + "');\n" +
+				"[" + Matlab.INPUT_VARIABLE_NAME +"," + Matlab.COLUMNS_VARIABLE_NAME + "]=" + 
+				this.hashfun + "('" + this.tablefile.getAbsolutePath() + "','" + this.type + "');\n" +
 				code;
 	}
 	
@@ -157,7 +206,10 @@ public class MatlabCode {
 	 * @param code MATLAB snippet
 	 * @return Modified code
 	 */
-	public String addSaveCode(String code) {
+	private String addSaveCode(String code) {
+		if (this.tablefile == null)
+			return code;
+		
 		return code + "\n" +
 				"cd " + Matlab.TEMP_PATH + ";\n" +
 				this.hashfun + "('" + this.tablefile.getAbsolutePath() + "', " + Matlab.OUTPUT_VARIABLE_NAME +");";
@@ -184,11 +236,11 @@ public class MatlabCode {
 	 * @return Modified code
 	 * @throws Exception
 	 */
-	public String prepareSnippetCode() throws Exception  {
+	public String prepareSnippetCode(boolean hasInput) throws Exception  {
 		copyHashMapScriptToTempDirectory();
 		this.snippet = addLoadCode(this.snippet);
 		this.snippet = addSaveCode(this.snippet);
-		return copySnippetToTempDirectory(true);
+		return copySnippetToTempDirectory(hasInput, true);
 	}
 	
 	/**
@@ -198,16 +250,16 @@ public class MatlabCode {
 	 * 
 	 * @param width Plot width
 	 * @param height Plot height
+	 * @param hasInput flag to signal if the data table is a script input or not
 	 * @return	Modified code
 	 * @throws Exception
 	 */
-	public String preparePlotCode(int width, int height) throws Exception {
+	public String preparePlotCode(int width, int height, boolean hasInput) throws Exception {
 		copyHashMapScriptToTempDirectory();
-		this.plotfile = File.createTempFile(Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
-		this.plotfile.deleteOnExit();
+		createPlotFile();
 		this.snippet = addLoadCode(this.snippet);
 		this.snippet = addPlotCode(this.snippet, width, height);
-		return copySnippetToTempDirectory(false);		
+		return copySnippetToTempDirectory(hasInput, false);		
 	}
 
 	/**
@@ -220,6 +272,18 @@ public class MatlabCode {
 			this.tablefile.delete();
 		if (this.plotfile != null)
 			this.plotfile.delete();
+	}
+	
+	/**
+	 * Create a file for the plot output in the JVM temp-folder
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	public File createPlotFile() throws IOException {
+		this.plotfile = File.createTempFile(Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
+		this.plotfile.deleteOnExit();
+		return this.plotfile;
 	}
 	
 	/**
@@ -238,17 +302,14 @@ public class MatlabCode {
 	 * @return MATLAB code to execute this script.
 	 * @throws Exception 
 	 */
-	private String copySnippetToTempDirectory(boolean hasOutput) throws Exception {
+	private String copySnippetToTempDirectory(boolean hasInput, boolean hasOutput) throws Exception {
     	this.snippetfile = File.createTempFile(Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
     	this.snippetfile.deleteOnExit();
-    	this.snippet = this.addFunctionCode(hasOutput);
+    	this.snippet = this.addFunctionSignatureToCode(hasInput, hasOutput);
     	InputStream inStream = new ByteArrayInputStream(this.snippet.getBytes());
     	writeStreamToFile(inStream, new FileOutputStream(this.snippetfile));
-    	if (hasOutput) {
-    		return "cd " + Matlab.TEMP_PATH + ";" + Matlab.OUTPUT_VARIABLE_NAME + "=" + this.snippetfun + ";\n";
-    	} else {
-    		return "cd " + Matlab.TEMP_PATH + ";" + this.snippetfun + ";\n";
-    	}
+    	
+    	return "cd " + Matlab.TEMP_PATH + ";" + createFunctionSignature(hasInput, hasOutput) + ";";
     }
 	
 	/**
@@ -304,7 +365,7 @@ public class MatlabCode {
      * @param out
      * @throws IOException
      */
-    public static void writeStreamToFile(InputStream in, OutputStream out) throws IOException {
+    private static void writeStreamToFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[16384];
         while (true) {
             int count = in.read(buffer);
@@ -316,5 +377,210 @@ public class MatlabCode {
         out.close();
     }
 	
+    
+    public static List<String> getVariableNamesFromColumnNames(String type, List<String> colNames) {
+    	if (type.equals("dataset"))
+    		return colNames;
+    	if (type.equals("map"))
+    		return colNames;
+    	if (type.equals("struct")){
+    		List<String> varNames = new ArrayList<String>();
+    		for (String colName : colNames) 
+    			varNames.add(colName.replaceAll("[^0-9a-zA-Z_]", ""));
+    		return varNames;
+    	}
+    	
+    	return null;
+    }
+    
+    public static String getInputVariableInstanciationCommand(String type, List<String> vars, List<DataType> types) {
+    	if (type.equals("dataset")) {
+    		String cmd = Matlab.INPUT_VARIABLE_NAME + "= dataset(";
+    		String cell = "{";
+    		for (String var : vars){
+    			cmd += "[],";
+    			cell += var + " ";
+    		}
+    		cell += "}";
+    		return cmd + "VarNames" + cell + ");";
+    	}
+    	if (type.equals("map")){
+    		String cmd = Matlab.INPUT_VARIABLE_NAME + "=containers.Map;";
+    		String empty;
+    		for (int i = 0; i < vars.size(); i++) {
+    			if (types.get(i).equals(StringCell.TYPE))
+    				empty = "{}";
+    			else
+    				empty = "[]";
+    			cmd += Matlab.INPUT_VARIABLE_NAME + "('"+ vars.get(i) +"')=" + empty + ";";
+    		}
+    		return cmd;
+    	}
+    	if (type.equals("struct")) {
+    		String cmd = "";
+    		String empty;
+    		for (int i = 0; i < vars.size(); i++) {
+    			if (types.get(i).equals(StringCell.TYPE))
+    				empty = "{}";
+    			else
+    				empty = "[]";
+    			cmd += Matlab.INPUT_VARIABLE_NAME + ".('"+ vars.get(i) +"')=" + empty + ";";
+    		}
+    		return cmd;
+    	}
+    	
+    	return null;
+    }
+    
+    public static String getInputVariableAdditionalInformationCommand(String type, List<String> vars, List<String> cols) {
+    	if (type.equals("dataset")) {
+    		String cmd = "set(" + Matlab.INPUT_VARIABLE_NAME + ",";
+    		String varCell = "{";
+    		String colCell = "{";
+    		for (int i = 0; i < vars.size(); i++) {
+    			varCell += vars.get(i) + " ";
+    			colCell += cols.get(i) + " ";
+    		}
+    		varCell += "}";
+    		colCell += "}";
+    		return cmd + "'VarNames'," + varCell + ",'VarDescription'," + colCell + ");";
+    	} else {
+    		String cmd = Matlab.COLUMNS_VARIABLE_NAME + "=struct(";
+    		String colCell = "{";
+    		String varCell = "{";
+    		for (int i = 0; i < vars.size(); i++) {
+    			colCell += "'" + cols.get(i) + "' ";
+    			varCell += "'" + vars.get(i) + "' ";
+    		}
+    		colCell += "}";
+    		varCell += "}";
+    		cmd += "'matlab'," + varCell + ",'knime'," + colCell + ");"; // Careful, the field names have to be the same as in hashmaputils.m!
+    		return cmd;
+    	}
+    	
+    }
+    
+    
+    public static String getAppendRowCommand(String type, DataRow row, List<String>varNames) {
+    	if (type.equals("dataset")) {
+    		String cell = "{";
+    		for (int i = 0; i < row.getNumCells(); i++) {
+    			if (row.getCell(i).getType().equals(StringCell.TYPE))
+    				if (row.getCell(i).isMissing())
+    					cell += "'' ";
+    				else
+    					cell += "'" + row.getCell(i) + "' ";
+    			else
+    				if (row.getCell(i).isMissing())
+    					cell += Double.NaN + " ";
+    				else
+    					cell += row.getCell(i) + " ";
+    		}
+    		cell += "}";
+    		return "[" + Matlab.INPUT_VARIABLE_NAME + "cell2dataset("+ cell +", 'ReadVarNames', false)];";
+    	}
+    	if (type.equals("struct")){
+    		String cmd = "";
+    		String value;
+    		for (int i = 0; i < varNames.size(); i++) {
+    			if (row.getCell(i).getType().equals(StringCell.TYPE))
+    				if (row.getCell(i).isMissing())
+    					value = "{''}";
+    				else
+    					value = "{'" + row.getCell(i) + "'}";
+    			else
+    				if (row.getCell(i).isMissing())
+    					value = "" + Double.NaN;
+    				else
+    					value = "" + row.getCell(i);
+    			cmd += Matlab.INPUT_VARIABLE_NAME + ".('"+ varNames.get(i) +"')" + "(end+1)=" + value + ";" ;
+    		}
+    		return cmd;
+    	}
+    	if (type.equals("map")) {
+    		String cmd = "";
+    		String var, value;
+    		for (int i = 0; i < varNames.size(); i++) {
+    			if (row.getCell(i).getType().equals(StringCell.TYPE))
+    				if (row.getCell(i).isMissing())
+    					value = "'';";
+    				else
+    					value = "'" + row.getCell(i) + ";";
+    			else
+    				if (row.getCell(i).isMissing())
+    					value = "" + Double.NaN;
+    				else
+    					value = "" + row.getCell(i);
+    			var = Matlab.INPUT_VARIABLE_NAME + "('"+ varNames.get(i) +"')";
+    			cmd += var + "=[" + var + " " + value + "];" ;
+    		}
+    		return cmd;
+    	}
+
+    	return null;
+    }
+    
+    
+    public static String getOutputVariableNamesCommand(String type) {
+    	if (type.equals("dataset"))
+    		return "get(" + Matlab.OUTPUT_VARIABLE_NAME + ", 'VarNames');";
+    	if (type.equals("map"))
+    		return Matlab.OUTPUT_VARIABLE_NAME +".keys();";
+    	if (type.equals("struct"))
+    		return "fieldnames(" + Matlab.OUTPUT_VARIABLE_NAME + ");";
+    				
+    	return null;
+    }
+    
+    
+    public static String getOutputVariableTypesCommand(String type) {
+    	if (type.equals("dataset"))
+    		return "cellfun(@(x)class("+ Matlab.OUTPUT_VARIABLE_NAME +"(x)),"+ getOutputVariableNamesCommand(type) +",'UniformOutput', false)";;
+    	if (type.equals("map"))
+    		return "cellfun(@(x)class("+ Matlab.OUTPUT_VARIABLE_NAME +"(x)),"+ Matlab.OUTPUT_VARIABLE_NAME +".keys(),'UniformOutput', false)";
+    	if (type.equals("struct"))
+    		return "structfun(@(x){class(x)},"+ Matlab.OUTPUT_VARIABLE_NAME +");";
+    	
+    	return null;
+    }
+    
+    public static String getOutputVariableDescriptionsCommand(String type) {
+    	if (type.equals("dataset"))
+    		return "get(" + Matlab.OUTPUT_VARIABLE_NAME + ", 'VarDescription');";
+    	else 
+    		return "{" + Matlab.COLUMNS_VARIABLE_NAME + ".knime};";
+    }
+    
+    public static String getOutputVariableNumberOfRows(String type) {
+    	if (type.equals("dataset"))
+    		return "length(" + Matlab.OUTPUT_VARIABLE_NAME + ");";
+    	if (type.equals("map"))
+    		return Matlab.OUTPUT_VARIABLE_NAME + ".keys;lenght(" + Matlab.OUTPUT_VARIABLE_NAME + "(ans{1}));";
+    	if (type.equals("struct"))
+    		return "max(structfun(@(x)length(x), " + Matlab.OUTPUT_VARIABLE_NAME + "));";
+    	
+    	return null;
+    }
+    
+    public static String getRetrieveOutputRowCommand(String type, int rowNumber, String[] varNames) {
+    	if (type.equals("dataset"))
+    		return Matlab.OUTPUT_VARIABLE_NAME + "(" + rowNumber + ", :);";
+    	if (type.equals("map")) { //TODO This approach is highly inefficient. since it puts the entire table in the 'ans' variable before accessing it.
+    		String cmd = "{";
+    		for (String varName : varNames)
+    			cmd += Matlab.OUTPUT_VARIABLE_NAME + "('" + varName + "') ";
+			cmd += "};ans(" + rowNumber + ",:);";
+    		return cmd;
+    	}
+    	if (type.equals("struct")) {
+    		String cmd = "{";
+    		for (String varName : varNames)
+    			cmd += Matlab.OUTPUT_VARIABLE_NAME + ".('" + varName + "')("+ rowNumber + ") ";
+    		return cmd + "};";
+    	}
+    	
+    	return null;
+    }
+    
 }
 

@@ -11,8 +11,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -32,6 +36,7 @@ import de.mpicbg.knime.knutils.Attribute;
 import de.mpicbg.knime.knutils.AttributeUtils;
 import de.mpicbg.knime.knutils.InputTableAttribute;
 import de.mpicbg.knime.scripting.matlab.srv.Matlab;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabRemote;
 
 
 /**
@@ -157,7 +162,7 @@ public class MatlabTable {
     public void linkedHashMap2KnimeTable(ExecutionContext exec) {
     	
     	// Determine the column attributes
-    	List<Attribute> colAttributes = createColumnSpecifications(this.hash);
+    	List<Attribute> colAttributes = createColumnAttributeList(this.hash);
     	
         // Get the number of samples (rows)
         int numSamples = -1;
@@ -269,7 +274,7 @@ public class MatlabTable {
      * @param hash Table data
      * @return List of KNIME table attributes (specs)
      */
-    public static List<Attribute> createColumnSpecifications(LinkedHashMap<String, Object> hash) {
+    public static List<Attribute> createColumnAttributeList(LinkedHashMap<String, Object> hash) {
         // Initialize the columnSpec table
         List<Attribute> colSpec = new ArrayList<Attribute>();
         Attribute attribute;
@@ -308,6 +313,84 @@ public class MatlabTable {
         return colSpec;
     }
 
+    
+    public void pushTable2MatlabWorkspace(MatlabProxy proxy, String matlabType, BufferedDataTable table) throws MatlabInvocationException {
+    	
+    	// Get the column names
+    	List<String> colNames = new ArrayList<String>();
+    	List<DataType> colTypes = new ArrayList<DataType>();
+        for (DataColumnSpec colSpec : table.getDataTableSpec()) {
+            colNames.add(colSpec.getName());
+            colTypes.add(colSpec.getType());
+        }
+        
+        List<String> varNames = MatlabCode.getVariableNamesFromColumnNames(matlabType, colNames);
+        
+        // Initialize the input variable
+        String instanciationCmd = MatlabCode.getInputVariableInstanciationCommand(matlabType, varNames, colTypes);
+        proxy.eval(instanciationCmd);
+        
+        // Push the data line by line
+        String appendRowCmd;
+        for (DataRow dataRow : table) {
+        	appendRowCmd = MatlabCode.getAppendRowCommand(matlabType, dataRow, varNames);
+        	proxy.eval(appendRowCmd);
+        }
+        
+        // Finish up
+        String additionalInfo = MatlabCode.getInputVariableAdditionalInformationCommand(matlabType, varNames, colNames);
+        proxy.eval(additionalInfo);
+    }
+
+    
+	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabProxy proxy, String matlabType) throws MatlabInvocationException {
+		// Fetch the column names and types
+		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputVariableNamesCommand(matlabType));
+		String[] varDescr = (String[]) proxy.getVariable(MatlabCode.getOutputVariableDescriptionsCommand(matlabType));
+		String[] varTypes = (String[]) proxy.getVariable(MatlabCode.getOutputVariableTypesCommand(matlabType));
+		
+		// Get the number of rows
+		double numRows = ((double[]) proxy.getVariable(MatlabCode.getOutputVariableNumberOfRows(matlabType)))[0];
+		int numCols = varNames.length;
+		
+		// Compile the table specifications
+		DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
+		for (int i = 0; i < numCols; i++) {
+			if (varTypes[i].equals("double"))
+				colSpecs[i] = new DataColumnSpecCreator(varDescr[i], DoubleCell.TYPE).createSpec();
+			else if (varTypes[i].equals("char") || varTypes[i].equals("cell"))
+				colSpecs[i] = new DataColumnSpecCreator(varDescr[i], StringCell.TYPE).createSpec();
+			else
+				throw new RuntimeException("Unsupported MATLAB type '" + varTypes[i] + "' in columnn '" + varDescr[i] + "' (#." + i + ").");
+		}
+		
+		// Pull the table data
+		DataTableSpec outputSpec = new DataTableSpec(colSpecs);
+		BufferedDataContainer container = exec.createDataContainer(outputSpec);
+		DataCell[] cells = new DataCell[numCols];
+		for (int i = 0; i < numRows; i++) {
+			// Retrieve a row from the MATLAB workspace
+			Object[] data = (Object[]) proxy.getVariable(MatlabCode.getRetrieveOutputRowCommand(matlabType, i+1, varNames));
+
+			// Prepare the cells
+			for (int j = 0; j < numCols; j++) {
+				if (colSpecs[j].getType().equals(DoubleCell.TYPE))
+					cells[j] = new DoubleCell(((double[])data[j])[0]);
+				else
+					cells[j] = new StringCell(((String[]) data[j])[0]);
+			}
+			
+			// Append the row to the table
+			RowKey key = new RowKey("" + i);
+			DataRow row = new DefaultRow(key, cells);
+			container.addRowToTable(row);
+		}
+
+		container.close();
+		return container.getTable();
+	}
+    
+    
     /**
      * Cleanup the files and object to liberate disk and memory space
      * TODO: make sure we got everything.
@@ -317,5 +400,7 @@ public class MatlabTable {
 			hashTempFile.delete();
 		hash = null;
 	}
+
+
 	
 }
