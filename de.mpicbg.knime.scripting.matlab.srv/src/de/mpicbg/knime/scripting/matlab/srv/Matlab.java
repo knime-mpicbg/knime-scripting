@@ -75,7 +75,7 @@ public interface Matlab {
 	 * @param inputTable KNIME input table
 	 * @throws Exception 
 	 */
-	public void openTask(BufferedDataTable inputTable, String matlabType) 
+	public void openTask(BufferedDataTable inputTable, String matlabType, String transferMethod) 
 			throws Exception;
 
 	/**
@@ -87,7 +87,7 @@ public interface Matlab {
 	 * @return KNIME table produced by the MATLAB snippet
 	 * @throws Exception 
 	 */
-	public BufferedDataTable snippetTask(BufferedDataTable inputTable, ExecutionContext exec, String snippet, String matlabType) 
+	public BufferedDataTable snippetTask(BufferedDataTable inputTable, String transferMethod, ExecutionContext exec, String snippet, String matlabType) 
 			throws Exception;
 
 	/**
@@ -99,7 +99,7 @@ public interface Matlab {
 	 * @return File object of the temporary png-file of the plot 
 	 * @throws Exception
 	 */
-	public File plotTask(BufferedDataTable inputTable, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
+	public File plotTask(BufferedDataTable inputTable, String transferMethod, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
 			throws Exception;
 	
 	/**

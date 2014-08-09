@@ -39,6 +39,9 @@ public class MatlabClient {
 	/** Data transfer method */
 	public int method;
 	
+	/** Number of MATLAB application instance */
+	public int sessions;
+	
 	
 	/**
 	 * Constructor of the MATLAB client.
@@ -49,8 +52,8 @@ public class MatlabClient {
 	 * @param local
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabClient(boolean local) throws MatlabConnectionException {
-		this(local, MatlabRemote.DEFAULT_HOST, MatlabRemote.DEFAULT_PORT);
+	public MatlabClient(boolean local, int sessions) throws MatlabConnectionException {
+		this(local, sessions, MatlabRemote.DEFAULT_HOST, MatlabRemote.DEFAULT_PORT);
 	} 
 	
 	
@@ -64,11 +67,10 @@ public class MatlabClient {
 	 * @param port
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabClient(boolean local, String host, int port) throws MatlabConnectionException {
-		this.method = 2;
+	public MatlabClient(boolean local, int sessions, String host, int port) throws MatlabConnectionException {
 		this.local = local;
 		if (local) {
-			client = new Local(this.method);
+			client = new Local(sessions);
 		} else {
 			client = new Remote(host, port);
 		}		
@@ -110,9 +112,6 @@ public class MatlabClient {
 		
 		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
 		private MatlabTable table;
-		
-		/** Method of data transfer between KNIME and MATLAB */
-		private int method;
 	
 		
 		/**
@@ -121,9 +120,8 @@ public class MatlabClient {
 		 * 
 		 * @throws MatlabConnectionException
 		 */
-		public Local(int method) throws MatlabConnectionException {
-			this.method = method;
-			matlabController = new MatlabController();
+		public Local(int sessions) throws MatlabConnectionException {
+			matlabController = new MatlabController(sessions);
 		}
 
 		
@@ -131,7 +129,7 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void openTask(BufferedDataTable inputTable, String matlabType) 
+		public void openTask(BufferedDataTable inputTable, String matlabType, String transferMethod) 
 				throws Exception {
 	       
 			MatlabProxy proxy;
@@ -139,18 +137,18 @@ public class MatlabClient {
 			// Transfer the KNIME table as hash map object dump to the JVM temp-folder
 			table = new MatlabTable(inputTable);
 			String cmd;
-			if (this.method == 1) {
+			if (transferMethod.equals("file")) {
 		        table.writeHashMapToTempFolder();
 		        code = new MatlabCode(table.getTempFile(), matlabType);
 		        cmd = code.prepareOpenCode(false);
 		        proxy = acquireMatlabProxy();
-			} else if (this.method == 2){
+			} else if (transferMethod.equals("workspace")){
 				code = new MatlabCode(matlabType);
 				proxy = acquireMatlabProxy();
 				table.pushTable2MatlabWorkspace(proxy, matlabType);
 				cmd = code.prepareOpenCode(false);
 			} else {
-				throw new RuntimeException("Unknown method: " + this.method);
+				throw new RuntimeException("Unknown method: " + transferMethod);
 			}
 			
 	        
@@ -164,10 +162,10 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public BufferedDataTable snippetTask(BufferedDataTable inputTable, ExecutionContext exec, String snippet, String matlabType)
+		public BufferedDataTable snippetTask(BufferedDataTable inputTable, String transferMethod, ExecutionContext exec, String snippet, String matlabType)
 				throws Exception {
 			
-			if (this.method == 1) {
+			if (transferMethod.equals("file")) {
 				// Convert the KNIME table and write it to the temp-directory
 				table = new MatlabTable(inputTable);
 				table.writeHashMapToTempFolder();
@@ -187,7 +185,7 @@ public class MatlabClient {
 				table.readHashMapFromTempFolder(exec);
 				return table.getBufferedDataTable();
 				
-			} else if (this.method == 2) {
+			} else if (transferMethod.equals("workspace")) {
 				// Get a proxy (block it)
 				MatlabProxy proxy = acquireMatlabProxy();
 
@@ -222,10 +220,10 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public File plotTask(BufferedDataTable inputTable, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
+		public File plotTask(BufferedDataTable inputTable, String transferMethod, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
 				throws Exception {
 
-			if (this.method == 1) {
+			if (transferMethod.equals("file")) {
 				// Transfer the KNIME table as hash map object dump to the JVM temp-folder
 				table = new MatlabTable(inputTable);
 				table.writeHashMapToTempFolder();
@@ -243,7 +241,7 @@ public class MatlabClient {
 
 			    // Return the png-image
 				return code.getPlotFile();
-			} else if (this.method == 2) {
+			} else if (transferMethod.equals("workspace")) {
 				// Get a proxy (block it)
 				MatlabProxy proxy = acquireMatlabProxy();
 
@@ -364,7 +362,7 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void openTask(BufferedDataTable inputTable, String matlabType)
+		public void openTask(BufferedDataTable inputTable, String matlabType, String transferMethod)
 				throws IOException, MatlabInvocationException {
 			
 			// This task is not used for a remote client. It only makes sense if you have the MATLAB application on the same machine.
@@ -376,7 +374,7 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public BufferedDataTable snippetTask(BufferedDataTable inputTable, ExecutionContext exec, String snippet, String matlabType)
+		public BufferedDataTable snippetTask(BufferedDataTable inputTable, String transferMethod, ExecutionContext exec, String snippet, String matlabType)
 				throws Exception {
 
 			// Get a proxy (block it)
@@ -404,7 +402,7 @@ public class MatlabClient {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public File plotTask(BufferedDataTable inputTable, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
+		public File plotTask(BufferedDataTable inputTable, String transferMethod, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
 				throws IOException, Exception {
 			// Get a proxy (block it)
 			MatlabProxy proxy = matlabServer.acquireMatlabProxy();

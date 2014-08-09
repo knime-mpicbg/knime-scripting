@@ -40,7 +40,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 
 /**
- * TODO: Make the checkbox act on the server settings (deactivate them when the we use a local server)
+ * Preference page of the MATLAB scripting integration for KNIME
  * 
  * @author Holger Brandl
  */
@@ -67,6 +67,10 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
         		parent);
         
+        IntegerFieldEditor threads = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_SESSIONS,
+        		"Number of (local) Matlab application instances", 
+        		parent);
+        
         StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,
         		"The host where the Matlab-server is running",
         		parent);
@@ -88,15 +92,26 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         		new String[][]{{"dataset","dataset"}, {"map", "map"}, {"struct", "struct"}},
         		parent);
         
+        ComboFieldEditor transfer = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD,
+        		"Data transfer method between KNIME and MATLAB.\n('file' is faster but needs disk space and memory, 'workspace' is slower but less ressource hungry)",
+        		new String[][]{{"file","file"}, {"workspace", "workspace"}},
+        		parent);
+        
         addField(local);
+        addField(threads);
         addField(host);
         addField(port);
         addField(snippets);
         addField(plots);
         addField(type);
+        addField(transfer);
     }
 
-
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void init(final IWorkbench workbench) {
         // nothing to do
     }

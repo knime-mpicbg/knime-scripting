@@ -116,8 +116,9 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	PortObject[] outPorts = new PortObject[1];
     	
     	try {
-            // Get the MATLAB type
+            // Get preference pane properties
             this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+            this.method = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
             
 	    	// Get the input table
 	    	BufferedDataTable inputTable = (BufferedDataTable)inData[0];
@@ -127,7 +128,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	        exec.checkCanceled();
 	
 	        // Execute the script
-	        File plotFile = matlab.client.plotTask(inputTable, snippet, getDefWidth(), getDefHeight(), this.type);
+	        File plotFile = matlab.client.plotTask(inputTable, this.method, snippet, getDefWidth(), getDefHeight(), this.type);
 	        exec.checkCanceled();
 	        
 	        // Fetch the image file form the server and load it

@@ -1,5 +1,7 @@
 package de.mpicbg.knime.scripting.matlab.srv;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import matlabcontrol.MatlabConnectionException;
@@ -35,6 +37,8 @@ public class MatlabController {
 	
 	/** MATLAB access queue */
 	static ArrayBlockingQueue<MatlabProxy> proxyQueue;// = new ArrayBlockingQueue<MatlabProxy>(1);
+	
+	static int proxyQueueSize; 
 
 	
 	/**
@@ -47,11 +51,12 @@ public class MatlabController {
 	 * @param name of the thread
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabController() throws MatlabConnectionException {
+	public MatlabController(int sessions) throws MatlabConnectionException {
 		// Set a very permissive security manager (beware this could be an entry point for abuse)
 		System.setSecurityManager(new PermissiveSecurityManager());
 		
 		synchronized(this) {
+			proxyQueueSize = sessions;
 			
 			// Determine the total number of threads and the number of this thread
 			if (threadCount == null) {
@@ -59,12 +64,12 @@ public class MatlabController {
 			} else {
 				threadCount++;
 			}
-			threadNumber = threadCount;
+			this.threadNumber = threadCount;
 			
 			// Create the proxy factory (exactly once).
 			if (proxyFactory == null) {
 				MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().
-						setUsePreviouslyControlledSession(true).
+						setUsePreviouslyControlledSession(proxyQueueSize == 1).
 						build();
 				proxyFactory = new MatlabProxyFactory(options);
 			} 
@@ -84,34 +89,48 @@ public class MatlabController {
 	public synchronized void connect() throws MatlabConnectionException {
 		System.out.println("MATLAB: starting...");
 		if (proxyQueue == null) {
-			proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
+			proxyQueue = new ArrayBlockingQueue<MatlabProxy>(proxyQueueSize);
 			// Use the factory to get a running MATLAB session
-			proxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback() {
-	            @Override
-	            public void proxyCreated(MatlabProxy proxy) {
-	            	// Once the session is running, add the proxy object to the proxy queue
-	                proxyQueue.add(proxy);
-	                // Add a disconnection listener, so this controller can react if the MATLAB 
-	                // application is closed (for instance by the user)
-	                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener() {				
-						@Override
-						public void proxyDisconnected(MatlabProxy proxy) {
-							proxyQueue = null;
-						}
-					});
-	            }
-	        });
+			for (int i = 0; i < proxyQueueSize; i++) {
+				proxyFactory.requestProxy(new MatlabProxyFactory.RequestCallback() {
+		            @Override
+		            public void proxyCreated(MatlabProxy proxy) {
+		            	// Once the session is running, add the proxy object to the proxy queue
+		                proxyQueue.add(proxy);
+		                // Add a disconnection listener, so this controller can react if the MATLAB 
+		                // application is closed (for instance by the user)
+		                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener() {				
+							@Override
+							public void proxyDisconnected(MatlabProxy proxy) {
+								proxyQueue = null;
+							}
+						});
+		            }
+		        });
+			}
 			
 			// Clean the command window and state what happened
-            try {
-            	MatlabProxy proxy = getQueue().take();
-				proxy.eval("clc");
-				proxy.eval("disp('Started from KNIME (MATLAB scripting integration)')");
-				getQueue().put(proxy);
-			} catch (MatlabInvocationException e1) {
-				e1.printStackTrace();
-			} catch (InterruptedException e2) {
-				e2.printStackTrace();
+			List<MatlabProxy> tempProxyHolder = new ArrayList<MatlabProxy>(proxyQueueSize);
+			
+			for (int i = 0; i < proxyQueueSize; i++) {
+	            try {
+	            	tempProxyHolder.add(getQueue().take());
+				} catch (InterruptedException e2) {
+					e2.printStackTrace();
+				}
+			}
+			for (int i = 0; i < proxyQueueSize; i++) {
+				try {
+					MatlabProxy proxy = tempProxyHolder.remove(0); 
+					proxy.eval("clc");
+					proxy.eval("disp('Started from KNIME (MATLAB scripting integration)')");
+					getQueue().put(proxy);
+					
+				} catch (MatlabInvocationException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
             System.out.println("...running.");
 		} else {

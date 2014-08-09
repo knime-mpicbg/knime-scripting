@@ -53,15 +53,16 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	BufferedDataTable[] outData = new BufferedDataTable[1];
     	
     	try {
-            // Get the MATLAB type
+            // Get preference pane properties
             this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+            this.method = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
             
             // Get the code
     		String snippet = prepareScript();
     		exec.checkCanceled();
     		
     		// Execute it
-    		BufferedDataTable table = this.matlab.client.snippetTask(inData[0], exec, snippet, this.type);
+    		BufferedDataTable table = this.matlab.client.snippetTask(inData[0], this.method, exec, snippet, this.type);
     		outData[0] = table;
     		exec.checkCanceled();
     		

@@ -6,6 +6,9 @@ import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
 import matlabcontrol.MatlabConnectionException;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
@@ -20,8 +23,18 @@ public class OpenInMatlab extends AbstractNodeModel {
     /** Object to access the MATLAB session */
     private MatlabClient matlab;
     
+    /** Preference pane */
+    private IPreferenceStore preferences = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
+    
     /** MATLAB type */
     private String type;
+    
+    /** Number of MATLAB application instances */ 
+    private int sessions;
+    
+    /** KNIME-to-MATLAB data transfer method */
+    private String transfer;
+    
 
     /**
      * Constructor for the node model.
@@ -31,15 +44,45 @@ public class OpenInMatlab extends AbstractNodeModel {
         super(1, 0, true);
         
         // Instantiate the local MATLAB server      
-        try {
-			matlab = new MatlabClient(true);
+        sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+        initializeMatlabClient(true, sessions);
+        
+        // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
+        preferences.addPropertyChangeListener(new IPropertyChangeListener() {
+        	int newSessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+
+        	@Override
+        	public void propertyChange(PropertyChangeEvent event) {
+        		String newValue = event.getNewValue().toString();
+
+        		if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_SESSIONS) {
+        			newSessions = Integer.parseInt(newValue);
+        			logger.info("MATLAB: server property (MATLAB_SESSIONS) was changed to " + newSessions + ". Re-initializing MATLAB client.");
+        			return;
+        		}
+
+        		initializeMatlabClient(true, newSessions);
+        	}
+        });
+        
+    }   
+    
+    
+    /**
+     * Instantiate the MATLAB client
+     * 
+     * @param local
+     * @param sessions
+     */
+    private void initializeMatlabClient(boolean local, int sessions) {
+    	try {
+			matlab = new MatlabClient(true, sessions);
 		} catch (MatlabConnectionException e) {
 			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 					" to use KNIME's MATLAB scripting integration.");
 			e.printStackTrace();
 		}
-    }   
-
+    }
 
     /**
      * {@inheritDoc}
@@ -49,13 +92,20 @@ public class OpenInMatlab extends AbstractNodeModel {
         // Get the table
         BufferedDataTable data = inData[0];
         
+        // Get properties from the preference pane
         type = MatlabScriptingBundleActivator.getDefault()
         		.getPreferenceStore()
         		.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+        sessions = MatlabScriptingBundleActivator.getDefault()
+        		.getPreferenceStore()
+        		.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+        transfer = MatlabScriptingBundleActivator.getDefault()
+        		.getPreferenceStore()
+        		.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
         
         try {               	
         	// Execute the command in MATLAB
-        	matlab.client.openTask(data, this.type);
+        	matlab.client.openTask(data, this.type, this.transfer);
         	exec.checkCanceled();
         	
         	// Housekeeping

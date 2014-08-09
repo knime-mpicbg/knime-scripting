@@ -53,7 +53,7 @@ public class MatlabServer implements MatlabRemote {
 	 * 
 	 * @param port
 	 */
-	public MatlabServer(int port) {
+	public MatlabServer(int port, int sessions) {
 		try {
             System.out.println("Configuring on port: " + port);
             Remote.config(null, port, null, 0);
@@ -62,7 +62,7 @@ public class MatlabServer implements MatlabRemote {
             ItemServer.bind(this, REGISTRY_NAME);
             
             System.out.println("Starting MATLAB application...");
-            matlabController = new MatlabController();
+            matlabController = new MatlabController(sessions);
         } catch (IOException e) {
         	System.err.println("Unable to write registry.");
             e.printStackTrace();
@@ -126,7 +126,7 @@ public class MatlabServer implements MatlabRemote {
 	    		"***************************************************************");
 		
 	    // Start the server
-	    new MatlabServer(port);
+	    new MatlabServer(port, threads);
 	}
 
 	/**

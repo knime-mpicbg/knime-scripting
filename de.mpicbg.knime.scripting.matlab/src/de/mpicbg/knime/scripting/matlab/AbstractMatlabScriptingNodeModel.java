@@ -35,6 +35,9 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
     
     /** MALTLAB type */
     protected String type;
+    
+    /** KNIME-to-MATLAB data transfer method */
+    protected String method;
 
     
     /**
@@ -49,15 +52,17 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
         
         // Get the values from the KNIME preference dialog.
         boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
+        int sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
         String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
         int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
         
         // Initialize the MATLAB client
-        initializeMatlabClient(local, host, port);
+        initializeMatlabClient(local, sessions,  host, port);
         
         // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
         preferences.addPropertyChangeListener(new IPropertyChangeListener() {
 			boolean newLocal = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
+			int newSessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
 			String newHost = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
 	        int newPort = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
 	        
@@ -74,9 +79,17 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 				} else if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_PORT) {
 					newPort = Integer.parseInt(newValue);
 					logger.info("MATLAB: server property (MATLAB_PORT) was changed to " + newPort + ". Re-initializing MATLAB client.");
+				} else if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_SESSIONS) {
+					newSessions = Integer.parseInt(newValue);
+					if (newLocal == true) { 
+						logger.info("MATLAB: server property (MATLAB_SESSIONS) was changed to " + newSessions + ". Re-initializing MATLAB client.");
+					} else {
+						logger.warn("MATLAB: server property (MATLAB_SESSIONS) was changed. But this property is ignored when using a remote host.");
+						return;
+					}
 				}
 				
-				initializeMatlabClient(newLocal, newHost, newPort);
+				initializeMatlabClient(newLocal, newSessions, newHost, newPort);
 			}
 		});
     }
@@ -89,9 +102,9 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      * @param port 
      * @param host 
      */
-    private void initializeMatlabClient(boolean local, String host, int port) {
+    private void initializeMatlabClient(boolean local, int sessions, String host, int port) {
         try {
-			matlab = new MatlabClient(local, host, port);
+			matlab = new MatlabClient(local, sessions, host, port);
 		} catch (MatlabConnectionException e) {
 			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 					" to use KNIME's MATLAB scripting integration.");
