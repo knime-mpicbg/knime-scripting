@@ -354,4 +354,11 @@ public class MatlabServer implements MatlabRemote {
         }
     }
 
+
+	@Override
+	public void printServerMessage(String msg) {
+		System.out.println(msg);
+		
+	}
+
 }

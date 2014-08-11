@@ -49,6 +49,9 @@ public interface MatlabRemote {
 	
 	
 	
+	public void printServerMessage(String msg);
+	
+	
 	////////////////////// Server file operations (data transfer) ////////////////////// 
 	
 	/**

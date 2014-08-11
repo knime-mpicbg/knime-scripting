@@ -5,6 +5,7 @@ import gnu.cajo.utils.extra.TransparentItemProxy;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.net.InetAddress;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -42,6 +43,12 @@ public class MatlabClient {
 	/** Number of MATLAB application instance */
 	public int sessions;
 	
+	/** Thread number (for identification during debugging) */
+	private int clientNumber;
+	
+	/** Total count of threads connecting to MATLAB */
+	static Integer clientCount;
+	
 	
 	/**
 	 * Constructor of the MATLAB client.
@@ -69,10 +76,20 @@ public class MatlabClient {
 	 */
 	public MatlabClient(boolean local, int sessions, String host, int port) throws MatlabConnectionException {
 		this.local = local;
-		if (local) {
-			client = new Local(sessions);
+		
+		// Determine the total number of threads and the number of this thread
+		if (clientCount == null) {
+			clientCount = 1;
 		} else {
-			client = new Remote(host, port);
+			clientCount++;
+		}
+		this.clientNumber = clientCount;
+
+		// Instantiate the MATLAB client
+		if (local) {
+			client = new Local(sessions, this.clientNumber);
+		} else {
+			client = new Remote(host, port, this.clientNumber);
 		}		
 	}
 	
@@ -112,6 +129,8 @@ public class MatlabClient {
 		
 		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
 		private MatlabTable table;
+		
+		private int clientNumber;
 	
 		
 		/**
@@ -120,8 +139,10 @@ public class MatlabClient {
 		 * 
 		 * @throws MatlabConnectionException
 		 */
-		public Local(int sessions) throws MatlabConnectionException {
-			matlabController = new MatlabController(sessions);
+		public Local(int sessions, int clientNumber) throws MatlabConnectionException {
+			this.clientNumber = clientNumber;
+			this.matlabController = new MatlabController(sessions);
+			System.out.println("Created local MATLAB client " + this.clientNumber);
 		}
 
 		
@@ -343,20 +364,24 @@ public class MatlabClient {
 		
 		private MatlabFileTransfer plot;
 		
+		private int clientNumber;
 
 		/**
 		 * Constructor
 		 */
-		public Remote(String serverName, int serverPort) {
+		public Remote(String serverName, int serverPort, int clientNumber) {
+			this.clientNumber = clientNumber;
+			
 	        try {
 	            String url = "//" + serverName + ":" + serverPort + "/" + MatlabRemote.REGISTRY_NAME;
 	            matlabServer = (MatlabRemote) TransparentItemProxy.getItem(url, new Class[]{MatlabRemote.class});
+	            System.err.println("Created remote MATLAB client " + this.clientNumber + "(server: )" + url);	            
+	            matlabServer.printServerMessage("Connection from " + InetAddress.getLocalHost().getHostName() + ", client " + this.clientNumber);
 	        } catch (Throwable e) {
 	        	System.err.println("Unable to connect to MATLAB server.");
 	            throw new RuntimeException(e);
 	        }
 		}
-		
 		
 		/**
 		 * {@inheritDoc}
@@ -518,6 +543,12 @@ public class MatlabClient {
 		@Override
 		public void closeFile(int descriptor) throws IOException {
 			matlabServer.closeFile(descriptor);
+		}
+
+
+		@Override
+		public void printServerMessage(String msg) {
+			matlabServer.printServerMessage(msg);
 		}
 		
 	}
