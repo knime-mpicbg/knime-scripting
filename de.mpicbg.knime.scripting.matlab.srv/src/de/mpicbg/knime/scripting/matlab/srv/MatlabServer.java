@@ -160,6 +160,15 @@ public class MatlabServer implements MatlabRemote {
 	}
 	
 	/**
+     * {@inheritDoc}
+     */
+	@Override
+	public void printServerMessage(String msg) {
+		System.out.println(msg);
+		
+	}
+	
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -353,12 +362,5 @@ public class MatlabServer implements MatlabRemote {
             	output.close();
         }
     }
-
-
-	@Override
-	public void printServerMessage(String msg) {
-		System.out.println(msg);
-		
-	}
 
 }

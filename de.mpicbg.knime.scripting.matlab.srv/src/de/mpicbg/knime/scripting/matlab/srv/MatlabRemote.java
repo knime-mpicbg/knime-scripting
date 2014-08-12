@@ -48,7 +48,11 @@ public interface MatlabRemote {
 	public void releaseMatlabProxy(MatlabProxy proxy) throws MatlabConnectionException;
 	
 	
-	
+	/**
+	 * Print message (provided by the client) on the servers standard output
+	 * 
+	 * @param msg
+	 */
 	public void printServerMessage(String msg);
 	
 	
