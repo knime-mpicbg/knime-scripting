@@ -65,11 +65,8 @@ public class MatlabFileTransfer {
 	 * @throws IOException
 	 */
 	public MatlabFileTransfer(MatlabRemote matlab, File inputFile) throws IOException {
+		this(inputFile);
 		this.server = matlab;
-		this.prefix = FilenameUtils.getBaseName(inputFile.getAbsolutePath());
-		this.suffix = FilenameUtils.getExtension(inputFile.getAbsolutePath());
-		this.clientFile = inputFile;
-		
 		upload();
 	}
 	
@@ -79,9 +76,10 @@ public class MatlabFileTransfer {
 	 * @param inputFile
 	 */
 	public MatlabFileTransfer(File inputFile) {
+		this.prefix = FilenameUtils.getBaseName(inputFile.getAbsolutePath());
+		this.suffix = FilenameUtils.getExtension(inputFile.getAbsolutePath());
 		this.clientFile = inputFile;
 	}
-	
 	
 	/**
 	 * Constructor for a transfer file, where the resource from this package will 
@@ -94,6 +92,7 @@ public class MatlabFileTransfer {
 	 */
 	public MatlabFileTransfer(MatlabRemote matlab, String resourcePath) throws FileNotFoundException, IOException {
 		this(resourcePath);
+		this.server = matlab;
 		upload();
 	}
 	
@@ -106,13 +105,15 @@ public class MatlabFileTransfer {
 	 * @throws IOException
 	 */
 	public MatlabFileTransfer(String resourcePath) throws FileNotFoundException, IOException {
+		this.prefix = FilenameUtils.getBaseName(resourcePath);
+		this.suffix = FilenameUtils.getExtension(resourcePath);
 		clientFile = new File(Matlab.TEMP_PATH, FilenameUtils.getName(resourcePath));
 		clientFile.deleteOnExit();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         InputStream resstream = loader.getResourceAsStream(resourcePath);
         writeStreamToFile(resstream, new FileOutputStream(clientFile));
 	}
-
+	
 
 	/**
 	 * Get the client file object on the local machine.
