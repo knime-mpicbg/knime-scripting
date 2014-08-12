@@ -56,7 +56,6 @@ public interface MatlabRemote extends MatlabOperations {
 	public void printServerMessage(String msg);
 	
 	
-	
 	////////////////////// Server file operations (data transfer) ////////////////////// 
 	
 	/**
