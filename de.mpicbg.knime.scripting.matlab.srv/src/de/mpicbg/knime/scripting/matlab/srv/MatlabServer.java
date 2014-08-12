@@ -25,6 +25,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import matlabcontrol.MatlabConnectionException;
+import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 
@@ -52,6 +53,7 @@ public class MatlabServer implements MatlabRemote {
 	 * Constructor
 	 * 
 	 * @param port
+	 * @param sessions
 	 */
 	public MatlabServer(int port, int sessions) {
 		try {
@@ -133,29 +135,22 @@ public class MatlabServer implements MatlabRemote {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public MatlabProxy acquireMatlabProxy() throws MatlabConnectionException {
+	public void acquireMatlabProxy() throws MatlabConnectionException {
 		MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 		matlabProxyHolder.add(proxy);
 		System.out.println("MATLAB Proxy acquired by thread " + matlabController.getThreadNumber());
-		return proxy;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void releaseMatlabProxy(MatlabProxy proxy) {
-		if (proxy == null) {
-			if (this.matlabProxyHolder.size() > 0) {
-				this.matlabController.returnProxyToQueue(this.matlabProxyHolder.remove(1));
-				System.out.println("Proxy released.");
-			} else {
-				System.out.println("Oups, we lost a proxy along the way. Time for serious debugging.");
-			}
+	public void releaseMatlabProxy() {
+		if (this.matlabProxyHolder.size() > 0) {
+			this.matlabController.returnProxyToQueue(this.matlabProxyHolder.remove(1));
+			System.out.println("Proxy released.");
 		} else {
-			this.matlabController.returnProxyToQueue(proxy);
-			this.matlabProxyHolder.remove(proxy);
-			System.out.println("The proxy released by thread " + matlabController.getThreadNumber());
+			System.out.println("Oups, we lost a proxy along the way. Time for serious debugging.");
 		}
 	}
 	
@@ -167,6 +162,9 @@ public class MatlabServer implements MatlabRemote {
 		System.out.println(msg);
 		
 	}
+	
+	
+	
 	
 	/**
 	 * {@inheritDoc}
@@ -228,7 +226,66 @@ public class MatlabServer implements MatlabRemote {
         ServerFile file = fileMap.get(descriptor);
         file.close();
         fileMap.remove(descriptor);
-    }
+    }	
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void eval(String cmd) throws MatlabInvocationException {
+		if (matlabProxyHolder.size() == 0)
+			throw new RuntimeException("Before doing MATLAB operations you have to call the acquireMatlabProxy method");
+		
+		matlabProxyHolder.get(1).eval(cmd);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void feval(String arg0, Object... arg1)
+			throws MatlabInvocationException {
+		throw new RuntimeException("The MATLAB server does currently not support the 'feval' operation.");
+		
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Object getVariable(String cmd) throws MatlabInvocationException {
+		if (matlabProxyHolder.size() == 0)
+			throw new RuntimeException("Before doing MATLAB operations you have to call the acquireMatlabProxy method");
+		
+		return matlabProxyHolder.get(1).getVariable(cmd);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Object[] returningEval(String arg0, int arg1)
+			throws MatlabInvocationException {
+		throw new RuntimeException("The MATLAB server does currently not support the 'feval' operation.");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Object[] returningFeval(String arg0, int arg1, Object... arg2)
+			throws MatlabInvocationException {
+		throw new RuntimeException("The MATLAB server does currently not support the 'feval' operation.");
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void setVariable(String arg0, Object arg1)
+			throws MatlabInvocationException {
+		throw new RuntimeException("The MATLAB server does currently not support the 'feval' operation.");
+	}
 
 	
 
@@ -363,4 +420,6 @@ public class MatlabServer implements MatlabRemote {
         }
     }
 
+    
 }
+

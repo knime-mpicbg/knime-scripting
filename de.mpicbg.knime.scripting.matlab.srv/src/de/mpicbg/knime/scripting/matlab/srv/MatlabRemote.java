@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import matlabcontrol.MatlabConnectionException;
-import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabOperations;
 
 
 /**
@@ -14,7 +14,7 @@ import matlabcontrol.MatlabProxy;
  * 
  * @author Holger Brandl, Tom Haux, Felix Meyenhofer
  */
-public interface MatlabRemote {
+public interface MatlabRemote extends MatlabOperations {
 	
 	/** Default host */
 	public static final String DEFAULT_HOST = "localhost";
@@ -37,7 +37,7 @@ public interface MatlabRemote {
 	 * @return 
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabProxy acquireMatlabProxy() throws MatlabConnectionException;
+	public void acquireMatlabProxy() throws MatlabConnectionException;
 	
 	/**
 	 * Release the MATLAB proxy and thus make it available for other processes again.
@@ -45,7 +45,7 @@ public interface MatlabRemote {
 	 * @param proxy
 	 * @throws MatlabConnectionException
 	 */
-	public void releaseMatlabProxy(MatlabProxy proxy) throws MatlabConnectionException;
+	public void releaseMatlabProxy() throws MatlabConnectionException;
 	
 	
 	/**

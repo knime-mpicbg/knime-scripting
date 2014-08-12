@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
-
+import matlabcontrol.MatlabOperations;
+import org.apache.commons.io.FilenameUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.StringCell;
@@ -53,7 +53,7 @@ public class MatlabCode {
 	private final String hashresource = Matlab.MATLAB_HASHMAP_SCRIPT;
 	
 	/** Function name of the MATLAB script that handles the data loading */
-	private final String hashfun = fileName2functionName(this.hashresource);
+	private final String hashfun = FilenameUtils.getBaseName(this.hashresource);
 	
 	
 	/**
@@ -100,6 +100,81 @@ public class MatlabCode {
 	}
 	
 	
+	
+	
+	
+	/**
+	 * Constructor to produce the MATLAB code for a 
+	 * snippet node running on a server using file-based data transfer
+	 * 
+	 * @param code
+	 * @param matlabType
+	 * @param parserPath
+	 * @param snippetPath
+	 * @param tablePath
+	 * @throws Exception
+	 */
+	public MatlabCode(String code, String matlabType, String parserPath, String snippetPath, String tablePath) throws Exception {
+		this.type = matlabType;
+		
+		String script = "";
+		script = addLoadCode(code, parserPath, tablePath);
+		script = addSaveCode(script, parserPath, tablePath);
+		script = addErrorHandlingCode(script);
+		script = addFunctionSignature(script, FilenameUtils.getBaseName(snippetPath), false, true);
+		
+		this.snippet = script;
+	}
+	
+	/**
+	 * Constructor to produce the MATLAB code for a
+	 * plot node running on a server using file-based data transfer.
+	 * 
+	 * @param code
+	 * @param matlabType
+	 * @param parserPath
+	 * @param snippetPath
+	 * @param tablePath
+	 * @param plotPath
+	 * @param width
+	 * @param height
+	 * @throws Exception
+	 */
+	public MatlabCode(String code, String matlabType, String parserPath, String snippetPath, String tablePath, String plotPath, int width, int height) throws Exception {
+		this.type = matlabType;
+		
+		String script = "";
+		script = addLoadCode(code, parserPath, tablePath);
+		script = addPlotCode(script, width, height, plotPath);
+		script = addErrorHandlingCode(script);
+		script = addFunctionSignature(script, FilenameUtils.getBaseName(snippetPath), false, false);
+		
+		this.snippet = script;
+	}
+	
+	/**
+	 * Constructor to produce the MATLAB code for a
+	 * plot node running on a server using workspace-push based data transfer.
+	 * 
+	 * @param code
+	 * @param matlabType
+	 * @param plotPath
+	 * @param width
+	 * @param height
+	 */
+	public MatlabCode(String code, String matlabType, String snippetPath, String plotPath, int width, int height) {
+		this.type = matlabType;
+		
+		String script = "";
+		script = addPlotCode(script, width, height, plotPath);
+		script = addErrorHandlingCode(script);
+		script = addFunctionSignature(script, FilenameUtils.getBaseName(snippetPath), false, false);
+		
+		this.snippet = script;
+		
+	}
+	
+	
 	/**
 	 * Wrap the entire snippet in a try-catch clause to for error handling
 	 * 
@@ -107,6 +182,10 @@ public class MatlabCode {
 	 */
 	private String addErrorHandlingCode() {
 		return "\ntry\n" + this.snippet + "\ncatch " + Matlab.ERROR_VARIABLE_NAME + ";end\n";
+	}
+	
+	private String addErrorHandlingCode(String code) {
+		return "\ntry\n" + code + "\ncatch " + Matlab.ERROR_VARIABLE_NAME + ";end\n";
 	}
 	
 	/**
@@ -119,9 +198,16 @@ public class MatlabCode {
 		if (this.snippetfile == null)
 			throw new Exception("Before addning the function header to the snippet, A file needs to be created.");
 		
-		this.snippetfun = fileName2functionName(this.snippetfile.getName());
+		this.snippetfun = FilenameUtils.getBaseName(this.snippetfile.getAbsolutePath());
 		
 		return "function " + createFunctionSignature(hasInput, hasOutput) + "\n" + Matlab.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '');\n" + this.snippet;
+	}
+	
+	private String addFunctionSignature(String code, String functionName, boolean hasInput, boolean hasOutput) {
+		return "function " + createFunctionSignature(functionName, hasInput, hasOutput) + "\n" + 
+				Matlab.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '');\n" + 
+				code;
+		
 	}
 	
 	/**
@@ -133,11 +219,15 @@ public class MatlabCode {
 	 * @return
 	 */
 	private String createFunctionSignature(boolean hasInput, boolean hasOutput) {
+		return createFunctionSignature(this.snippetfun, hasInput, hasOutput);
+	}
+	
+	private String createFunctionSignature(String functionName, boolean hasInput, boolean hasOutput) {
 		String signature = "";
 		if (hasOutput)
-			signature += "[" + Matlab.OUTPUT_VARIABLE_NAME + "," + Matlab.ERROR_VARIABLE_NAME + "]" +"=" + this.snippetfun;
+			signature += "[" + Matlab.OUTPUT_VARIABLE_NAME + "," + Matlab.ERROR_VARIABLE_NAME + "]" +"=" + functionName;
 		else
-			signature += Matlab.ERROR_VARIABLE_NAME + "=" + this.snippetfun;
+			signature += Matlab.ERROR_VARIABLE_NAME + "=" + functionName;
 		
 		if (hasInput)
 			signature += "(" + Matlab.INPUT_VARIABLE_NAME + ")";
@@ -161,6 +251,14 @@ public class MatlabCode {
         		"set(gcf,'PaperPositionMode','auto');\n" +
         		code + "\n" +
         		"print(figureHandle, '-dpng', '" + this.plotfile + "');\n" + 
+        		Matlab.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
+	}
+	
+	private String addPlotCode(String code, Integer plotWidth, Integer plotHeight, String plotPath) {
+    	return "figureHandle = figure('visible', 'off', 'units', 'pixels', 'position', [0, 0, " + plotWidth + ", " + plotHeight + "]);\n" +
+        		"set(gcf,'PaperPositionMode','auto');\n" +
+        		code + "\n" +
+        		"print(figureHandle, '-dpng', '" + plotPath + "');\n" + 
         		Matlab.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
 	}
 	
@@ -209,6 +307,17 @@ public class MatlabCode {
 				code;
 	}
 	
+	private String addLoadCode(String code, String scriptPath, String tablePath) throws Exception {
+		
+		String matlabPath = FilenameUtils.getFullPath(scriptPath); 
+		String functionName = FilenameUtils.getBaseName(scriptPath);
+		
+		return "cd " + matlabPath + ";\n" + 
+				"[" + Matlab.INPUT_VARIABLE_NAME +"," + Matlab.COLUMNS_VARIABLE_NAME + "]=" + 
+				functionName + "('" + tablePath + "','" + this.type + "');\n" +
+				code;
+	}
+	
 	/**
 	 * Add the code to save the data in {@link Matlab#OUTPUT_VARIABLE_NAME}
 	 * to a binary file.
@@ -223,6 +332,14 @@ public class MatlabCode {
 		return code + "\n" +
 				"cd " + Matlab.TEMP_PATH + ";\n" +
 				this.hashfun + "('" + this.tablefile.getAbsolutePath() + "', " + Matlab.OUTPUT_VARIABLE_NAME +");";
+	}
+	
+	private String addSaveCode(String code, String scriptPath, String tablePath) {
+		String matlabPath = FilenameUtils.getFullPath(scriptPath);
+		String functionName = FilenameUtils.getBaseName(scriptPath);
+		return code + "\n" +
+				"cd " + matlabPath + ";\n" +
+				functionName + "('" + matlabPath + "', " + Matlab.OUTPUT_VARIABLE_NAME +");";
 	}
 	
 	/**
@@ -292,6 +409,7 @@ public class MatlabCode {
 	 * @return
 	 * @throws IOException
 	 */
+	@Deprecated
 	public File createPlotFile() throws IOException {
 		this.plotfile = File.createTempFile(Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
 		this.plotfile.deleteOnExit();
@@ -304,8 +422,24 @@ public class MatlabCode {
 	 * 
 	 * @return MATLAB plot file
 	 */
-	public File getPlotFile() {
+	@Deprecated
+	public File getPlotTempFile() {
 		return this.plotfile;
+	}
+	
+	/**
+	 * Get the {@link File} object pointing to the m-temp-file
+	 * containing the MATLAB snippet (script)
+	 * 
+	 * @return MATLAB script temp-file
+	 */
+	@Deprecated
+	public File getSnippetTempFile() {
+		return this.snippetfile;
+	}
+	
+	public String getSnippet(){
+		return this.snippet;
 	}
 	
 	/**
@@ -314,6 +448,7 @@ public class MatlabCode {
 	 * @return MATLAB code to execute this script.
 	 * @throws Exception 
 	 */
+	@Deprecated
 	private String copySnippetToTempDirectory(boolean hasInput, boolean hasOutput) throws Exception {
     	this.snippetfile = File.createTempFile(Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
     	this.snippetfile.deleteOnExit();
@@ -331,6 +466,7 @@ public class MatlabCode {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
+	@Deprecated
 	private void copyHashMapScriptToTempDirectory() throws FileNotFoundException, IOException {
 		copyResourceToTempDirectory(this.hashresource);
 	}
@@ -343,6 +479,7 @@ public class MatlabCode {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
+	@Deprecated
 	private File copyResourceToTempDirectory(String resourceAbsolutePath) throws FileNotFoundException, IOException {
 		File resfile = new File(resourceAbsolutePath);	
 		File outfile = new File(this.temppath, resfile.getName());
@@ -352,23 +489,6 @@ public class MatlabCode {
         writeStreamToFile(resstream, new FileOutputStream(outfile));
         return outfile;
     }
-	
-	/**
-     * Clip the extension of the file name so it can be used as a function name 
-     * in MATLAB. 
-     * 
-     * @param str file name
-     * @return function name
-     */
-    private static String fileName2functionName(String str) {
-        File tmp = new File(str);
-        str = tmp.getName();
-        int index = str.indexOf(".");
-        if (index > 1) {
-            str = str.substring(0, index);
-        }
-        return str;
-    }
     
     /**
      * Write an file input to an output stream.
@@ -377,6 +497,7 @@ public class MatlabCode {
      * @param out
      * @throws IOException
      */
+	@Deprecated
     private static void writeStreamToFile(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[16384];
         while (true) {
@@ -389,6 +510,12 @@ public class MatlabCode {
         out.close();
     }
 	
+	
+	public String getScriptExecutionCommand(String snippetPath, boolean hasInput, boolean hasOutput) {
+		String path = FilenameUtils.getFullPath(snippetPath);
+		String fun = FilenameUtils.getBaseName(snippetPath);
+		return "cd " + path + ";" + createFunctionSignature(fun, hasInput, hasOutput) + ";";
+	}
     
     public static List<String> getVariableNamesFromColumnNames(String type, List<String> colNames) {
     	if (type.equals("dataset"))
@@ -600,8 +727,8 @@ public class MatlabCode {
     }
     
     
-    public static void checkForSnippetErrors(MatlabProxy proxy) throws MatlabInvocationException {
-    	String[] error = (String[]) proxy.getVariable(MatlabCode.getRetrieveErrorCommand());
+    public static void checkForSnippetErrors(MatlabOperations controller) throws MatlabInvocationException {
+    	String[] error = (String[]) controller.getVariable(MatlabCode.getRetrieveErrorCommand());
 		if (error[0].length() > 0)
 			throw new RuntimeException(error[0] + ", " + error[1] + " Check your MATLAB code!");
     }

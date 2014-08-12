@@ -1,5 +1,7 @@
 package de.mpicbg.knime.scripting.matlab.srv.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabProxy;
 
 import org.knime.core.data.DataCell;
@@ -75,6 +78,9 @@ public class MatlabTable {
 		this.hash = hash;
 	}
 	
+	public MatlabTable(File hashTempFile) {
+		this.hashTempFile = hashTempFile;
+	}
 	
 	/**
 	 * Getter for the temp-file containing the KNIME table data
@@ -267,6 +273,17 @@ public class MatlabTable {
         this.hashTempFile.delete();
     }
     
+    public InputStream getHashMapObjectStream() throws IOException {
+    	 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    	    ObjectOutputStream oos = new ObjectOutputStream(baos);
+    	    oos.writeObject(this.hash);
+
+    	    oos.flush();
+    	    oos.close();
+
+    	    return new ByteArrayInputStream(baos.toByteArray());
+    }
+    
     /**
      * Create the column specs from the {@link LinkedHashMap} 
      * (MATLAB understandable java object)
@@ -314,7 +331,7 @@ public class MatlabTable {
     }
 
     
-    public void pushTable2MatlabWorkspace(MatlabProxy proxy, String matlabType) throws MatlabInvocationException {
+    public void pushTable2MatlabWorkspace(MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
     	
     	// Get the column names
     	List<String> colNames = new ArrayList<String>();
@@ -343,7 +360,7 @@ public class MatlabTable {
     }
 
     
-	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabProxy proxy, String matlabType) throws MatlabInvocationException {
+	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
 		// Fetch the column names and types
 		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputVariableNamesCommand(matlabType));
 //		String[] varDescr = (String[]) proxy.getVariable(MatlabCode.getOutputVariableDescriptionsCommand(matlabType));
