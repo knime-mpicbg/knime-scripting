@@ -130,6 +130,7 @@ public class MatlabClient {
 		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
 		private MatlabTable table;
 		
+		/** Client number (to distinguish the calls to {@link MatlabController} and {@link MatlabServer} */
 		private int clientNumber;
 	
 		
@@ -172,7 +173,6 @@ public class MatlabClient {
 				throw new RuntimeException("Unknown method: " + transferMethod);
 			}
 			
-	        
 			// Execute 
 	        proxy.eval(cmd);
 	        returnMatlabProxy(proxy);
@@ -375,7 +375,7 @@ public class MatlabClient {
 	        try {
 	            String url = "//" + serverName + ":" + serverPort + "/" + MatlabRemote.REGISTRY_NAME;
 	            matlabServer = (MatlabRemote) TransparentItemProxy.getItem(url, new Class[]{MatlabRemote.class});
-	            System.err.println("Created remote MATLAB client " + this.clientNumber + "(server: )" + url);	            
+	            System.out.println("Created remote MATLAB client " + this.clientNumber + "(server: )" + url);	            
 	            matlabServer.printServerMessage("Connection from " + InetAddress.getLocalHost().getHostName() + ", client " + this.clientNumber);
 	        } catch (Throwable e) {
 	        	System.err.println("Unable to connect to MATLAB server.");

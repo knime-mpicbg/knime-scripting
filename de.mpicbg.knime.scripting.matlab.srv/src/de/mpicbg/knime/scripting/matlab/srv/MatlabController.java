@@ -38,7 +38,7 @@ public class MatlabController {
 	/** MATLAB access queue */
 	static ArrayBlockingQueue<MatlabProxy> proxyQueue;// = new ArrayBlockingQueue<MatlabProxy>(1);
 	
-	/** Number of allowed proxies (set during instanciation of the class) */
+	/** Number of allowed proxies (set during instantiation of the class) */
 	static int proxyQueueSize; 
 
 	
