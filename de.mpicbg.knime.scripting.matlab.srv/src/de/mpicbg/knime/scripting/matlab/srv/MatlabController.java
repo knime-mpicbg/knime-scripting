@@ -69,7 +69,7 @@ public class MatlabController {
 			// Create the proxy factory (exactly once).
 			if (proxyFactory == null) {
 				MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().
-						setUsePreviouslyControlledSession(proxyQueueSize == 1).
+						setUsePreviouslyControlledSession(proxyQueueSize == 1). // TODO check if this is necessary or if it also works if all the sessions would be re-used
 						build();
 				proxyFactory = new MatlabProxyFactory(options);
 			} 
