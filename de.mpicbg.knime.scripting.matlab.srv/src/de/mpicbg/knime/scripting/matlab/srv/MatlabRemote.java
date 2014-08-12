@@ -56,6 +56,7 @@ public interface MatlabRemote {
 	public void printServerMessage(String msg);
 	
 	
+	
 	////////////////////// Server file operations (data transfer) ////////////////////// 
 	
 	/**
@@ -68,7 +69,6 @@ public interface MatlabRemote {
 	 * @throws IOException
 	 */
 	public File createTempFile(String prefix, String suffix) throws IOException;
-
 	
 	/**
 	 * Get the relative file path

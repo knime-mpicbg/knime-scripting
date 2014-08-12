@@ -175,7 +175,7 @@ public class MatlabClient {
 			
 			// Execute 
 	        proxy.eval(cmd);
-	        returnMatlabProxy(proxy);
+	        releaseMatlabProxy(proxy);
 	        
 		}
 
@@ -200,7 +200,7 @@ public class MatlabClient {
 				proxy.eval(cmd);
 				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
-				returnMatlabProxy(proxy);
+				releaseMatlabProxy(proxy);
 
 				// Get the data back
 				table.readHashMapFromTempFolder(exec);
@@ -229,7 +229,7 @@ public class MatlabClient {
 				BufferedDataTable outputTable = table.pullTableFromMatlabWorkspace(exec, proxy, matlabType);
 
 				// Return the proxy
-				returnMatlabProxy(proxy);
+				releaseMatlabProxy(proxy);
 
 				return outputTable;
 			} else {
@@ -258,7 +258,7 @@ public class MatlabClient {
 				proxy.eval(cmd);
 				MatlabCode.checkForSnippetErrors(proxy);
 				proxy.eval("disp('created plot.')");
-			    returnMatlabProxy(proxy);
+			    releaseMatlabProxy(proxy);
 
 			    // Return the png-image
 				return code.getPlotFile();
@@ -280,7 +280,7 @@ public class MatlabClient {
 				proxy.eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
 				
 				// Release the proxy
-				returnMatlabProxy(proxy);
+				releaseMatlabProxy(proxy);
 				
 				return code.getPlotFile();
 				
@@ -329,7 +329,7 @@ public class MatlabClient {
 		private MatlabProxy acquireMatlabProxy() throws MatlabInvocationException, MatlabConnectionException {
 			MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 			matlabProxyHolder.add(proxy);
-			proxy.eval("disp(' ');disp('Thread "+ matlabController.getThreadNumber() +":');");
+			proxy.eval(MatlabCode.getThreadInforCommand(matlabController.getThreadNumber()));
 	        return proxy;
 		}
 		
@@ -338,7 +338,7 @@ public class MatlabClient {
 		 *  
 		 * @param proxy
 		 */
-		private void returnMatlabProxy(MatlabProxy proxy) {
+		private void releaseMatlabProxy(MatlabProxy proxy) {
 			matlabController.returnProxyToQueue(proxy);
 			matlabProxyHolder.remove(proxy);
 		}
@@ -362,8 +362,10 @@ public class MatlabClient {
 		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
 		private MatlabTable table;
 		
+		/** Temp-file containing the plot image */
 		private MatlabFileTransfer plot;
 		
+		/** Client number (to distinguish the calls to {@link MatlabController} and {@link MatlabServer} */
 		private int clientNumber;
 
 		/**

@@ -104,8 +104,8 @@ public interface Matlab {
 	
 	/**
 	 * This method needs to be implemented by the clients to allow reacting
-	 * on the cancellation of the KNIME workflow execution or other un-anticipated
-	 * errors (that do not crash KNIME entirely). The method includes the necessary
+	 * on the cancellation of the KNIME workflow execution or other exceptions
+	 * (that do not crash KNIME entirely). The method includes the necessary
 	 * steps to restore the MATLAB server to a point that it can be executed again.
 	 * 
 	 * @throws InterruptedException

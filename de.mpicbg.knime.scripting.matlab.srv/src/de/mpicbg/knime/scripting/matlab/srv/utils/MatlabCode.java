@@ -56,11 +56,17 @@ public class MatlabCode {
 	private final String hashfun = fileName2functionName(this.hashresource);
 	
 	
+	/**
+	 * Constructor
+	 * 
+	 * @param matlabType
+	 */
 	public MatlabCode(String matlabType) {
 		this.type = matlabType;
 	}
 	
 	/**
+	 * Constructor
 	 * 
 	 * @param code
 	 * @param matlabType
@@ -587,6 +593,10 @@ public class MatlabCode {
     
     public static String getRetrieveErrorCommand() {
     	return "{" + Matlab.ERROR_VARIABLE_NAME + ".identifier " + Matlab.ERROR_VARIABLE_NAME + ".message}"; 
+    }
+    
+    public static String getThreadInforCommand(int threadNumber) {
+    	return "disp(' ');disp('Thread "+ threadNumber +":');";
     }
     
     
