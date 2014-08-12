@@ -40,7 +40,7 @@ import matlabcontrol.MatlabProxy;
 public class MatlabServer implements MatlabRemote {
 	
 	/** Hash to maintain the file map */
-	private ServerFileMap fileMap;
+	private ServerFileMap fileMap = new ServerFileMap();
 	
 	/** MATLAB controller object */
 	private MatlabController matlabController;
