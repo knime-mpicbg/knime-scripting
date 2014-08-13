@@ -236,7 +236,7 @@ public class MatlabServer implements MatlabRemote {
 		if (matlabProxyHolder.size() == 0)
 			throw new RuntimeException("Before doing MATLAB operations you have to call the acquireMatlabProxy method");
 		
-		matlabProxyHolder.get(1).eval(cmd);
+		matlabProxyHolder.get(0).eval(cmd);
 	}
 
 	/**
@@ -257,7 +257,7 @@ public class MatlabServer implements MatlabRemote {
 		if (matlabProxyHolder.size() == 0)
 			throw new RuntimeException("Before doing MATLAB operations you have to call the acquireMatlabProxy method");
 		
-		return matlabProxyHolder.get(1).getVariable(cmd);
+		return matlabProxyHolder.get(0).getVariable(cmd);
 	}
 
 	/**
