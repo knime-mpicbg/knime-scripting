@@ -15,6 +15,9 @@ import javax.swing.*;
 
 
 /**
+ * The MATLAB plot node dialog adds a tab to configure the plot image
+ * parameters to the default scripting node dialog.
+ * 
  * @author Holger Brandl
  */
 public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
@@ -40,15 +43,12 @@ public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
         };
 
         addDialogComponent(chooser);
-
         addDialogComponent(new DialogComponentBoolean(MatlabPlotNodeModel.createOverwriteFileSetting(), "Overwrite existing file"));
-
-//            addDialogComponent(new DialogComponentStringSelection(createPropOutputType(), "Type", Arrays.asList("png", "jpg", "pdf", "svg")));
-
     }
 
     @Override
     public String getTemplatesFromPreferences() {
         return MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES);
     }
+    
 }

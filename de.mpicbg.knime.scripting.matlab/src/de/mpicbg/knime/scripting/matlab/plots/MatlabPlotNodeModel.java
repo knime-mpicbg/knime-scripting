@@ -39,9 +39,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	
 	/** Setting name for the plot height */
 	private static final String FIGURE_HEIGHT_SETTING_NAME = "figure.height";
-	
-	/** Setting name for the plot output file type */
-	private static final String OUTPUT_TYPE_SETTING_NAME = "figure.ouput.type";
 
 	/** Setting name for the plot output file path */
 	private static final String OUTPUT_FILE_SETTING_NAME = "figure.output.file";
@@ -94,7 +91,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         addModelSetting(FIGURE_HEIGHT_SETTING_NAME, createPropFigureHeightSetting());
         addModelSetting(FIGURE_WIDTH_SETTING_NAME, createPropFigureWidthSetting());
         addModelSetting(OUTPUT_FILE_SETTING_NAME, createPropOutputFileSetting());
-        addModelSetting(OUTPUT_TYPE_SETTING_NAME, createPropOutputTypeSetting());
     }
 
 
@@ -315,15 +311,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
             protected void validateSettingsForModel(NodeSettingsRO settings) throws InvalidSettingsException {
             }
         };
-    }
-
-    /**
-     * Create the output file image type setting
-     * 
-     * @return Image file type
-     */
-    public static SettingsModelString createPropOutputTypeSetting() {
-        return new SettingsModelString(OUTPUT_TYPE_SETTING_NAME , "png");
     }
     
 }
