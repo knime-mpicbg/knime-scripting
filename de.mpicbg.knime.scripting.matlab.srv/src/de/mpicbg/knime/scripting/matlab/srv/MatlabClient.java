@@ -6,6 +6,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.net.InetAddress;
 
 import org.knime.core.node.BufferedDataTable;
@@ -28,14 +33,12 @@ import matlabcontrol.MatlabProxy;
  * commands, in the second case it uses the cajo library to communicate
  * with the JVM on a remote machine that works like a MATLAB controller.
  * 
- * TODO: If the client runs in the remote mode and it can't connect to the server, there are severe problems with workflow loading (nodes are note loaded)
- * 
  * @author Felix Meyenhofer
  */
 public class MatlabClient {
 	
 	/** MATLAB client object (can either use a remote or a local MATLAB session) */
-	public final Matlab client;
+	public Matlab client;
 	
 	/** Store the local/remote flag for information purposes */
 	public final boolean local;
@@ -48,8 +51,17 @@ public class MatlabClient {
 	
 	/** Thread number (for identification during debugging) */
 	private int clientNumber;
+
+	/** Host name that provides the MATLAB application access */
+	private String host;
+
+	/** Port where the MATLAB host is listening */
+	private int port;
+
+	/** Timeout in milliseconds when trying to connect to a remote MATLAB host */
+	private final long timeout = 1500;
 	
-	/** Total count of threads connecting to MATLAB */
+	/** Total count of clients (nodes) on the local machine connecting to MATLAB */
 	static Integer clientCount;
 	
 	
@@ -92,8 +104,41 @@ public class MatlabClient {
 		if (local) {
 			client = new Local(sessions, this.clientNumber);
 		} else {
-			client = new Remote(host, port, this.clientNumber);
+			this.host = host;
+			this.port = port;
+			
+			// Use an executor to impose a connection time out.
+			ExecutorService executor = Executors.newCachedThreadPool();
+			Callable<Object> task = new Callable<Object>() {
+			   public Object call() {
+			      return getRemote();
+			   }
+			};
+			Future<Object> future = executor.submit(task);
+			try {
+			   client = (Remote)future.get(this.timeout , TimeUnit.MILLISECONDS); 
+			} catch (Exception e) {
+				future.cancel(true);
+				System.out.println("The operation timed out.");
+				e.printStackTrace();
+			} finally {
+				if (client == null)
+					throw new RuntimeException("The connection to the MATLAB server timed out. " +
+							"Either the server is not running, or it was not able to checkout a MATLAB license");
+//					client = new Local(sessions, this.clientNumber);
+			}
+//			client = new Remote(host, port, this.clientNumber);
 		}		
+	}
+	
+	/**
+	 * Getter for the Remote object. This is just to avoid having to deal
+	 * with inputs in the task object that later is handed to the executor.
+	 * 
+	 * @return
+	 */
+	private Remote getRemote() {
+		 return new Remote(host, port, this.clientNumber);
 	}
 	
 	/**

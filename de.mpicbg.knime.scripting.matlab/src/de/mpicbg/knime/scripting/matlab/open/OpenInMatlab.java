@@ -43,10 +43,6 @@ public class OpenInMatlab extends AbstractNodeModel {
     	// Define the ports and use a hash-map for setting models 
         super(1, 0, true);
         
-        // Instantiate the local MATLAB server      
-        sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
-        initializeMatlabClient(true, sessions);
-        
         // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
         preferences.addPropertyChangeListener(new IPropertyChangeListener() {
         	int newSessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
@@ -64,7 +60,6 @@ public class OpenInMatlab extends AbstractNodeModel {
         		initializeMatlabClient(true, newSessions);
         	}
         });
-        
     }   
     
     
@@ -75,13 +70,15 @@ public class OpenInMatlab extends AbstractNodeModel {
      * @param sessions
      */
     private void initializeMatlabClient(boolean local, int sessions) {
-    	try {
-			matlab = new MatlabClient(true, sessions);
-		} catch (MatlabConnectionException e) {
-			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
-					" to use KNIME's MATLAB scripting integration.");
-			e.printStackTrace();
-		}
+    	if (matlab == null) {
+	    	try {
+				matlab = new MatlabClient(true, sessions);
+			} catch (MatlabConnectionException e) {
+				logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
+						" to use KNIME's MATLAB scripting integration.");
+				e.printStackTrace();
+			}
+    	}
     }
 
     /**
@@ -89,6 +86,10 @@ public class OpenInMatlab extends AbstractNodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
+    	// Instantiate the local MATLAB server      
+        sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+        initializeMatlabClient(true, sessions);
+    	
         // Get the table
         BufferedDataTable data = inData[0];
         
@@ -114,7 +115,8 @@ public class OpenInMatlab extends AbstractNodeModel {
         } catch (Exception e) {
         	throw e;
     	} finally {
-    		this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
+    		if (matlab != null)
+    			this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
     	}
         
         logger.info("The data is now loaded in MATLAB. Switch to the MATLAB command window.");

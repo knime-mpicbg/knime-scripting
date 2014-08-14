@@ -53,6 +53,8 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	BufferedDataTable[] outData = new BufferedDataTable[1];
     	
     	try {
+    		this.initializeMatlabClient();
+    		
             // Get preference pane properties
             this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
             this.method = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
@@ -73,7 +75,8 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	} catch (Exception e) {
     		throw e;
     	} finally {
-    		this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
+    		if (matlab != null)
+    			this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
     	}
     	
     	return outData;

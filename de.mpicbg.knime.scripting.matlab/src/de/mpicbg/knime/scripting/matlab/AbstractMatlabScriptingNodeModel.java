@@ -9,6 +9,9 @@
 
 package de.mpicbg.knime.scripting.matlab;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
@@ -49,15 +52,6 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      */
     protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
         super(inPorts, outPorts, useNewSettingsHashmap);
-        
-        // Get the values from the KNIME preference dialog.
-        boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
-        int sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
-        String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
-        int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
-        
-        // Initialize the MATLAB client
-        initializeMatlabClient(local, sessions,  host, port);
         
         // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
         preferences.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -104,12 +98,40 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      */
     private void initializeMatlabClient(boolean local, int sessions, String host, int port) {
         try {
+        	// Check if we can find the host
+        	InetAddress.getByName(host);
+        	// Create the client.
+        	if (!local)
+        		logger.warn("Connecting to MATLAB on remote host");
 			matlab = new MatlabClient(local, sessions, host, port);
 		} catch (MatlabConnectionException e) {
 			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 					" to use KNIME's MATLAB scripting integration.");
 			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			logger.error("MATLAB scripting integration: can not connect to " + host);
+			e.printStackTrace();
 		}
+    }
+    
+    
+    /** 
+     * This is the initialization method the can be called from the
+     * {@link this#execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}
+     * method. This way the connection to MATLAB is only made once it is about to 
+     * be used.
+     */
+    public void initializeMatlabClient() {
+    	if (this.matlab == null) {
+	    	// Get the values from the KNIME preference dialog.
+	        boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
+	        int sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+	        String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
+	        int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
+	        
+	        // Initialize the MATLAB client
+	        initializeMatlabClient(local, sessions, host, port);
+    	}
     }
     
 }
