@@ -23,6 +23,8 @@ import de.mpicbg.knime.scripting.matlab.srv.MatlabRemote;
  * Since this wrapper can be used for local and remote MATLAB hosts, the temp-files
  * are created only upon request (getter methods).
  * 
+ * TODO: create a read and write method and clean up; download, upload, writeStreamToFile and save method.
+ * 
  * @author Tom Haux, Felix Meyenhofer
  */
 public class MatlabFileTransfer {
@@ -52,6 +54,20 @@ public class MatlabFileTransfer {
 		this.prefix = prefix;
 		this.suffix = suffix;
 	}
+	
+	/**
+	 * Constructor for a for a file Transfer on the local machine only.
+	 * This constructor only initializes the class without taking any
+	 * implicit action.
+	 * 
+	 * @param prefix
+	 * @param suffix
+	 * @throws IOException
+	 */
+	public MatlabFileTransfer(String prefix, String suffix) throws IOException {
+		this.prefix = prefix;
+		this.suffix = suffix;
+	}
 
 	/**
 	 * Constructor for a transfer file that will be synchronized from the client to
@@ -77,7 +93,7 @@ public class MatlabFileTransfer {
 	 */
 	public MatlabFileTransfer(File inputFile) {
 		this.prefix = FilenameUtils.getBaseName(inputFile.getAbsolutePath());
-		this.suffix = FilenameUtils.getExtension(inputFile.getAbsolutePath());
+		this.suffix = "." + FilenameUtils.getExtension(inputFile.getAbsolutePath());
 		this.clientFile = inputFile;
 	}
 	
@@ -106,7 +122,7 @@ public class MatlabFileTransfer {
 	 */
 	public MatlabFileTransfer(String resourcePath) throws FileNotFoundException, IOException {
 		this.prefix = FilenameUtils.getBaseName(resourcePath);
-		this.suffix = FilenameUtils.getExtension(resourcePath);
+		this.suffix = "." + FilenameUtils.getExtension(resourcePath);
 		clientFile = new File(Matlab.TEMP_PATH, FilenameUtils.getName(resourcePath));
 		clientFile.deleteOnExit();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -166,7 +182,7 @@ public class MatlabFileTransfer {
 	 * @return Relative path on the remote machine
 	 */
 	public String getServerPath() {
-		return getServerFile().getAbsolutePath();
+		return server.getFilePath(getServerFile());
 	}
 
 	/**
@@ -206,7 +222,7 @@ public class MatlabFileTransfer {
 	}
 	
 	
-	public void upload(InputStream bis) throws IOException {
+	public void upload(InputStream inputStream) throws IOException {
 		// Read the file into a byte array and pass it to the server
 		int descriptor = -1;
 
@@ -214,12 +230,12 @@ public class MatlabFileTransfer {
 		try {
 			byte[] buffer = new byte[8192];
 			descriptor = server.openFile(getServerFile());
-			bis = new BufferedInputStream(bis);
+			inputStream = new BufferedInputStream(inputStream);
 			int bytesRead = 0;
 
 			// Keep reading until we hit the end of the file
 			// when the end of the stream has been reached, -1 is returned
-			while ((bytesRead = bis.read(buffer)) != -1) {
+			while ((bytesRead = inputStream.read(buffer)) != -1) {
 				byte[] b = buffer;
 				if (bytesRead < buffer.length) b = Arrays.copyOf(buffer, bytesRead);
 				server.writeFile(descriptor, b);
@@ -229,8 +245,8 @@ public class MatlabFileTransfer {
 		} finally {
 			if (descriptor != -1) 
 				server.closeFile(descriptor);
-			if (bis != null)
-				bis.close();
+			if (inputStream != null)
+				inputStream.close();
 		}
 	}
 
@@ -262,7 +278,7 @@ public class MatlabFileTransfer {
 				if (bos != null) 
 					bos.close();
 			} catch (IOException e) {
-				//TODO should we really ignore this?
+				System.err.println("MATLAB file transfer: the file was not closed properly");
 			}
 		}
 	}
@@ -275,6 +291,16 @@ public class MatlabFileTransfer {
 			clientFile.delete();
 		if (serverFile != null)
 			server.deleteFile(serverFile);
+	}
+	
+	/** Save an input stream to the client file
+	 * 
+	 * @param inputStream
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public void save(InputStream inputStream) throws FileNotFoundException, IOException {
+		writeStreamToFile(inputStream,  new FileOutputStream(getClientFile()));
 	}
 	
 	
