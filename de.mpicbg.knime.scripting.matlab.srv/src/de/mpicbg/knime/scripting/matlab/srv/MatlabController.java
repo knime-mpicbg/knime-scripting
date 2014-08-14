@@ -89,8 +89,8 @@ public class MatlabController {
 	 * @throws MatlabConnectionException
 	 */	
 	public synchronized void connect() throws MatlabConnectionException {
-		System.out.println("MATLAB: starting...");
 		if (proxyQueue == null) {
+			System.out.println("MATLAB: starting applicaton...");
 			proxyQueue = new ArrayBlockingQueue<MatlabProxy>(proxyQueueSize);
 			// Use the factory to get a running MATLAB session
 			for (int i = 0; i < proxyQueueSize; i++) {
@@ -104,6 +104,7 @@ public class MatlabController {
 		                proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener() {				
 							@Override
 							public void proxyDisconnected(MatlabProxy proxy) {
+								System.out.println("MATLAB application disconnected.");
 								proxyQueue = null;
 							}
 						});
@@ -136,7 +137,7 @@ public class MatlabController {
 			}
             System.out.println("...running.");
 		} else {
-			System.out.println("...already running.");
+//			System.out.println("MATLAB application is running.");
 		}
 	}
 	
