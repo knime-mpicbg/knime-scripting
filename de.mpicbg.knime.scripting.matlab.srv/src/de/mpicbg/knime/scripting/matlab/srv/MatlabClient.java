@@ -527,11 +527,11 @@ public class MatlabClient {
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), false, true);
 				
 				// Run the snippet
-				matlabServer.acquireMatlabProxy();
-				matlabServer.eval(cmd);
+				acquireMatlabProxy();
+				eval(cmd);
 				MatlabCode.checkForScriptErrors(matlabServer);
-				matlabServer.eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
-				matlabServer.releaseMatlabProxy();
+				eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
+				releaseMatlabProxy();
 				
 				// Get back the data.
 				tableFile.download();
@@ -548,11 +548,11 @@ public class MatlabClient {
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), true, true);
 
 				// Get a proxy (block it) push the data execute the snippet and pull back the modified data
-				matlabServer.acquireMatlabProxy();
+				acquireMatlabProxy();
 				table.pushTable2MatlabWorkspace(matlabServer, matlabType);
-				matlabServer.eval(cmd);
+				eval(cmd);
 				BufferedDataTable outputTable = table.pullTableFromMatlabWorkspace(exec, matlabServer, matlabType);
-				matlabServer.releaseMatlabProxy();
+				releaseMatlabProxy();
 
 				return outputTable;
 			} else {
@@ -595,11 +595,11 @@ public class MatlabClient {
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), false, false);
 				
 				// Execute 
-				matlabServer.acquireMatlabProxy();
-				matlabServer.eval(cmd);
+				acquireMatlabProxy();
+				eval(cmd);
 				MatlabCode.checkForScriptErrors(matlabServer);
-				matlabServer.eval("disp('created plot.')");
-			    matlabServer.releaseMatlabProxy();
+				eval("disp('created plot.')");
+			    releaseMatlabProxy();
 
 			    // Return the png-image
 			    plotFile.download();
@@ -607,7 +607,7 @@ public class MatlabClient {
 
 			} else if (transferMethod.equals("workspace")) {
 				// Get a proxy (block it)
-				matlabServer.acquireMatlabProxy();
+				acquireMatlabProxy();
 
 				// Push the table to the input variable in the MATLAB workspace.
 				table.pushTable2MatlabWorkspace(matlabServer, matlabType);
@@ -621,11 +621,11 @@ public class MatlabClient {
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), true, false);
 
 				// Run the snippet it in MATLAB
-				matlabServer.acquireMatlabProxy();
-				matlabServer.eval(cmd);
+				acquireMatlabProxy();
+				eval(cmd);
 				MatlabCode.checkForScriptErrors(matlabServer);
-				matlabServer.eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
-				matlabServer.releaseMatlabProxy();
+				eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
+				releaseMatlabProxy();
 
 				// Fetch the output from the server
 				plotFile.download();
@@ -667,9 +667,9 @@ public class MatlabClient {
 		 */
 		@Override
 		public void acquireMatlabProxy() throws MatlabConnectionException, MatlabInvocationException {
+			matlabServer.printServerMessage("Execute job: " + this.hostName + ", client " + this.clientNumber);
 			matlabServer.acquireMatlabProxy();
 			matlabServer.eval(MatlabCode.getClearWorkspaceCommand());
-			matlabServer.printServerMessage("Execute job: " + this.hostName + ", client " + this.clientNumber);
 		}
 		
 		/**

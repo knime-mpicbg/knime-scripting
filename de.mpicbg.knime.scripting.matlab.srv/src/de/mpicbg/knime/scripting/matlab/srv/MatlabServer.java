@@ -136,7 +136,7 @@ public class MatlabServer implements MatlabRemote {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void acquireMatlabProxy() throws MatlabConnectionException {
+	public synchronized void acquireMatlabProxy() throws MatlabConnectionException {
 		MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 		matlabProxyHolder.add(proxy);
 		System.out.println("\tacquired contoller thread " + matlabController.getThreadNumber());
@@ -146,7 +146,7 @@ public class MatlabServer implements MatlabRemote {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void releaseMatlabProxy() {
+	public synchronized void releaseMatlabProxy() {
 		if (this.matlabProxyHolder.size() > 0) {
 			this.matlabController.returnProxyToQueue(this.matlabProxyHolder.remove(0));
 			System.out.println("\treleased controller thread " + matlabController.getThreadNumber());
