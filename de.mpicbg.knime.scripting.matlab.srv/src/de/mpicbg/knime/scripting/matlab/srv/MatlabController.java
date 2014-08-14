@@ -18,9 +18,8 @@ import matlabcontrol.PermissiveSecurityManager;
  * by the KNIME nodes.
  * 
  * TODO: add connection timeout
- * TODO: The proxy queue has currently a length of 1. I should be fairly easy to pass a parameter
- * from node dialog that controls the number of MATLAB instances. This way the task could be distributed
- * on several MATLAB applications
+ * TODO: Connection problems are not handled well yet.
+ * 		 1) if there is not network and MATLAB can't check out a license it hangs and if interrupted, thinks that matlab already runs.
  * 
  * @author Felix Meyenhofer
  */
@@ -75,7 +74,7 @@ public class MatlabController {
 				proxyFactory = new MatlabProxyFactory(options);
 			} 
 			
-			connect();
+//			connect();
 		}
 		
 		System.out.println("MATLAB: created thread " +  threadNumber );
