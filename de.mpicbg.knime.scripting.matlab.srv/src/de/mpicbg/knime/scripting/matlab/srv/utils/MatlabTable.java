@@ -91,6 +91,10 @@ public class MatlabTable {
 		return this.hashTempFile;
 	}
 	
+	public String getHashMapTempPath() {
+		return this.hashTempFile.getAbsolutePath();
+	}
+	
 	/**
 	 * Getter for the KNIME table
 	 * 
@@ -273,15 +277,24 @@ public class MatlabTable {
         this.hashTempFile.delete();
     }
     
+    /**
+     * Get an input stream from the hash map object.
+     * This method allows to bypass the local temp-file of the data table
+     * when operating with a remote MATLAB host. So the data is streamed 
+     * to the server and only there it is saved to a file.
+     * The {@link MatlabFileTransfer} class has the complementary functionality
+     * to achieve this.
+     * 
+     * @return
+     * @throws IOException
+     */
     public InputStream getHashMapObjectStream() throws IOException {
     	 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    	    ObjectOutputStream oos = new ObjectOutputStream(baos);
-    	    oos.writeObject(this.hash);
-
-    	    oos.flush();
-    	    oos.close();
-
-    	    return new ByteArrayInputStream(baos.toByteArray());
+    	 ObjectOutputStream oos = new ObjectOutputStream(baos);
+    	 oos.writeObject(this.hash);
+    	 oos.flush();
+    	 oos.close();
+    	 return new ByteArrayInputStream(baos.toByteArray());
     }
     
     /**
@@ -332,7 +345,6 @@ public class MatlabTable {
 
     
     public void pushTable2MatlabWorkspace(MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
-    	
     	// Get the column names
     	List<String> colNames = new ArrayList<String>();
     	List<DataType> colTypes = new ArrayList<DataType>();
