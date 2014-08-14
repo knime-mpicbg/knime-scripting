@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.IOException;
 
 import matlabcontrol.MatlabConnectionException;
+import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
 
 
 /**
  * This interface defines the methods that can be accessed from another JVM 
- * (see cajo documentation).
+ * (see cajo documentation). So these are the methods that are implemented
+ * by both, the {@link MatlabClient} and the {@link MatlabServer}.
+ * 
  * Furthermore it contains some default settings for the MATLAB server
  * 
  * @author Holger Brandl, Tom Haux, Felix Meyenhofer
@@ -36,8 +39,9 @@ public interface MatlabRemote extends MatlabOperations {
 	 * 
 	 * @return 
 	 * @throws MatlabConnectionException
+	 * @throws MatlabInvocationException 
 	 */
-	public void acquireMatlabProxy() throws MatlabConnectionException;
+	public void acquireMatlabProxy() throws MatlabConnectionException, MatlabInvocationException;
 	
 	/**
 	 * Release the MATLAB proxy and thus make it available for other processes again.

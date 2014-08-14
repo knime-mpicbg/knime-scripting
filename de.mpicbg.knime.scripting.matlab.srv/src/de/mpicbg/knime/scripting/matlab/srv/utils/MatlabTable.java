@@ -367,19 +367,19 @@ public class MatlabTable {
         }
         
         // Finish up
-        String additionalInfo = MatlabCode.getInputVariableAdditionalInformationCommand(matlabType, varNames, colNames);
+        String additionalInfo = MatlabCode.getInputColumnAdditionalInformationCommand(matlabType, varNames, colNames);
         proxy.eval(additionalInfo);
     }
 
     
 	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
 		// Fetch the column names and types
-		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputVariableNamesCommand(matlabType));
+		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputColumnNamesCommand(matlabType));
 //		String[] varDescr = (String[]) proxy.getVariable(MatlabCode.getOutputVariableDescriptionsCommand(matlabType));
-		String[] varTypes = (String[]) proxy.getVariable(MatlabCode.getOutputVariableTypesCommand(matlabType));
+		String[] varTypes = (String[]) proxy.getVariable(MatlabCode.getOutputColumnTypesCommand(matlabType));
 		
 		// Get the number of rows
-		double numRows = ((double[]) proxy.getVariable(MatlabCode.getOutputVariableNumberOfRows(matlabType)))[0];
+		double numRows = ((double[]) proxy.getVariable(MatlabCode.getOutputTableNumberOfRowsCommand(matlabType)))[0];
 		int numCols = varNames.length;
 		
 		// Compile the table specifications

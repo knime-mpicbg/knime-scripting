@@ -28,6 +28,8 @@ import matlabcontrol.MatlabProxy;
  * commands, in the second case it uses the cajo library to communicate
  * with the JVM on a remote machine that works like a MATLAB controller.
  * 
+ * TODO: If the client runs in the remote mode and it can't connect to the server, there are severe problems with workflow loading (nodes are note loaded)
+ * 
  * @author Felix Meyenhofer
  */
 public class MatlabClient {
@@ -131,6 +133,15 @@ public class MatlabClient {
 		/** Object to hold the KNIME table and allowing MATLAB compatible transformations */
 		private MatlabTable table;
 		
+		/** Temp-file holding the plot image */
+		private MatlabFileTransfer plotFile;
+		
+		/** Temp-file holding the hashmaputils.m for data parsing in MATLAB */
+		private MatlabFileTransfer parserFile;
+		
+		/** Temp-file holding the snippet code */
+		private MatlabFileTransfer codeFile;
+		
 		/** Client number (to distinguish the calls to {@link MatlabController} and {@link MatlabServer} */
 		private int clientNumber;
 	
@@ -154,30 +165,31 @@ public class MatlabClient {
 		@Override
 		public void openTask(BufferedDataTable inputTable, String matlabType, String transferMethod) 
 				throws Exception {
-	       
+
 			MatlabProxy proxy;
-			
-			// Transfer the KNIME table as hash map object dump to the JVM temp-folder
 			table = new MatlabTable(inputTable);
-			String cmd;
+			
 			if (transferMethod.equals("file")) {
+				// Transfer the KNIME table as hash map object dump to the JVM temp-folder
 		        table.writeHashMapToTempFolder();
-		        code = new MatlabCode(table.getTempFile(), matlabType);
-		        cmd = code.prepareOpenCode(false);
+		        
+		        // Prepare the MATLAB parser script
+		        parserFile = new MatlabFileTransfer(Matlab.MATLAB_HASHMAP_SCRIPT);
+		        
+		        // Compile the command to open the data in MATLAB
+		        String cmd = MatlabCode.getOpenInMatlabCommand(matlabType, parserFile.getClientPath(), table.getHashMapTempPath());
+		        
+		        // Execute
 		        proxy = acquireMatlabProxy();
+		        proxy.eval(cmd);
+		        releaseMatlabProxy(proxy);
+		        
 			} else if (transferMethod.equals("workspace")){
-				code = new MatlabCode(matlabType);
 				proxy = acquireMatlabProxy();
 				table.pushTable2MatlabWorkspace(proxy, matlabType);
-				cmd = code.prepareOpenCode(false);
-			} else {
-				throw new RuntimeException("Unknown method: " + transferMethod);
+				proxy.eval(MatlabCode.getOpenMessage(matlabType));
+				releaseMatlabProxy(proxy);
 			}
-			
-			// Execute 
-	        proxy.eval(cmd);
-	        releaseMatlabProxy(proxy);
-	        
 		}
 
 		/**
@@ -187,20 +199,31 @@ public class MatlabClient {
 		public BufferedDataTable snippetTask(BufferedDataTable inputTable, String transferMethod, ExecutionContext exec, String snippet, String matlabType)
 				throws Exception {
 			
+			// Prepare snippet temp-file
+			codeFile = new MatlabFileTransfer(Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
+			
+			table = new MatlabTable(inputTable);
+			
 			if (transferMethod.equals("file")) {
 				// Convert the KNIME table and write it to the temp-directory
-				table = new MatlabTable(inputTable);
 				table.writeHashMapToTempFolder();
+				
+				// Prepare the MATLAB parser script
+		        parserFile = new MatlabFileTransfer(Matlab.MATLAB_HASHMAP_SCRIPT);
 
 				// Add the MATLAB code to the snippet and transfer the scripts to the temp-directory
-				code = new MatlabCode(snippet, table.getTempFile(), matlabType);
-				String cmd = code.prepareSnippetCode(false);			
+				code = new MatlabCode(snippet, matlabType, 
+						parserFile.getClientPath(), 
+						codeFile.getClientPath(), 
+						table.getHashMapTempPath());
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+		        String cmd = code.getScriptExecutionCommand(codeFile.getClientPath(), false, true);		
 
 				// Run it in MATLAB
 				MatlabProxy proxy = acquireMatlabProxy();
 				proxy.eval(cmd);
-				MatlabCode.checkForSnippetErrors(proxy);
-				proxy.eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
+				MatlabCode.checkForScriptErrors(proxy);
+				proxy.eval(MatlabCode.getSnippetNodeMessage(false));
 				releaseMatlabProxy(proxy);
 
 				// Get the data back
@@ -208,28 +231,19 @@ public class MatlabClient {
 				return table.getBufferedDataTable();
 				
 			} else if (transferMethod.equals("workspace")) {
-				// Get a proxy (block it)
-				MatlabProxy proxy = acquireMatlabProxy();
-
-				// Convert the KNIME table and write it to the temp-directory
-				table = new MatlabTable(inputTable);
-
-				// Push the table to the input variable in the MATLAB workspace.
-				table.pushTable2MatlabWorkspace(proxy, matlabType);
-				
 				// Create a script from the snippet
-				code = new MatlabCode(snippet, matlabType);
-				String cmd = code.prepareSnippetCode(true);		
-
-				// Run the snippet it in MATLAB
+				code = new MatlabCode(snippet, matlabType, 
+						codeFile.getClientPath());
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+				String cmd = code.getScriptExecutionCommand(codeFile.getClientPath(), true, true);
+				
+				// Get a proxy (block it) push the data execute the snippet and pull back the modified data
+				MatlabProxy proxy = acquireMatlabProxy();
+				table.pushTable2MatlabWorkspace(proxy, matlabType);
 				proxy.eval(cmd);
-				MatlabCode.checkForSnippetErrors(proxy);
-				proxy.eval("disp('exectuted snippet and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.OUTPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + "')"); //TODO pack this in a function in matlabCode.
-
-				// Pull the data from the output variable in the MATLAB workspace
+				MatlabCode.checkForScriptErrors(proxy);
+				proxy.eval(MatlabCode.getSnippetNodeMessage(true)); //TODO pack this in a function in matlabCode.
 				BufferedDataTable outputTable = table.pullTableFromMatlabWorkspace(exec, proxy, matlabType);
-
-				// Return the proxy
 				releaseMatlabProxy(proxy);
 
 				return outputTable;
@@ -245,49 +259,61 @@ public class MatlabClient {
 		public File plotTask(BufferedDataTable inputTable, String transferMethod, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
 				throws Exception {
 
+			// Prepare snippet temp-file
+			codeFile = new MatlabFileTransfer(Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
+			// Prepare the plot temp file
+			plotFile = new MatlabFileTransfer(Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
+			// Get the  input table data ready for processing
+			table = new MatlabTable(inputTable);
+			
 			if (transferMethod.equals("file")) {
 				// Transfer the KNIME table as hash map object dump to the JVM temp-folder
-				table = new MatlabTable(inputTable);
 				table.writeHashMapToTempFolder();
 				
-				// Copy the MATLAB script to the temp-directory and get the file name with the random string in it
-				code = new MatlabCode(snippet, table.getTempFile(), matlabType);
-				String cmd = code.preparePlotCode(plotWidth, plotHeight, false);
+				// Prepare the parser temp-file
+				parserFile = new MatlabFileTransfer(Matlab.MATLAB_HASHMAP_SCRIPT);
 				
-				// Execute 
+				// Prepare the code snippet
+				code = new MatlabCode(snippet, matlabType, 
+						parserFile.getClientPath(), 
+						codeFile.getClientPath(), 
+						table.getHashMapTempPath(), 
+						plotFile.getClientPath(),
+						plotWidth, plotHeight);
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+				String cmd = code.getScriptExecutionCommand(codeFile.getClientPath(), false, false);
+				
+				// Execute
 				MatlabProxy proxy = acquireMatlabProxy();
 				proxy.eval(cmd);
-				MatlabCode.checkForSnippetErrors(proxy);
-				proxy.eval("disp('created plot.')");
+				MatlabCode.checkForScriptErrors(proxy);
+				proxy.eval(MatlabCode.getPlotNodeMessage(false));
 			    releaseMatlabProxy(proxy);
-
-			    // Return the png-image
-				return code.getPlotTempFile();
+				
 			} else if (transferMethod.equals("workspace")) {
 				// Get a proxy (block it)
 				MatlabProxy proxy = acquireMatlabProxy();
 
 				// Push the table to the input variable in the MATLAB workspace.
-				table = new MatlabTable(inputTable);
 				table.pushTable2MatlabWorkspace(proxy, matlabType);
-
-				// Create a server file for the output plot-image
-				code = new MatlabCode(snippet, matlabType);
-				String cmd = code.preparePlotCode(plotWidth, plotHeight, true);
 				
-				// Run the snippet it in MATLAB
+				// Prepare the code snippet.
+				code = new MatlabCode(snippet, matlabType,
+						codeFile.getClientPath(), 
+						plotFile.getClientPath(), 
+						plotWidth, plotHeight);
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+				String cmd = code.getScriptExecutionCommand(codeFile.getClientPath(), true, false);
+				
+				// Execute 
 				proxy.eval(cmd);
-				MatlabCode.checkForSnippetErrors(proxy);
-				proxy.eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
-				
-				// Release the proxy
-				releaseMatlabProxy(proxy);
-				
-				return code.getPlotTempFile();
-				
-			} else {
-				return null;
-			}
+				MatlabCode.checkForScriptErrors(proxy);
+				proxy.eval(MatlabCode.getPlotNodeMessage(false));
+			    releaseMatlabProxy(proxy);
+			} 
+
+		    // Return the png-image
+			return plotFile.getClientFile();
 		}
 
 		/**
@@ -313,10 +339,14 @@ public class MatlabClient {
 		 */
 		@Override
 		public void cleanup() {
-			if (this.code != null)
-				this.code.cleanup();
 			if (this.table != null)
 				this.table.cleanup();
+			if (codeFile !=null)
+				codeFile.delete();
+			if (parserFile != null)
+				parserFile.delete();
+			if (plotFile != null)
+				plotFile.delete();
 		}
 		
 		/**
@@ -328,10 +358,15 @@ public class MatlabClient {
 		 * @throws MatlabConnectionException 
 		 */
 		private MatlabProxy acquireMatlabProxy() throws MatlabInvocationException, MatlabConnectionException {
-			MatlabProxy proxy = matlabController.acquireProxyFromQueue();
-			matlabProxyHolder.add(proxy);
-			proxy.eval(MatlabCode.getThreadInforCommand(matlabController.getThreadNumber()));
-	        return proxy;
+			if (matlabProxyHolder.size() == 0) {
+				MatlabProxy proxy = matlabController.acquireProxyFromQueue();
+				matlabProxyHolder.add(proxy);
+				proxy.eval(MatlabCode.getThreadInfoCommand(matlabController.getThreadNumber()));
+				proxy.eval(MatlabCode.getClearWorkspaceCommand());
+		        return proxy;
+			} else {
+				return matlabProxyHolder.get(0);
+			}
 		}
 		
 		/**
@@ -415,11 +450,15 @@ public class MatlabClient {
 		public BufferedDataTable snippetTask(BufferedDataTable inputTable, String transferMethod, ExecutionContext exec, String snippet, String matlabType)
 				throws Exception {
 			
+			// Get the data ready for conversion
+			table = new MatlabTable(inputTable);
+			
+			// Prepare the MATLAB code
+			codeFile = new MatlabFileTransfer(matlabServer, Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
+			
 			if (transferMethod.equals("file")) {
 				// Transfer the KNIME table to the server
-				table = new MatlabTable(inputTable);
 				table.knimeTable2LinkedHashMap();
-				
 				tableFile = new MatlabFileTransfer(matlabServer, Matlab.TABLE_TEMP_FILE_PREFIX, Matlab.TABLE_TEMP_FILE_SUFFIX);
 				tableFile.upload(table.getHashMapObjectStream());
 				
@@ -427,19 +466,17 @@ public class MatlabClient {
 				parserFile = new MatlabFileTransfer(matlabServer, Matlab.MATLAB_HASHMAP_SCRIPT);
 				
 				// Prepare the MATLAB code
-				codeFile = new MatlabFileTransfer(matlabServer, Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
 				code = new MatlabCode(snippet, matlabType, 
 						parserFile.getServerPath(), 
 						codeFile.getServerPath(),
 						tableFile.getServerPath());
-				
-				codeFile.upload(new ByteArrayInputStream(code.getSnippet().getBytes()));
+				codeFile.upload(new ByteArrayInputStream(code.getScript().getBytes()));
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), false, true);
 				
 				// Run the snippet
 				matlabServer.acquireMatlabProxy();
 				matlabServer.eval(cmd);
-				MatlabCode.checkForSnippetErrors(matlabServer);
+				MatlabCode.checkForScriptErrors(matlabServer);
 				matlabServer.eval("disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME + "')");
 				matlabServer.releaseMatlabProxy();
 				
@@ -452,22 +489,16 @@ public class MatlabClient {
 				return table.getBufferedDataTable();
 				
 			} else if (transferMethod.equals("workspace")) {
-				// Convert the KNIME table and write it to the temp-directory
-				table = new MatlabTable(inputTable);
+				// Prepare the MATLAB snippet code
+				code = new MatlabCode(snippet, matlabType, codeFile.getServerPath());
+				codeFile.upload(new ByteArrayInputStream(code.getScript().getBytes()));
+				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), true, true);
 
-				// Get a proxy (block it)
+				// Get a proxy (block it) push the data execute the snippet and pull back the modified data
 				matlabServer.acquireMatlabProxy();
-				
-				// Push the table to the input variable in the MATLAB workspace.
 				table.pushTable2MatlabWorkspace(matlabServer, matlabType);
-
-				// Run the snippet it in MATLAB
-				matlabServer.eval(snippet);
-
-				// Pull the data from the output variable in the MATLAB workspace
+				matlabServer.eval(cmd);
 				BufferedDataTable outputTable = table.pullTableFromMatlabWorkspace(exec, matlabServer, matlabType);
-
-				// Return the proxy
 				matlabServer.releaseMatlabProxy();
 
 				return outputTable;
@@ -484,17 +515,20 @@ public class MatlabClient {
 		public File plotTask(BufferedDataTable inputTable, String transferMethod, String snippet, Integer plotWidth, Integer plotHeight, String matlabType) 
 				throws IOException, Exception {
 			
+			// Get the data ready for conversion
+			table = new MatlabTable(inputTable);
+			// Prepare a snippet file
+			codeFile = new MatlabFileTransfer(matlabServer, Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
+			// Prepare the plot image file
+			plotFile = new MatlabFileTransfer(matlabServer, Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
+			
 			if (transferMethod.equals("file")) {
 				// Transfer the KNIME table as hash map object dump to the JVM temp-folder
-				table = new MatlabTable(inputTable);
 				table.writeHashMapToTempFolder();
 				tableFile = new MatlabFileTransfer(matlabServer, table.getTempFile());
 				
 				// Prepare the data table parser file
 				parserFile = new MatlabFileTransfer(matlabServer, Matlab.MATLAB_HASHMAP_SCRIPT);
-				
-				// Prepare the plot image file
-				plotFile = new MatlabFileTransfer(matlabServer, Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
 				
 				// Copy the MATLAB script to the temp-directory and get the file name with the random string in it
 				codeFile = new MatlabFileTransfer(matlabServer, Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
@@ -504,13 +538,13 @@ public class MatlabClient {
 						tableFile.getServerPath(), 
 						plotFile.getServerPath(), 
 						plotWidth, plotHeight);
-				codeFile.upload(new ByteArrayInputStream(code.getSnippet().getBytes()));
+				codeFile.upload(new ByteArrayInputStream(code.getScript().getBytes()));
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), false, false);
 				
 				// Execute 
 				matlabServer.acquireMatlabProxy();
 				matlabServer.eval(cmd);
-				MatlabCode.checkForSnippetErrors(matlabServer);
+				MatlabCode.checkForScriptErrors(matlabServer);
 				matlabServer.eval("disp('created plot.')");
 			    matlabServer.releaseMatlabProxy();
 
@@ -523,30 +557,21 @@ public class MatlabClient {
 				matlabServer.acquireMatlabProxy();
 
 				// Push the table to the input variable in the MATLAB workspace.
-				table = new MatlabTable(inputTable);
 				table.pushTable2MatlabWorkspace(matlabServer, matlabType);
-
-				// Prepare a snippet file
-				codeFile = new MatlabFileTransfer(matlabServer, Matlab.SNIPPET_TEMP_FILE_PREFIX, Matlab.SNIPPET_TEMP_FILE_SUFFIX);
-				
-				// Create a server file for the output plot-image
-				plotFile = new MatlabFileTransfer(matlabServer, Matlab.PLOT_TEMP_FILE_PREFIX, Matlab.PLOT_TEMP_FILE_SUFFIX);
 
 				// Add the code to produce a png-file from the plot
 				MatlabCode code = new MatlabCode(snippet, matlabType,
 						codeFile.getServerPath(), 
 						plotFile.getServerPath(), 
 						plotWidth, plotHeight);
-				codeFile.upload(new ByteArrayInputStream(code.getSnippet().getBytes()));
+				codeFile.upload(new ByteArrayInputStream(code.getScript().getBytes()));
 				String cmd = code.getScriptExecutionCommand(codeFile.getServerPath(), true, false);
-				
 
 				// Run the snippet it in MATLAB
 				matlabServer.acquireMatlabProxy();
 				matlabServer.eval(cmd);
-				MatlabCode.checkForSnippetErrors(matlabServer);
+				MatlabCode.checkForScriptErrors(matlabServer);
 				matlabServer.eval("disp('created plot and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')");
-				// Release the proxy
 				matlabServer.releaseMatlabProxy();
 
 				// Fetch the output from the server
@@ -572,17 +597,25 @@ public class MatlabClient {
 		 */
 		@Override
 		public void cleanup() {
-			plotFile.delete();
-			code.cleanup();
-			table.cleanup();
+			if (tableFile != null)
+				tableFile.delete();
+			if (parserFile != null)
+				parserFile.delete();
+			if (codeFile != null)
+				codeFile.delete();
+			if (plotFile != null)
+				plotFile.delete();
+			if (table != null)
+				table.cleanup();
 		}
 		
 		/**
-		 * {@inheritDoc} 
+		 * {@inheritDoc}  
 		 */
 		@Override
-		public void acquireMatlabProxy() throws MatlabConnectionException {
+		public void acquireMatlabProxy() throws MatlabConnectionException, MatlabInvocationException {
 			matlabServer.acquireMatlabProxy();
+			matlabServer.eval(MatlabCode.getClearWorkspaceCommand());
 		}
 		
 		/**
