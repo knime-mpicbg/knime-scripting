@@ -573,7 +573,7 @@ public class MatlabCode {
      * @return
      */
     public static String getThreadInfoCommand(int threadNumber) {
-    	return "disp(' ');disp('Thread "+ threadNumber +":');";
+    	return "disp(' ');disp('Node "+ threadNumber +":');";
     }
     
     /**

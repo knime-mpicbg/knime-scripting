@@ -63,14 +63,13 @@ public class MatlabServer implements MatlabRemote {
             System.out.println("Registering with name: " + REGISTRY_NAME);
             ItemServer.bind(this, REGISTRY_NAME);
             
-            System.out.println("Starting MATLAB application...");
-            matlabController = new MatlabController(sessions);
+            matlabController = new MatlabController(sessions, true);
         } catch (IOException e) {
-        	System.err.println("Unable to write registry.");
             e.printStackTrace();
+            throw new RuntimeException("Unable to write registry.");
         } catch (MatlabConnectionException e) {
-			System.err.println("Unable to connect to the MATLAB applicatoin.");
-			e.printStackTrace();
+        	e.printStackTrace();
+			throw new RuntimeException("Unable to connect to the MATLAB application.");
 		}
 	}
 	
@@ -130,7 +129,9 @@ public class MatlabServer implements MatlabRemote {
 	    // Start the server
 	    new MatlabServer(port, threads);
 	}
-
+	
+	
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -138,7 +139,7 @@ public class MatlabServer implements MatlabRemote {
 	public void acquireMatlabProxy() throws MatlabConnectionException {
 		MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 		matlabProxyHolder.add(proxy);
-		System.out.println("acquired MatlabProxy " + matlabController.getThreadNumber());
+		System.out.println("\tacquired contoller thread " + matlabController.getThreadNumber());
 	}
 
 	/**
@@ -148,9 +149,7 @@ public class MatlabServer implements MatlabRemote {
 	public void releaseMatlabProxy() {
 		if (this.matlabProxyHolder.size() > 0) {
 			this.matlabController.returnProxyToQueue(this.matlabProxyHolder.remove(0));
-			System.out.println("Proxy released.");
-		} else {
-			System.out.println("Oups, we lost a proxy along the way. Time for serious debugging.");
+			System.out.println("\treleased controller thread " + matlabController.getThreadNumber());
 		}
 	}
 	
@@ -159,10 +158,8 @@ public class MatlabServer implements MatlabRemote {
      */
 	@Override
 	public void printServerMessage(String msg) {
-		System.out.println(msg);
-		
+		System.out.println(msg);	
 	}
-	
 	
 	
 	

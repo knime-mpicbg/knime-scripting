@@ -24,6 +24,9 @@ import matlabcontrol.PermissiveSecurityManager;
  * @author Felix Meyenhofer
  */
 public class MatlabController {
+	
+	/** Execution mode (as server or on local machine) */
+	private boolean isServer;
 
 	/** Thread number (for identification during debugging) */
 	private Integer threadNumber;
@@ -51,11 +54,12 @@ public class MatlabController {
 	 * @param name of the thread
 	 * @throws MatlabConnectionException
 	 */
-	public MatlabController(int sessions) throws MatlabConnectionException {
+	public MatlabController(int sessions, boolean executionMode) throws MatlabConnectionException {
 		// Set a very permissive security manager (beware this could be an entry point for abuse)
 		System.setSecurityManager(new PermissiveSecurityManager());
 		
 		synchronized(this) {
+			isServer = executionMode;
 			proxyQueueSize = sessions;
 			
 			// Determine the total number of threads and the number of this thread
@@ -74,10 +78,12 @@ public class MatlabController {
 				proxyFactory = new MatlabProxyFactory(options);
 			} 
 			
-//			connect();
+			// If the controller is owned by the MatlabServer we start MATLAB immediately.
+			if (isServer)
+				connect();
 		}
 		
-		System.out.println("MATLAB: created thread " +  threadNumber );
+		System.out.println("MATLAB: created controller thread " +  threadNumber );
 	}
 	
 	
@@ -106,6 +112,15 @@ public class MatlabController {
 							public void proxyDisconnected(MatlabProxy proxy) {
 								System.out.println("MATLAB application disconnected.");
 								proxyQueue = null;
+								// Try to restart MATLAB immediately. The connect method makes sure it only happens once (provided that the first attempt is successful).
+								if (isServer) {
+									try {
+										connect();
+									} catch (MatlabConnectionException e) {
+										System.err.println("Unable to restart MATLAB application(s). You need to restart the server!");
+										e.printStackTrace();
+									}
+								}
 							}
 						});
 		            }
@@ -166,9 +181,8 @@ public class MatlabController {
 		try {
 			return proxyQueue.take();
 		} catch (InterruptedException e) {
-			System.err.println("This is bad. The queue is probably corrupted. You need to reopen the Workflow.");
 			e.printStackTrace();
-			return null;
+			throw new RuntimeException("This is bad. The queue is probably corrupted. You need to close and reopen the Workflow.");
 		}
 	}
 	

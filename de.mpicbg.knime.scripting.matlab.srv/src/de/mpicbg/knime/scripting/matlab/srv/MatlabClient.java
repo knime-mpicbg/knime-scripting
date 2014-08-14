@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -199,7 +200,7 @@ public class MatlabClient {
 		 */
 		public Local(int sessions, int clientNumber) throws MatlabConnectionException {
 			this.clientNumber = clientNumber;
-			this.matlabController = new MatlabController(sessions);
+			this.matlabController = new MatlabController(sessions, false);
 			System.out.println("Created local MATLAB client " + this.clientNumber);
 		}
 
@@ -457,6 +458,8 @@ public class MatlabClient {
 		
 		/** Client number (to distinguish the calls to {@link MatlabController} and {@link MatlabServer} */
 		private int clientNumber;
+		
+		private String hostName;
 
 
 		/**
@@ -464,6 +467,11 @@ public class MatlabClient {
 		 */
 		public Remote(String serverName, int serverPort, int clientNumber) {
 			this.clientNumber = clientNumber;
+			try {
+				this.hostName = InetAddress.getLocalHost().getHostName();
+			} catch (UnknownHostException e1) {
+				this.hostName = "Unknown host";
+			}
 			
 	        try {
 	            String url = "//" + serverName + ":" + serverPort + "/" + MatlabRemote.REGISTRY_NAME;
@@ -661,6 +669,7 @@ public class MatlabClient {
 		public void acquireMatlabProxy() throws MatlabConnectionException, MatlabInvocationException {
 			matlabServer.acquireMatlabProxy();
 			matlabServer.eval(MatlabCode.getClearWorkspaceCommand());
+			matlabServer.printServerMessage("Execute job: " + this.hostName + ", client " + this.clientNumber);
 		}
 		
 		/**
