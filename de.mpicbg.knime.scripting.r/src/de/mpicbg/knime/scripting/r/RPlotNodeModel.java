@@ -19,6 +19,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 
 
 /**
@@ -61,8 +62,10 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 
         adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
         createFigure(connection);
-
-//        BufferedDataTable[] result = prepareOutput(exec, connection);
+        
+        // if the script has been evaluated with 'evaluate', check for warnings. returns empty list otherwise
+        ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+        if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
 
         // close the connection to R
         connection.close();

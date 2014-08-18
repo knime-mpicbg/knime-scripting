@@ -15,11 +15,14 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.*;
@@ -32,10 +35,28 @@ import java.util.*;
  */
 public class RUtils {
 
-    public static final String SCRIPT_PROPERTY_DEFAULT = "rOut <- kIn;";
+	// TODO: this needs to go to snippet nodes? or refactor with a nice name?
+    public static final String SCRIPT_PROPERTY_DEFAULT = "rOut <- kIn";
 
     public static int MAX_FACTOR_LEVELS = 500;
     public static final String NA_VAL_FOR_R = "NA";
+    
+    // constants defining the naming of variables used as KNIME input/output within R
+    /** data-frame with input KNIME-table */
+    public static final String VAR_RKNIME_IN = "knime.in";
+    /** data-frame for output KNIME-table */
+    public static final String VAR_RKNIME_OUT = "knime.out";
+    /** list with input KNIME flow variables */
+    public static final String VAR_RKNIME_FLOW_IN = "knime.flow.in";
+    /** list for output KNIME flow variables */
+    public static final String VAR_RKNIME_FLOW_OUT = "knime.flow.out";
+    /** character vector for loading/saving used R packages */
+    public static final String VAR_RKNIME_LIBS = "knime.loaded.libraries";
+    /** KNIME color information TODO: how to represent in R? */
+    public static final String VAR_RKNIME_COLOR = "knime.colors";
+    /** KNIME input script */
+    public static final String VAR_RKNIME_SCRIPT = "knime.script.in";
+    
 
 
     public static RList convert2RList(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
@@ -45,7 +66,8 @@ public class RUtils {
         DataTableSpec tableSpecs = bufTable.getDataTableSpec();
         List<String> includeColumns = AttributeUtils.toStringList(AttributeUtils.convert(tableSpecs));
 
-        validateColumnNames(exec, bufTable);
+        // not necessary to check
+        //validateColumnNames(exec, bufTable);
 
         List<Object> columArrays = new ArrayList<Object>();
         Map<Integer, DataType> converters = new TreeMap<Integer, DataType>();
@@ -79,9 +101,10 @@ public class RUtils {
         }
 
 //        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 1: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
+     
 
 
-        // 2) Perform the actual table conversion: loop ONCE (for performance reasons) over the table and populate the array for R
+        // 2) Perform the actual table conversion: loop ONCE (for performance reasons) over the table and populate the vectors for R
         int rowCounter = 0;
         for (DataRow dataRow : bufTable) {
             exec.checkCanceled();
@@ -157,7 +180,7 @@ public class RUtils {
 //        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 2: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
 
 
-        // 3) create the REXP (which is a list of columns
+        // 3) create the REXP (which is a list of vectors)
         RList rList = new RList(bufTable.getDataTableSpec().getNumColumns(), true);
 
         for (Integer colIndex : converters.keySet()) {
@@ -184,6 +207,7 @@ public class RUtils {
 
     /**
      * Ensures that the column names in the input table are valid data.frame attribute names.
+     * Note: there is no column name which is not allowed in R data.frames (though maybe not recommended), unnecessary check?
      *
      * @throws RuntimeException if a column does not match the requirements as defined in the R language definition
      */
@@ -193,7 +217,7 @@ public class RUtils {
 
             String colName = columnSpec.getName();
 
-            // fix colum names which are not valid in R (that means containing invalid characters). cf. R-method 'make.names'
+            // fix column names which are not valid in R (that means containing invalid characters). cf. R-method 'make.names'
 //            if (!colName.matches("[\\w]+[\\d\\w_. ]*")) {
             if (!colName.matches("[\\w]+.*")) {
                 throw new RuntimeException("The column named '" + colName + "' is not compatible (=start with somethine A-z) with R and needs to be renamed");
@@ -399,7 +423,7 @@ public class RUtils {
     }
 
 
-    public static void evalScript(RConnection connection, String preparedScript) {
+    /*public static void evalScript(RConnection connection, String preparedScript) {
         try {
 
             connection.parseAndEval(preparedScript);
@@ -407,7 +431,7 @@ public class RUtils {
         } catch (Throwable e) {
             throw new RuntimeException("Error while executing script: " + preparedScript + "\n The error was: " + e + "\n It's likely that the syntax of your script is not correct.", e);
         }
-    }
+    }*/
 
 
     public static String fixEncoding(String stringValue) {
@@ -477,9 +501,17 @@ public class RUtils {
     }
 
 
-    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host, String... objectNames) throws RserveException, IOException, REXPMismatchException, REngineException {
+    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host, String... objectNames) 
+    		throws RserveException, IOException, REXPMismatchException, REngineException, KnimeScriptingException {
 
         connection.voidEval("tmpwfile = tempfile('tempRws');");
+        
+        //check whether named objects exist in R workspace
+        for(int i = 0; i < objectNames.length; i++) {
+        	String evalExistense = "exists(\"" + objectNames[i] + "\")";
+        	if(((REXPLogical)connection.eval(evalExistense)).isFALSE()[0])
+        		throw new KnimeScriptingException("Try to save object " + objectNames[i] + ". Object does not exist in R workspace.");
+        }
 
         String allParams = Arrays.toString(objectNames).replace("[", "").replace("]", "").replace(" ", "");
         connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
@@ -492,7 +524,7 @@ public class RUtils {
         // to furthe improve performance we simply copy the file on a local host
         if (host != null && host.equals("localhost")) {
             File localRWSFile = new File(connection.eval("tmpwfile").asString());
-            copyFile(localRWSFile, rWorkspaceFile);
+             copyFile(localRWSFile, rWorkspaceFile);
 
         } else {
             // create the local file and transfer the workspace file from the rserver
@@ -539,25 +571,23 @@ public class RUtils {
     // a small testing environment to test r-communication
 
 
-    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionContext exec) {
+    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionContext exec) throws KnimeScriptingException {
         Map<String, Object> inputMapping = createPortMapping(inObjects);
 
         // first push the generic inputs
         Map<String, File> genPortMapping = getGenericPorts(inputMapping);
-
         try {
-            RUtils.loadGenericInputs(genPortMapping, connection);
+            if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
         } catch (Throwable e) {
-            throw new RuntimeException("Failed to convert generic node inputs into r workspace variables: " + e);
+            throw new KnimeScriptingException("Failed to convert generic node inputs into r workspace variables: " + e);
         }
 
         // second, push the table inputs
         Map<String, BufferedDataTable> tablePortMapping = getDataTablePorts(inputMapping);
-
         try {
-            RUtils.loadTableInputs(connection, tablePortMapping, exec);
+            if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec);
         } catch (Throwable e) {
-            throw new RuntimeException("Failed to convert table node inputs into r workspace variables: " + e);
+            throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
         }
 
         return inputMapping;
@@ -579,14 +609,10 @@ public class RUtils {
             pushTable.put(varName, REXP.createDataFrame(inputAsRList));
         }
 
-        RUtils.push2R(connection, pushTable);
-    }
-
-
-    public static Map<String, REXP> push2R(RConnection connection, Map<String, REXP> pushTable) throws RserveException, REXPMismatchException {
+        // assign REXP-dataframe to their R-variable name
         for (String parName : pushTable.keySet()) {
             REXP dataFrame = pushTable.get(parName);
-            connection.assign(parName, dataFrame);
+            connection.assign(parName, dataFrame); //TODO: check if this is the step which takes long for big tables
 
             // post-process nominal attributes to convert missing values to actual NA in R
             RList rList = dataFrame.asList();
@@ -601,10 +627,7 @@ public class RUtils {
                 }
             }
         }
-
-        return pushTable;
     }
-
 
     private static Map<String, BufferedDataTable> getDataTablePorts(Map<String, Object> inputMapping) {
         TreeMap<String, BufferedDataTable> tablePortMapping = new TreeMap<String, BufferedDataTable>();
@@ -621,7 +644,11 @@ public class RUtils {
         return tablePortMapping;
     }
 
-
+    /**
+     * delivers a map containing generic input ports mapped to an R variable name
+     * @param inputMapping
+     * @return map with generic input ports only
+     */
     private static Map<String, File> getGenericPorts(Map<String, Object> inputMapping) {
         TreeMap<String, File> genericSubMapping = new TreeMap<String, File>();
 
@@ -645,7 +672,7 @@ public class RUtils {
 
         Map<String, Object> portVarMapping = new TreeMap<String, Object>();
 
-
+        // number of non-null input port objects
         int numConnectedInputs = 0;
         for (PortObject inport : inObjects) {
             if (inport != null) {
@@ -653,28 +680,25 @@ public class RUtils {
             }
         }
 
-        List<String> parNames = new ArrayList<String>();
-
+        // create naming of input variables for R; e.g. kIn, or kIn1
+        // map port objects to variable name
+        // TODO: creates input variable for null-objects, is there any reason?
         for (int i = 0; i < inObjects.length; i++) {
-            parNames.add(RSnippetNodeModel.R_INVAR_BASE_NAME + (numConnectedInputs > 1 ? (i + 1) : ""));
-        }
-
-        for (int i = 0; i < inObjects.length; i++) {
+        	String RVariableName = RSnippetNodeModel.R_INVAR_BASE_NAME + (numConnectedInputs > 1 ? (i + 1) : "");
+            
             PortObject inport = inObjects[i];
-
             if (inport == null) {
                 continue;
             }
 
             if (inport instanceof RPortObject) {
-                portVarMapping.put(parNames.get(i), ((RPortObject) inport).getFile());
+                portVarMapping.put(RVariableName, ((RPortObject) inport).getFile());
             } else if (inport instanceof BufferedDataTable) {
-                portVarMapping.put(parNames.get(i), inport);
+                portVarMapping.put(RVariableName, inport);
             } else {
                 throw new RuntimeException("Unexpected port type: " + inport);
             }
         }
-
 
         return portVarMapping;
     }
@@ -695,4 +719,195 @@ public class RUtils {
 
         return script;
     }
+
+
+    /**
+     * use 'evaluate' package to execute the script and keep input+output+errors+warnings
+     * 
+     * @param fixedScript 	the R script
+     * @param connection	the connection to the R server
+     * @param logger		the node-logger to push warnings
+     * 
+     * @return	R list containing input, output, plots, (errors - not returned; throws exception instead) and warnings
+     * 
+     * @throws RserveException
+     * @throws KnimeScriptingException
+     * @throws REXPMismatchException
+     */
+	public static REXPGenericVector evaluateScript(String fixedScript, RConnection connection) 
+			throws RserveException, KnimeScriptingException, REXPMismatchException {
+		
+		// use 'evaluate' package to capture input+output+warnings+error
+    	// syntax errors are captured with try
+    	REXP r;
+    	
+    	// try to load evaluate package
+    	r = connection.eval("try(library(\"evaluate\"))");
+    	if (r.inherits("try-error")) 
+    		throw new KnimeScriptingException("Package 'evaluate' could not be loaded. \nTo run the script without, please turn off 'Evaluate script' in the node configuration dialog / preference settings?.");
+    
+    	// try to evaluate script (fails with syntax errors)
+    	connection.assign(VAR_RKNIME_SCRIPT, fixedScript);
+    	r = connection.eval("knime.eval.obj <- evaluate("+ VAR_RKNIME_SCRIPT + ", new_device = FALSE)");
+    	
+    	// evaluation succeeded
+    	// check for errors
+    	int[] errIdx = ((REXPInteger) connection.eval("which(sapply(knime.eval.obj, inherits, \"error\") == TRUE, arr.ind = TRUE)")).asIntegers();
+    	if(errIdx.length > 0) {
+   
+    		String firstError = "Error " + "(1/" + errIdx.length + "): ";
+    		REXPString error = (REXPString) connection.eval("knime.eval.obj[[" + errIdx[0] + "]]$message");
+    		firstError = firstError + error.asString() + "\n\tSee R-console view for further details";
+
+    		throw new KnimeScriptingException(firstError);
+    	}
+    	
+    	return (REXPGenericVector) (connection.eval("knime.eval.obj"));
+	}
+	
+	public static void evalScript(RConnection connection, String fixedScript)
+			throws RserveException, KnimeScriptingException,
+			REXPMismatchException {
+		
+		REXP out;
+		// evaluate script
+		out = connection.eval("try({" + fixedScript + "}, silent = TRUE)");
+		if( out.inherits("try-error"))
+			throw new KnimeScriptingException("Error : " + out.asString());
+	}
+
+
+	public static void parseScript(RConnection connection, String fixedScript)
+			throws RserveException, KnimeScriptingException,
+			REXPMismatchException {
+		REXP out;
+		String rScriptVar = RUtils.VAR_RKNIME_SCRIPT;
+		connection.assign(rScriptVar, fixedScript);
+		// parse script
+		out = connection.eval("try(parse(text=" + rScriptVar + "), silent = TRUE)");
+		if( out.inherits("try-error"))
+			throw new KnimeScriptingException("Syntax error: " + out.asString());
+	}
+
+
+	public static BufferedDataTable convert2DataTable(ExecutionContext exec,
+			REXP out, String[] rowNames, Map<String, DataType> typeMapping) {
+		// TODO use row names for output table
+		return convert2DataTable(exec, out, typeMapping);
+	}
+
+
+	public static Image createImage(RConnection connection, String script, int width, int height, String device) 
+			throws REngineException, RserveException, REXPMismatchException, KnimeScriptingException {
+	
+	    	// check preferences
+	    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
+	    	
+	        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
+	        script = supportOldVarNames(script);
+	
+	        String tempFileName = "rmPlotFile." + device;
+	
+	        String deviceArgs = device.equals("jpeg") ? "quality=97," : "";
+	        REXP xp = connection.parseAndEval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
+	
+	        if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
+	            System.err.println("Can't open " + device + " graphics device:\n" + xp.asString());
+	            // this is analogous to 'warnings', but for us it's sufficient to get just the 1st warning
+	            REXP w = connection.eval("if (exists('last.warning') && length(last.warning)>0) names(last.warning)[1] else 0");
+	            if (w.isString()) System.err.println(w.asString());
+	            return null;
+	        }
+	
+	        // ok, so the device should be fine - let's plot - replace this by any plotting code you desire ...
+	        String preparedScript = fixEncoding(script);
+	        RUtils.parseScript(connection, preparedScript);
+	
+	        if(useEvaluate) {
+	        	// parse and run script
+	        	// evaluation list, can be used to create a console view
+	        	evaluateScript(preparedScript, connection);
+	
+	        } else {
+	        	// parse and run script
+	        	evalScript(connection, preparedScript);     	
+	        }
+	
+	        /*try {
+				evalScript(connection, preparedScript);
+			} catch (KnimeScriptingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+	//        connection.parseAndEval(preparedScript);
+	
+	        // close the image
+	        connection.parseAndEval("dev.off();");
+	
+	        // There is no I/O API in REngine because it's actually more efficient to use R for this
+	        // we limit the file size to 1MB which should be sufficient and we delete the file as well
+	        xp = connection.parseAndEval("r=readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); r");
+	
+	        // now this is pretty boring AWT stuff - create an image from the data and display it ...
+	        return Toolkit.getDefaultToolkit().createImage(xp.asBytes());
+	    }
+
+
+	/**
+	 * assumes in R workspace an objects resulting from 'evaluate'-function call
+	 * retrieves a list of error messages from this object
+	 * 
+	 * @param connection
+	 * @return list with error messages
+	 * @throws RserveException
+	 * @throws REXPMismatchException
+	 */
+	public static ArrayList<String> checkForErrors(RConnection connection) 
+			throws RserveException, REXPMismatchException {
+		
+		ArrayList<String> errorMessages = new ArrayList<String>();
+		if (((REXPLogical) connection.eval("exists(\"knime.eval.obj\")")).isFALSE()[0])
+			return errorMessages;
+		
+		// check for errors
+    	int[] errIdx = ((REXPInteger) connection.eval("which(sapply(knime.eval.obj, inherits, \"error\") == TRUE, arr.ind = TRUE)")).asIntegers();
+    	if(errIdx.length > 0) {
+    		for(int i=0; i < errIdx.length; i++){
+    			REXPString error = (REXPString) connection.eval("knime.eval.obj[[" + errIdx[i] + "]]$message");
+    			errorMessages.add(error.asString());
+    		}
+    	}
+    	return errorMessages;
+	}
+
+	/**
+	 * assumes in R workspace an objects resulting from 'evaluate'-function call
+	 * retrieves a list of error messages from this object
+	 * 
+	 * @param connection
+	 * @return list with warning messages
+	 * @throws RserveException
+	 * @throws REXPMismatchException
+	 */
+	public static ArrayList<String> checkForWarnings(RConnection connection) 
+			throws RserveException, REXPMismatchException {
+		
+		ArrayList<String> warnMessages = new ArrayList<String>();
+		if (((REXPLogical) connection.eval("exists(\"knime.eval.obj\")")).isFALSE()[0])
+			return warnMessages;
+		
+		//check for warnings
+    	int[] warnIdx = ((REXPInteger) connection.eval("which(sapply(knime.eval.obj, inherits, \"warning\") == TRUE, arr.ind = TRUE)")).asIntegers();
+    	if(warnIdx.length > 0) {
+    		for(int i=0; i < warnIdx.length; i++){
+    			String singleWarning;
+    			REXPString warn = (REXPString) connection.eval("deparse(knime.eval.obj[[" + warnIdx[i] + "]]$call)");
+    			singleWarning = warn.asString() + " : ";
+    			warn = (REXPString) connection.eval("knime.eval.obj[[" + warnIdx[i] + "]]$message");
+    			singleWarning = singleWarning + warn.asString() + "\n";
+    			warnMessages.add(singleWarning);
+    		}
+    	}
+    	return warnMessages;
+	}
 }

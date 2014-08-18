@@ -2,7 +2,6 @@ package de.mpicbg.knime.scripting.r.plots;
 
 import de.mpicbg.knime.scripting.core.ImageClipper;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.knime.scripting.r.RImageFactory;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -105,7 +104,7 @@ public class RPlotCanvas extends JPanel {
 
             String script = plotModel.prepareScript();
 
-            Image image = RImageFactory.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
+            Image image = RUtils.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
 
             connection.close();
 

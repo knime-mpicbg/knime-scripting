@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 
 import org.knime.core.node.BufferedDataTable;
@@ -12,8 +13,6 @@ import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import java.io.File;
-
-import static de.mpicbg.knime.scripting.r.RSnippetNodeModel.R_INVAR_BASE_NAME;
 
 
 /**
@@ -42,11 +41,11 @@ public class ConvertToTable extends AbstractNodeModel {
         RUtils.pushToR(inObjects, connection, exec);
 
         // 2) Make sure that the R-object in the persistied workspace is of type data-frame
-        boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + R_INVAR_BASE_NAME + ")").asString());
+        boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());
         if (!isDataFrame) {
             logger.warn("The R object in the input is not a data-frame. Only data frames can be converted into Knime tables. Trying casting to data.frame...");
 
-            REXP xp = connection.parseAndEval("try(" + R_INVAR_BASE_NAME + " <- as.data.frame(" + R_INVAR_BASE_NAME + " ))");
+            REXP xp = connection.parseAndEval("try(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " <- as.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " ))");
 
             if (xp.inherits("try-error")) {
                 throw new RuntimeException("Casting to data-frame failed. You need to change your script to return a data-structure that is a data-frame or can be coerced into one. ");
@@ -55,7 +54,9 @@ public class ConvertToTable extends AbstractNodeModel {
 
 
         //3) convert the data frame back into a knime table
-        REXP rexp = connection.eval(R_INVAR_BASE_NAME);
+        REXP rexp = connection.eval(RSnippetNodeModel.R_INVAR_BASE_NAME);
+        String[] rowNames = connection.eval("rownames(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asStrings();
+        
         BufferedDataTable dataTable = RUtils.convert2DataTable(exec, rexp, null);
 
         connection.voidEval("rm(list = ls(all = TRUE));");
