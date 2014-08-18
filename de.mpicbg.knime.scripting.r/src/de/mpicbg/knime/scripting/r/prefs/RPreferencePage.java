@@ -56,16 +56,12 @@ public class RPreferencePage extends FieldEditorPreferencePage implements IWorkb
     @Override
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
-//        addField(new FileFieldEditor(RPreferenceInitializer.REPAINT_ON_RESIZE, "Path to R executable", parent));
+
         addField(new StringFieldEditor(RPreferenceInitializer.R_HOST, "The host where Rserve is running", parent));
         addField(new IntegerFieldEditor(RPreferenceInitializer.R_PORT, "The port on which Rserve is listening", parent));
         addField(new BooleanFieldEditor(RPreferenceInitializer.REPAINT_ON_RESIZE, "Repaint on resize", parent));
-
-        /*addField(new StringFieldEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Template resource for the R-Snippet-node", parent));
-        addField(new StringFieldEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Template resource for the R-Plot-node", parent));
-        //addField(new StringFieldEditor(RPreferenceInitializer.R_OPENINR_TEMPLATES, "Template resource for the OpenInR-node", parent));
-
-        addField(new TemplateTableEditor(RPreferenceInitializer.R_OPENINR_TEMPLATES, "Template resource for the OpenInR-node", parent));*/
+        
+        addField(new BooleanFieldEditor(RPreferenceInitializer.USE_EVALUATE_PACKAGE, "Enable R-console view (requires 'evaluate' package)", parent));
 
         addField(new TemplateTableEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Snippet template resource", parent));
         addField(new TemplateTableEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Plot template resource", parent));
