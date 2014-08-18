@@ -3,7 +3,7 @@ package de.mpicbg.knime.scripting.r.plots;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
-import de.mpicbg.knime.scripting.r.RImageFactory;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RPlotNodeFactory;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -45,7 +45,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
     protected SettingsModelBoolean propOverwriteFile = RPlotNodeFactory.createOverwriteFile();
     private SettingsModelString propOutputType = RPlotNodeFactory.createPropOutputType();
 
-    public static final String DEFAULT_R_PLOTCMD = "plot(kIn);";
+    public static final String DEFAULT_R_PLOTCMD = "plot(1:10)";
 
     public static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
@@ -72,15 +72,16 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
 
     /**
      * Creates a figure using the R-variable in the current connection's workspace as input.
+     * @throws KnimeScriptingException 
      */
-    protected void createFigure(RConnection connection) throws RserveException, IOException, REXPMismatchException, REngineException {
+    protected void createFigure(RConnection connection) throws RserveException, IOException, REXPMismatchException, REngineException, KnimeScriptingException {
 
         RUtils.saveToLocalFile(getTempWSFile(), connection, RUtils.getHost(), RSnippetNodeModel.R_INVAR_BASE_NAME);
 
 
         // 2) create the image the script
         String script = prepareScript();
-        image = RImageFactory.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
+        image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
 
 
         String fileName = prepareOutputFileName();

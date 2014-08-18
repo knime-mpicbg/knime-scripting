@@ -4,6 +4,8 @@ import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -35,7 +37,9 @@ public class RTests {
             e.printStackTrace();
         } catch (REngineException e) {
             e.printStackTrace();
-        }
+        } catch (KnimeScriptingException e) {
+			e.printStackTrace();
+		}
 
         connection.close();
         System.err.println("done");

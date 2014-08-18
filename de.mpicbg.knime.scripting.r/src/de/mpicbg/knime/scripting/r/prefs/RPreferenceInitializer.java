@@ -47,6 +47,7 @@ public class RPreferenceInitializer extends AbstractPreferenceInitializer {
      */
 //    public static final String PREF_R_PATH = "knime.r.path";
     public static final String REPAINT_ON_RESIZE = "repaint.on.resize";
+    public static final String USE_EVALUATE_PACKAGE = "use.evaluate.package";
 
     public static final String R_PLOT_TEMPLATES = "templates.figures";
     public static final String R_SNIPPET_TEMPLATES = "template.snippets";
@@ -62,30 +63,19 @@ public class RPreferenceInitializer extends AbstractPreferenceInitializer {
     public void initializeDefaultPreferences() {
         IPreferenceStore store = R4KnimeBundleActivator.getDefault().getPreferenceStore();
 
-//        File rPath = RCorePlugin.getRExecutable();
-//        if (rPath != null) {
-//            LOGGER.info("Default R executable: " + rPath.getAbsolutePath());
-//            store.setDefault(PREF_R_PATH, rPath);
-//
-//        } else {
-//            store.setDefault(PREF_R_PATH, "");
-//        }
-
         store.setDefault(REPAINT_ON_RESIZE, false);
+        store.setDefault(USE_EVALUATE_PACKAGE, false);
         store.setDefault(R_HOST, "localhost");
         store.setDefault(R_PORT, 6311);
 
-//        store.setDefault(R_PLOT_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt");
-//        store.setDefault(R_SNIPPET_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/snippet-templates.txt");
-//        store.setDefault(R_OPENINR_TEMPLATES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/openinr-templates.txt");
-        store.setDefault(R_PLOT_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/figure-templates.txt");
-        store.setDefault(R_SNIPPET_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/snippet-templates.txt");
-        store.setDefault(R_OPENINR_TEMPLATES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/R/openinr-templates.txt");
+
+        store.setDefault(R_PLOT_TEMPLATES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/figure-templates.txt");
+        store.setDefault(R_SNIPPET_TEMPLATES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/snippet-templates.txt");
 
         String defaultRPath = "R";
 
         if (Utils.isMacOSPlatform()) {
-            defaultRPath = "/Applications/R64.app/";
+            defaultRPath = "/Applications/R.app/";
         }
 
         if (Utils.isWindowsPlatform()) {

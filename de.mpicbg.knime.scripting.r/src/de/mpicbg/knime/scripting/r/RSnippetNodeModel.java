@@ -1,13 +1,24 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPInteger;
+import org.rosuda.REngine.REXPList;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,15 +43,16 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
                                           final ExecutionContext exec) throws Exception {
-
-        long starttime = System.currentTimeMillis();
+    	
+    	// check preferences
+    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 
         RConnection connection = RUtils.createConnection();
 
-        // 1) convert exampleSet ihnto data-frame and put into the r-workspace
+        // 1) convert exampleSet into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec);
 
-        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
+        // 2) run the script  (remove all line breaks and other no space whitespace-characters
 //        connection.eval(RUtils.prepare4RExecution(script.getStringValue()));
 
         String rawScript = prepareScript();
@@ -49,20 +61,48 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         rawScript = RUtils.supportOldVarNames(rawScript);
 
         String fixedScript = RUtils.fixEncoding(rawScript);
+        
+        REXP out = null;
+        String[] rowNames = null;
+        
+        RUtils.parseScript(connection, fixedScript);
 
-        connection.voidEval(fixedScript);
+        if(useEvaluate) {
+        	// parse and run script
+        	// evaluation list, can be used to create a console view, throws first R-error-message
+        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+        	// check for warnings
+        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+        	
+
+        } else {
+        	// parse and run script
+        	RUtils.evalScript(connection, fixedScript);     	
+        }
+
+        // check if result data frame is present
+    	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
+    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");
+    	
+    	out = connection.eval(R_OUTVAR_BASE_NAME);
+        if(!out.inherits("data.frame")) 
+        	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
+        
+        // retrieve row names
+        rowNames = connection.eval("rownames(" + R_OUTVAR_BASE_NAME + ")").asStrings();
 
         Map<String, DataType> typeMapping = getColumnTypeMapping(inData[0]);
 
         // 3) extract output data-frame from R
-        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, connection.eval(R_OUTVAR_BASE_NAME), typeMapping);
+        assert(out != null);
+        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, out, rowNames, typeMapping);
 
         connection.eval("rm(list = ls(all = TRUE));");
         connection.close();
 
         return new BufferedDataTable[]{dataTable};
     }
-
 
     private static Map<String, DataType> getColumnTypeMapping(BufferedDataTable bufferedDataTable) {
         Iterator<DataColumnSpec> dataColumnSpecIterator = bufferedDataTable.getSpec().iterator();

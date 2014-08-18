@@ -29,7 +29,7 @@ public abstract class AbstractTableScriptingNodeModel extends AbstractScriptingN
 
     protected final NodeLogger logger = NodeLogger.getLogger(this.getClass());
 
-    protected boolean appendCols = true;
+    protected boolean appendCols = false;
     protected String[] columnNames;
     protected String[] columnTypes;
 

@@ -18,12 +18,6 @@ public class RPlotNodeView<RPlotModel extends AbstractRPlotNodeModel> extends No
     public RPlotNodeView(final RPlotModel nodeModel) {
         super(nodeModel);
 
-        //  instantiate the components of the view here.
-
-//        JPanel jPanel = new JPanel(new BorderLayout());
-//        jPanel.add(new JLabel("blabla"));
-
-
         updateView(nodeModel);
 
     }

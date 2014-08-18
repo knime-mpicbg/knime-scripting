@@ -24,6 +24,7 @@
  */
 package de.mpicbg.knime.scripting.r.generic;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 
@@ -33,6 +34,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.*;
 import org.knime.core.util.FileUtil;
 import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -143,9 +145,19 @@ public class RPortObject implements PortObject {
         JPanel panel = new JPanel(new BorderLayout());
         JEditorPane jep = new JEditorPane();
         jep.setEditable(false);
+        
         panel.setName("R Port View");
 
-        RConnection connection = RUtils.createConnection();
+        
+        RConnection connection;
+		try {
+			connection = RUtils.createConnection();
+		} catch (KnimeScriptingException e) {
+			jep.setText(e.getMessage());
+			panel.add(new JScrollPane(jep));	        
+			e.printStackTrace();
+			return new JComponent[]{panel};
+		}
         jep.setFont(new Font("Monospaced", Font.PLAIN, 14));
 
         try {
