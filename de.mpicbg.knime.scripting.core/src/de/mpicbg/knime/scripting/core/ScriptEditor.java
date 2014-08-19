@@ -281,7 +281,7 @@ public class ScriptEditor extends JPanel {
         scriptEditorPanel.replaceSelection(replacement);
 
         attributeList.clearSelection();
-        scriptEditorPanel.requestFocus();
+        scriptEditorPanel.requestFocusInWindow();
     }
 
 
@@ -380,91 +380,93 @@ public class ScriptEditor extends JPanel {
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
-        // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
-        scriptingPanelContainer = new JSplitPane();
-        attributePanel = new JPanel();
-        scrollPane2 = new JScrollPane();
-        panel1 = new JPanel();
-        attributeList = new JList();
-        helpButton = new JButton();
-        scriptingPanel = new JPanel();
-        scrollPane1 = new JScrollPane();
-        scriptEditorPanel = new UndoableEditPane();
-        configureButton = new JButton();
+		// Generated using JFormDesigner non-commercial license
+		scriptingPanelContainer = new JSplitPane();
+		attributePanel = new JPanel();
+		scrollPane2 = new JScrollPane();
+		panel1 = new JPanel();
+		attributeList = new JList();
+		helpButton = new JButton();
+		scriptingPanel = new JPanel();
+		scrollPane1 = new JScrollPane();
+		scriptEditorPanel = new UndoableEditPane();
+		configureButton = new JButton();
 
-        //======== this ========
-        setLayout(new BorderLayout());
+		//======== this ========
+		setLayout(new BorderLayout());
 
-        //======== scriptingPanelContainer ========
-        {
-            scriptingPanelContainer.setDividerSize(2);
-            scriptingPanelContainer.setDividerLocation(160);
+		//======== scriptingPanelContainer ========
+		{
+			scriptingPanelContainer.setDividerSize(2);
+			scriptingPanelContainer.setDividerLocation(160);
 
-            //======== attributePanel ========
-            {
-                attributePanel.setLayout(new BorderLayout());
+			//======== attributePanel ========
+			{
+				attributePanel.setLayout(new BorderLayout());
 
-                //======== scrollPane2 ========
-                {
-                    scrollPane2.setPreferredSize(new Dimension(160, 98));
+				//======== scrollPane2 ========
+				{
+					scrollPane2.setPreferredSize(new Dimension(160, 98));
 
-                    //======== panel1 ========
-                    {
-                        panel1.setBorder(new TitledBorder("Input attributes"));
-                        panel1.setLayout(new BorderLayout());
-                        panel1.add(attributeList, BorderLayout.CENTER);
-                    }
-                    scrollPane2.setViewportView(panel1);
-                }
-                attributePanel.add(scrollPane2, BorderLayout.CENTER);
+					//======== panel1 ========
+					{
+						panel1.setBorder(new TitledBorder(null, "Input attributes", TitledBorder.LEADING, TitledBorder.TOP));
+						panel1.setLayout(new BorderLayout());
+						panel1.add(attributeList, BorderLayout.CENTER);
+					}
+					scrollPane2.setViewportView(panel1);
+				}
+				attributePanel.add(scrollPane2, BorderLayout.CENTER);
 
-                //---- helpButton ----
-                helpButton.setText("help");
-                helpButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        showHelp();
-                    }
-                });
-                attributePanel.add(helpButton, BorderLayout.SOUTH);
-            }
-            scriptingPanelContainer.setLeftComponent(attributePanel);
+				//---- helpButton ----
+				helpButton.setText("help");
+				helpButton.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						showHelp();
+					}
+				});
+				attributePanel.add(helpButton, BorderLayout.SOUTH);
+			}
+			scriptingPanelContainer.setLeftComponent(attributePanel);
 
-            //======== scriptingPanel ========
-            {
-                scriptingPanel.setLayout(new BorderLayout());
+			//======== scriptingPanel ========
+			{
+				scriptingPanel.setLayout(new BorderLayout());
 
-                //======== scrollPane1 ========
-                {
-                    scrollPane1.setViewportView(scriptEditorPanel);
-                }
-                scriptingPanel.add(scrollPane1, BorderLayout.CENTER);
-            }
-            scriptingPanelContainer.setRightComponent(scriptingPanel);
-        }
-        add(scriptingPanelContainer, BorderLayout.CENTER);
+				//======== scrollPane1 ========
+				{
+					scrollPane1.setViewportView(scriptEditorPanel);
+				}
+				scriptingPanel.add(scrollPane1, BorderLayout.CENTER);
+			}
+			scriptingPanelContainer.setRightComponent(scriptingPanel);
+		}
+		add(scriptingPanelContainer, BorderLayout.CENTER);
 
-        //---- configureButton ----
-        configureButton.setText("Reconfigure using wizard");
-        configureButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                configureButtonActionPerformed();
-            }
-        });
+		//---- configureButton ----
+		configureButton.setText("Reconfigure using wizard");
+		configureButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				configureButtonActionPerformed();
+			}
+		});
         // JFormDesigner - End of component initialization  //GEN-END:initComponents
     }
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
-    // Generated using JFormDesigner Open Source Project license - Sphinx-4 (cmusphinx.sourceforge.net/sphinx4/)
-    private JSplitPane scriptingPanelContainer;
-    private JPanel attributePanel;
-    private JScrollPane scrollPane2;
-    private JPanel panel1;
-    private JList attributeList;
-    protected JButton helpButton;
-    private JPanel scriptingPanel;
-    private JScrollPane scrollPane1;
-    private UndoableEditPane scriptEditorPanel;
-    JButton configureButton;
+	// Generated using JFormDesigner non-commercial license
+	private JSplitPane scriptingPanelContainer;
+	private JPanel attributePanel;
+	private JScrollPane scrollPane2;
+	private JPanel panel1;
+	private JList attributeList;
+	protected JButton helpButton;
+	private JPanel scriptingPanel;
+	private JScrollPane scrollPane1;
+	private UndoableEditPane scriptEditorPanel;
+	JButton configureButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 
 

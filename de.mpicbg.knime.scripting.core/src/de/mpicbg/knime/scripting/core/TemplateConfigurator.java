@@ -83,16 +83,6 @@ public class TemplateConfigurator extends JPanel {
 
     }
 
-
-    public static Window getOwnerDialog(Container awtOwner) {
-        while (awtOwner != null && !(awtOwner instanceof JDialog || awtOwner instanceof JFrame)) {
-            awtOwner = awtOwner.getParent();
-        }
-
-        return (Window) awtOwner;
-    }
-
-
     public String generateScript() {
         return rggDialog.generateRScriptFromTemplate();
     }
@@ -122,9 +112,8 @@ public class TemplateConfigurator extends JPanel {
 
 
     private void editTemplate() {
-        Window window = getOwnerDialog(scriptProvider.scriptEditor);
+    	Window window = SwingUtilities.windowForComponent(this);
         final JDialog editDialog = new JDialog(window);
-        editDialog.setModal(true);
         editDialog.setLayout(new BorderLayout());
 
 
