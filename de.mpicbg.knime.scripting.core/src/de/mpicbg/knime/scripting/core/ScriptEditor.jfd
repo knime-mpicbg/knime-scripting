@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?> 
-<java version="1.5.0_24" class="java.beans.XMLDecoder"> 
+<java version="1.6.0_65" class="java.beans.XMLDecoder"> 
  <object class="com.jformdesigner.model.FormModel"> 
   <void property="contentType"> 
    <string>form/swing</string> 
@@ -70,8 +70,6 @@
                 <string>Input attributes</string> 
                 <int>4</int> 
                 <int>2</int> 
-                <null/> 
-                <null/> 
                </object> 
               </void> 
               <void property="name"> 
@@ -165,7 +163,7 @@
             </void> 
             <void method="add"> 
              <object class="com.jformdesigner.model.FormComponent"> 
-              <string>de.mpicbg.tds.knime.knutils.scripting.UndoableEditPane</string> 
+              <string>de.mpicbg.knime.scripting.core.UndoableEditPane</string> 
               <void property="name"> 
                <string>scriptEditorPanel</string> 
               </void> 

@@ -3,6 +3,7 @@ package de.mpicbg.knime.scripting.core.rgg.wizard;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -39,7 +40,7 @@ public class PreviewImagePanel extends JPanel {
             @Override
             public void mouseReleased(MouseEvent mouseEvent) {
                 if (mouseEvent.getClickCount() == 2) {
-                    JDialog jDialog = new JDialog(TemplateConfigurator.getOwnerDialog(PreviewImagePanel.this));
+                    JDialog jDialog = new JDialog(SwingUtilities.windowForComponent((PreviewImagePanel)mouseEvent.getSource()));
                     jDialog.setSize(new Dimension(image.getWidth() + 20, image.getHeight() + 20));
                     jDialog.setLayout(new BorderLayout());
                     PreviewImagePanel imagePanel = new PreviewImagePanel();
