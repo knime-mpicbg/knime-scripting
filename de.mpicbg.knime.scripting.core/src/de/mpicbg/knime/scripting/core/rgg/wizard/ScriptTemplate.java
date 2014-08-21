@@ -1,6 +1,5 @@
 package de.mpicbg.knime.scripting.core.rgg.wizard;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -10,7 +9,8 @@ import java.util.Map;
 
 
 /**
- * Document me!
+ * As the class is used for serialization/deserialization template configurations to node.xml:
+ * DO NOT REFACTOR (at least do not rename the class)!
  *
  * @author Holger Brandl
  */
