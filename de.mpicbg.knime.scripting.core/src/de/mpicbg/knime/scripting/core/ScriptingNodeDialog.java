@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel.*;
 
@@ -265,6 +267,20 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public static ScriptTemplate deserializeTemplate(String serializedTemplate) {
         if (serializedTemplate == null || StringUtils.isBlank(serializedTemplate)) {
             return null;
+        }
+        
+        // class ScriptTemplate has been relocated. To successful load templates saved before, check whether given class can be loaded
+        // look for something like "<de.mpicbg.XXXX.ScriptTemplate"
+        String searchPattern = "de\\.mpicbg\\..*\\.ScriptTemplate";
+        Pattern p = Pattern.compile("<(" + searchPattern +")");
+        Matcher m = p.matcher(serializedTemplate);
+        if(m.find()) {
+            String classLocation = m.group(1);
+            try {
+            	Class.forName(classLocation);
+            } catch( ClassNotFoundException e ) {
+            	serializedTemplate = serializedTemplate.replaceAll(searchPattern, ScriptTemplate.class.getCanonicalName());
+            }
         }
 
         return (ScriptTemplate) new XStream(new DomDriver()).fromXML(serializedTemplate);
