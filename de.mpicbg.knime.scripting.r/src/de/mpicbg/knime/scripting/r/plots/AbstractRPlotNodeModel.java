@@ -106,8 +106,12 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         		} catch(IOException e) {
         			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path! (" + e.getMessage() + ")");
         		}
-        	}       
-            ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", imageFile);
+        	}
+
+            FileOutputStream fsOut = new FileOutputStream(new File(fileName));
+            ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", fsOut);
+            fsOut.close();
+
         }
     }
 
