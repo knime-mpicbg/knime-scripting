@@ -20,6 +20,8 @@ Export-Package: de.mpicbg.knime.knutils;
    org.knime.core.data,
    org.knime.core.node.port,
    org.knime.core.node.defaultnodesettings",
+ de.mpicbg.knime.knutils.annotations,
+ de.mpicbg.knime.knutils.data.property,
  de.mpicbg.knime.knutils.ui;
   uses:="de.mpicbg.knime.knutils,
    org.knime.core.node,
