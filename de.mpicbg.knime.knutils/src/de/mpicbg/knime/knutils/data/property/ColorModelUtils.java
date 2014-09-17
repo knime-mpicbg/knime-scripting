@@ -2,14 +2,15 @@ package de.mpicbg.knime.knutils.data.property;
 
 import java.awt.Color;
 import java.util.HashMap;
-import java.util.Set;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ColorModelNominal;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.base.AbstractConfigEntry;
-import org.knime.core.node.config.base.ConfigEntries;
 
 /**
  * The class provides methods around KNIME color model access
@@ -31,23 +32,28 @@ public class ColorModelUtils {
 	}
 
     /**
-     * keys (domain values) and their color is extracted from the model
-     * @param model
+     * keys (domain values) and their color is extracted from the column spec
+     * @param column spec
      * @return a map for assigned colors
      * @throws InvalidSettingsException
      */
-	public static HashMap<String, Color> parseNominalColorModel(ModelContent model) throws InvalidSettingsException {    	
-	
-    	Config colorCfg = model.getConfig("color_model");
-    	Set<String> keys = colorCfg.keySet();
-    	HashMap<String, Color> colorMap = new HashMap<String, Color>();
-    	
-    	for(String key : keys) {
-    		AbstractConfigEntry cfgEntry = colorCfg.getEntry(key);
-    		if(!cfgEntry.getType().equals(ConfigEntries.config)) {
-    			colorMap.put(key, new Color(colorCfg.getInt(key)));
-    		}
-    	}
-    	return colorMap;
+	public static HashMap<String, Color> parseNominalColorModel(
+			DataColumnSpec columnSpec) {
+		HashMap<String, Color> colorMap = new HashMap<String, Color>();
+		
+		ColorHandler ch = columnSpec.getColorHandler();
+		if (columnSpec.getDomain() == null) {
+			throw new IllegalStateException("Not a nominal column");
+		}
+		if(!columnSpec.getType().isCompatible(StringValue.class)) {
+			throw new IllegalStateException("Column type is not compatible to string values");
+		}
+		for (DataCell cell : columnSpec.getDomain().getValues()) {
+			Color c = ch.getColorAttr(cell).getColor();
+			
+			colorMap.put(((StringCell)cell).getStringValue(), c);
+		}
+		
+		return colorMap;
 	}
 }
