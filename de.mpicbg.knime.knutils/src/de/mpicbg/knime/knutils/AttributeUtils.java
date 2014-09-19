@@ -7,6 +7,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
@@ -141,10 +142,10 @@ public class AttributeUtils {
     }
 
 
-    public static boolean validate(List<String> includeReadouts, DataTableSpec spec) {
+    public static boolean validate(List<String> includeReadouts, DataTableSpec spec) throws InvalidSettingsException {
         for (String includeReadout : includeReadouts) {
             if (spec.getColumnSpec(includeReadout) == null) {
-                throw new IllegalArgumentException("selected columns do not match incoming table model. Please reconfigure the node!");
+                throw new InvalidSettingsException("selected columns do not match incoming table model. Please reconfigure the node!");
             }
         }
 
