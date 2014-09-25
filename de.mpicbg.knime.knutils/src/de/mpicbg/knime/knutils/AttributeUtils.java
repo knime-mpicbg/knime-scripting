@@ -142,10 +142,10 @@ public class AttributeUtils {
     }
 
 
-    public static boolean validate(List<String> includeReadouts, DataTableSpec spec) throws InvalidSettingsException {
+    public static boolean validate(List<String> includeReadouts, DataTableSpec spec) {
         for (String includeReadout : includeReadouts) {
             if (spec.getColumnSpec(includeReadout) == null) {
-                throw new InvalidSettingsException("selected columns do not match incoming table model. Please reconfigure the node!");
+                return false;
             }
         }
 
