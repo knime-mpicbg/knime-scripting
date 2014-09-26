@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="de.mpicbg.tds.knime.scripting.r.feature"
-      label="KNIME R Scripting extension"
+      id="de.mpicbg.tds.knime.scripting.groovy.feature"
+      label="KNIME Groovy Scripting extension"
       version="2.1.0.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
 
-   <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
-      Collection of KNIME nodes for developement and execution of R scripts and templates.
+   <description url="https://github.com/knime-mpicbg/HCS-Tools/wiki">
+      KNIME node to execute groovy scripts and templates.
    </description>
 
-   <copyright>
-      KNIME R Scripting extension
-    Copyright (C) 2014, Max Planck Institute of Molecular Cell Biology and Genetics
+   <copyrigh>
+      KNIME Groovy Scripting extension
+      Copyright (C) 2014, Max Planck Institute of Molecular Cell Biology and Genetics
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -311,8 +311,9 @@ POSSIBILITY OF SUCH DAMAGES.
                      END OF TERMS AND CONDITIONS
    </license>
 
+
    <plugin
-         id="de.mpicbg.knime.scripting.r"
+         id="de.mpicbg.knime.scripting.groovy"
          download-size="0"
          install-size="0"
          version="0.0.0"
