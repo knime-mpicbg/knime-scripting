@@ -5,6 +5,8 @@
 /*/bin
 /.metadata
 .classpath
-.project
 .settings
 target
+
+# UML diagrams
+*.ucls

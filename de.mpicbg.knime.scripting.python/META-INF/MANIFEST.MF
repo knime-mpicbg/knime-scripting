@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ManifestVersion: 2
+Bundle-Name: Ptyhon Scripting Integration for KNIME
+Bundle-SymbolicName: de.mpicbg.knime.scripting.python; singleton:=true
+Bundle-Version: 2.0.0.qualifier
+Bundle-ClassPath: pythonsnippet.jar
+Bundle-Activator: de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator
+Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base,
+ de.mpicbg.knime.knutils,
+ de.mpicbg.knime.scripting.core,
+ de.mpicbg.knime.scripting.python.srv;visibility:=reexport
+Bundle-ActivationPolicy: lazy
+Export-Package: de.mpicbg.knime.scripting.python
+
+

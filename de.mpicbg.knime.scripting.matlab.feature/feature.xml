@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="de.mpicbg.tds.knime.scripting.matlab.feature"
+      label="KNIME Matlab Scripting extension"
+      version="2.0.0.qualifier"
+      provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
+
+   <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
+      The Matlab Scripting Integration provides a collection of KNIME nodes to develop and integrate matlab scripts
+        and templates.
+   </description>
+
+   <copyright>
+      KNIME Matlab Scripting extension
+    Copyright (c) 2014, Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+	All rights reserved.
+   </copyright>
+
+   <license>
+      	BSD-License
+        -
+        TERMS AND CONDITIONS
+        -
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions
+        are met:
+        ‚Ä¢ Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+        ‚Ä¢ Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer
+        in the documentation and/or other materials provided with the
+        distribution.
+        ‚Ä¢ Neither the name of the MPI-CBG nor the names of its contributors
+        may be used to endorse or promote products derived from this
+        software without specific prior written permission.
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+        &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+        NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+        FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+        SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY
+        DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+        DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+        GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+        INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+        WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+        OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+        EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+        -
+        END OF TERMS AND CONDITIONS
+        -
+
+        IMPORTANT NOTICE:
+        It is the obligation of every user to abide terms and conditions
+        of The MathWorks, Inc. Software License Agreement.
+        In particular Article 8 ‚ÄúWeb Applications‚Äù: it is permissible
+        for an Application created by a Licensee of the
+        NETWORK CONCURRENT USER ACTIVATION type to use MATLAB as a remote
+        engine with static scripts.
+   </license>
+
+   <plugin
+         id="de.mpicbg.knime.scripting.matlab"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+         
+	<plugin
+         id="de.mpicbg.knime.scripting.matlab.srv"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>
