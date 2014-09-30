@@ -96,8 +96,8 @@ class RunnableBee extends Thread {
 public class MatCtrlThreads {
 	
 	public static void main(String[] args) throws MatlabConnectionException, InterruptedException, MatlabInvocationException {
-		RunnableBee bee1 = new RunnableBee("Bee-1");
-		RunnableBee bee2 = new RunnableBee("Bee-2");
+		MWorker bee1 = new MWorker("Bee-1");
+		MWorker bee2 = new MWorker("Bee-2");
 		
 		bee1.initialize();
 		bee1.start();
