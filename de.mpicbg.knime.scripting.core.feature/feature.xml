@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.core"
       label="KNIME Scripting extension core"
-      version="2.1.0.qualifier"
+      version="2.0.0.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
 
    <description>

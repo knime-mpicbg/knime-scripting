@@ -3,7 +3,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ManifestVersion: 2
 Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
-Bundle-Version: 1.1.0.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-ClassPath: matlabsnippet.jar,
  lib/commons-math-2.0.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
