@@ -22,11 +22,11 @@ Bundle-ClassPath: scriptingcore.jar,
  lib/xstream-1.3.1.jar
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
-Require-Bundle:  org.eclipse.core.runtime,
- org.knime.workbench.core,
- org.knime.workbench.repository,
- org.knime.base,
- de.mpicbg.knime.knutils
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
+ org.knime.workbench.core;bundle-version="[2.10.0,3.0.0)",
+ org.knime.workbench.repository;bundle-version="[2.10.0,3.0.0)",
+ org.knime.base;bundle-version="[2.10.0,3.0.0)",
+ de.mpicbg.knime.knutils;bundle-version="[2.0.0,3.0.0)"
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  de.mpicbg.knime.scripting.core,
