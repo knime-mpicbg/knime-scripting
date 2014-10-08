@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ManifestVersion: 2
 Bundle-Name: Ptyhon Scripting Integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.python; singleton:=true

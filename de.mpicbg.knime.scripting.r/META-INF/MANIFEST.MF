@@ -21,6 +21,6 @@ Export-Package: de.mpicbg.knime.scripting.r,
  de.mpicbg.knime.scripting.r.rgg,
  org.rosuda.REngine,
  org.rosuda.REngine.Rserve
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 
