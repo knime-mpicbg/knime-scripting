@@ -8,7 +8,7 @@ Export-Package: de.mpicbg.knime.scripting.matlab.srv
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.srv.MatlabServerBundleActivator
-Require-Bundle: org.knime.workbench.core
+Require-Bundle: org.knime.workbench.core;bundle-version="[2.10.0,3.0.0)"
 Bundle-ClassPath: matlab-srv4knime.jar,
  lib/cajo-1.134.jar,
  lib/commons-math-2.0.jar,

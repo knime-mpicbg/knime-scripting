@@ -8,13 +8,13 @@ Bundle-ClassPath: pythonsnippet.jar
 Bundle-Activator: de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
-Require-Bundle: org.eclipse.core.runtime,
- org.knime.workbench.core,
- org.knime.workbench.repository,
- org.knime.base,
- de.mpicbg.knime.knutils,
- de.mpicbg.knime.scripting.core,
- de.mpicbg.knime.scripting.python.srv;visibility:=reexport
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
+ org.knime.workbench.core;bundle-version="[2.10.0,3.0.0)",
+ org.knime.workbench.repository;bundle-version="[2.10.0,3.0.0)",
+ org.knime.base;bundle-version="[2.10.0,3.0.0)",
+ de.mpicbg.knime.knutils;bundle-version="[2.0.0,3.0.0)",
+ de.mpicbg.knime.scripting.core;bundle-version="[2.0.0,3.0.0)",
+ de.mpicbg.knime.scripting.python.srv;bundle-version="[2.0.0,3.0.0)";visibility:=reexport
 Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.python
 

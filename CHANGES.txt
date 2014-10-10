@@ -1,0 +1,26 @@
+======================================================================================================
+2014-09-30
+VERSION		v2.0.0
+
+INTERNAL
+
+* restructured file/folder structure
+* simplified deployment
+* Converting python and matlab server from maven to eclipse projects
+
+ISSUES
+
+scripting
+* fixes #28: 'edit templates' is read only in KNIME 2.10
+* fixes bug: failed to load script template settings doe to relocated class ScriptTemplate
+
+python
+* Allow multi-line CSVs and (optionally) use pandas
+* Enable transfer of all cell types to python as long as they are compatible to StringCell
+
+R
+* "append columns" default set to "false" to quick fix error message of expected table specs
+* add new preference "use evaluate package"
+* fix default links to templates
+* fix R-plot default script
+* improve reporting of error-messages and warnings (TODO: create console view)
