@@ -1,7 +1,30 @@
+from __future__ import print_function
+from __future__ import absolute_import
+import platform
 import csv
 import array
 from types import *
+from functools import partial
+    
+# Check for the correct version
+version = platform.python_version()
+if float(version[:3]) < 2.7:
+    from ordereddict import OrderedDict
+else:
+    from collections import OrderedDict
 
+# python 3 compat
+if float(version[:3]) > 3.0:    
+    NoneType = None
+    StringType = str
+    FloatType = float
+    IntType = int
+    LongType = int
+
+# open() function for py2/3
+open_r = partial(open, mode='rb') if float(version[:3]) < 3 else partial(open, mode='r', newline='')
+open_w = partial(open, mode='wb') if float(version[:3]) < 3 else partial(open, mode='w', newline='')
+    
 # test if pandas is available
 try:
     import pandas as pd
@@ -9,6 +32,8 @@ try:
     have_pandas = True    
 except:
     have_pandas = False
+
+
 # For some large CSV files one may get the exception
 # Error: field larger than field limit (131072)
 # This is a quick and dirty solution to adapt the csv field_size_limit.
@@ -43,7 +68,7 @@ while decrement:
 #       table = create_data_table(...);
 #
 def infer_column_types(csv_filename, count):
-    csv_reader = csv.reader(open(csv_filename, 'rb'), delimiter=',', quotechar='"')
+    csv_reader = csv.reader(open_r(csv_filename), delimiter=',', quotechar='"')
     types = OrderedDict()
     current = 0
     for row in csv_reader:
@@ -55,19 +80,19 @@ def infer_column_types(csv_filename, count):
         elif current < count or count == 0:
             index = 0
             for item in types:
-                type = types[item]
+                t = types[item]
                 try:
                     int(row[index])
-                    if type == NoneType:
-                        type = IntType
+                    if t == NoneType:
+                        t = IntType
                 except:
                     try:
                         float(row[index])
-                        if type == NoneType or type == IntType:
-                            type = FloatType
+                        if t == NoneType or t == IntType:
+                            t = FloatType
                     except:
-                        type = StringType
-                types[item] = type
+                        t = StringType
+                types[item] = t
                 index += 1
         current += 1
     return types
@@ -96,7 +121,7 @@ def create_empty_table(csv_filename, types, header_lines):
 #  contains comma-separated types, e.g. INT, FLOAT, STRING
 #
 def get_column_types(csv_filename):
-    csv_reader = csv.reader(open(csv_filename, 'rb'), delimiter=',', quotechar='"')
+    csv_reader = csv.reader(open_r(csv_filename), delimiter=',', quotechar='"')
     types = OrderedDict()
     current = 0
     for row in csv_reader:
@@ -110,13 +135,13 @@ def get_column_types(csv_filename):
             for item in types:
                 itemType = row[index]
                 if itemType == "INT":
-                    type = IntType
+                    t = IntType
                 elif itemType == "FLOAT":
-                    type = FloatType
+                    t = FloatType
                 else:
-                    type = StringType
+                    t = StringType
 
-                types[item] = type
+                types[item] = t
                 index += 1
 
             return types
@@ -133,12 +158,12 @@ def create_data_table(csv_filename, types, header_lines):
     if have_pandas:
         skip = range(1, header_lines)
         d = pd.read_csv(csv_filename, skiprows=skip).to_dict()
-        d = {k: d[k].values() for k in d} # convert to dict of lists (as used by the python snippet)
+        d = OrderedDict({k: list(d[k].values()) for k in d}) # convert to dict of lists (as used by the python snippet)
         return d
     else:
         table = create_empty_table(csv_filename, types, header_lines)
     
-        csv_file = open(csv_filename, 'rb')
+        csv_file = open_r(csv_filename)
     
         csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
     
@@ -148,14 +173,13 @@ def create_data_table(csv_filename, types, header_lines):
                 index = 0
                 for item in types:
                     array = table[item]
-                    type = types[item]
+                    t = types[item]
                     value = row[index]
-    
                     if value == "":
                         value = None
-                    elif type == FloatType:
+                    elif t == FloatType:
                         value = float(value)
-                    elif type == IntType:
+                    elif t == IntType:
                         value = int(value)
     
                     # Instead of setting array[current]=value we append
@@ -173,7 +197,7 @@ def create_data_table(csv_filename, types, header_lines):
 #
 def line_count(csv_filename):
     # Count the number of lines
-    csv_file = open(csv_filename)
+    csv_file = open_r(csv_filename)
     return sum(1 for line in csv_file)
     csv_file.close()
 
@@ -203,10 +227,10 @@ def read_csv(csv_filename, read_types):
 #  lines will be a row with comma-separated values for each colunn.
 #
 def write_csv(csv_filename, table, write_types):
-    csv_file = open(csv_filename, 'wb')
+    csv_file = open_w(csv_filename)
     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
 
-    keys = table.keys()
+    keys = list(table) 
     count = len(table[keys[0]])
 
     #  First write the column headers
@@ -218,22 +242,24 @@ def write_csv(csv_filename, table, write_types):
         for item in table:
             column = table[item]
             index = 0
+            col = None
 
             # Find the first non-missing value
-            while type(column[index]) is NoneType:
-                index += 1
+            for index, val in enumerate(column):
+                if type(val) is not NoneType:
+                    break
                 
             if have_pandas: # pandas is using np types
-                if np.issubdtype(type(column[index]), np.int) or np.issubdtype(type(column[index]), np.long):
+                if np.issubdtype(type(val), np.int) or np.issubdtype(type(val), np.long):
                     types.append("INT")
-                elif np.issubdtype(type(column[index]), np.float):
+                elif np.issubdtype(type(val), np.float):
                     types.append("FLOAT")
                 else:
                     types.append("STRING")
             else:
-                if type(column[index]) is IntType or type(column[index]) is LongType:
+                if type(val) is IntType or type(val) is LongType:
                     types.append("INT")
-                elif type(column[index]) is FloatType:
+                elif type(val) is FloatType:
                     types.append("FLOAT")
                 else:
                     types.append("STRING")
@@ -254,12 +280,3 @@ def write_csv(csv_filename, table, write_types):
         csv_writer.writerow(row)
 
     csv_file.close()
-
-import platform
-
-# Check for the correct version
-version = platform.python_version()
-if float(version[:3]) < 2.7:
-    from ordereddict import OrderedDict
-else:
-    from collections import OrderedDict
