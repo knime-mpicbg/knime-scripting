@@ -22,8 +22,8 @@ if float(version[:3]) > 3.0:
     LongType = int
 
 # open() function for py2/3
-open_r = partial(open, mode='rb') if float(version[:3]) < 3 else partial(open, mode='r', newline='')
-open_w = partial(open, mode='wb') if float(version[:3]) < 3 else partial(open, mode='w', newline='')
+def open(filename, mode, **kwargs):
+    return open(filename, mode) if float(version[:3]) < 3 else open(filename, mode[0], newline='')
     
 # test if pandas is available
 try:
