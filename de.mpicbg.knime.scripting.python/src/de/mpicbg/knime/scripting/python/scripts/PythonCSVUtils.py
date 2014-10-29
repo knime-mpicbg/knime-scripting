@@ -23,7 +23,7 @@ if float(version[:3]) > 3.0:
 
 # open() function for py2/3
 def openf(filename, mode, **kwargs):
-    return open(filename, mode) if float(version[:3]) < 3 else open(filename, mode[0], newline='')
+    return open(filename, mode, **kwargs) if float(version[:3]) < 3 else open(filename, mode[0], newline='', **kwargs)
     
 # test if pandas is available
 try:
