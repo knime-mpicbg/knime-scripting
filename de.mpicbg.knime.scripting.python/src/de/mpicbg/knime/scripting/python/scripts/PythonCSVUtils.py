@@ -218,7 +218,7 @@ def read_csv(csv_filename, read_types):
 
         table = create_data_table(csv_filename, types, 1)
 
-    return table
+    return table, types
 
 #
 #  Write a table (dictionary) to a csv file.  The first line will contain a comma-separated list
