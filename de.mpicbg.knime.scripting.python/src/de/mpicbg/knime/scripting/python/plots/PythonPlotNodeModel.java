@@ -49,7 +49,18 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 
     private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
-    private final String DEFAULT_PYTHON_PLOTCMD = "plot(kIn)";
+    private final String DEFAULT_PYTHON_PLOTCMD =""     
+		+"if have_pandas:\n" 
+		+"	df = pd.DataFrame.from_dict(kIn)\n"
+		+"	df.plot()\n"
+		+"else:\n"
+		+"	# find numeric columns\n"
+		+"	numericColumns = [k for k in columnTypes if columnTypes[k] in [IntType, FloatType]]\n"
+		+"	index = range(len(kIn[numericColumns[0]]))\n"
+		+"	# plot each column\n"
+		+"	for col in numericColumns:\n"
+		+"		plot(index, kIn[col], label=col)\n"
+		+"	legend()\n";
 
     protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
