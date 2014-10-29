@@ -10,11 +10,14 @@ import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -27,6 +30,7 @@ import org.knime.core.node.port.image.ImagePortObjectSpec;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -240,4 +244,33 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     public Image getImage() {
         return image;
     }
+    
+    @Override
+    protected void saveInternals(File nodeDir, ExecutionMonitor executionMonitor) throws IOException, CanceledExecutionException {
+        if (image != null) {
+            File imageFile = new File(nodeDir, "image.bin");
+            FileOutputStream f_out = new FileOutputStream(imageFile);
+            // Write object with ObjectOutputStream
+            ObjectOutputStream obj_out = new ObjectOutputStream(new BufferedOutputStream(f_out));
+            // Write object out to disk
+            obj_out.writeObject(new ImageIcon(image));
+            obj_out.close();
+        }
+    }
+
+
+    @Override
+    protected void loadInternals(File nodeDir, ExecutionMonitor executionMonitor) throws IOException, CanceledExecutionException {
+        super.loadInternals(nodeDir, executionMonitor);
+
+        try {
+            File nodeImageFile = new File(nodeDir, "image.bin");
+            FileInputStream f_in = new FileInputStream(nodeImageFile);
+            // Read object using ObjectInputStream
+            ObjectInputStream obj_in = new ObjectInputStream(new BufferedInputStream(f_in));
+            // Read an object
+            image = ((ImageIcon) obj_in.readObject()).getImage();
+        } catch (Throwable ignored) {
+        }
+    }    
 }
