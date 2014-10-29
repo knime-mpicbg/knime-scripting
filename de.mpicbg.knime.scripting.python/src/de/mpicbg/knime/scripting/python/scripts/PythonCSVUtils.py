@@ -1,9 +1,6 @@
-from __future__ import print_function
-from __future__ import absolute_import
 import platform
 import csv
 import array
-from types import *
 from functools import partial
     
 # Check for the correct version
@@ -20,7 +17,9 @@ if float(version[:3]) > 3.0:
     FloatType = float
     IntType = int
     LongType = int
-
+else:
+	from types import *	
+	
 # open() function for py2/3
 def openf(filename, mode, **kwargs):
     return open(filename, mode, **kwargs) if float(version[:3]) < 3 else open(filename, mode[0], newline='', **kwargs)
