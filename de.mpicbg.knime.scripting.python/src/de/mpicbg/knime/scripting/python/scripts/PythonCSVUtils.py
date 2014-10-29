@@ -22,7 +22,7 @@ if float(version[:3]) > 3.0:
     LongType = int
 
 # open() function for py2/3
-def open(filename, mode, **kwargs):
+def openf(filename, mode, **kwargs):
     return open(filename, mode) if float(version[:3]) < 3 else open(filename, mode[0], newline='')
     
 # test if pandas is available
@@ -68,7 +68,7 @@ while decrement:
 #       table = create_data_table(...);
 #
 def infer_column_types(csv_filename, count):
-    csv_reader = csv.reader(open_r(csv_filename), delimiter=',', quotechar='"')
+    csv_reader = csv.reader(openf(csv_filename, 'rb'), delimiter=',', quotechar='"')
     types = OrderedDict()
     current = 0
     for row in csv_reader:
@@ -121,7 +121,7 @@ def create_empty_table(csv_filename, types, header_lines):
 #  contains comma-separated types, e.g. INT, FLOAT, STRING
 #
 def get_column_types(csv_filename):
-    csv_reader = csv.reader(open_r(csv_filename), delimiter=',', quotechar='"')
+    csv_reader = csv.reader(openf(csv_filename, 'rb'), delimiter=',', quotechar='"')
     types = OrderedDict()
     current = 0
     for row in csv_reader:
@@ -163,7 +163,7 @@ def create_data_table(csv_filename, types, header_lines):
     else:
         table = create_empty_table(csv_filename, types, header_lines)
     
-        csv_file = open_r(csv_filename)
+        csv_file = openf(csv_filename, 'rb')
     
         csv_reader = csv.reader(csv_file, delimiter=',', quotechar='"')
     
@@ -197,7 +197,7 @@ def create_data_table(csv_filename, types, header_lines):
 #
 def line_count(csv_filename):
     # Count the number of lines
-    csv_file = open_r(csv_filename)
+    csv_file = openf(csv_filename, 'rb')
     return sum(1 for line in csv_file)
     csv_file.close()
 
@@ -227,7 +227,7 @@ def read_csv(csv_filename, read_types):
 #  lines will be a row with comma-separated values for each colunn.
 #
 def write_csv(csv_filename, table, write_types):
-    csv_file = open_w(csv_filename)
+    csv_file = openf(csv_filename, 'wb')
     csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
 
     keys = list(table) 
