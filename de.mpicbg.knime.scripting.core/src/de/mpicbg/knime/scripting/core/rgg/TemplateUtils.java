@@ -145,17 +145,16 @@ public class TemplateUtils {
     private static String replaceDomains(String templateText, List<DataColumnSpec> attributeListModel) {
         // create the matcher from the regex and the given templateText
         Matcher matcher = Pattern.compile(RGG_DOMAIN).matcher(templateText);
-
-        while (matcher.find()) {
-            String matchResult = templateText.substring(matcher.start(), matcher.end());
-            System.err.println("match=" + matchResult);
-            String attributeName = matcher.group(1);
-            System.err.println("matchgroup=" + attributeName);
-
-            templateText = templateText.replace(matchResult, concatDomain(attributeListModel, attributeName));
+        
+        StringBuffer stringBuffer = new StringBuffer();
+        
+        while(matcher.find()){
+        	String attributeName = matcher.group(1);
+            matcher.appendReplacement(stringBuffer, concatDomain(attributeListModel, attributeName).toString());
         }
+        matcher.appendTail(stringBuffer);
 
-        return templateText;
+        return stringBuffer.toString();
     }
 
 
