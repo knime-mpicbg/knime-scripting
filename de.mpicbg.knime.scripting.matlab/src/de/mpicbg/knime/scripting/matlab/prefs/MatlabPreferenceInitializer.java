@@ -48,7 +48,7 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(MATLAB_PORT, 1198);
 
 //        store.setDefault(MATLB_TEMPLATE_RESOURCES, "file:///Volumes/tds/software+tools/KNIME/script-templates/Matlab/script-templates.txt");
-        store.setDefault(MATLAB_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/script-templates.txt");
-        store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_public/Matlab/figure-templates.txt");
+        store.setDefault(MATLAB_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/script-templates.txt");
+        store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/figure-templates.txt");
     }
 }
