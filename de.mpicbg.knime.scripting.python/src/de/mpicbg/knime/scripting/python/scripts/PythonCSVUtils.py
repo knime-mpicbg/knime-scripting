@@ -16,7 +16,8 @@ except:
 # Taken from:
 # http://stackoverflow.com/questions/15063936/csv-error-field-larger-than-field-limit-131072
 import sys
-maxInt = sys.maxsize if sys.version_info >= (3, 0) else sys.maxint
+version = sys.version_info
+maxInt = sys.maxsize if version >= (3, 0) else sys.maxint
 decrement = True
 
 while decrement:
@@ -133,7 +134,10 @@ def create_data_table(csv_filename, types, header_lines):
     if have_pandas:
         skip = range(1, header_lines)
         d = pd.read_csv(csv_filename, skiprows=skip).to_dict()
-        d = {k: d[k].values() for k in d} # convert to dict of lists (as used by the python snippet)
+        
+        # convert to dict of lists (as used by the python snippet)
+        d = dict((k, d[k].values()) for k in d)
+        
         return d
     else:
         table = create_empty_table(csv_filename, types, header_lines)
@@ -255,11 +259,7 @@ def write_csv(csv_filename, table, write_types):
 
     csv_file.close()
 
-import platform
-
-# Check for the correct version
-version = platform.python_version()
-if float(version[:3]) < 2.7:
+if version < (2, 7):
     from ordereddict import OrderedDict
 else:
     from collections import OrderedDict
