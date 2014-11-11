@@ -16,7 +16,8 @@ except:
 # Taken from:
 # http://stackoverflow.com/questions/15063936/csv-error-field-larger-than-field-limit-131072
 import sys
-maxInt = sys.maxsize if sys.version_info >= (3, 0) else sys.maxint
+version = sys.version_info
+maxInt = sys.maxsize if version >= (3, 0) else sys.maxint
 decrement = True
 
 while decrement:
@@ -255,11 +256,7 @@ def write_csv(csv_filename, table, write_types):
 
     csv_file.close()
 
-import platform
-
-# Check for the correct version
-version = platform.python_version()
-if float(version[:3]) < 2.7:
+if version < (2, 7):
     try:
         from ordereddict import OrderedDict
     except:
