@@ -134,10 +134,7 @@ def create_data_table(csv_filename, types, header_lines):
     if have_pandas:
         skip = range(1, header_lines)
         d = pd.read_csv(csv_filename, skiprows=skip).to_dict()
-        
-        # convert to dict of lists (as used by the python snippet)
-        d = dict((k, d[k].values()) for k in d)
-        
+        d = OrderedDict(dict((k, list(d[k].values())) for k in d)) # convert to dict of lists (as used by the python snippet)
         return d
     else:
         table = create_empty_table(csv_filename, types, header_lines)
@@ -259,7 +256,12 @@ def write_csv(csv_filename, table, write_types):
 
     csv_file.close()
 
+
 if version < (2, 7):
-    from ordereddict import OrderedDict
+    try:
+        from ordereddict import OrderedDict
+    except:
+        sys.stderr.write("Module ordereddict not found. Please install it using 'pip install ordereddict'\n")
+        raise
 else:
     from collections import OrderedDict
