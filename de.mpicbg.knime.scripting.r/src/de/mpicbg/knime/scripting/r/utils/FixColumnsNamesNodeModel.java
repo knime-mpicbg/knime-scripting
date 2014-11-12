@@ -6,6 +6,7 @@ import de.mpicbg.knime.knutils.AttributeUtils;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.*;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -17,8 +18,6 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import java.util.ArrayList;
 import java.util.List;
-
-
 /**
  * This is the model implementation of RSnippet. Improved R Integration for Knime
  *
@@ -109,9 +108,14 @@ public class FixColumnsNamesNodeModel extends AbstractNodeModel {
 
     private String fixNameWithR(String originalName, RConnection connection) throws RserveException, REXPMismatchException {
     	
+    	// mask " in column names to avoid syntax errors with R
+    	originalName = StringEscapeUtils.escapeJava(originalName); //create an additional plugin dependency 
+    	//originalName = originalName.replace('"', '.');
+    	//originalName = originalName.replace('\', '.');
+    			
     	// connection should not be null, as it throws exception when creation fails
     	assert(connection != null);
-    	return connection.eval("make.unique(make.names('" + originalName + "'))").asStrings()[0];
+    	return connection.eval("make.unique(make.names(\"" + originalName + "\"))").asStrings()[0];
 
     }
 
