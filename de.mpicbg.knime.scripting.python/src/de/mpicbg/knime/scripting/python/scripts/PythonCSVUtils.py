@@ -133,7 +133,7 @@ def create_data_table(csv_filename, types, header_lines):
     # if pandas is available, use it!
     if have_pandas:
         skip = range(1, header_lines)
-        d = pd.read_csv(csv_filename, skiprows=skip).to_dict()
+        d = pd.read_csv(csv_filename, skiprows=skip, dtype=types, sep=',').to_dict()
         d = OrderedDict(dict((k, list(d[k].values())) for k in d)) # convert to dict of lists (as used by the python snippet)
         return d
     else:
