@@ -256,11 +256,12 @@ def write_csv(csv_filename, table, write_types):
 
     csv_file.close()
 
+
 if version < (2, 7):
     try:
         from ordereddict import OrderedDict
     except:
         sys.stderr.write("Module ordereddict not found. Please install it using 'pip install ordereddict'\n")
-        raise 
+        raise
 else:
     from collections import OrderedDict
