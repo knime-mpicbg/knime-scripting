@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Core library for KNIME-scripting integrations
 Bundle-SymbolicName: de.mpicbg.knime.scripting.core;singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.0.1.qualifier
 Bundle-ClassPath: scriptingcore.jar,
  lib/beansbinding-1.2.1.jar,
  lib/commons-collections-3.2.jar,
