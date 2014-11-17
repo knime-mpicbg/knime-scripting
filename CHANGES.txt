@@ -1,4 +1,21 @@
 ======================================================================================================
+2014-11-13
+VERSION		v2.0.1
+
+ISSUES
+
+scripting
+* Python, Matlab, Groovy: fix default links to templates
+* #36: Rgg fails to replace more than one domain placeholders
+
+python
+* #38: Python nodes fail with python 2.6 since pandas integration
+
+R
+* #37: Bug in Fix column names (columns with special characters like ' )
+
+
+======================================================================================================
 2014-09-30
 VERSION		v2.0.0
 
