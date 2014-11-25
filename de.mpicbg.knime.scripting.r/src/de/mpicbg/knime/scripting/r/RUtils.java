@@ -809,14 +809,13 @@ public class RUtils {
 	        String tempFileName = "rmPlotFile." + device;
 	
 	        String deviceArgs = device.equals("jpeg") ? "quality=97," : "";
-	        REXP xp = connection.parseAndEval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
+	        REXP xp = connection.eval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
 	
 	        if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
-	            System.err.println("Can't open " + device + " graphics device:\n" + xp.asString());
 	            // this is analogous to 'warnings', but for us it's sufficient to get just the 1st warning
 	            REXP w = connection.eval("if (exists('last.warning') && length(last.warning)>0) names(last.warning)[1] else 0");
 	            if (w.isString()) System.err.println(w.asString());
-	            return null;
+	            throw new KnimeScriptingException("Can't open " + device + " graphics device:\n" + xp.asString());
 	        }
 	
 	        // ok, so the device should be fine - let's plot - replace this by any plotting code you desire ...
@@ -833,20 +832,18 @@ public class RUtils {
 	        	evalScript(connection, preparedScript);     	
 	        }
 	
-	        /*try {
-				evalScript(connection, preparedScript);
-			} catch (KnimeScriptingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
-	//        connection.parseAndEval(preparedScript);
-	
 	        // close the image
-	        connection.parseAndEval("dev.off();");
+	        connection.eval("dev.off();");
+	        // check if the plot file has been written
+	        int xpInt = connection.eval("file.access('" + tempFileName + "',0)").asInteger();
+	        if(xpInt == -1) throw new KnimeScriptingException("Plot could not be created. Please check your script");
 	
-	        // There is no I/O API in REngine because it's actually more efficient to use R for this
 	        // we limit the file size to 1MB which should be sufficient and we delete the file as well
-	        xp = connection.parseAndEval("r=readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); r");
+	        xp = connection.eval("try({ binImage <- readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); binImage })");
+	        
+	        if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
+	            throw new KnimeScriptingException(xp.asString());
+	        }
 	
 	        // now this is pretty boring AWT stuff - create an image from the data and display it ...
 	        return Toolkit.getDefaultToolkit().createImage(xp.asBytes());
