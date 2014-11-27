@@ -46,7 +46,7 @@ public class PythonSnippetNodeFactory
         IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
         String templateResources = prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
 
-        return new PythonSnippetNodeDialog(PythonSnippetNodeModel.DEFAULT_SCRIPT, true, true);
+        return new PythonSnippetNodeDialog(PythonSnippetNodeModel.DEFAULT_SCRIPT, true);
     }
 }
 

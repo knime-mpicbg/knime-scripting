@@ -1,23 +1,9 @@
 package de.mpicbg.knime.scripting.core;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
+import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createSnippetProperty;
+import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createTemplateProperty;
 
-import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
-import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplateWizard;
-import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
-
-import org.apache.commons.lang.StringUtils;
-import org.knime.core.node.*;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +11,26 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel.*;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JTable;
+
+import org.apache.commons.lang.StringUtils;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
+import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplateWizard;
+import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
 
 
 /**
@@ -45,7 +50,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
 
     private String defaultScript;
-    private boolean hasOutput;
     private List<String> urlList;
 
     // the two main user interface elements: the template editor/configurator and the template repository browser
@@ -67,9 +71,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     /**
      * New pane for configuring ScriptedNode node dialog
      */
-    public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean hasOutput, boolean enableTemplateRepository) {
+    public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
         this.defaultScript = defaultScript;
-        this.hasOutput = hasOutput;
 
 
         // construct the panel for script loading/authoring
@@ -82,20 +85,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         // create the template repository browser tab (if enabled)
         if (enableTemplateRepository) {
 
-            // parse URLs and update the cache
-            /*TemplateCache templateCache = TemplateCache.getInstance();
-            List<URL> urlList = templateCache.parseConcatendatedURLs(templateResources);
-            List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
-            List<String> warnings = new ArrayList<String>();
-            for(URL filePath : urlList) {
-                try {
-                    templates.addAll(templateCache.getTemplateCache(filePath));
-                } catch (IOException e) { warnings.add(e.getMessage()); }
-            }
-            // show warning if files are empty or could not be read
-            if(!warnings.isEmpty()) {
-                logger.warn(warnings);
-            }     */
             updateUrlList(getTemplatesFromPreferences());
             List<ScriptTemplate> templates = updateTemplates();
 
@@ -103,11 +92,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             templateWizard = new ScriptTemplateWizard(this, templates);
             templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
             this.addTabAt(1, "Templates", templateWizard);
-        }
-
-
-        if (hasOutput) {
-            addTab("Script Output", createOutputModelPanel());
         }
 
         removeTab("Options");
@@ -137,73 +121,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     protected boolean isReconfigurable() {
         return true;
     }
-
-
-    private JPanel createOutputModelPanel() {
-        // construct the output column selection panel
-        JPanel outputPanel = new JPanel();
-        outputPanel.setLayout(new BoxLayout(outputPanel, BoxLayout.Y_AXIS));
-        JPanel outputButtonPanel = new JPanel();
-        JPanel outputMainPanel = new JPanel(new BorderLayout());
-        JPanel newtableCBPanel = new JPanel();
-        m_appendColsCB = new JCheckBox("Append columns to input table");
-        newtableCBPanel.add(m_appendColsCB, BorderLayout.WEST);
-        JButton addButton = new JButton(new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                ((ScriptNodeOutputColumnsTableModel) table.getModel()).addRow("script output " + outTableDefCounter,
-                        "String");
-                outTableDefCounter++;
-            }
-        });
-        addButton.setText("Add Output Column");
-
-        JButton removeButton = new JButton(new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                int[] selectedRows = table.getSelectedRows();
-
-                if (selectedRows.length == 0) {
-                    return;
-                }
-
-                for (int i = selectedRows.length - 1; i >= 0; i--) {
-                    ((ScriptNodeOutputColumnsTableModel) table.getModel()).removeRow(selectedRows[i]);
-                }
-            }
-        });
-        removeButton.setText("Remove Output Column");
-
-        outputButtonPanel.add(addButton);
-        outputButtonPanel.add(removeButton);
-
-        table = new JTable();
-        table.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-
-        table.setAutoscrolls(true);
-        ScriptNodeOutputColumnsTableModel model = new ScriptNodeOutputColumnsTableModel();
-        model.addColumn("Column name");
-        model.addColumn("Column type");
-        model.addRow("script output " + outTableDefCounter, "String");
-        outTableDefCounter++;
-        table.setModel(model);
-
-        outputMainPanel.add(table.getTableHeader(), BorderLayout.PAGE_START);
-        outputMainPanel.add(table, BorderLayout.CENTER);
-        outputMainPanel.add(m_appendColsCB, BorderLayout.SOUTH);
-//        outputPanel.add(newtableCBPanel);
-        outputPanel.add(outputButtonPanel);
-        outputPanel.add(outputMainPanel);
-
-        TableColumn typeColumn = table.getColumnModel().getColumn(1);
-        JComboBox typeSelector = new JComboBox();
-        typeSelector.addItem("String");
-        typeSelector.addItem("Integer");
-        typeSelector.addItem("Double");
-        typeColumn.setCellEditor(new DefaultCellEditor(typeSelector));
-        return outputPanel;
-    }
-
 
     @Override
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
@@ -253,14 +170,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         scriptProvider.setContent(script, finalTemplate);
-        // scriptEditor.resetEditorHistory();
-//            }
-//        });
 
-
-        if (hasOutput) {
-            loadOutputModel(settings);
-        }
     }
 
 
@@ -285,29 +195,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         return (ScriptTemplate) new XStream(new DomDriver()).fromXML(serializedTemplate);
     }
-
-
-    private void loadOutputModel(NodeSettingsRO settings) {
-        boolean appendCols = settings.getBoolean(APPEND_COLS, true);
-        m_appendColsCB.setSelected(appendCols);
-
-        String[] dataTableColumnNames =
-                settings.getStringArray(COLUMN_NAMES, new String[0]);
-        String[] dataTableColumnTypes =
-                settings.getStringArray(COLUMN_TYPES, new String[0]);
-
-        ((ScriptNodeOutputColumnsTableModel) table.getModel()).clearRows();
-
-        if (dataTableColumnNames == null) {
-            return;
-        }
-
-        for (int i = 0; i < dataTableColumnNames.length; i++) {
-            ((ScriptNodeOutputColumnsTableModel) table.getModel()).addRow(dataTableColumnNames[i],
-                    dataTableColumnTypes[i]);
-        }
-    }
-
 
     /**
      * {@inheritDoc}
@@ -342,34 +229,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         templateProperty.saveSettingsTo(settings);
-
-        if (hasOutput) {
-            saveOutputModel(settings);
-        }
     }
-
-
-    private void saveOutputModel(NodeSettingsWO settings) {
-        // work around a jtable cell value persistence problem
-        // by explicitly stopping editing if a cell is currently in edit mode
-        int editingRow = table.getEditingRow();
-        int editingColumn = table.getEditingColumn();
-
-        if (editingRow != -1 && editingColumn != -1) {
-            TableCellEditor editor = table.getCellEditor(editingRow, editingColumn);
-            editor.stopCellEditing();
-        }
-
-        settings.addBoolean(APPEND_COLS, m_appendColsCB.isSelected());
-        String[] columnNames =
-                ((ScriptNodeOutputColumnsTableModel) table.getModel()).getDataTableColumnNames();
-        settings.addStringArray(COLUMN_NAMES, columnNames);
-
-        String[] columnTypes =
-                ((ScriptNodeOutputColumnsTableModel) table.getModel()).getDataTableColumnTypes();
-        settings.addStringArray(COLUMN_TYPES, columnTypes);
-    }
-
 
     public void selectScriptTab() {
         selectTab(SCRIPT_TAB_NAME);

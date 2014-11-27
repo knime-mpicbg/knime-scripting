@@ -17,8 +17,8 @@ import java.util.Arrays;
  */
 public class RPlotNodeDialog extends ScriptingNodeDialog {
 
-    public RPlotNodeDialog(String defaultScript, boolean hasOutput, boolean useTemplateRepository) {
-        super(defaultScript, new RColNameReformater(), hasOutput, useTemplateRepository);
+    public RPlotNodeDialog(String defaultScript, boolean useTemplateRepository) {
+        super(defaultScript, new RColNameReformater(), useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentStringSelection(AbstractRPlotNodeFactory.createPropOutputType(), "File Type", Arrays.asList("png", "jpeg")));

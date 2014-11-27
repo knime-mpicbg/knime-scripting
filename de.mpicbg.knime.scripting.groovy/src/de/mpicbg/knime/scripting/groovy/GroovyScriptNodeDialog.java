@@ -10,8 +10,8 @@ import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializ
  * Time: 2:22 PM
  */
 public class GroovyScriptNodeDialog extends ScriptingNodeDialog {
-    public GroovyScriptNodeDialog(String defaultScript, boolean hasOutput, boolean useTemplateRepository) {
-        super(defaultScript, new GroovyColReformatter(), hasOutput, useTemplateRepository);
+    public GroovyScriptNodeDialog(String defaultScript, boolean useTemplateRepository) {
+        super(defaultScript, new GroovyColReformatter(), useTemplateRepository);
     }
 
     @Override

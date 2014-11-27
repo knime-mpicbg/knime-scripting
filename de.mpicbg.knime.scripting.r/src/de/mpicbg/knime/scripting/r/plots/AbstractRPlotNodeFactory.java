@@ -37,15 +37,9 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
     @Override
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_PLOT_TEMPLATES);
-        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), false, enableTemplateRepository());
+        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), true);
         //return new RPlotNodeDialog(templateResources, AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
     }
-
-
-    protected boolean enableTemplateRepository() {
-        return true;
-    }
-
 
     public static SettingsModelInteger createPropFigureWidth() {
         return new SettingsModelIntegerBounded("figure.width", 1000, 100, 5000);

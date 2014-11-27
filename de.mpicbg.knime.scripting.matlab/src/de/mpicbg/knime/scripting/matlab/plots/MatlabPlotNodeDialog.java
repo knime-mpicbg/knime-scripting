@@ -20,7 +20,7 @@ import javax.swing.*;
 public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
 
     public MatlabPlotNodeDialog(String templateResources, String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new MatlabColReformatter(), false, useTemplateRepository);
+        super(defaultScript, new MatlabColReformatter(), useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentNumber(MatlabPlotNodeFactory.createPropFigureWidth(), "Width", 10));

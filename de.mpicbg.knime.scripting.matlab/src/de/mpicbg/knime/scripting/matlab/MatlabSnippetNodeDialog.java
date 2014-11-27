@@ -10,8 +10,8 @@ import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
  * Time: 2:03 PM
  */
 public class MatlabSnippetNodeDialog extends ScriptingNodeDialog {
-    public MatlabSnippetNodeDialog(String defaultScript, boolean hasOutput, boolean useTemplateRepository) {
-        super(defaultScript, new MatlabColReformatter(), hasOutput, useTemplateRepository);
+    public MatlabSnippetNodeDialog(String defaultScript, boolean useTemplateRepository) {
+        super(defaultScript, new MatlabColReformatter(), useTemplateRepository);
     }
 
     @Override
