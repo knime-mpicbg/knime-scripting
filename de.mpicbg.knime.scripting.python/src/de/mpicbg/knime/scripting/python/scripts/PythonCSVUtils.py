@@ -111,7 +111,10 @@ def get_column_types(csv_filename):
             for item in types:
                 itemType = row[index]
                 if itemType == "INT":
-                    type = IntType
+                	if have_pandas:
+                		type = FloatType
+                	else:
+                		type = IntType
                 elif itemType == "FLOAT":
                     type = FloatType
                 else:
