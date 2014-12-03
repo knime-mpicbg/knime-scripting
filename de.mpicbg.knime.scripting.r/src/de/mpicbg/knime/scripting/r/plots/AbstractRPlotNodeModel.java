@@ -89,12 +89,17 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         // the plot should be written to file
         if (!fileName.isEmpty()) {
         	File imageFile = new File(fileName);
-        	if(!imageFile.exists())
-        		throw new KnimeScriptingException("File '" + fileName + "' cannot be created. Please check the output path!");
-            if (!propOverwriteFile.getBooleanValue() && new File(fileName).exists()) {
-                throw new KnimeScriptingException("Overwrite file is disabled but image file '" + fileName + "' already exsists.");
-            }
-
+        	// check if the file already exists but should not be overwritten
+        	if(imageFile.exists()) {
+        		if(!propOverwriteFile.getBooleanValue())
+        			throw new KnimeScriptingException("Overwrite file is disabled but image file '" + fileName + "' already exsists.");
+        	} else {
+        		try {
+        			imageFile.createNewFile();
+        		} catch(IOException e) {
+        			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path!\n" + e.getMessage());
+        		}
+        	}       
             ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", imageFile);
         }
     }
