@@ -85,10 +85,13 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         String script = prepareScript();
         image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
 
-        // no need to save image to file
+        // no need to save image to file ?
         if(!propEnableFile.getBooleanValue()) return;
+        String fileName = propOutputFile.getStringValue();
+        if(fileName == null) return;
+        if(fileName.length() == 0) return;
 
-        String fileName = prepareOutputFileName();
+        fileName = prepareOutputFileName(fileName);
         
         // the plot should be written to file
         if (!fileName.isEmpty()) {
@@ -109,9 +112,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
     }
 
 
-    private String prepareOutputFileName() {
-        String fileName = propOutputFile.getStringValue();
-
+    private String prepareOutputFileName(String fileName) {
         // process flow-variables
         fileName = FlowVarUtils.replaceFlowVars(fileName, this);
 
