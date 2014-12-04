@@ -42,6 +42,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
     protected SettingsModelInteger propWidth = RPlotNodeFactory.createPropFigureWidth();
     protected SettingsModelInteger propHeight = RPlotNodeFactory.createPropFigureHeight();
     protected SettingsModelString propOutputFile = RPlotNodeFactory.createPropOutputFile();
+    protected SettingsModelBoolean propEnableFile = RPlotNodeFactory.createEnableFile();
     protected SettingsModelBoolean propOverwriteFile = RPlotNodeFactory.createOverwriteFile();
     private SettingsModelString propOutputType = RPlotNodeFactory.createPropOutputType();
 
@@ -65,6 +66,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         addSetting(propHeight);
 
         addSetting(propOutputFile);
+        addSetting(propEnableFile);
         addSetting(propOverwriteFile);
         addSetting(propOutputType);
     }
@@ -83,6 +85,8 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         String script = prepareScript();
         image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
 
+        // no need to save image to file
+        if(!propEnableFile.getBooleanValue()) return;
 
         String fileName = prepareOutputFileName();
         
@@ -97,7 +101,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         		try {
         			imageFile.createNewFile();
         		} catch(IOException e) {
-        			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path!\n" + e.getMessage());
+        			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path! (" + e.getMessage() + ")");
         		}
         	}       
             ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", imageFile);
@@ -243,16 +247,4 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
             image = ((ImageIcon) obj_in.readObject()).getImage();
         }
     }
-//
-//
-//    public static void main(String[] args) {
-//        Date date = new Date(System.currentTimeMillis());
-//
-//        Calendar c = Calendar.getInstance();
-//
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
-//        System.err.println("heute" +));
-//
-//    }
-
 }
