@@ -1,12 +1,18 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
+import java.io.File;
 
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.rosuda.REngine.Rserve.RConnection;
 
-import java.io.File;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
+import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.r.RUtils;
 
 
 /**
@@ -15,22 +21,50 @@ import java.io.File;
  *
  * @author Holger Brandl (MPI-CBG)
  */
-public class GenericOpenInRNodeModel extends GenericRSnippet {
+public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
 
+	/* (non-Javadoc)
+	 * @see de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel#hasOutput()
+	 */
+	@Override
+	protected boolean hasOutput() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+    @Override
+	/* (non-Javadoc)
+	 * @see org.knime.core.node.NodeModel.configure(final PortObjectSpec[] inSpecs)
+	 */
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new PortObjectSpec[0];
+    }
 
-    protected GenericOpenInRNodeModel() {
+	protected GenericOpenInRNodeModel() {
         super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0]);
     }
 
-
     @Override
     protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-        PortObject[] portObjects = super.execute(inData, exec);
+    	
+    	//create connection to server
+    	logger.info("Creating R-connection");
+        RConnection connection = RUtils.createConnection();
 
-        File workSpaceFile = ((RPortObject) portObjects[0]).getFile();
-
+        // push incoming data to R server
+        logger.info("Pushing inputs to R...");
+        RUtils.pushToR(inData, connection, exec);
+        
+        // save workspace file and return it to local machine
+        File rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_INVAR_BASE_NAME);
+        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_INVAR_BASE_NAME);
+        
+        // close connection to server
+        connection.close();
+        
+        // open R with workspace file
         logger.info("Spawning R-instance ...");
-        OpenInRNodeModel.openWSFileInR(workSpaceFile, prepareScript());
+        OpenInRNodeModel.openWSFileInR(rWorkspaceFile, prepareScript());
 
         return new PortObject[0];
     }
