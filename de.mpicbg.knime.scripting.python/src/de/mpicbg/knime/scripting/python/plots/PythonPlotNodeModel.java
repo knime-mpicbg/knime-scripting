@@ -143,7 +143,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 
         // Add plot-specific commands
         PythonTempFile imageFile = new PythonTempFile(python, "pyplot", ".png");
-        writer.write("\nsavefig('" + imageFile.getServerPath() + "')\n");
+        writer.write("\nsavefig(r'" + imageFile.getServerPath() + "')\n");
         writer.close();
 
         // Copy the script file to the server
