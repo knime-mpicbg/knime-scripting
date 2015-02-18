@@ -24,23 +24,40 @@
  */
 package de.mpicbg.knime.scripting.r.generic;
 
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
-import de.mpicbg.knime.scripting.r.RUtils;
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.zip.ZipEntry;
 
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
+
+import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.*;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
+import org.knime.core.node.port.PortType;
 import org.knime.core.util.FileUtil;
 import org.rosuda.REngine.Rserve.RConnection;
-import org.rosuda.REngine.Rserve.RserveException;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.util.Collections;
-import java.util.zip.ZipEntry;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.r.RUtils;
 
 
 /**
@@ -143,12 +160,14 @@ public class RPortObject implements PortObject {
      */
     public JComponent[] getViews() {
         JPanel panel = new JPanel(new BorderLayout());
-        JEditorPane jep = new JEditorPane();
+        JTextArea jep = new JTextArea();
+        // prevent autoscrolling
+        DefaultCaret caret = (DefaultCaret)jep.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
         jep.setEditable(false);
         
         panel.setName("R Port View");
 
-        
         RConnection connection;
 		try {
 			connection = RUtils.createConnection();
@@ -162,21 +181,29 @@ public class RPortObject implements PortObject {
 
         try {
             RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_OUTVAR_BASE_NAME, new File(getFilePath())), connection);
-
-            connection.voidEval("sumR<-summary(R)");
-
-            connection.voidEval("sink('summary.txt')");
-            connection.voidEval("print(sumR)");
-            connection.voidEval("sink()");
-
-            String summary = connection.eval("readChar(file('summary.txt', 'r'), 100000)").asString();
+                        
+            // to get structure information about the output object, one needs to use capture the output
+            // str(...) does not provide any return value
+            connection.voidEval("tempfile <- tempfile(pattern = 'structure_', fileext = '.txt')");
+            List<String> objects = Arrays.asList(connection.eval("ls()").asStrings());
+            for(String obj : objects) {
+            	// exclude files which where created temporary TODO: it is too dependent on how temporary file variables are named... other solution?
+            	if(!(obj.equals("tempfile") || obj.equals("tmpwfile")))
+            		connection.voidEval("capture.output(print(\"" + obj + "\"), str(" + obj + "), file = tempfile, append = TRUE)");
+            }         
+            
+            String[] structure = connection.eval("readLines(tempfile)").asStrings();
+            connection.voidEval("unlink(tempfile)");
+              
+            String summary = StringUtils.join(structure, '\n');
+            
             jep.setText(summary);
 
         } catch (Throwable e) {
-            jep.setText("Could not apply 'summary' to port object saved in R model file:\n" + getFilePath());
+            jep.setText("Failed to retrieve the structure of R objects from port file " + getFilePath());
         }
-
-//        jep.setText("R model file:\n" + getFilePath());
+        
+        connection.close();
 
         panel.add(new JScrollPane(jep));
         return new JComponent[]{panel};

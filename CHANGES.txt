@@ -1,4 +1,27 @@
 ======================================================================================================
+2015-02-18
+VERSION		v2.0.2
+
+ISSUES
+
+scripting
+* closes #49: remove output tab from snippet node (main changes in AbstractTableScriptingNodeModel)
+
+Python
+* part of #55: integer columns are transfered as float to allow missing values
+* some changes for better NaN/missing value handling with python snippet node (not yet finished)
+* fixes #56: Python plot fails under windows
+
+R
+* fixes #53: check if plot was generated and give error message
+* fixes #50: fix R port of generic nodes, return structure of objects transfered via RPort
+* fixes #7: RPlot - Null Pointer Exception if plot node contains a nonvalid output path
+* closes #10: Plot Overwrite - Warning instead of Error
+* fixes #5: Generic OpenInR - pushes rOut instead of kIn
+* R-scripting - improve error message if plot file path is invalid (was: reporting Null-Pointer exception)
+* enables R-nodes to push row-names for table inputs
+
+======================================================================================================
 2014-11-13
 VERSION		v2.0.1
 

@@ -45,7 +45,7 @@ public class GenericRSnippetFactory
     @Override
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, false, true);
+        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, true);
     }
 
 }

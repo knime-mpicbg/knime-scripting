@@ -20,7 +20,7 @@ import javax.swing.*;
 public class PythonPlotNodeDialog extends ScriptingNodeDialog {
 
     public PythonPlotNodeDialog(String templateResources, String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new PythonColReformatter(), false, useTemplateRepository);
+        super(defaultScript, new PythonColReformatter(), useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentNumber(PythonPlotNodeFactory.createPropFigureWidth(), "Width", 10));

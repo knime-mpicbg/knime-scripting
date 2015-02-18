@@ -1,5 +1,6 @@
 import csv
 import array
+import math
 from types import *
 
 # test if pandas is available
@@ -111,7 +112,10 @@ def get_column_types(csv_filename):
             for item in types:
                 itemType = row[index]
                 if itemType == "INT":
-                    type = IntType
+                	if have_pandas:
+                		type = FloatType
+                	else:
+                		type = IntType
                 elif itemType == "FLOAT":
                     type = FloatType
                 else:
@@ -133,7 +137,7 @@ def create_data_table(csv_filename, types, header_lines):
     # if pandas is available, use it!
     if have_pandas:
         skip = range(1, header_lines)
-        d = pd.read_csv(csv_filename, skiprows=skip, dtype=types, sep=',').to_dict()
+        d = pd.read_csv(csv_filename, skiprows=skip, dtype=types, sep=',', keep_default_na=False, na_values=['']).to_dict()
         d = OrderedDict(dict((k, list(d[k].values())) for k in d)) # convert to dict of lists (as used by the python snippet)
         return d
     else:
@@ -247,10 +251,16 @@ def write_csv(csv_filename, table, write_types):
         for item in table:
             column = table[item]
             value = column[current]
-            if value is not None:
-                row.append(value)
-            else:
-                row.append("")
+            try:
+                if math.isnan(value):
+                    row.append(float('NaN'))
+                else:
+                    row.append(value)
+            except TypeError:
+                if value is not None:
+                    row.append(value)
+                else:
+                    row.append("")
 
         csv_writer.writerow(row)
 

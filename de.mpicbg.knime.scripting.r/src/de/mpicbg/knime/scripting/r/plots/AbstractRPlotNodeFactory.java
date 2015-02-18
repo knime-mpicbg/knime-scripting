@@ -36,16 +36,8 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_PLOT_TEMPLATES);
-        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), false, enableTemplateRepository());
-        //return new RPlotNodeDialog(templateResources, AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
+        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), true);
     }
-
-
-    protected boolean enableTemplateRepository() {
-        return true;
-    }
-
 
     public static SettingsModelInteger createPropFigureWidth() {
         return new SettingsModelIntegerBounded("figure.width", 1000, 100, 5000);
@@ -63,15 +55,15 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
 
     public static SettingsModelString createPropOutputFile() {
-        return new SettingsModelString("figure.output.file", "") {
-            @Override
-            protected void validateSettingsForModel(NodeSettingsRO settings) throws InvalidSettingsException {
-//                super.validateSettingsForModel(settings);
-            }
-        };
+        return new SettingsModelString("figure.output.file", "");
     }
 
     public static SettingsModelString createPropOutputType() {
         return new SettingsModelString("figure.ouput.type", "png");
     }
+
+
+	public static SettingsModelBoolean createEnableFile() {
+		return new SettingsModelBoolean("write.output.file", true);
+	}
 }

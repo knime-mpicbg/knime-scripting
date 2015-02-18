@@ -18,18 +18,26 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  *
  */
 public class PythonTableConverter {
     public static BufferedDataTable convertCSVToTable(ExecutionContext exec, File pyOutFile, NodeLogger logger) throws RuntimeException {
         try {
-            CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\"');
+        	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
+            CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\0');
 
-            int errCounter = 0;
             String[] columnNames = reader.readNext();
             String[] columnTypes = reader.readNext();
+            
+            assert(columnNames.length == columnTypes.length);
+            
+            // remove quote character from beginning and end
+            char quoteChar = columnNames[0].charAt(0);
+            for(int i = 0; i < columnNames.length; i++) {
+            	columnNames[i] = removeQuotes(columnNames[i]);
+            	columnTypes[i] = removeQuotes(columnTypes[i]);
+            }
 
             // Create data rows
             DataColumnSpec[] colSpecs = new DataColumnSpec[columnTypes.length];
@@ -53,16 +61,27 @@ public class PythonTableConverter {
 
                 for (int i = 0; i < columnTypes.length; i++) {
                     DataColumnSpec colSpec = colSpecs[i];
-
-                    // Create the cell based on the column type
-                    try {
-                        if (colSpec.getType().isCompatible(IntValue.class)) {
-                            cells[i] = new IntCell(Integer.parseInt(line[i]));
-                        } else if (colSpec.getType().isCompatible(DoubleValue.class))
-                            cells[i] = new DoubleCell(Double.parseDouble(line[i]));
-                        else cells[i] = new StringCell(line[i]);
-                    } catch (NumberFormatException e) {
-                        cells[i] = DataType.getMissingCell();
+                    String value = line[i];
+                    
+                    //if the value starts with ", it's a string
+                    if(value.charAt(0) == quoteChar) {
+                    	cells[i] = new StringCell(removeQuotes(value));
+                    } else {
+                    	// Create the cell based on the column type
+                        try {
+                            if (colSpec.getType().isCompatible(IntValue.class)) {
+                                cells[i] = new IntCell(Integer.parseInt(value));
+                            } else if (colSpec.getType().isCompatible(DoubleValue.class))
+                                cells[i] = new DoubleCell(Double.parseDouble(value));
+                            else {
+                            	// it should be a string but did not start with quotechar, so it's missing?
+                            	if(value.equals("nan"))
+                            		cells[i] = DataType.getMissingCell();
+                            	else throw new RuntimeException("unsupported string found in CSV:" + value + "\n" + pyOutFile.getAbsolutePath());
+                            }
+                        } catch (NumberFormatException e) {
+                            cells[i] = DataType.getMissingCell();
+                        }
                     }
                 }
 
@@ -79,7 +98,13 @@ public class PythonTableConverter {
         }
     }
 
-    private static List<String> getColumnNames(DataTableSpec tableSpec) {
+    private static String removeQuotes(String string) {
+    	if(string == null) return null;
+    	if(string.length() < 2) return null;
+    	return string.substring(1, string.length()-1);
+	}
+
+	private static List<String> getColumnNames(DataTableSpec tableSpec) {
         List<String> colNames = new ArrayList<String>();
         for (DataColumnSpec colSpec : tableSpec) {
             colNames.add(colSpec.getName());
