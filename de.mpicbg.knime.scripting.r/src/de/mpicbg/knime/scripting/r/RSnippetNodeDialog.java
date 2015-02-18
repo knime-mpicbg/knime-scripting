@@ -24,8 +24,8 @@ public class RSnippetNodeDialog extends ScriptingNodeDialog {
      * @param hasOutput
      * @param useTemplateRepository
      */
-    public RSnippetNodeDialog(String defaultScript, boolean hasOutput, boolean useTemplateRepository) {
-        super(defaultScript, new RColNameReformater(), hasOutput, useTemplateRepository);
+    public RSnippetNodeDialog(String defaultScript, boolean useTemplateRepository) {
+        super(defaultScript, new RColNameReformater(), useTemplateRepository);
     }
 
     @Override

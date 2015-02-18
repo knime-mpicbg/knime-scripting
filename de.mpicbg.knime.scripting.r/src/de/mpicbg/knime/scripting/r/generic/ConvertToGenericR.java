@@ -49,7 +49,7 @@ public class ConvertToGenericR extends AbstractNodeModel {
             rWorkspaceFile = File.createTempFile("genericR", "R");  //Note: this r is just a filename suffix
         }
 
-        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_INVAR_BASE_NAME);
+        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
 
         connection.close();
 

@@ -35,11 +35,7 @@ public abstract class AbstractRSnippetNodeFactory extends NodeFactory<RSnippetNo
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, true, enableTemplateRepository());
+        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, true);
     }
 
-
-    protected boolean enableTemplateRepository() {
-        return true;
-    }
 }

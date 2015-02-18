@@ -14,8 +14,8 @@ public class PythonSnippetNodeDialog extends ScriptingNodeDialog {
     /**
      * New pane for configuring ScriptedNode node dialog
      */
-    public PythonSnippetNodeDialog(String defaultScript, boolean hasOutput, boolean enableTemplateRepository) {
-        super(defaultScript, new PythonColReformatter(), hasOutput, enableTemplateRepository);
+    public PythonSnippetNodeDialog(String defaultScript, boolean enableTemplateRepository) {
+        super(defaultScript, new PythonColReformatter(), enableTemplateRepository);
     }
 
     @Override

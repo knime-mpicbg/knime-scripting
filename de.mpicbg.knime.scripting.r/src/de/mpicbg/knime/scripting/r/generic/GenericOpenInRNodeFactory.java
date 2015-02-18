@@ -57,7 +57,7 @@ public class GenericOpenInRNodeFactory extends NodeFactory<GenericOpenInRNodeMod
     @Override
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_OPENINR_TEMPLATES);
-        return new RSnippetNodeDialog("", false, true);
+        return new RSnippetNodeDialog("", true);
     }
 
 }

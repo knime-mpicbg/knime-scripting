@@ -56,7 +56,7 @@ public class GroovyScript01NodeFactory extends NodeFactory {
      */
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = GroovyScriptingBundleActivator.getDefault().getPreferenceStore().getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES);
-        return new GroovyScriptNodeDialog(GroovyScriptNodeModel.DEFAULT_SCRIPT, true, true);
+        return new GroovyScriptNodeDialog(GroovyScriptNodeModel.DEFAULT_SCRIPT, true);
     }
 
 }

@@ -42,6 +42,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
     protected SettingsModelInteger propWidth = RPlotNodeFactory.createPropFigureWidth();
     protected SettingsModelInteger propHeight = RPlotNodeFactory.createPropFigureHeight();
     protected SettingsModelString propOutputFile = RPlotNodeFactory.createPropOutputFile();
+    protected SettingsModelBoolean propEnableFile = RPlotNodeFactory.createEnableFile();
     protected SettingsModelBoolean propOverwriteFile = RPlotNodeFactory.createOverwriteFile();
     private SettingsModelString propOutputType = RPlotNodeFactory.createPropOutputType();
 
@@ -65,6 +66,7 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         addSetting(propHeight);
 
         addSetting(propOutputFile);
+        addSetting(propEnableFile);
         addSetting(propOverwriteFile);
         addSetting(propOutputType);
     }
@@ -83,22 +85,38 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
         String script = prepareScript();
         image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
 
+        // no need to save image to file ?
+        if(!propEnableFile.getBooleanValue()) return;
+        String fileName = propOutputFile.getStringValue();
+        if(fileName == null) return;
+        if(fileName.length() == 0) return;
 
-        String fileName = prepareOutputFileName();
-
+        fileName = prepareOutputFileName(fileName);
+        
+        // the plot should be written to file
         if (!fileName.isEmpty()) {
-            if (!propOverwriteFile.getBooleanValue() && new File(fileName).exists()) {
-                throw new RuntimeException("Overwrite file is disabled but image file '" + fileName + "' already exsists");
-            }
+        	File imageFile = new File(fileName);
+        	// check if the file already exists but should not be overwritten
+        	if(imageFile.exists()) {
+        		if(!propOverwriteFile.getBooleanValue())
+        			throw new KnimeScriptingException("Overwrite file is disabled but image file '" + fileName + "' already exsists.");
+        	} else {
+        		try {
+        			imageFile.createNewFile();
+        		} catch(IOException e) {
+        			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path! (" + e.getMessage() + ")");
+        		}
+        	}
 
-            ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", new File(fileName));
+            FileOutputStream fsOut = new FileOutputStream(new File(fileName));
+            ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", fsOut);
+            fsOut.close();
+
         }
     }
 
 
-    private String prepareOutputFileName() {
-        String fileName = propOutputFile.getStringValue();
-
+    private String prepareOutputFileName(String fileName) {
         // process flow-variables
         fileName = FlowVarUtils.replaceFlowVars(fileName, this);
 
@@ -234,16 +252,4 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
             image = ((ImageIcon) obj_in.readObject()).getImage();
         }
     }
-//
-//
-//    public static void main(String[] args) {
-//        Date date = new Date(System.currentTimeMillis());
-//
-//        Calendar c = Calendar.getInstance();
-//
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
-//        System.err.println("heute" +));
-//
-//    }
-
 }

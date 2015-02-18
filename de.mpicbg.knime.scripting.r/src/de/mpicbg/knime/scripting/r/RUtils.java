@@ -1,11 +1,34 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.knutils.AttributeUtils;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.generic.RPortObject;
-import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
-import org.knime.core.data.*;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -15,17 +38,24 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
-import org.rosuda.REngine.*;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPDouble;
+import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPInteger;
+import org.rosuda.REngine.REXPList;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPString;
+import org.rosuda.REngine.REXPVector;
+import org.rosuda.REngine.REngineException;
+import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.io.*;
-import java.nio.channels.FileChannel;
-import java.util.*;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.generic.RPortObject;
+import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -59,31 +89,24 @@ public class RUtils {
     
 
 
-    public static RList convert2RList(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
-//        long timeBefore = System.currentTimeMillis();
-
+    public static REXP convert2DataFrame(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
 
         DataTableSpec tableSpecs = bufTable.getDataTableSpec();
-        List<String> includeColumns = AttributeUtils.toStringList(AttributeUtils.convert(tableSpecs));
-
-        // not necessary to check
-        //validateColumnNames(exec, bufTable);
 
         List<Object> columArrays = new ArrayList<Object>();
         Map<Integer, DataType> converters = new TreeMap<Integer, DataType>();
 
         int numRows = bufTable.getRowCount();
+        
+        // array to store row names
+        String[] rowKeys = new String[numRows];
 
         // 1) initialize the arrays
         for (int i = 0; i < tableSpecs.getNumColumns(); i++) {
 
             DataColumnSpec colSpec = tableSpecs.getColumnSpec(i);
             DataType colType = colSpec.getType();
-
-            if (!includeColumns.contains(colSpec.getName())) {
-                continue;
-            }
-
+            
             converters.put(i, colType);
 
             if (colType.equals(DoubleCell.TYPE)) {
@@ -98,16 +121,16 @@ public class RUtils {
             } else {
                 throw new RuntimeException("value type of attribute '" + colSpec.getName() + "' not supported");
             }
+
         }
-
-//        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 1: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
-     
-
 
         // 2) Perform the actual table conversion: loop ONCE (for performance reasons) over the table and populate the vectors for R
         int rowCounter = 0;
         for (DataRow dataRow : bufTable) {
             exec.checkCanceled();
+            
+            // save row name to array
+            rowKeys[rowCounter] = dataRow.getKey().getString();
 
             for (Integer colIndex : converters.keySet()) {
                 DataType colType = converters.get(colIndex);
@@ -199,9 +222,36 @@ public class RUtils {
         }
 
 //        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 3: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
+        REXP df = createDataFrame(rList, rowKeys);
 
+        return df;
+    }
 
-        return rList;
+    /**
+     * create a data frame (as REXP) with given row names, data frame can be empty
+     * @param l list with content to build the dataframe
+     * @param rowNames	array containing rownames
+     * @return 
+     * @throws REXPMismatchException
+     */
+	public static REXP createDataFrame(RList l, String[] rowNames) throws REXPMismatchException {
+    	if (l == null) throw new NullPointerException("data frame (cannot be null)");
+    	if (!(l.at(0) instanceof REXPVector)) throw new REXPMismatchException(new REXPList(l), "data frame (contents must be vectors)");
+    	return
+    			new REXPGenericVector(l,
+    					new REXPList(
+    							new RList(
+    									new REXP[] {
+    											new REXPString("data.frame"),
+    											new REXPString(l.keys()),
+    											//new int[] { REXPInteger.NA, -fe.length() }
+    											new REXPString(rowNames)
+    									},
+    									new String[] {
+    											"class",
+    											"names",
+    											"row.names"
+    									})));
     }
 
 
@@ -604,9 +654,9 @@ public class RUtils {
                 throw new RuntimeException("null tables are not allowed in the table input mapping");
             }
 
-            RList inputAsRList = convert2RList(exec, input);
+            REXP inputAsDF = convert2DataFrame(exec, input);
 
-            pushTable.put(varName, REXP.createDataFrame(inputAsRList));
+            pushTable.put(varName, inputAsDF);
         }
 
         // assign REXP-dataframe to their R-variable name
@@ -809,14 +859,13 @@ public class RUtils {
 	        String tempFileName = "rmPlotFile." + device;
 	
 	        String deviceArgs = device.equals("jpeg") ? "quality=97," : "";
-	        REXP xp = connection.parseAndEval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
+	        REXP xp = connection.eval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
 	
 	        if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
-	            System.err.println("Can't open " + device + " graphics device:\n" + xp.asString());
 	            // this is analogous to 'warnings', but for us it's sufficient to get just the 1st warning
 	            REXP w = connection.eval("if (exists('last.warning') && length(last.warning)>0) names(last.warning)[1] else 0");
 	            if (w.isString()) System.err.println(w.asString());
-	            return null;
+	            throw new KnimeScriptingException("Can't open " + device + " graphics device:\n" + xp.asString());
 	        }
 	
 	        // ok, so the device should be fine - let's plot - replace this by any plotting code you desire ...
@@ -833,20 +882,18 @@ public class RUtils {
 	        	evalScript(connection, preparedScript);     	
 	        }
 	
-	        /*try {
-				evalScript(connection, preparedScript);
-			} catch (KnimeScriptingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
-	//        connection.parseAndEval(preparedScript);
-	
 	        // close the image
-	        connection.parseAndEval("dev.off();");
+	        connection.eval("dev.off();");
+	        // check if the plot file has been written
+	        int xpInt = connection.eval("file.access('" + tempFileName + "',0)").asInteger();
+	        if(xpInt == -1) throw new KnimeScriptingException("Plot could not be created. Please check your script");
 	
-	        // There is no I/O API in REngine because it's actually more efficient to use R for this
 	        // we limit the file size to 1MB which should be sufficient and we delete the file as well
-	        xp = connection.parseAndEval("r=readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); r");
+	        xp = connection.eval("try({ binImage <- readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); binImage })");
+	        
+	        if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
+	            throw new KnimeScriptingException(xp.asString());
+	        }
 	
 	        // now this is pretty boring AWT stuff - create an image from the data and display it ...
 	        return Toolkit.getDefaultToolkit().createImage(xp.asBytes());
