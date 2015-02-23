@@ -93,21 +93,21 @@ class RunnableBee extends Thread {
 
 
 
-public class MatCtrlThreads {
-	
-	public static void main(String[] args) throws MatlabConnectionException, InterruptedException, MatlabInvocationException {
-		MWorker bee1 = new MWorker("Bee-1");
-		MWorker bee2 = new MWorker("Bee-2");
-		
-		bee1.initialize();
-		bee1.start();
-		
-		
-		bee2.initialize();
-		bee2.start();
-		
-		bee1.join();
-		bee2.join();
-	}	
-
-}
+//public class MatCtrlThreads {
+//	
+//	public static void main(String[] args) throws MatlabConnectionException, InterruptedException, MatlabInvocationException {
+////		MWorker bee1 = new MWorker("Bee-1");
+////		MWorker bee2 = new MWorker("Bee-2");
+//		
+////		bee1.initialize();
+//		bee1.start();
+//		
+//		
+////		bee2.initialize();
+//		bee2.start();
+//		
+//		bee1.join();
+//		bee2.join();
+//	}	
+//
+//}
