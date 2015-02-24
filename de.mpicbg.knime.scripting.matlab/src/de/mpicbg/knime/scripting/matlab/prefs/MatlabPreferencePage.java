@@ -29,11 +29,9 @@ import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
-import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -63,21 +61,21 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
     protected void createFieldEditors() {
         final Composite parent = getFieldEditorParent();
 
-        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
-        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
-        		parent);
+//        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
+//        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
+//        		parent);
         
         IntegerFieldEditor threads = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_SESSIONS,
         		"Number of (local) Matlab application instances", 
         		parent);
         
-        StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,
-        		"The host where the Matlab-server is running",
-        		parent);
-        
-        IntegerFieldEditor port = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT,
-        		"The port on which Matlab-server is listening",
-        		parent);
+//        StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,
+//        		"The host where the Matlab-server is running",
+//        		parent);
+//        
+//        IntegerFieldEditor port = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT,
+//        		"The port on which Matlab-server is listening",
+//        		parent);
         
         TemplateTableEditor snippets = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES,
         		"Snippet template resources",
@@ -97,10 +95,10 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         		new String[][]{{"file","file"}, {"workspace", "workspace"}},
         		parent);
         
-        addField(local);
+//        addField(local);
         addField(threads);
-        addField(host);
-        addField(port);
+//        addField(host);
+//        addField(port);
         addField(snippets);
         addField(plots);
         addField(type);

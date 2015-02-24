@@ -72,8 +72,9 @@ public class OpenInMatlab extends AbstractNodeModel {
     private void initializeMatlabClient(boolean local, int sessions) {
     	if (matlab == null) {
 	    	try {
-	    		logger.warn("Connecting to local MATLAB application.");
+	    		logger.info("Connecting to local MATLAB application.");
 				matlab = new MatlabClient(true, sessions);
+				logger.warn("Switch to your MATLAB application. The data is loaded in the workspace now.");
 			} catch (MatlabConnectionException e) {
 				logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 						" to use KNIME's MATLAB scripting integration.");

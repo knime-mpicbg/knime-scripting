@@ -34,10 +34,10 @@ public interface Matlab {
 	public final static String ERROR_VARIABLE_NAME = "snippetError";
 	
 	/** Default MATLAB snippet script */
-	public final static String DEFAULT_SNIPPET = OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME; 
+	public final static String DEFAULT_SNIPPET = "% " + OUTPUT_VARIABLE_NAME + " contains the input data. After manipulations the output data has be be assigned " + OUTPUT_VARIABLE_NAME + "\n" + OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME; 
 	
 	/** Default MATLAB plot script */
-    public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)' will be run prior to these commands.\nplot(kIn);";
+    public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)' will be run prior to these commands.\nplot(1:size(kIn,1));";
 	
 	/** Default MATLAB type to hold the KNIME table data */
 	public final static String DEFAULT_TYPE = "dataset";
