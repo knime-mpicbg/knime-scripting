@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.matlab.feature"
       label="KNIME Matlab Scripting extension"
-      version="2.0.1.qualifier"
+      version="2.0.3.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
@@ -13,11 +13,11 @@
    <copyright>
       KNIME Matlab Scripting extension
     Copyright (c) 2014, Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
-	All rights reserved.
+ All rights reserved.
    </copyright>
 
    <license>
-      	BSD-License
+      BSD-License
         -
         TERMS AND CONDITIONS
         -
@@ -64,8 +64,8 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
-	<plugin
+
+   <plugin
          id="de.mpicbg.knime.scripting.matlab.srv"
          download-size="0"
          install-size="0"

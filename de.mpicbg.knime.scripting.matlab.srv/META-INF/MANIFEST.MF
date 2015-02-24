@@ -4,7 +4,7 @@ Main-Class: de.mpicbg.knime.scripting.matlab.srv.MatlabServer
 Bundle-ManifestVersion: 2
 Bundle-Name: Server for the Matlab scripting integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab.srv; singleton:=true
-Bundle-Version: 2.0.0.qualifier
+Bundle-Version: 2.0.3.qualifier
 Export-Package: de.mpicbg.knime.scripting.matlab.srv,
  de.mpicbg.knime.scripting.matlab.srv.utils
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
