@@ -1,10 +1,9 @@
 Copyright (c) 2014, Max Planck Institute of Molecular Cell Biology and Genetics 
 All rights reserved.
 
-********************
-BSD 3-Clause License
-********************
+***
 
+##BSD 3-Clause License
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
@@ -30,13 +29,12 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-********************
-                                    
-Applies to source code contained in the directories: matlab-server and
+
+###IMPORTANT NOTICE:
+***        
+...applying to source code contained in the directories: matlab-server and
 matlab4knime
-
-IMPORTANT NOTICE:
-
+***
 It is the obligation of every user to abide terms and conditions of The
 MathWorks, Inc. Software License Agreement. In particular Article 8 “Web
 Applications”: it is permissible for an Application created by a Licensee of the
