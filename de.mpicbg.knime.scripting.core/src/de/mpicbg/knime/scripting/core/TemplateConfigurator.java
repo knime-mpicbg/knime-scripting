@@ -64,8 +64,8 @@ public class TemplateConfigurator extends JPanel {
 
         // create the ui of the template and make it visible
         rggContainer.removeAll();
-
         rggContainer.add(rggDialog, BorderLayout.CENTER);
+        rggContainer.revalidate();
 
         // choose which ui to show
         if (newTemplate.isLinkedToScript()) {

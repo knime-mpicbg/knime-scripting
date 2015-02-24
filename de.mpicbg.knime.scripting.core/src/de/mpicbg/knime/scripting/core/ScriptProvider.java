@@ -37,7 +37,7 @@ public class ScriptProvider extends JPanel {
 
 
     public ScriptProvider(ColNameReformater colNameReformater, boolean isReconfigurable) {
-        setLayout(new CardLayout());
+        setLayout(new ResizableCardLayout());
 
         scriptEditor = new ScriptEditor(colNameReformater, this);
         add(scriptEditor, SCRIPT_EDITOR);
