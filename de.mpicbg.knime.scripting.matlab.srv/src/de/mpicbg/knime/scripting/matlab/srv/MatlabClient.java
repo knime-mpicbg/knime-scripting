@@ -65,7 +65,6 @@ public class MatlabClient {
 	/** Total count of clients (nodes) on the local machine connecting to MATLAB */
 	static Integer clientCount;
 	
-	
 	/**
 	 * Constructor of the MATLAB client.
 	 * It uses the local flag to determine weather to use a local
@@ -190,6 +189,8 @@ public class MatlabClient {
 		
 		/** Client number (to distinguish the calls to {@link MatlabController} and {@link MatlabServer} */
 		private int clientNumber;
+		
+		private int referenceNumber;
 	
 		
 		/**
@@ -200,8 +201,12 @@ public class MatlabClient {
 		 */
 		public Local(int sessions, int clientNumber) throws MatlabConnectionException {
 			this.clientNumber = clientNumber;
-			this.matlabController = new MatlabController(sessions, false);
-			System.out.println("Created local MATLAB client " + this.clientNumber);
+//			this.matlabController = new MatlabController(sessions, false);
+			this.matlabController = MatlabController.getInstance();
+			this.referenceNumber = MatlabController.getReferenceCount();
+			this.matlabController.setParameter(sessions, false);
+			
+			System.out.println("Created local MATLAB client " + this.clientNumber + " (ref.: " + this.referenceNumber + ")");
 		}
 
 		
@@ -223,7 +228,9 @@ public class MatlabClient {
 		        parserFile = new MatlabFileTransfer(Matlab.MATLAB_HASHMAP_SCRIPT);
 		        
 		        // Compile the command to open the data in MATLAB
-		        String cmd = MatlabCode.getOpenInMatlabCommand(matlabType, parserFile.getClientPath(), table.getHashMapTempPath());
+		        String cmd = MatlabCode.getOpenInMatlabCommand(matlabType, 
+		        		parserFile.getClientPath(), 
+		        		table.getHashMapTempPath());
 		        
 		        // Execute
 		        proxy = acquireMatlabProxy();
@@ -389,8 +396,8 @@ public class MatlabClient {
 				this.table.cleanup();
 			if (codeFile !=null)
 				codeFile.delete();
-			if (parserFile != null)
-				parserFile.delete();
+//			if (parserFile != null)
+//				parserFile.delete();
 			if (plotFile != null)
 				plotFile.delete();
 		}
@@ -407,7 +414,7 @@ public class MatlabClient {
 			if (matlabProxyHolder.size() == 0) {
 				MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 				matlabProxyHolder.add(proxy);
-				proxy.eval(MatlabCode.getThreadInfoCommand(matlabController.getThreadNumber()));
+				proxy.eval(MatlabCode.getThreadInfoCommand(this.referenceNumber));
 				proxy.eval(MatlabCode.getClearWorkspaceCommand());
 		        return proxy;
 			} else {
@@ -652,8 +659,8 @@ public class MatlabClient {
 		public void cleanup() {
 			if (tableFile != null)
 				tableFile.delete();
-			if (parserFile != null)
-				parserFile.delete();
+//			if (parserFile != null)
+//				parserFile.delete();
 			if (codeFile != null)
 				codeFile.delete();
 			if (plotFile != null)

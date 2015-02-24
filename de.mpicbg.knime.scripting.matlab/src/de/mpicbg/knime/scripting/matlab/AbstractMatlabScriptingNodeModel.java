@@ -98,12 +98,14 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      */
     private void initializeMatlabClient(boolean local, int sessions, String host, int port) {
         try {
-        	// Check if we can find the host
-        	InetAddress.getByName(host);
         	// Create the client.
-        	if (!local)
+        	if (local) {
+        		matlab = new MatlabClient(local, sessions, host, port);
+        	} else {
         		logger.warn("Connecting to MATLAB on remote host");
-			matlab = new MatlabClient(local, sessions, host, port);
+        		// Check if we can find the host
+        		InetAddress.getByName(host);
+        	}
 		} catch (MatlabConnectionException e) {
 			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
 					" to use KNIME's MATLAB scripting integration.");

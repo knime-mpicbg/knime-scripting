@@ -48,7 +48,7 @@ public class MatlabSnippetNodeFactory
         IPreferenceStore prefStore = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
         String templateResources = prefStore.getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES);
 
-        return new MatlabSnippetNodeDialog(Matlab.DEFAULT_SNIPPET, true, true);
+        return new MatlabSnippetNodeDialog(Matlab.DEFAULT_SNIPPET, true);
     }
 }
 

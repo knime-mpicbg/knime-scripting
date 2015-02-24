@@ -48,6 +48,8 @@ public class MatlabServer implements MatlabRemote {
 	/** MATLAB proxy holder */
 	private ArrayList<MatlabProxy> matlabProxyHolder = new ArrayList<MatlabProxy>(1);
 	
+	private int referenceNumber;
+	
 	
 	/**
 	 * Constructor
@@ -63,7 +65,10 @@ public class MatlabServer implements MatlabRemote {
             System.out.println("Registering with name: " + REGISTRY_NAME);
             ItemServer.bind(this, REGISTRY_NAME);
             
-            matlabController = new MatlabController(sessions, true);
+//            matlabController = new MatlabController(sessions, true);
+            this.matlabController = MatlabController.getInstance();
+            this.referenceNumber = MatlabController.getReferenceCount();
+            this.matlabController.setParameter(sessions, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Unable to write registry.");
@@ -139,7 +144,7 @@ public class MatlabServer implements MatlabRemote {
 	public synchronized void acquireMatlabProxy() throws MatlabConnectionException {
 		MatlabProxy proxy = matlabController.acquireProxyFromQueue();
 		matlabProxyHolder.add(proxy);
-		System.out.println("\tacquired contoller thread " + matlabController.getThreadNumber());
+		System.out.println("\tacquired contoller thread " + this.referenceNumber);
 	}
 
 	/**
@@ -149,7 +154,7 @@ public class MatlabServer implements MatlabRemote {
 	public synchronized void releaseMatlabProxy() {
 		if (this.matlabProxyHolder.size() > 0) {
 			this.matlabController.returnProxyToQueue(this.matlabProxyHolder.remove(0));
-			System.out.println("\treleased controller thread " + matlabController.getThreadNumber());
+			System.out.println("\treleased controller thread " + this.referenceNumber);
 		}
 	}
 	

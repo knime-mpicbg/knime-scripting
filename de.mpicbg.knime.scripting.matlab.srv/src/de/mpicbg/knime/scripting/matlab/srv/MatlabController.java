@@ -9,7 +9,6 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
-import matlabcontrol.PermissiveSecurityManager;
 
 
 /**
@@ -25,14 +24,17 @@ import matlabcontrol.PermissiveSecurityManager;
  */
 public class MatlabController {
 	
+	/** keep one single class instance */
+	private static MatlabController instance = new MatlabController();
+	
 	/** Execution mode (as server or on local machine) */
-	private boolean isServer;
+	private static boolean isServer = false;
 
-	/** Thread number (for identification during debugging) */
-	private Integer threadNumber;
+//	/** Thread number (for identification during debugging) */
+//	private Integer threadNumber = 1;
 	
 	/** Total count of threads connecting to MATLAB */
-	static Integer threadCount;
+	private static Integer threadCount = 0;
 	
 	/** Factory to control the MATLAB session */
 	static MatlabProxyFactory proxyFactory;
@@ -41,49 +43,86 @@ public class MatlabController {
 	static ArrayBlockingQueue<MatlabProxy> proxyQueue;// = new ArrayBlockingQueue<MatlabProxy>(1);
 	
 	/** Number of allowed proxies (set during instantiation of the class) */
-	static int proxyQueueSize; 
+	static int proxyQueueSize = 1;
+	
+	
+	private MatlabController() {
+		// Prevent multiple instantiation
+	}
+	
 
 	
-	/**
-	 * Constructor of a local MATLAB connector.
-	 * This starts a single MATLAB session that will be controlled with the JMI wrapper
-	 * matlabcontrol.
-	 * All the instances of this class will communicate with one and the same MATLAB 
-	 * session. Hence this class handles it's own queue.
-	 * 
-	 * @param name of the thread
-	 * @throws MatlabConnectionException
-	 */
-	public MatlabController(int sessions, boolean executionMode) throws MatlabConnectionException {
-		// Set a very permissive security manager (beware this could be an entry point for abuse)
-		System.setSecurityManager(new PermissiveSecurityManager());
+//	/**
+//	 * Constructor of a local MATLAB connector.
+//	 * This starts a single MATLAB session that will be controlled with the JMI wrapper
+//	 * matlabcontrol.
+//	 * All the instances of this class will communicate with one and the same MATLAB 
+//	 * session. Hence this class handles it's own queue.
+//	 * 
+//	 * @param name of the thread
+//	 * @throws MatlabConnectionException
+//	 */
+//	public MatlabController(int sessions, boolean executionMode) throws MatlabConnectionException {
+//		// Set a very permissive security manager (beware this could be an entry point for abuse)
+//		System.setSecurityManager(new PermissiveSecurityManager());
+//		
+//		synchronized(this) {
+//			isServer = executionMode;
+//			proxyQueueSize = sessions;
+//			
+//			// Determine the total number of threads and the number of this thread
+//			if (threadCount == null) {
+//				threadCount = 1;
+//			} else {
+//				threadCount++;
+//			}
+//			this.threadNumber = threadCount;
+//			
+//			// Create the proxy factory (exactly once).
+//			if (proxyFactory == null) {
+//				MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().
+//						setUsePreviouslyControlledSession(true).
+//						build();
+//				proxyFactory = new MatlabProxyFactory(options);
+//			} 
+//			
+//			// If the controller is owned by the MatlabServer we start MATLAB immediately.
+//			if (isServer)
+//				connect();
+//		}
+//		
+//		System.out.println("MATLAB: created controller thread " +  threadNumber );
+//	}
+	
+	public static synchronized MatlabController getInstance() throws MatlabConnectionException {
+		if (MatlabController.instance == null)
+			MatlabController.instance = new MatlabController();
 		
-		synchronized(this) {
-			isServer = executionMode;
-			proxyQueueSize = sessions;
-			
-			// Determine the total number of threads and the number of this thread
-			if (threadCount == null) {
-				threadCount = 1;
-			} else {
-				threadCount++;
-			}
-			this.threadNumber = threadCount;
-			
-			// Create the proxy factory (exactly once).
-			if (proxyFactory == null) {
-				MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().
-						setUsePreviouslyControlledSession(true).
-						build();
-				proxyFactory = new MatlabProxyFactory(options);
-			} 
-			
-			// If the controller is owned by the MatlabServer we start MATLAB immediately.
-			if (isServer)
-				connect();
-		}
+		// Determine the total number of threads and the number of this thread
+		threadCount++;
+					
+//		this.threadNumber = threadCount;
 		
-		System.out.println("MATLAB: created controller thread " +  threadNumber );
+		// Create the proxy factory (exactly once).
+		if (proxyFactory == null) {
+			MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().
+					setUsePreviouslyControlledSession(true).
+					build();
+			proxyFactory = new MatlabProxyFactory(options);
+		} 
+		
+		// If the controller is owned by the MatlabServer we start MATLAB immediately.
+		if (isServer)
+			connect();
+		
+		return MatlabController.instance;
+	}
+	
+	public synchronized void setParameter(int sessions, boolean executionMode) {
+		System.out.println("Overwrite MatlabController paramter: " + proxyQueueSize + "->" + sessions + ", " + isServer + "->" + executionMode +".");
+		
+		isServer = executionMode;
+		proxyQueueSize = sessions;
 	}
 	
 	
@@ -94,7 +133,7 @@ public class MatlabController {
 	 * 
 	 * @throws MatlabConnectionException
 	 */	
-	public synchronized void connect() throws MatlabConnectionException {
+	public static synchronized void connect() throws MatlabConnectionException {
 		if (proxyQueue == null) {
 			System.out.println("MATLAB: starting applicaton...");
 			proxyQueue = new ArrayBlockingQueue<MatlabProxy>(proxyQueueSize);
@@ -113,14 +152,14 @@ public class MatlabController {
 								System.out.println("MATLAB application disconnected.");
 								proxyQueue = null;
 								// Try to restart MATLAB immediately. The connect method makes sure it only happens once (provided that the first attempt is successful).
-								if (isServer) {
+//								if (isServer) {
 									try {
 										connect();
 									} catch (MatlabConnectionException e) {
 										System.err.println("Unable to restart MATLAB application(s). You need to restart the server!");
 										e.printStackTrace();
 									}
-								}
+//								}
 							}
 						});
 		            }
@@ -162,8 +201,12 @@ public class MatlabController {
 	 * 
 	 * @return
 	 */
-	public synchronized ArrayBlockingQueue<MatlabProxy> getQueue() {
+	public static synchronized ArrayBlockingQueue<MatlabProxy> getQueue() {
 		return proxyQueue;
+	}
+	
+	public static synchronized int getReferenceCount() {
+		return threadCount;
 	}
 	
 	
@@ -174,7 +217,7 @@ public class MatlabController {
 	 * @return Proxy object
 	 * @throws MatlabConnectionException 
 	 */
-	public synchronized MatlabProxy acquireProxyFromQueue() throws MatlabConnectionException {
+	public MatlabProxy acquireProxyFromQueue() throws MatlabConnectionException {
 		// Establish a session connection
 		connect();
 		// Get access to the session
@@ -193,7 +236,7 @@ public class MatlabController {
 	 * 
 	 * @param proxy
 	 */
-	public synchronized void returnProxyToQueue(MatlabProxy proxy) {
+	public void returnProxyToQueue(MatlabProxy proxy) {
 		try {
 			proxyQueue.put(proxy);
 		} catch (InterruptedException e) {
@@ -203,13 +246,13 @@ public class MatlabController {
 	}
 	
 
-	/**
-	 * Getter for the thread number
-	 * 
-	 * @return
-	 */
-	public Integer getThreadNumber() {
-		return this.threadNumber;
-	}
-	
+//	/**
+//	 * Getter for the thread number
+//	 * 
+//	 * @return
+//	 */
+//	public Integer getThreadNumber() {
+//		return this.threadNumber;
+//	}
+//	
 }
