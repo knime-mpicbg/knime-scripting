@@ -23,7 +23,7 @@ import java.util.List;
  * Date: 2/23/11
  * Time: 5:17 PM
  */
-
+@Deprecated
 public class MatlabWebClient implements MatlabWeb {
 
     private MatlabWeb matlab;

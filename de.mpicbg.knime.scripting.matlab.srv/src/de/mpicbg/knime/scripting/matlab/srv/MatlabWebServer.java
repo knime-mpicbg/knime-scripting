@@ -12,6 +12,8 @@
 package de.mpicbg.knime.scripting.matlab.srv;
 
 import com.mathworks.jmi.CompletionObserver;
+
+import de.mpicbg.knime.scripting.matlab.srv.utils.MatlabUtilities;
 import gnu.cajo.invoke.Remote;
 import gnu.cajo.utils.ItemServer;
 
@@ -28,7 +30,7 @@ import java.util.concurrent.Semaphore;
  * Date: 2/23/11
  * Time: 4:54 PM
  */
-
+@Deprecated
 public class MatlabWebServer implements MatlabWeb {
 
     com.mathworks.jmi.Matlab matlab;

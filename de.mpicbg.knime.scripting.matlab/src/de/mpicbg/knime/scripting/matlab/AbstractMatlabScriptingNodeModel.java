@@ -9,99 +9,145 @@
 
 package de.mpicbg.knime.scripting.matlab;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabTempFile;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabWebClient;
+import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
+import matlabcontrol.MatlabConnectionException;
+
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.knime.core.node.port.PortType;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedHashMap;
 
-
+/**
+ * 
+ * @author Holger Brandl, Felix Meyenhofer
+ *
+ */
 public abstract class AbstractMatlabScriptingNodeModel extends AbstractScriptingNodeModel {
 
-
-    // Temp files for reading/writing the table and the script
-    protected MatlabWebClient matlab;
+    /** Settings from the KNIME preference dialog */
     protected IPreferenceStore preferences = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
 
-    protected MatlabTempFile transferFile;
-    protected MatlabTempFile hashMapScript;
-    protected String workingDir;
-    protected String functionName;
+    /** Holds the MATLAB client object */
+    protected MatlabClient matlab; 
+    
+    /** MALTLAB type */
+    protected String type;
+    
+    /** KNIME-to-MATLAB data transfer method */
+    protected String method;
 
-    protected String dataType = "dataset";    // TODO make a tab in the configuration dialog to expose choices for different matlab types.
-
-
-    //
-    // Constructor
-    //
-    protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports);
+    
+    /**
+     * Constructor
+     * 
+     * @param inPorts
+     * @param outPorts
+     * @throws MatlabConnectionException 
+     */
+    protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
+        super(inPorts, outPorts, useNewSettingsHashmap);
+        
+        // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
+        preferences.addPropertyChangeListener(new IPropertyChangeListener() {
+//			boolean newLocal = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
+			int newSessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+//			String newHost = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
+//	        int newPort = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
+	        
+			@Override
+			public void propertyChange(PropertyChangeEvent event) {
+				String newValue = event.getNewValue().toString();
+				
+//				if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_LOCAL) {
+//					newLocal = Boolean.parseBoolean(newValue);
+//					logger.info("MATLAB: server property (MATLAB_LOCAL) was changed to " + newLocal + ". Re-initializing MATLAB client.");
+//				} else if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_HOST) {
+//					String newHost = newValue;
+//					logger.info("MATLAB: server property (MATLAB_HOST) was changed to " + newHost + ". Re-initializing MATLAB client.");
+//				} else if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_PORT) {
+//					newPort = Integer.parseInt(newValue);
+//					logger.info("MATLAB: server property (MATLAB_PORT) was changed to " + newPort + ". Re-initializing MATLAB client.");
+//				} else 
+				if (event.getProperty() == MatlabPreferenceInitializer.MATLAB_SESSIONS) {
+					newSessions = Integer.parseInt(newValue);
+//					if (newLocal == true) { 
+//						logger.info("MATLAB: server property (MATLAB_SESSIONS) was changed to " + newSessions + ". Re-initializing MATLAB client.");
+//					} else {
+						logger.warn("MATLAB: server property (MATLAB_SESSIONS) was changed. But this property is ignored when using a remote host.");
+//						return;
+//					}
+				}
+				
+				initializeMatlabClient(newSessions);
+			}
+		});
     }
-
-
-    protected void establishConnection() {
-        if (matlab == null || !matlab.isConnected()) {
-            String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
-            int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
-            matlab = new MatlabWebClient(host, port);
-        }
-        if (matlab.isLocked()) {
-            throw new RuntimeException("MATLAB server is busy. Try again later.");
-        }
+    
+    
+    /**
+     * Initialize the MATLAB client
+     * 
+     * @param local Flag to choose local or remote execution
+     * @param port 
+     * @param host 
+     */
+    private void initializeMatlabClient(boolean local, int sessions, String host, int port) {
+        try {
+        	// Create the client.
+        	if (local) {
+        		matlab = new MatlabClient(local, sessions, host, port);
+        	} else {
+        		logger.warn("Connecting to MATLAB on remote host");
+        		// Check if we can find the host
+        		InetAddress.getByName(host);
+        	}
+		} catch (MatlabConnectionException e) {
+			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
+					" to use KNIME's MATLAB scripting integration.");
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			logger.error("MATLAB scripting integration: can not connect to " + host);
+			e.printStackTrace();
+		}
     }
-
-
-    protected void executeMatlabScript(String script) throws Exception {
-        String errorMessage = matlab.executeScript(script);
-        if (!errorMessage.isEmpty()) {
-            logger.error(errorMessage);
-            throw new Exception(new RuntimeException("Matlab failed to create plot (see error message above)."));
-        }
+    
+    private void initializeMatlabClient(int sessions){
+    	try {
+    		matlab = new MatlabClient(true, sessions);
+    	} catch (MatlabConnectionException e) {
+			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
+					" to use KNIME's MATLAB scripting integration.");
+			e.printStackTrace();
+		}
     }
-
-
-    protected void transferHashMapUtils() throws IOException {
-        hashMapScript = new MatlabTempFile(matlab, "hashmaputils", ".m");
-        copyResourceToFolder("hashmaputils.m", hashMapScript.getClientPath());
-        hashMapScript.upload();
-        workingDir = hashMapScript.getServerFile().getParent();
-        functionName = TemplateUtils.fileNameTrunk(hashMapScript.getServerFile().getName());
+    	
+    
+    
+    
+    /** 
+     * This is the initialization method the can be called from the
+     * {@link this#execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}
+     * method. This way the connection to MATLAB is only made once it is about to 
+     * be used.
+     */
+    public void initializeMatlabClient() {
+    	if (this.matlab == null) {
+	    	// Get the values from the KNIME preference dialog.
+//	        boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
+	        int sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
+//	        String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
+//	        int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
+	        
+	        // Initialize the MATLAB client
+	        initializeMatlabClient(sessions);
+//	        initializeMatlabClient(local, sessions, host, port);
+    	}
     }
-
-
-    protected void uploadData(BufferedDataTable inputTable) throws Exception {
-        LinkedHashMap table = TableConverter.convertKnimeTableToLinkedHashMap(inputTable);
-        transferFile = new MatlabTempFile(matlab, "knime-matlab", ".tmp");
-        TableConverter.writeHashMapToTempFolder(transferFile.getClientPath(), table);
-        transferFile.upload();
-    }
-
-
-    protected BufferedDataTable downloadData(ExecutionContext exec) throws Exception {
-        transferFile.fetch();
-        LinkedHashMap scriptOutput = TableConverter.readSerializedHashMap(transferFile.getClientFile());
-        BufferedDataTable outputs = TableConverter.convertLinkedHashMapToKnimeTable(exec, scriptOutput);
-        return outputs;
-    }
-
-
-    public File copyResourceToFolder(String resourcePath, String outputPath) throws IOException {
-        File ouputFile = new File(outputPath);
-        ouputFile.deleteOnExit();
-        InputStream resourceStream = getClass().getResourceAsStream(resourcePath);
-        TemplateUtils.writeStreamToFile(resourceStream, new FileOutputStream(ouputFile));
-        return ouputFile;
-    }
-
-
+    
 }

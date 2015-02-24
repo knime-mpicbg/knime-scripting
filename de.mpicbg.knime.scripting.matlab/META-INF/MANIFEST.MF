@@ -5,7 +5,8 @@ Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
 Bundle-Version: 2.0.1.qualifier
 Bundle-ClassPath: matlabsnippet.jar,
- lib/commons-math-2.0.jar
+ lib/commons-math-2.0.jar,
+ lib/matlabcontrol-4.1.0.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin

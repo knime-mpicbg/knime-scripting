@@ -9,14 +9,17 @@
  * NETWORK CONCURRENT USER ACTIVATION type to use MATLAB as a remote engine with static scripts.
  */
 
-package de.mpicbg.knime.scripting.matlab.srv;
+package de.mpicbg.knime.scripting.matlab.srv.utils;
 
 import java.io.*;
 import java.util.Arrays;
 
+import de.mpicbg.knime.scripting.matlab.srv.MatlabWeb;
+
 /**
  * Encapsulates client and server temp files to simplify create/delete/copy operations
  */
+@Deprecated
 public class MatlabTempFile {
 
     private File clientFile, serverFile;

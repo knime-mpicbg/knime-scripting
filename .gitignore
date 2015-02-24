@@ -10,3 +10,5 @@ target
 
 # UML diagrams
 *.ucls
+# Matlab autosave
+*.m~

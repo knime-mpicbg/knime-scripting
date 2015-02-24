@@ -26,7 +26,7 @@ import java.util.*;
  *         <p/>
  *         TODO - include the option to select different MATLAB types.
  */
-
+@Deprecated
 public class TableConverter {
 
 

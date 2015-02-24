@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.matlab.plots;
+package de.mpicbg.knime.scripting.matlab.srv;
 
 import de.mpicbg.knime.scripting.matlab.srv.MatlabWebClient;
 

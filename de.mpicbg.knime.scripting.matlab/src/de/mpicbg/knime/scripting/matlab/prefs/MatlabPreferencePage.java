@@ -27,16 +27,19 @@ package de.mpicbg.knime.scripting.matlab.prefs;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
+import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 
 /**
+ * Preference page of the MATLAB scripting integration for KNIME
+ * 
  * @author Holger Brandl
  */
 public class MatlabPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -51,21 +54,64 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void createFieldEditors() {
-        Composite parent = getFieldEditorParent();
+        final Composite parent = getFieldEditorParent();
 
-        addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST, "The host where the Matlab-server is running", parent));
-        addField(new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT, "The port on which Matlab-server is listening", parent));
-
-        /*addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
-        addField(new StringFieldEditor(MatlabPreferenceInitializer.MATLB_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));*/
-        addField(new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES, "Snippet template resources", parent));
-        addField(new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES, "Plot template resource", parent));
+//        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
+//        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
+//        		parent);
+        
+        IntegerFieldEditor threads = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_SESSIONS,
+        		"Number of (local) Matlab application instances", 
+        		parent);
+        
+//        StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,
+//        		"The host where the Matlab-server is running",
+//        		parent);
+//        
+//        IntegerFieldEditor port = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT,
+//        		"The port on which Matlab-server is listening",
+//        		parent);
+        
+        TemplateTableEditor snippets = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES,
+        		"Snippet template resources",
+        		parent);
+        
+        TemplateTableEditor plots = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES,
+        		"Plot template resource",
+        		parent);
+        
+        ComboFieldEditor type = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TYPE,
+        		"MATLAB data type to hold the input table.\nUsing something else than dataset might introduce template incompatilities",
+        		new String[][]{{"dataset","dataset"}, {"map", "map"}, {"struct", "struct"}},
+        		parent);
+        
+        ComboFieldEditor transfer = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD,
+        		"Data transfer method between KNIME and MATLAB.\n('file' is faster but needs disk space and memory, 'workspace' is slower but less ressource hungry)",
+        		new String[][]{{"file","file"}, {"workspace", "workspace"}},
+        		parent);
+        
+//        addField(local);
+        addField(threads);
+//        addField(host);
+//        addField(port);
+        addField(snippets);
+        addField(plots);
+        addField(type);
+        addField(transfer);
     }
 
-
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void init(final IWorkbench workbench) {
         // nothing to do
     }
+
 }

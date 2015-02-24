@@ -266,15 +266,15 @@ public class TemplateUtils {
     }
 
 
-    public static String fileNameTrunk(String str) {
-        File tmp = new File(str);
-        str = tmp.getName();
-        int index = str.indexOf(".");
-        if (index > 1) {
-            str = str.substring(0, index);
-        }
-        return str;
-    }
+//    public static String fileNameTrunk(String str) {
+//        File tmp = new File(str);
+//        str = tmp.getName();
+//        int index = str.indexOf(".");
+//        if (index > 1) {
+//            str = str.substring(0, index);
+//        }
+//        return str;
+//    }
 
 
 }
