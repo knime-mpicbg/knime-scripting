@@ -111,7 +111,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     public void useTemplate(ScriptTemplate template) {
         selectScriptTab();
-        scriptProvider.setContent(null, template);
+        scriptProvider.setContent(template.getTemplate(), template);
     }
 
 
