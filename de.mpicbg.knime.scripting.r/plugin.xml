@@ -78,9 +78,21 @@
 
     <extension point="org.knime.workbench.repository.categories">
         <!--<category level-id="scripting" name="Scripting" path="/"/>-->
-        <category level-id="r" name="R Scripting" path="/community"/>
-        <category level-id="genericr" name="Generic R" path="/community/r"/>
-        <category level-id="utils" name="Utils" path="/community/r"/>
+        <category
+              icon="resources/ricon.png"
+              level-id="r"
+              name="R Scripting"
+              path="/community"/>
+        <category
+              icon="resources/ricon.png"
+              level-id="genericr"
+              name="Generic R"
+              path="/community/r"/>
+        <category
+              icon="resources/ricon.png"
+              level-id="utils"
+              name="Utils"
+              path="/community/r"/>
     </extension>
 
     <extension
@@ -99,6 +111,14 @@
                 id="de.mpicbg.tds.knime.scripting.r.prefs.RPreferencePage"
                 name="R-Scripting">
         </page>
+    </extension>
+    <extension
+          point="org.knime.product.splashExtension">
+       <splashExtension
+             icon="resources/ricon48.png"
+             id="R"
+             tooltip="An integration of R into Knime">
+       </splashExtension>
     </extension>
 
     <!-- disabled because it looks the same as the r-extenion splash icon from the knime r-extension -->
