@@ -17,9 +17,14 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[2.10.0,3.0.0)",
  org.knime.base;bundle-version="[2.10.0,3.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[2.0.0,3.0.0)",
- de.mpicbg.knime.scripting.core;bundle-version="[2.0.3,3.0.0)",
- de.mpicbg.knime.scripting.matlab.srv;bundle-version="[2.0.3,3.0.0)";visibility:=reexport
-Export-Package: de.mpicbg.knime.scripting.matlab,
- de.mpicbg.knime.scripting.matlab.prefs
+ de.mpicbg.knime.scripting.core;bundle-version="[2.0.3,3.0.0)"
+Export-Package: de.mpicbg.knime.scripting.matlab;
+  uses:="de.mpicbg.knime.scripting.core,
+   de.mpicbg.knime.scripting.matlab.ctrl,
+   org.eclipse.jface.preference,
+   org.eclipse.ui.plugin,
+   org.osgi.framework,
+   org.knime.core.data,
+   matlabcontrol"
 Import-Package: org.apache.commons.io
 

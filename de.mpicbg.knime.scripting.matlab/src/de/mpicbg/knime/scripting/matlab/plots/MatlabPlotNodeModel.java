@@ -3,8 +3,10 @@ package de.mpicbg.knime.scripting.matlab.plots;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
-import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
-import de.mpicbg.knime.scripting.matlab.srv.Matlab;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabFileTransfer;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabTable;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.*;
@@ -112,11 +114,11 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	PortObject[] outPorts = new PortObject[1];
     	
     	try {
-    		this.initializeMatlabClient();
+//    		this.initializeMatlabClient();
     		
-            // Get preference pane properties
-            this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
-            this.method = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
+//            // Get preference pane properties
+//            this.matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+//            this.tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
             
 	    	// Get the input table
 	    	BufferedDataTable inputTable = (BufferedDataTable)inData[0];
@@ -126,7 +128,62 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	        exec.checkCanceled();
 	
 	        // Execute the script
-	        File plotFile = matlab.client.plotTask(inputTable, this.method, snippet, getDefWidth(), getDefHeight(), this.type);
+	     // Prepare snippet temp-file
+ 			codeFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_PREFIX, 
+ 					AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_SUFFIX);
+ 			// Prepare the plot temp file
+ 			plotFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.PLOT_TEMP_FILE_PREFIX, 
+ 					AbstractMatlabScriptingNodeModel.PLOT_TEMP_FILE_SUFFIX);
+ 			// Get the  input table data ready for processing
+ 			table = new MatlabTable(inputTable);
+ 			
+ 			if (tableTransferMethod.equals("file")) {
+ 				// Transfer the KNIME table as hash map object dump to the JVM temp-folder
+ 				table.writeHashMapToTempFolder();
+ 				
+ 				// Prepare the parser temp-file
+ 				parserFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.MATLAB_HASHMAP_SCRIPT);
+ 				
+ 				// Prepare the code snippet
+ 				code = new MatlabCode(snippet, matlabWorkspaceType, 
+ 						parserFile.getPath(), 
+ 						codeFile.getPath(), 
+ 						table.getHashMapTempPath(), 
+ 						plotFile.getPath(),
+ 						getDefWidth(), getDefHeight());
+ 				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+ 				String cmd = code.getScriptExecutionCommand(codeFile.getPath(), false, false);
+ 				
+ 				// Execute
+ 				matlabProxy = matlabConnector.acquireProxyFromQueue();
+ 				matlabProxy.eval(cmd);
+ 				MatlabCode.checkForScriptErrors(matlabProxy);
+ 				matlabProxy.eval(MatlabCode.getPlotNodeMessage(false));
+// 			    releaseMatlabProxy(proxy);
+ 				
+ 			} else if (tableTransferMethod.equals("workspace")) {
+ 				// Get a proxy (block it)
+ 				matlabProxy = matlabConnector.acquireProxyFromQueue();
+
+ 				// Push the table to the input variable in the MATLAB workspace.
+ 				table.pushTable2MatlabWorkspace(matlabProxy, matlabWorkspaceType);
+ 				
+ 				// Prepare the code snippet.
+ 				code = new MatlabCode(snippet, matlabWorkspaceType,
+ 						codeFile.getPath(), 
+ 						plotFile.getPath(), 
+ 						getDefWidth(), getDefHeight());
+ 				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+ 				String cmd = code.getScriptExecutionCommand(codeFile.getPath(), true, false);
+ 				
+ 				// Execute 
+ 				matlabProxy.eval(cmd);
+ 				MatlabCode.checkForScriptErrors(matlabProxy);
+ 				matlabProxy.eval(MatlabCode.getPlotNodeMessage(false));
+// 			    releaseMatlabProxy(proxy);
+ 			}
+ 			
+//	        File plotFile = matlabConnector.client.plotTask(inputTable, this.tableTransferMethod, snippet, getDefWidth(), getDefHeight(), this.matlabWorkspaceType);
 	        exec.checkCanceled();
 	        
 	        // Fetch the image file form the server and load it
@@ -143,20 +200,20 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	
 	        // Create the image port object
 	        PNGImageContent content;
-	        FileInputStream in = new FileInputStream(plotFile);
+	        FileInputStream in = new FileInputStream(plotFile.getPath());
 	        content = new PNGImageContent(in);
 	        in.close();
 	        	
 	        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
 	        
 	        // Housekeeping
-	        this.matlab.cleanup();
+	        cleanup();
         
     	} catch (Exception e) {
     		throw e;
     	} finally {
-    		if (matlab != null)
-    			this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
+    		if ((matlabConnector != null) && (matlabProxy != null))
+    			matlabConnector.returnProxyToQueue(matlabProxy);
     	}
     	
     	return outPorts;
@@ -169,7 +226,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     @Override
     public String getDefaultScript() {
         if (getHardwiredTemplate() == null) {
-            return Matlab.DEFAULT_PLOTCMD;
+            return AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD;
         } else {
             return TemplateConfigurator.generateScript(getHardwiredTemplate());
         }

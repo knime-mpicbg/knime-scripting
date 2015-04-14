@@ -36,7 +36,7 @@ public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
             // override this method to make the file-selection optional
             @Override
             protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-                String value = (String) ((JComboBox) ((JPanel) getComponentPanel().getComponent(0)).getComponent(0)).getSelectedItem();
+                String value = (String) ((JComboBox<?>) ((JPanel) getComponentPanel().getComponent(0)).getComponent(0)).getSelectedItem();
                 ((SettingsModelString) getModel()).setStringValue(value == null ? "" : value);
             }
 

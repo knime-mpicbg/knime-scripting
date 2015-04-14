@@ -1,5 +1,7 @@
 package de.mpicbg.knime.scripting.matlab.snippet;
 
+import java.io.ByteArrayInputStream;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -7,7 +9,9 @@ import org.knime.core.node.InvalidSettingsException;
 
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
-import de.mpicbg.knime.scripting.matlab.srv.Matlab;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabFileTransfer;
+import de.mpicbg.knime.scripting.matlab.ctrl.MatlabTable;
 
 
 /**
@@ -30,7 +34,7 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
      */
     @Override
     public String getDefaultScript() {
-        return Matlab.DEFAULT_SNIPPET;
+        return AbstractMatlabScriptingNodeModel.DEFAULT_SNIPPET;
     }
 
 
@@ -50,36 +54,87 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
                                           final ExecutionContext exec) throws Exception {
 
-    	BufferedDataTable[] outData = new BufferedDataTable[1];
+    	BufferedDataTable outData = null;
     	
     	try {
-    		this.initializeMatlabClient();
+//    		this.initializeMatlabClient();
     		
             // Get preference pane properties
-            this.type = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
-            this.method = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
+            this.matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
+            this.tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
             
             // Get the code
     		String snippet = prepareScript();
     		exec.checkCanceled();
     		
     		// Execute it
-    		BufferedDataTable table = this.matlab.client.snippetTask(inData[0], this.method, exec, snippet, this.type);
-    		outData[0] = table;
+    		// Prepare snippet temp-file
+			codeFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_PREFIX, 
+					AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_SUFFIX);
+			
+			table = new MatlabTable(inData[0]);
+			
+			if (tableTransferMethod.equals("file")) {
+				// Convert the KNIME table and write it to the temp-directory
+				table.writeHashMapToTempFolder();
+				
+				// Prepare the MATLAB parser script
+		        parserFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.MATLAB_HASHMAP_SCRIPT);
+
+				// Add the MATLAB code to the snippet and transfer the scripts to the temp-directory
+				code = new MatlabCode(snippet, matlabWorkspaceType, 
+						parserFile.getPath(), 
+						codeFile.getPath(), 
+						table.getHashMapTempPath());
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+		        String cmd = code.getScriptExecutionCommand(codeFile.getPath(), false, true);		
+
+				// Run it in MATLAB
+		        matlabProxy = matlabConnector.acquireProxyFromQueue();
+		        matlabProxy.eval(cmd);
+				MatlabCode.checkForScriptErrors(matlabProxy);
+				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(false));
+//				releaseMatlabProxy(proxy);
+
+				// Get the data back
+				table.readHashMapFromTempFolder(exec);
+				outData = table.getBufferedDataTable();
+				
+			} else if (tableTransferMethod.equals("workspace")) {
+				// Create a script from the snippet
+				code = new MatlabCode(snippet, matlabWorkspaceType, 
+						codeFile.getPath());
+				codeFile.save(new ByteArrayInputStream(code.getScript().getBytes()));
+				String cmd = code.getScriptExecutionCommand(codeFile.getPath(), true, true);
+				
+				// Get a proxy (block it) push the data execute the snippet and pull back the modified data
+				matlabProxy = matlabConnector.acquireProxyFromQueue();
+				table.pushTable2MatlabWorkspace(matlabProxy, matlabWorkspaceType);
+				matlabProxy.eval(cmd);
+				MatlabCode.checkForScriptErrors(matlabProxy);
+				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(true)); //TODO pack this in a function in matlabCode.
+				outData = table.pullTableFromMatlabWorkspace(exec, matlabProxy, matlabWorkspaceType);
+//				releaseMatlabProxy(proxy);
+
+				
+			}
+			
+//    		BufferedDataTable table = this.matlabConnector.client.snippetTask(inData[0], this.tableTransferMethod, exec, snippet, this.matlabWorkspaceType);
+//    		outData[0] = table;
     		exec.checkCanceled();
     		
     		// Housekeeping
-    		this.matlab.cleanup();
-    		exec.checkCanceled();
+    		cleanup();
+//    		exec.checkCanceled();
 
     	} catch (Exception e) {
     		throw e;
     	} finally {
-    		if (matlab != null)
-    			this.matlab.rollback(); // Double check if the proxy was returned (in case of an Exception it will happen here)
+    		if ((matlabConnector != null) && (matlabProxy != null))
+    			matlabConnector.returnProxyToQueue(matlabProxy);
     	}
     	
-    	return outData;
+    	return new BufferedDataTable[]{outData};
     }
 
 }

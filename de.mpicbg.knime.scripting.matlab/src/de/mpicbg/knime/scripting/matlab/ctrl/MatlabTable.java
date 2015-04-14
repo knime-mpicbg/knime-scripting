@@ -38,8 +38,7 @@ import org.knime.core.node.ExecutionContext;
 import de.mpicbg.knime.knutils.Attribute;
 import de.mpicbg.knime.knutils.AttributeUtils;
 import de.mpicbg.knime.knutils.InputTableAttribute;
-import de.mpicbg.knime.scripting.matlab.srv.Matlab;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabRemote;
+import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 
 
 /**
@@ -252,7 +251,7 @@ public class MatlabTable {
     	if (this.hash == null)
     		knimeTable2LinkedHashMap();
     	
-        File file = File.createTempFile(Matlab.TABLE_TEMP_FILE_PREFIX, Matlab.TABLE_TEMP_FILE_SUFFIX);
+        File file = File.createTempFile(AbstractMatlabScriptingNodeModel.TABLE_TEMP_FILE_PREFIX, AbstractMatlabScriptingNodeModel.TABLE_TEMP_FILE_SUFFIX);
         file.deleteOnExit();
         FileOutputStream fileStream = new FileOutputStream(file);
         ObjectOutputStream serializedObject = new ObjectOutputStream(fileStream);

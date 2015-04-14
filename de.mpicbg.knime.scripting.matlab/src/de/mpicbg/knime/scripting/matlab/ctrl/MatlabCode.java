@@ -5,16 +5,15 @@ import java.util.List;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
-import matlabcontrol.MatlabProxy;
 
 import org.apache.commons.io.FilenameUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.StringCell;
 
-import de.mpicbg.knime.scripting.matlab.srv.Matlab;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabClient;
-import de.mpicbg.knime.scripting.matlab.srv.MatlabServer;
+import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
+
+
 
 
 /**
@@ -27,9 +26,8 @@ import de.mpicbg.knime.scripting.matlab.srv.MatlabServer;
  * The constructor then adds the necessary code to the snippet from the user input
  * like code for loading the table, saving it and the function signature so the code
  * can be put in a file and used as script. (Executing the code as a script instead of passing
- * it directly to {@link MatlabServer#eval} or {@link MatlabProxy#eval(String)} has the
- * advantage that to code can contain line breaks and the MATLAB workspace stays free of 
- * variables created in the input snippet) 
+ * it directly to the MATLAB proxy has the advantage that to code can contain line breaks 
+ * and the MATLAB workspace stays free of variables created in the input snippet) 
  * The modified script can be retrieved with the {@link this#getSnippet()} method 
  * and the code to execute the script with {@link this#getScriptExecutionCommand(String, boolean, boolean)} 
  * This class does however not take care to of writing the script into a file. The
@@ -166,7 +164,7 @@ public class MatlabCode {
 	 * @return
 	 */
 	private String addErrorHandlingCode(String code) {
-		return "\ntry\n" + code + "\ncatch " + Matlab.ERROR_VARIABLE_NAME + ";\nend\n";
+		return "\ntry\n" + code + "\ncatch " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ";\nend\n";
 	}
 	
 	/**
@@ -180,7 +178,7 @@ public class MatlabCode {
 	 */
 	private String addFunctionSignature(String code, String functionName, boolean hasInput, boolean hasOutput) {
 		return "function " + createFunctionSignature(functionName, hasInput, hasOutput) + "\n" + 
-				Matlab.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '');\n" + 
+				AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '');\n" + 
 				code;
 	}
 	
@@ -196,12 +194,12 @@ public class MatlabCode {
 	private String createFunctionSignature(String functionName, boolean hasInput, boolean hasOutput) {
 		String signature = "";
 		if (hasOutput)
-			signature += "[" + Matlab.OUTPUT_VARIABLE_NAME + "," + Matlab.ERROR_VARIABLE_NAME + "]" +"=" + functionName;
+			signature += "[" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "," + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "]" +"=" + functionName;
 		else
-			signature += Matlab.ERROR_VARIABLE_NAME + "=" + functionName;
+			signature += AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "=" + functionName;
 		
 		if (hasInput)
-			signature += "(" + Matlab.INPUT_VARIABLE_NAME + ")";
+			signature += "(" + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ")";
 		else
 			signature += "()";
 		
@@ -223,7 +221,7 @@ public class MatlabCode {
         		"set(gcf,'PaperPositionMode','auto');\n" +
         		code + "\n" +
         		"print(figureHandle, '-dpng', '" + plotPath + "');\n" + 
-        		Matlab.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
+        		AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
 	}
 	
 	/**
@@ -242,7 +240,7 @@ public class MatlabCode {
 		String functionName = FilenameUtils.getBaseName(scriptPath);
 		
 		return "cd " + matlabPath + ";\n" + 
-				"[" + Matlab.INPUT_VARIABLE_NAME +"," + Matlab.COLUMNS_VARIABLE_NAME + "]=" + 
+				"[" + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME +"," + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + "]=" + 
 				functionName + "('" + tablePath + "','" + matlabType + "');\n" +
 				code;
 	}
@@ -261,7 +259,7 @@ public class MatlabCode {
 		String functionName = FilenameUtils.getBaseName(scriptPath);
 		return code + "\n" +
 				"cd " + matlabPath + ";\n" +
-				functionName + "('" + tablePath + "', " + Matlab.OUTPUT_VARIABLE_NAME +");";
+				functionName + "('" + tablePath + "', " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +");";
 	}
 	
 	/**
@@ -315,21 +313,21 @@ public class MatlabCode {
      */
     public static String getInputVariableInstanciationCommand(String type, List<String> vars, List<DataType> types) {
     	if (type.equals("dataset")) {
-    		String cmd = Matlab.INPUT_VARIABLE_NAME + "= dataset(";
+    		String cmd = AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "= dataset(";
     		for (int i = 0; i < vars.size(); i++)
     			cmd += "[],";
 
     		return cmd.substring(0, cmd.length()-1) + ");";
     	}
     	if (type.equals("map")){
-    		String cmd = Matlab.INPUT_VARIABLE_NAME + "=containers.Map;";
+    		String cmd = AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "=containers.Map;";
     		String empty;
     		for (int i = 0; i < vars.size(); i++) {
     			if (types.get(i).equals(StringCell.TYPE))
     				empty = "{}";
     			else
     				empty = "[]";
-    			cmd += Matlab.INPUT_VARIABLE_NAME + "('"+ vars.get(i) +"')=" + empty + ";";
+    			cmd += AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "('"+ vars.get(i) +"')=" + empty + ";";
     		}
     		return cmd;
     	}
@@ -341,7 +339,7 @@ public class MatlabCode {
     				empty = "{}";
     			else
     				empty = "[]";
-    			cmd += Matlab.INPUT_VARIABLE_NAME + ".('"+ vars.get(i) +"')=" + empty + ";";
+    			cmd += AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ".('"+ vars.get(i) +"')=" + empty + ";";
     		}
     		return cmd;
     	}
@@ -352,7 +350,7 @@ public class MatlabCode {
     /**
      * Get additional information for the table. Depending on the type
      * this information is stored in the dataset or in the additional 
-     * MATLAB variable {@link Matlab#COLUMNS_VARIABLE_NAME}.
+     * MATLAB variable {@link AbstractMatlabScriptingNodeModel#COLUMNS_VARIABLE_NAME}.
      * 
      * @param type
      * @param vars
@@ -361,7 +359,7 @@ public class MatlabCode {
      */
     public static String getInputColumnAdditionalInformationCommand(String type, List<String> vars, List<String> cols) {
     	if (type.equals("dataset")) {
-    		String cmd = "set(" + Matlab.INPUT_VARIABLE_NAME + ",";
+    		String cmd = "set(" + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ",";
     		String varCell = "{";
     		String colCell = "{";
     		for (int i = 0; i < vars.size(); i++) {
@@ -370,9 +368,9 @@ public class MatlabCode {
     		}
     		varCell += "}";
     		colCell += "}";
-    		return Matlab.INPUT_VARIABLE_NAME + "=" + cmd + "'VarNames'," + varCell + ",'VarDescription'," + colCell + ");";
+    		return AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "=" + cmd + "'VarNames'," + varCell + ",'VarDescription'," + colCell + ");";
     	} else {
-    		String cmd = Matlab.COLUMNS_VARIABLE_NAME + "=struct(";
+    		String cmd = AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + "=struct(";
     		String colCell = "{";
     		String varCell = "{";
     		for (int i = 0; i < vars.size(); i++) {
@@ -412,7 +410,7 @@ public class MatlabCode {
     					cell += row.getCell(i) + " ";
     		}
     		cell += "}";
-    		return Matlab.INPUT_VARIABLE_NAME + "=[" + Matlab.INPUT_VARIABLE_NAME + ";cell2dataset("+ cell +", 'ReadVarNames', false)];";
+    		return AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "=[" + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ";cell2dataset("+ cell +", 'ReadVarNames', false)];";
     	}
     	if (type.equals("struct")){
     		String cmd = "";
@@ -428,7 +426,7 @@ public class MatlabCode {
     					value = "" + Double.NaN;
     				else
     					value = "" + row.getCell(i);
-    			cmd += Matlab.INPUT_VARIABLE_NAME + ".('"+ varNames.get(i) +"')" + "(end+1)=" + value + ";" ;
+    			cmd += AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ".('"+ varNames.get(i) +"')" + "(end+1)=" + value + ";" ;
     		}
     		return cmd;
     	}
@@ -446,7 +444,7 @@ public class MatlabCode {
     					value = "" + Double.NaN;
     				else
     					value = "" + row.getCell(i);
-    			var = Matlab.INPUT_VARIABLE_NAME + "('"+ varNames.get(i) +"')";
+    			var = AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + "('"+ varNames.get(i) +"')";
     			cmd += var + "=[" + var + " " + value + "];" ;
     		}
     		return cmd;
@@ -464,11 +462,11 @@ public class MatlabCode {
      */
     public static String getOutputColumnNamesCommand(String type) {
     	if (type.equals("dataset"))
-    		return "get(" + Matlab.OUTPUT_VARIABLE_NAME + ", 'VarNames');";
+    		return "get(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ", 'VarNames');";
     	if (type.equals("map"))
-    		return Matlab.OUTPUT_VARIABLE_NAME +".keys();";
+    		return AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +".keys();";
     	if (type.equals("struct"))
-    		return "fieldnames(" + Matlab.OUTPUT_VARIABLE_NAME + ");";
+    		return "fieldnames(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ");";
     				
     	return null;
     }
@@ -482,11 +480,11 @@ public class MatlabCode {
      */
     public static String getOutputColumnTypesCommand(String type) {
     	if (type.equals("dataset"))
-    		return "cellfun(@(x)class("+ Matlab.OUTPUT_VARIABLE_NAME +".(x)),"+ "get(" + Matlab.OUTPUT_VARIABLE_NAME + ", 'VarNames'),'UniformOutput', false)";;
+    		return "cellfun(@(x)class("+ AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +".(x)),"+ "get(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ", 'VarNames'),'UniformOutput', false)";;
     	if (type.equals("map"))
-    		return "cellfun(@(x)class("+ Matlab.OUTPUT_VARIABLE_NAME +"(x)),"+ Matlab.OUTPUT_VARIABLE_NAME +".keys(),'UniformOutput', false)";
+    		return "cellfun(@(x)class("+ AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +"(x)),"+ AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +".keys(),'UniformOutput', false)";
     	if (type.equals("struct"))
-    		return "structfun(@(x){class(x)},"+ Matlab.OUTPUT_VARIABLE_NAME +");";
+    		return "structfun(@(x){class(x)},"+ AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +");";
     	
     	return null;
     }
@@ -502,9 +500,9 @@ public class MatlabCode {
      */
     public static String getOutputColumnDescriptionsCommand(String type) {
     	if (type.equals("dataset"))
-    		return "get(" + Matlab.OUTPUT_VARIABLE_NAME + ", 'VarNames');"; // Take also the variable names
+    		return "get(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ", 'VarNames');"; // Take also the variable names
     	else 
-    		return "{" + Matlab.COLUMNS_VARIABLE_NAME + ".knime};";
+    		return "{" + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + ".knime};";
     }
     
     /**
@@ -516,11 +514,11 @@ public class MatlabCode {
      */
     public static String getOutputTableNumberOfRowsCommand(String type) {
     	if (type.equals("dataset"))
-    		return "length(" + Matlab.OUTPUT_VARIABLE_NAME + ");";
+    		return "length(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ");";
     	if (type.equals("map"))
-    		return Matlab.OUTPUT_VARIABLE_NAME + ".keys;lenght(" + Matlab.OUTPUT_VARIABLE_NAME + "(ans{1}));";
+    		return AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ".keys;lenght(" + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "(ans{1}));";
     	if (type.equals("struct"))
-    		return "max(structfun(@(x)length(x), " + Matlab.OUTPUT_VARIABLE_NAME + "));";
+    		return "max(structfun(@(x)length(x), " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "));";
     	
     	return null;
     }
@@ -536,18 +534,18 @@ public class MatlabCode {
      */
     public static String getRetrieveOutputRowCommand(String type, int rowNumber, String[] varNames) {
     	if (type.equals("dataset"))
-    		return "datasetfun(@(x)x(" + rowNumber + ")," + Matlab.OUTPUT_VARIABLE_NAME + ",'UniformOutput',false);";
+    		return "datasetfun(@(x)x(" + rowNumber + ")," + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ",'UniformOutput',false);";
     	if (type.equals("map")) { //TODO This approach is highly inefficient. since it puts the entire table in the 'ans' variable before accessing it.
     		String cmd = "{";
     		for (String varName : varNames)
-    			cmd += Matlab.OUTPUT_VARIABLE_NAME + "('" + varName + "') ";
+    			cmd += AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "('" + varName + "') ";
 			cmd += "};ans(" + rowNumber + ",:);";
     		return cmd;
     	}
     	if (type.equals("struct")) {
     		String cmd = "{";
     		for (String varName : varNames)
-    			cmd += Matlab.OUTPUT_VARIABLE_NAME + ".('" + varName + "')("+ rowNumber + ") ";
+    			cmd += AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + ".('" + varName + "')("+ rowNumber + ") ";
     		return cmd + "};";
     	}
     	
@@ -562,7 +560,7 @@ public class MatlabCode {
      * @return
      */
     public static String getRetrieveErrorCommand() {
-    	return "{" + Matlab.ERROR_VARIABLE_NAME + ".identifier " + Matlab.ERROR_VARIABLE_NAME + ".message}"; 
+    	return "{" + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".identifier " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".message}"; 
     }
     
     /**
@@ -583,7 +581,7 @@ public class MatlabCode {
      * @return
      */
     public static String getClearWorkspaceCommand() {
-    	return "clear " + Matlab.INPUT_VARIABLE_NAME + " " + Matlab.COLUMNS_VARIABLE_NAME + " " + Matlab.OUTPUT_VARIABLE_NAME + " " + Matlab.ERROR_VARIABLE_NAME;
+    	return "clear " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + " " + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + " " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + " " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME;
     }
     
     /**
@@ -600,7 +598,7 @@ public class MatlabCode {
     	String functionName = FilenameUtils.getBaseName(parserPath);
     			
     	return "cd " + matlabPath + ";" + 
-				"[" + Matlab.INPUT_VARIABLE_NAME +"," + Matlab.COLUMNS_VARIABLE_NAME + "]=" + 
+				"[" + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME +"," + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + "]=" + 
 				functionName + "('" + tablePath + "','" + matlabType + "');" +
 				getOpenMessage(matlabType);
     }
@@ -615,7 +613,7 @@ public class MatlabCode {
     public static String getPlotNodeMessage(boolean changedInputVariables){
     	String msg = "disp('created plot";
     	if (changedInputVariables)
-    		msg += " and updated " + Matlab.INPUT_VARIABLE_NAME + ", " + Matlab.COLUMNS_VARIABLE_NAME + " ')";
+    		msg += " and updated " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ", " + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + " ')";
     	return  msg + ".');";
     }
     
@@ -627,9 +625,9 @@ public class MatlabCode {
      * @return
      */
     public static String getSnippetNodeMessage(boolean changedInputVariable) {
-    	String msg = "disp('exectuted snippet and updated " + Matlab.OUTPUT_VARIABLE_NAME;
+    	String msg = "disp('exectuted snippet and updated " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME;
     	if (changedInputVariable)
-    		msg += ", " + Matlab.INPUT_VARIABLE_NAME + " and " + Matlab.COLUMNS_VARIABLE_NAME;
+    		msg += ", " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + " and " + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME;
     	return msg + ".');";
     }
     
