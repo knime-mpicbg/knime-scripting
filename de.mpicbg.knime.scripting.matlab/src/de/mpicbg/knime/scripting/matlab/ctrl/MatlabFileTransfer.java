@@ -6,7 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
+
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 
 /**
@@ -64,8 +69,9 @@ public class MatlabFileTransfer {
 		this.suffix = "." + FilenameUtils.getExtension(resourcePath);
 		file = new File(AbstractMatlabScriptingNodeModel.TEMP_PATH, FilenameUtils.getName(resourcePath));
 		file.deleteOnExit();
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream resstream = loader.getResourceAsStream(resourcePath);
+		Bundle bundle = Platform.getBundle("de.mpicbg.knime.scripting.matlab");
+		URL resFile = bundle.getResource(resourcePath);
+        InputStream resstream = resFile.openStream();
         writeStreamToFile(resstream, new FileOutputStream(file));
 	}
 
