@@ -23,14 +23,6 @@ import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.io.*;
-import java.nio.channels.FileChannel;
-import java.util.*;
-
 
 /**
  * Document me!
@@ -43,7 +35,7 @@ public class RUtils {
     public static final String SCRIPT_PROPERTY_DEFAULT = "rOut <- kIn";
 
     public static int MAX_FACTOR_LEVELS = 500;
-    public static final String NA_VAL_FOR_R = "NA";
+    
     
     // constants defining the naming of variables used as KNIME input/output within R
     /** data-frame with input KNIME-table */
@@ -63,149 +55,39 @@ public class RUtils {
     
 
 
-    public static RList convert2RList(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
-//        long timeBefore = System.currentTimeMillis();
-
+    public static RDataFrameContainer convert2DataContainer(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
 
         DataTableSpec tableSpecs = bufTable.getDataTableSpec();
-        List<String> includeColumns = AttributeUtils.toStringList(AttributeUtils.convert(tableSpecs));
-
-        // not necessary to check
-        //validateColumnNames(exec, bufTable);
-
-        List<Object> columArrays = new ArrayList<Object>();
-        Map<Integer, DataType> converters = new TreeMap<Integer, DataType>();
-
         int numRows = bufTable.getRowCount();
-
+        
+        RDataFrameContainer rDFC = new RDataFrameContainer(numRows, tableSpecs.getNumColumns());
+        
         // 1) initialize the arrays
         for (int i = 0; i < tableSpecs.getNumColumns(); i++) {
 
             DataColumnSpec colSpec = tableSpecs.getColumnSpec(i);
             DataType colType = colSpec.getType();
-
-            if (!includeColumns.contains(colSpec.getName())) {
-                continue;
-            }
-
-            converters.put(i, colType);
-
-            if (colType.equals(DoubleCell.TYPE)) {
-                columArrays.add(new double[numRows]);
-
-            } else if (colType.equals(StringCell.TYPE) || colType.equals(DateAndTimeCell.TYPE)) {
-                columArrays.add(new String[numRows]);
-
-            } else if (colType.equals(IntCell.TYPE)) {
-                columArrays.add(new int[numRows]);
-
-            } else {
-                throw new RuntimeException("value type of attribute '" + colSpec.getName() + "' not supported");
-            }
+            
+            rDFC.addEmptyDataColumn(i, colType, colSpec.getName());           
         }
-
-//        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 1: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
-     
-
-
+        
         // 2) Perform the actual table conversion: loop ONCE (for performance reasons) over the table and populate the vectors for R
         int rowCounter = 0;
         for (DataRow dataRow : bufTable) {
             exec.checkCanceled();
-
-            for (Integer colIndex : converters.keySet()) {
-                DataType colType = converters.get(colIndex);
-
-                if (colType.equals(DoubleCell.TYPE)) {
-                    double[] numColumn = (double[]) columArrays.get(colIndex);
-                    DataCell dataCell = dataRow.getCell(colIndex);
-
-                    if (dataCell instanceof DoubleCell) {
-                        double value = ((DoubleCell) dataCell).getDoubleValue();
-                        numColumn[rowCounter] = value;
-
-                    } else if (dataCell instanceof IntCell) {  // this may happen after two table with matching column names but differeig types are concatenated.
-                        int intValue = ((IntCell) dataCell).getIntValue();
-                        numColumn[rowCounter] = intValue;
-
-                    } else if (dataCell.isMissing()) {
-                        numColumn[rowCounter] = REXPDouble.NA;
-
-                    } else {
-                        numColumn[rowCounter] = Double.NaN;
-                    }
-
-                } else if (colType.equals(StringCell.TYPE) || colType.equals(DateAndTimeCell.TYPE)) {
-                    String[] strColumn = (String[]) columArrays.get(colIndex);
-                    DataCell dataCell = dataRow.getCell(colIndex);
-
-                    if (dataCell instanceof StringCell) {
-                        String stringValue = ((StringCell) dataCell).getStringValue();
-
-                        // TODO REMOVE THIS HACK AS SOON AS https://www.rforge.net/bugzilla/show_bug.cgi?id=194 IS FIXED
-                        stringValue = stringValue.trim().isEmpty() ? NA_VAL_FOR_R : stringValue;
-                        // TODO REMOVE THIS HACK AS SOON AS https://www.rforge.net/bugzilla/show_bug.cgi?id=194 IS FIXED
-
-                        strColumn[rowCounter] = stringValue;
-
-                    } else if (dataCell instanceof DateAndTimeCell) {
-                        String dateValue = ((DateAndTimeCell) dataCell).getStringValue();
-                        strColumn[rowCounter] = dateValue;
-
-                    } else if (dataCell.isMissing()) {
-                        strColumn[rowCounter] = NA_VAL_FOR_R;
-                    }
-
-                } else if (colType.equals(IntCell.TYPE)) {
-                    int[] numColumn = (int[]) columArrays.get(colIndex);
-
-                    DataCell dataCell = dataRow.getCell(colIndex);
-                    if (dataCell instanceof IntCell) {
-                        int intValue = ((IntCell) dataCell).getIntValue();
-                        numColumn[rowCounter] = intValue;
-
-                    } else if (dataCell instanceof DoubleCell) { // this may happen after two table with matching column names but differeig types are concatenated.
-                        double doubleValue = ((DoubleCell) dataCell).getDoubleValue();
-                        numColumn[rowCounter] = (int) Math.round(doubleValue);
-
-                    } else if (dataCell.isMissing()) {
-                        numColumn[rowCounter] = REXPInteger.NA;
-
-                    } else {
-                        //http://cran.r-project.org/doc/manuals/R-data.html
-                        numColumn[rowCounter] = (int) Double.NaN;
-                    }
-                }
+            exec.setMessage("Save row " + dataRow.getKey() + "(" + rowCounter + "/" + numRows + ") in R container");
+            
+            // save row key
+            rDFC.addRowKey(rowCounter, dataRow.getKey().getString());
+                       
+            for (Integer colIndex : rDFC.getPushableColumns()) {
+            	rDFC.addData(rowCounter, colIndex, dataRow.getCell(colIndex));
             }
-
+            
             rowCounter++;
         }
-
-//        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 2: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
-
-
-        // 3) create the REXP (which is a list of vectors)
-        RList rList = new RList(bufTable.getDataTableSpec().getNumColumns(), true);
-
-        for (Integer colIndex : converters.keySet()) {
-            DataType colType = converters.get(colIndex);
-            String colName = tableSpecs.getColumnSpec(colIndex).getName();
-
-            if (colType.equals(DoubleCell.TYPE)) {
-                rList.put(colName, new REXPDouble((double[]) columArrays.get(colIndex)));
-
-            } else if (colType.equals(StringCell.TYPE) || colType.equals(DateAndTimeCell.TYPE)) {
-                rList.put(colName, new REXPString((String[]) columArrays.get(colIndex)));
-
-            } else if (colType.equals(IntCell.TYPE)) {
-                rList.put(colName, new REXPInteger((int[]) columArrays.get(colIndex)));
-            }
-        }
-
-//        NodeLogger.getLogger(RUtils.class).warn(bufTable.hashCode() + "- Time danach (knime->R) 3: " + (double) (System.currentTimeMillis() - timeBefore) / 1000);
-
-
-        return rList;
+        
+        return rDFC;
     }
 
 
@@ -229,7 +111,7 @@ public class RUtils {
         }
     }
 
-
+    // TODO: replace it
     public static BufferedDataTable convert2DataTable(ExecutionContext exec, REXP rexp, Map<String, DataType> typeMapping) {
         try {
             RList rList = rexp.asList();
@@ -307,7 +189,7 @@ public class RUtils {
                     LinkedHashSet<DataCell> domain = new LinkedHashSet<DataCell>();
 
                     for (int i = 0; i < numExamples; i++) {
-                        if (isNA[i] || stringColumn[i].equals(NA_VAL_FOR_R)) {
+                        if (isNA[i] || stringColumn[i].equals(RDataFrameContainer.NA_VAL_FOR_R)) {
                             cells[i][colIndex] = DataType.getMissingCell();
 
                         } else {
@@ -425,18 +307,6 @@ public class RUtils {
     public static int getPort() {
         return R4KnimeBundleActivator.getDefault().getPreferenceStore().getInt(RPreferenceInitializer.R_PORT);
     }
-
-
-    /*public static void evalScript(RConnection connection, String preparedScript) {
-        try {
-
-            connection.parseAndEval(preparedScript);
-
-        } catch (Throwable e) {
-            throw new RuntimeException("Error while executing script: " + preparedScript + "\n The error was: " + e + "\n It's likely that the syntax of your script is not correct.", e);
-        }
-    }*/
-
 
     public static String fixEncoding(String stringValue) {
         try {
@@ -583,6 +453,7 @@ public class RUtils {
         try {
             if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
         } catch (Throwable e) {
+        	System.gc();
             throw new KnimeScriptingException("Failed to convert generic node inputs into r workspace variables: " + e);
         }
 
@@ -591,15 +462,16 @@ public class RUtils {
         try {
             if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec);
         } catch (Throwable e) {
+        	System.gc();
             throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
         }
-
+        System.gc();
         return inputMapping;
     }
 
 
     private static void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionContext exec) throws REXPMismatchException, RserveException, CanceledExecutionException {
-        Map<String, REXP> pushTable = new HashMap<String, REXP>();
+    	int chunksize = 5;
 
         for (String varName : tableMapping.keySet()) {
             BufferedDataTable input = tableMapping.get(varName);
@@ -608,28 +480,9 @@ public class RUtils {
                 throw new RuntimeException("null tables are not allowed in the table input mapping");
             }
 
-            RList inputAsRList = convert2RList(exec, input);
-
-            pushTable.put(varName, REXP.createDataFrame(inputAsRList));
-        }
-
-        // assign REXP-dataframe to their R-variable name
-        for (String parName : pushTable.keySet()) {
-            REXP dataFrame = pushTable.get(parName);
-            connection.assign(parName, dataFrame); //TODO: check if this is the step which takes long for big tables
-
-            // post-process nominal attributes to convert missing values to actual NA in R
-            RList rList = dataFrame.asList();
-
-            for (Object columnKey : rList.keys()) {
-                REXPVector column = (REXPVector) rList.get(columnKey);
-                if (column.isString()) {
-                    String varName = columnKey.toString();
-                    String rVarName = parName + "$\"" + varName + "\"";
-
-                    connection.eval(rVarName + " = ifelse(" + rVarName + " == \"NA\", NA," + rVarName + ")");
-                }
-            }
+            RDataFrameContainer dataFrame = convert2DataContainer(exec, input);           
+            dataFrame.pushToR(connection, exec, varName, chunksize);
+            dataFrame = null;
         }
     }
 
@@ -912,6 +765,7 @@ public class RUtils {
     	return warnMessages;
 	}
 	
+
 	/**
 	 * run the actual external call to open R with Knime data
 	 * @param workspaceFile
@@ -999,4 +853,61 @@ public class RUtils {
 
 
 
+
+	public static REXP createDataFrameNoRownames(RList l) throws REXPMismatchException {
+    	if (l == null) throw new NullPointerException("data frame (cannot be null)");
+    	if (!(l.at(0) instanceof REXPVector)) throw new REXPMismatchException(new REXPList(l), "data frame (contents must be vectors)");
+    	return
+    			new REXPGenericVector(l);
+    }
+	
+	
+	public static void main(String[] args) {
+		System.out.println("this is a test");
+		
+		int n = 20000;
+		
+		RList rList = new RList(3, true);
+		
+		String[] rowNames = new String[n];
+		double[] data = new double[n];
+		for(int i = 0; i < n; i++) {
+			data[i] = i * Math.E;
+			String rn = i + "#this is my row key a very long one";
+			rowNames[i] = rn.substring(0, 30);
+		}
+
+        rList.put("Intensity_MeanIntensity_GFP_Cytoplasmic0", new REXPDouble(data));
+        rList.put("Intensity_MeanIntensity_GFP_Cytoplasmic1", new REXPDouble(data));
+        rList.put("testdata3", new REXPString(rowNames));
+
+        String host = "localhost";
+        int port = 6311;  
+        
+        try {
+        	//REXP df = createDataFrame(rList, rowNames);
+        	REXP df = createDataFrameNoRownames(rList);
+			RConnection con = new RConnection(host, port);
+            con.assign("kIn", df);
+            con.assign("rownames", new REXPString(rowNames));
+            con.eval("attr(kIn, \"row.names\") <- .set_row_names(length(kIn[[1]])); class(kIn) <- \"data.frame\"; rownames(kIn) <- rownames");
+            String[] colnames = con.eval("names(kIn)").asStrings();
+            for(String s : colnames)
+            	System.out.println("Column name: " + s);
+            String[] rownames = con.eval("rownames(kIn)").asStrings();
+            for(String s : rownames)
+            	System.out.println(s + ", ");
+		} catch (REXPMismatchException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RserveException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        
+				
+        System.out.println("done");
+		
+	}
 }

@@ -63,66 +63,54 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 
         RConnection connection = RUtils.createConnection();
-        
-        BufferedDataTable dataTable = null;
-        
-        BufferedDataTable[] inTables = castToBDT(inData);
 
-        try {
-	        // 1) convert exampleSet into data-frame and put into the r-workspace
-	        RUtils.pushToR(inTables, connection, exec);
-	
-	        // 2) run the script  (remove all line breaks and other no space whitespace-characters
-	//        connection.eval(RUtils.prepare4RExecution(script.getStringValue()));
-	
-	        String rawScript = prepareScript();
-	
-	        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-	        rawScript = RUtils.supportOldVarNames(rawScript);
-	
-	        String fixedScript = RUtils.fixEncoding(rawScript);
-	        
-	        REXP out = null;
-	        String[] rowNames = null;
-	        
-	        RUtils.parseScript(connection, fixedScript);
-	
-	        if(useEvaluate) {
-	        	// parse and run script
-	        	// evaluation list, can be used to create a console view, throws first R-error-message
-	        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
-	        	// check for warnings
-	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-	        	
-	
-	        } else {
-	        	// parse and run script
-	        	RUtils.evalScript(connection, fixedScript);     	
-	        }
-	
-	        // check if result data frame is present
-	    	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
-	    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");
-	    	
-	    	out = connection.eval(R_OUTVAR_BASE_NAME);
-	        if(!out.inherits("data.frame")) 
-	        	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
-	        
-	        // retrieve row names
-	        rowNames = connection.eval("rownames(" + R_OUTVAR_BASE_NAME + ")").asStrings();
-	
-	        Map<String, DataType> typeMapping = getColumnTypeMapping(inTables[0]);
-	
-	        // 3) extract output data-frame from R
-	        assert(out != null);
-	        dataTable = RUtils.convert2DataTable(exec, out, rowNames, typeMapping);
-	
-	        connection.eval("rm(list = ls(all = TRUE));");
-        } catch(Exception e) {
-        	connection.close();
-        	throw e;
+        // 1) convert exampleSet into data-frame and put into the r-workspace
+        RUtils.pushToR(inData, connection, exec.createSubExecutionContext((double)(1/3)));
+
+        String rawScript = prepareScript();
+
+        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
+        rawScript = RUtils.supportOldVarNames(rawScript);
+
+        String fixedScript = RUtils.fixEncoding(rawScript);
+        
+        REXP out = null;
+        String[] rowNames = null;
+        
+        RUtils.parseScript(connection, fixedScript);
+
+        if(useEvaluate) {
+        	// parse and run script
+        	// evaluation list, can be used to create a console view, throws first R-error-message
+        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+        	// check for warnings
+        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+        	
+
+        } else {
+        	// parse and run script
+        	RUtils.evalScript(connection, fixedScript);     	
         }
+
+        // check if result data frame is present
+    	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
+    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");
+    	
+    	out = connection.eval(R_OUTVAR_BASE_NAME);
+        if(!out.inherits("data.frame")) 
+        	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
+        
+        // retrieve row names
+        rowNames = connection.eval("rownames(" + R_OUTVAR_BASE_NAME + ")").asStrings();
+
+        Map<String, DataType> typeMapping = getColumnTypeMapping(inData[0]);
+
+        // 3) extract output data-frame from R
+        assert(out != null);
+        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, out, rowNames, typeMapping);
+
+        connection.eval("rm(list = ls(all = TRUE));");
         connection.close();
 
         return new BufferedDataTable[]{dataTable};
