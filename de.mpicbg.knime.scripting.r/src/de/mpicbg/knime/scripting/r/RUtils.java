@@ -1,13 +1,40 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.knutils.AttributeUtils;
-import de.mpicbg.knime.knutils.Utils;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.generic.RPortObject;
-import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.*;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
+>>>>>>> improve R transfer: transfer to R seems to work now, introduced chunks for big tables
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -17,7 +44,7 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.NodeLogger;
+
 import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
@@ -36,7 +63,6 @@ public class RUtils {
 
     public static int MAX_FACTOR_LEVELS = 500;
     
-    
     // constants defining the naming of variables used as KNIME input/output within R
     /** data-frame with input KNIME-table */
     public static final String VAR_RKNIME_IN = "knime.in";
@@ -53,41 +79,95 @@ public class RUtils {
     /** KNIME input script */
     public static final String VAR_RKNIME_SCRIPT = "knime.script.in";
     
+    /** enum for datatypes which can be pushed to R via R-serve */
+    public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
+    
+	public static RType getRType(DataType dataType, boolean hasDomainValues) {
+		// numeric values (order is important)
+		if(dataType.isCompatible(BooleanValue.class)) return RType.R_LOGICAL;
+		if(dataType.isCompatible(IntValue.class)) return RType.R_INT;
+		if(dataType.isCompatible(DoubleValue.class)) return RType.R_DOUBLE;
+		
+		// string
+		if(dataType.isCompatible(StringValue.class)) {
+			if(hasDomainValues) return RType.R_FACTOR;
+			else return RType.R_STRING;
+		}
+		
+		return null;
+	}
 
+    public static void transferRDataContainer(ExecutionContext exec, BufferedDataTable bufTable, int colLimit,
+    		RConnection connection, String parName) throws RserveException, REXPMismatchException, CanceledExecutionException {
 
-    public static RDataFrameContainer convert2DataContainer(ExecutionContext exec, BufferedDataTable bufTable) throws RserveException, REXPMismatchException, CanceledExecutionException {
-
-        DataTableSpec tableSpecs = bufTable.getDataTableSpec();
+        DataTableSpec tSpec = bufTable.getDataTableSpec();
         int numRows = bufTable.getRowCount();
+        int numCols = tSpec.getNumColumns();
         
-        RDataFrameContainer rDFC = new RDataFrameContainer(numRows, tableSpecs.getNumColumns());
-        
-        // 1) initialize the arrays
-        for (int i = 0; i < tableSpecs.getNumColumns(); i++) {
+        RDataFrameContainer rDFC = new RDataFrameContainer(numRows, numCols);
 
-            DataColumnSpec colSpec = tableSpecs.getColumnSpec(i);
-            DataType colType = colSpec.getType();
-            
-            rDFC.addEmptyDataColumn(i, colType, colSpec.getName());           
-        }
+    	// iterate over table columns; find the columns which can be pushed
+    	int chunkIdx = 0;
+    	int chunkCounter = 0;
+    	for(int colIdx = 0; colIdx < numCols; colIdx++) {
+    		DataColumnSpec cSpec = tSpec.getColumnSpec(colIdx);
+    		
+    		String cName = cSpec.getName();
+    		
+    		//check if column type is supported, then add to columns to pass
+    		RType type = getRType(cSpec.getType(), cSpec.getDomain().hasValues());
+    		if(type != null) {
+    			rDFC.addColumnSpec(cName, type, chunkIdx, colIdx);
+    		
+    			chunkCounter ++;
+    			if(chunkCounter == colLimit || colIdx == (numCols - 1)) {
+    				chunkIdx ++;
+    				chunkCounter = 0;
+    			}
+    		}
+    	}
+    	
+    	// iterate over the chunks
+    	int nChunks = rDFC.getColumnChunks().size();
+    	for(int chunk : rDFC.getColumnChunks()) {
+    		
+    		// set sub execution context for this chunk
+    		ExecutionContext subExec = exec.createSubExecutionContext(((double)chunk + 1)/(double)nChunks);
+    		subExec.setMessage("Chunk" + chunk);  	
+    		
+    		// initialize data vectors
+    		rDFC.initDataVectors(chunk);    	
+    		
+    		// fill arrays with data
+    		int rowIdx = 0;
+    		for(DataRow row : bufTable) {
+    			if(chunk == 0) rDFC.addRowKey(rowIdx, row.getKey().getString());
+    			
+    			subExec.checkCanceled();
+    			subExec.setProgress(((double)rowIdx+1)/(double)numRows);
+    			subExec.setMessage("Row " + rowIdx + "(chunk " + chunk + ")");
+    			
+    			rDFC.addRowData(row, rowIdx, chunk);
+    			
+    			rowIdx ++;
+    		}
+    		
+    		rDFC.pushChunk(chunk, connection, parName, subExec);
+    		rDFC.clearChunk(chunk);
+    	}
+    	
+    	// if table has no columns, store row-keys
+    	if(nChunks == 0) {
+    		int rowIdx = 0;
+    		for(DataRow row : bufTable) {
+    			rDFC.addRowKey(rowIdx, row.getKey().getString());
+    			rowIdx ++;
+    		}
+    	}
         
-        // 2) Perform the actual table conversion: loop ONCE (for performance reasons) over the table and populate the vectors for R
-        int rowCounter = 0;
-        for (DataRow dataRow : bufTable) {
-            exec.checkCanceled();
-            exec.setMessage("Save row " + dataRow.getKey() + "(" + rowCounter + "/" + numRows + ") in R container");
-            
-            // save row key
-            rDFC.addRowKey(rowCounter, dataRow.getKey().getString());
-                       
-            for (Integer colIndex : rDFC.getPushableColumns()) {
-            	rDFC.addData(rowCounter, colIndex, dataRow.getCell(colIndex));
-            }
-            
-            rowCounter++;
-        }
-        
-        return rDFC;
+    	exec.setMessage("Successful transfer to R"); 	
+    	
+    	rDFC.createDataFrame(parName, connection);
     }
 
 
@@ -453,7 +533,6 @@ public class RUtils {
         try {
             if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
         } catch (Throwable e) {
-        	System.gc();
             throw new KnimeScriptingException("Failed to convert generic node inputs into r workspace variables: " + e);
         }
 
@@ -462,10 +541,8 @@ public class RUtils {
         try {
             if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec);
         } catch (Throwable e) {
-        	System.gc();
             throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
         }
-        System.gc();
         return inputMapping;
     }
 
@@ -480,9 +557,7 @@ public class RUtils {
                 throw new RuntimeException("null tables are not allowed in the table input mapping");
             }
 
-            RDataFrameContainer dataFrame = convert2DataContainer(exec, input);           
-            dataFrame.pushToR(connection, exec, varName, chunksize);
-            dataFrame = null;
+            transferRDataContainer(exec, input, chunksize, connection, varName);           
         }
     }
 
