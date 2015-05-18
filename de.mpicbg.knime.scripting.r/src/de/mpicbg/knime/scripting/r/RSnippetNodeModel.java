@@ -65,7 +65,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         RConnection connection = RUtils.createConnection();
 
         // 1) convert exampleSet into data-frame and put into the r-workspace
-        RUtils.pushToR(inData, connection, exec.createSubExecutionContext((double)(1/3)));
+        RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
 
         String rawScript = prepareScript();
 

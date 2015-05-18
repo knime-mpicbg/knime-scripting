@@ -44,11 +44,26 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPDouble;
+import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPInteger;
+import org.rosuda.REngine.REXPList;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPString;
+import org.rosuda.REngine.REXPVector;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
+
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
+import de.mpicbg.knime.scripting.r.generic.RPortObject;
+import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -97,8 +112,21 @@ public class RUtils {
 		return null;
 	}
 
-    public static void transferRDataContainer(ExecutionContext exec, BufferedDataTable bufTable, int colLimit,
+	/**
+	 * pushes one KNIME table to R in chunks
+	 * @param exec				execution context
+	 * @param bufTable			KNIME table
+	 * @param colLimit			number of columns per chunk
+	 * @param connection		R-connection
+	 * @param parName			variable name in R
+	 * @throws RserveException
+	 * @throws REXPMismatchException
+	 * @throws CanceledExecutionException
+	 */
+    public static void transferRDataContainer(ExecutionMonitor exec, BufferedDataTable bufTable, int colLimit,
     		RConnection connection, String parName) throws RserveException, REXPMismatchException, CanceledExecutionException {
+    	
+    	NodeLogger logger = NodeLogger.getLogger(RDataFrameContainer.class);
 
         DataTableSpec tSpec = bufTable.getDataTableSpec();
         int numRows = bufTable.getRowCount();
@@ -124,6 +152,8 @@ public class RUtils {
     				chunkIdx ++;
     				chunkCounter = 0;
     			}
+    		} else {
+    			logger.info("Ommit column " + cName + "; data type not supported");
     		}
     	}
     	
@@ -132,8 +162,8 @@ public class RUtils {
     	for(int chunk : rDFC.getColumnChunks()) {
     		
     		// set sub execution context for this chunk
-    		ExecutionContext subExec = exec.createSubExecutionContext(((double)chunk + 1)/(double)nChunks);
-    		subExec.setMessage("Chunk" + chunk);  	
+    		ExecutionMonitor subExec = exec.createSubProgress(1.0/nChunks);
+    		subExec.setMessage("Chunk" + (chunk+1));  	
     		
     		// initialize data vectors
     		rDFC.initDataVectors(chunk);    	
@@ -145,7 +175,7 @@ public class RUtils {
     			
     			subExec.checkCanceled();
     			subExec.setProgress(((double)rowIdx+1)/(double)numRows);
-    			subExec.setMessage("Row " + rowIdx + "(chunk " + chunk + ")");
+    			subExec.setMessage("Row " + rowIdx + "(chunk " + (chunk+1) + "/ " + nChunks + ")");
     			
     			rDFC.addRowData(row, rowIdx, chunk);
     			
@@ -156,7 +186,7 @@ public class RUtils {
     		rDFC.clearChunk(chunk);
     	}
     	
-    	// if table has no columns, store row-keys
+    	// if table has no columns, store row-keys only
     	if(nChunks == 0) {
     		int rowIdx = 0;
     		for(DataRow row : bufTable) {
@@ -164,10 +194,12 @@ public class RUtils {
     			rowIdx ++;
     		}
     	}
-        
-    	exec.setMessage("Successful transfer to R"); 	
     	
+    	exec.setMessage("Create R data frame (cannot be cancelled)");
+  	
     	rDFC.createDataFrame(parName, connection);
+    	
+    	exec.setMessage("Successful transfer to R");
     }
 
 
@@ -522,14 +554,23 @@ public class RUtils {
         }
     }
 
-    // a small testing environment to test r-communication
-
-
-    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionContext exec) throws KnimeScriptingException {
+    /**
+     * push all incoming KNIME-objects to R
+     * @param inObjects
+     * @param connection
+     * @param exec
+     * @return
+     * @throws KnimeScriptingException
+     */
+    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionMonitor exec) throws KnimeScriptingException {
         Map<String, Object> inputMapping = createPortMapping(inObjects);
+        
+        double nInput = inputMapping.size();
+        exec.setMessage("Transfer to R");
 
         // first push the generic inputs
         Map<String, File> genPortMapping = getGenericPorts(inputMapping);
+        double nGenerics = genPortMapping.size();
         try {
             if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
         } catch (Throwable e) {
@@ -538,18 +579,29 @@ public class RUtils {
 
         // second, push the table inputs
         Map<String, BufferedDataTable> tablePortMapping = getDataTablePorts(inputMapping);
+        double nTables = tablePortMapping.size();
         try {
-            if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec);
+            if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec.createSubProgress(nTables/nInput));
         } catch (Throwable e) {
             throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
         }
         return inputMapping;
     }
 
+    /**
+     * transfers KNIME tables to R
+     * @param connection
+     * @param tableMapping
+     * @param exec
+     * @throws REXPMismatchException
+     * @throws RserveException
+     * @throws CanceledExecutionException
+     */
+    private static void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionMonitor exec) throws REXPMismatchException, RserveException, CanceledExecutionException {
+    	//TODO: add chunk-size as node setting
+    	int chunksize = 4;
 
-    private static void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionContext exec) throws REXPMismatchException, RserveException, CanceledExecutionException {
-    	int chunksize = 5;
-
+    	// transfer KNIME-tables to R
         for (String varName : tableMapping.keySet()) {
             BufferedDataTable input = tableMapping.get(varName);
 
@@ -557,7 +609,7 @@ public class RUtils {
                 throw new RuntimeException("null tables are not allowed in the table input mapping");
             }
 
-            transferRDataContainer(exec, input, chunksize, connection, varName);           
+            transferRDataContainer(exec.createSubProgress(1.0/tableMapping.size()), input, chunksize, connection, varName);           
         }
     }
 
@@ -599,6 +651,8 @@ public class RUtils {
 
     /**
      * The values of the map are either files or (buffered)data tables.
+     * @param inObjects
+     * @return
      */
     public static Map<String, Object> createPortMapping(PortObject[] inObjects) {
 

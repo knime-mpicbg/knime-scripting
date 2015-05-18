@@ -22,6 +22,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.rosuda.REngine.REXPDouble;
 import org.rosuda.REngine.REXPGenericVector;
@@ -33,6 +34,11 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.r.RUtils.RType;
 
+/**
+ * transfer class; from KNIME data table to R data frame
+ * @author Antje Janosch
+ *
+ */
 public class RDataFrameContainer {
 	
 	/**
@@ -40,18 +46,41 @@ public class RDataFrameContainer {
 	 */
 	private LinkedHashMap<Integer, List<RDataColumn>> m_columnChunks = new LinkedHashMap<Integer, List<RDataColumn>>();
 	
+	/**
+	 * list of chunk names
+	 */
 	private List<String> m_chunkNames = new ArrayList<String>();
 	
+	/**
+	 * row keys of table
+	 */
 	private String[] m_rowKeys;
 	
+	/**
+	 * number of rows
+	 */
 	private int m_numRows;
 	
+	/**
+	 * number of columns
+	 */
 	private int m_numCols;
 	
+	/**
+	 * intermediate value for missing strings; RServe does not support NA-values for Strings
+	 */
 	public static final String NA_VAL_FOR_R = "NA";
 	
+	/**
+	 * KNIME logger
+	 */
 	private NodeLogger logger = NodeLogger.getLogger(RDataFrameContainer.class);
 
+	/**
+	 * constructor with given table dimensions
+	 * @param numRows
+	 * @param numCols
+	 */
 	public RDataFrameContainer(int numRows, int numCols) {
 		super();
 		this.m_numRows = numRows;
@@ -60,10 +89,22 @@ public class RDataFrameContainer {
 		m_rowKeys = new String[numRows];
 	}
 	
+	/**
+	 * adds the row key of row at given index
+	 * @param row
+	 * @param rowKey
+	 */
 	public void addRowKey(int row, String rowKey) {
 		m_rowKeys[row] = rowKey;
 	}
 	
+	/**
+	 * adds a new data column with a given name, data type and index and assigned to a chunk
+	 * @param cName
+	 * @param type
+	 * @param chunk
+	 * @param colIdx
+	 */
 	public void addColumnSpec(String cName, RType type, int chunk, int colIdx) {
 		
 		RDataColumn rColumn = new RDataColumn(cName, type, colIdx);
@@ -73,10 +114,18 @@ public class RDataFrameContainer {
 		m_columnChunks.get(chunk).add(rColumn);
 	}
 
+	/**
+	 * @return set of chunk indices
+	 */
 	public Set<Integer> getColumnChunks() {
 		return m_columnChunks.keySet();
 	}
 
+	/**
+	 * initialize the data vectors of all columns in a given chunk
+	 * @param chunk
+	 * @return
+	 */
 	public boolean initDataVectors(int chunk) {
 		if(!m_columnChunks.containsKey(chunk)) {
 			logger.coding("cannot initialize data vectors. no chunk '" + chunk + "' available");
@@ -90,6 +139,12 @@ public class RDataFrameContainer {
 		return true;
 	}
 
+	/**
+	 * store data of a given row from all columns of a given chunk
+	 * @param row
+	 * @param rowIdx
+	 * @param chunk
+	 */
 	public void addRowData(DataRow row, int rowIdx, int chunk) {
 		
 		for(RDataColumn column : m_columnChunks.get(chunk)) {
@@ -98,7 +153,16 @@ public class RDataFrameContainer {
 		}
 	}
 
-	public void pushChunk(int chunk, RConnection connection, String parName, ExecutionContext exec) throws CanceledExecutionException, RserveException {
+	/**
+	 * transfer chunk to R
+	 * @param chunk
+	 * @param connection
+	 * @param parName
+	 * @param subExec
+	 * @throws CanceledExecutionException
+	 * @throws RserveException
+	 */
+	public void pushChunk(int chunk, RConnection connection, String parName, ExecutionMonitor subExec) throws CanceledExecutionException, RserveException {
 		
 		// create a new RList with a column vectors of this chunk
 		RList rList = new RList(this.m_numRows, true);
@@ -112,14 +176,18 @@ public class RDataFrameContainer {
     	String chunkName = parName + "_chunk_" + chunk;
     	m_chunkNames.add(chunkName);
     	
-    	exec.checkCanceled();
-    	exec.setMessage("transfer chunk " + chunkName + " to R (cannot be cancelled)");
+    	subExec.checkCanceled();
+    	subExec.setMessage("transfer chunk " + chunk + " to R (cannot be cancelled)");
     	
     	// assign data to variable in R
     	logger.debug("transfer chunk " + chunkName + " to R");
     	connection.assign(chunkName, new REXPGenericVector(rList));
 	}
 
+	/**
+	 * clears the data of all columns for a given chunk and call GC after that
+	 * @param chunk
+	 */
 	public void clearChunk(int chunk) {
 		List<RDataColumn> columns = m_columnChunks.get(chunk);
     	for(RDataColumn col : columns) {
@@ -128,6 +196,13 @@ public class RDataFrameContainer {
     	System.gc();
 	}
 
+	/**
+	 * combines all transfered chunks into a single data frame
+	 * fixes missing values
+	 * @param parName
+	 * @param connection
+	 * @throws RserveException
+	 */
 	public void createDataFrame(String parName, RConnection connection) throws RserveException {
 		logger.debug("combine chunks");
 
