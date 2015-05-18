@@ -62,13 +62,6 @@
          id="de.mpicbg.knime.scripting.matlab"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="de.mpicbg.knime.scripting.matlab.srv"
-         download-size="0"
-         install-size="0"
          version="0.0.0"/>
 
 </feature>
