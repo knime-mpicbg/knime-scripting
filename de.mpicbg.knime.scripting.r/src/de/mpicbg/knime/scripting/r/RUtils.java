@@ -60,6 +60,7 @@ import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.generic.RPortObject;
@@ -420,13 +421,7 @@ public class RUtils {
         return R4KnimeBundleActivator.getDefault().getPreferenceStore().getInt(RPreferenceInitializer.R_PORT);
     }
 
-    public static String fixEncoding(String stringValue) {
-        try {
-            return new String(stringValue.getBytes("UTF-8"), "UTF-8").replace("\r", "");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Could not change encoding of r-command to UTF8");
-        }
-    }
+
 
 
     public static void loadGenericInputs(Map<String, File> varFileMapping, RConnection connection) throws RserveException, REXPMismatchException, IOException {
@@ -805,7 +800,7 @@ public class RUtils {
 	        }
 	
 	        // ok, so the device should be fine - let's plot - replace this by any plotting code you desire ...
-	        String preparedScript = fixEncoding(script);
+	        String preparedScript = AbstractScriptingNodeModel.fixEncoding(script);
 	        RUtils.parseScript(connection, preparedScript);
 	
 	        if(useEvaluate) {

@@ -15,6 +15,9 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,6 +233,12 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     /**
+     * <p>
+     * deserializes the template from the node setting 'node.template'<br>
+     * loads the script (either with RGG configuration settings or as it is)<br>
+     * replace flowvariable placeholders
+     * </p>
+     * 
      * This method is usually just called from within the different execute implementations. Occassionally it is also
      * called in the view implemntations.
      */
@@ -261,11 +270,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
             script = TemplateConfigurator.generateScript(contextAwareHWTemplate);
         }
+        
+        script = fixEncoding(script);
 
         // replace flow-variables
         return FlowVarUtils.replaceFlowVars(script, this);
     }
     
+
     /**
      * cast an array of PortObjects into an array of BufferedDataTables
      * @param inData
@@ -282,4 +294,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 		}		
 		return inTables;
 	}
+
+    public static String fixEncoding(String stringValue) {
+        String encodedString = new String(StandardCharsets.UTF_8.encode(stringValue).toString());
+        return encodedString.replace("\r","");
+    }
+
 }

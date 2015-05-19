@@ -64,25 +64,27 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 
         RConnection connection = RUtils.createConnection();
 
-        // 1) convert exampleSet into data-frame and put into the r-workspace
+        // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
+        
+        // TODO: push color/size/shape model to R
+        // TODO: push flow variables to R
 
-        String rawScript = prepareScript();
+        String script = prepareScript();
 
         // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-        rawScript = RUtils.supportOldVarNames(rawScript);
-
-        String fixedScript = RUtils.fixEncoding(rawScript);
+        // stop support !
+        //rawScript = RUtils.supportOldVarNames(rawScript);
         
         REXP out = null;
         String[] rowNames = null;
         
-        RUtils.parseScript(connection, fixedScript);
+        RUtils.parseScript(connection, script);
 
         if(useEvaluate) {
         	// parse and run script
         	// evaluation list, can be used to create a console view, throws first R-error-message
-        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(script, connection);
         	// check for warnings
         	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
         	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
@@ -90,7 +92,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 
         } else {
         	// parse and run script
-        	RUtils.evalScript(connection, fixedScript);     	
+        	RUtils.evalScript(connection, script);     	
         }
 
         // check if result data frame is present
