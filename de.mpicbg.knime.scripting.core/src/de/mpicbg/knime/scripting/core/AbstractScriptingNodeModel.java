@@ -296,7 +296,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 	}
 
     public static String fixEncoding(String stringValue) {
-        String encodedString = new String(StandardCharsets.UTF_8.encode(stringValue).toString());
+        String encodedString = new String(stringValue.getBytes(StandardCharsets.UTF_8));
         return encodedString.replace("\r","");
     }
 
