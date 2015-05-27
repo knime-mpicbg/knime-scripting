@@ -62,6 +62,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 		// check preferences
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 
+    	// create connection
         RConnection connection = RUtils.createConnection();
 
         // 1) convert input table into data-frame and put into the r-workspace
@@ -70,17 +71,14 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         // TODO: push color/size/shape model to R
         // TODO: push flow variables to R
 
+        // 2) prepare and parse script
         String script = prepareScript();
-
         // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
         // stop support !
-        //rawScript = RUtils.supportOldVarNames(rawScript);
-        
-        REXP out = null;
-        String[] rowNames = null;
-        
+        //rawScript = RUtils.supportOldVarNames(rawScript);   
         RUtils.parseScript(connection, script);
 
+        // 3) evaluate script
         if(useEvaluate) {
         	// parse and run script
         	// evaluation list, can be used to create a console view, throws first R-error-message
@@ -97,25 +95,15 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 
         // check if result data frame is present
     	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
-    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");
-    	
-    	out = connection.eval(R_OUTVAR_BASE_NAME);
+    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");    	
+        REXP out = connection.eval(R_OUTVAR_BASE_NAME);
         if(!out.inherits("data.frame")) 
         	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
         
-        // retrieve row names
-        rowNames = connection.eval("rownames(" + R_OUTVAR_BASE_NAME + ")").asStrings();
-
-        Map<String, DataType> typeMapping = getColumnTypeMapping(inData[0]);
-
-        // 3) extract output data-frame from R
-        assert(out != null);
-        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, out, rowNames, typeMapping);
-
-        connection.eval("rm(list = ls(all = TRUE));");
-        connection.close();
-
-        return new BufferedDataTable[]{dataTable};
+        // 4) extract output data-frame from R
+        BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec);
+        
+        return new BufferedDataTable[]{outTable};
     }
 
     private static Map<String, DataType> getColumnTypeMapping(BufferedDataTable bufferedDataTable) {

@@ -2,40 +2,45 @@ package de.mpicbg.knime.scripting.r.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.StringValue;
-import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.rosuda.REngine.REXPDouble;
+import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPInteger;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-import de.mpicbg.knime.scripting.r.RUtils.RType;
-
 /**
- * transfer class; from KNIME data table to R data frame
+ * <p>
+ * table model for R <-> KNIME transfer
+ * </p>
+ * <pre>
+ * General:
+ * - create table, add column specs, add row keys, add data
+ * </pre>
+ * <p>
+ * To R: push column chunks to R, clear chunk data, later combine within R to a single data frame
+ * </p>
+ * <p>
+ * To KNIME: pull row chunks from R (re-use column data vector), fill in KNIME data table
+ * </p>
+ * 
  * @author Antje Janosch
  *
  */
@@ -44,7 +49,7 @@ public class RDataFrameContainer {
 	/**
 	 * column chunk number + list of columns in that chunk
 	 */
-	private LinkedHashMap<Integer, List<RDataColumn>> m_columnChunks = new LinkedHashMap<Integer, List<RDataColumn>>();
+	private LinkedHashMap<Integer, ArrayList<RDataColumn>> m_columnChunks = new LinkedHashMap<Integer, ArrayList<RDataColumn>>();
 	
 	/**
 	 * list of chunk names
@@ -104,15 +109,14 @@ public class RDataFrameContainer {
 	 * @param type
 	 * @param chunk
 	 * @param colIdx
+	 * @param levels 
 	 */
-	public void addColumnSpec(String cName, RType type, int chunk, int colIdx) {
+/*	public void addColumnSpec(String cName, RType type, int chunk, int colIdx) {
 		
 		RDataColumn rColumn = new RDataColumn(cName, type, colIdx);
 		
-		if(!m_columnChunks.containsKey(chunk))
-			m_columnChunks.put(chunk, new ArrayList<RDataColumn>());
-		m_columnChunks.get(chunk).add(rColumn);
-	}
+		addColumnSpec(rColumn, chunk);
+	}*/
 
 	/**
 	 * @return set of chunk indices
@@ -133,7 +137,6 @@ public class RDataFrameContainer {
 		}
 		
 		for(RDataColumn column : m_columnChunks.get(chunk)) {	
-			RType type = column.getType();
 			column.initDataVector(m_numRows);			
 		}		
 		return true;
@@ -183,19 +186,7 @@ public class RDataFrameContainer {
     	logger.debug("transfer chunk " + chunkName + " to R");
     	connection.assign(chunkName, new REXPGenericVector(rList));
 	}
-
-	/**
-	 * clears the data of all columns for a given chunk and call GC after that
-	 * @param chunk
-	 */
-	public void clearChunk(int chunk) {
-		List<RDataColumn> columns = m_columnChunks.get(chunk);
-    	for(RDataColumn col : columns) {
-    		col.clearData();
-    	}
-    	System.gc();
-	}
-
+	
 	/**
 	 * combines all transfered chunks into a single data frame
 	 * fixes missing values
@@ -242,6 +233,124 @@ public class RDataFrameContainer {
             	connection.voidEval(parName + "[," + (dataframeColumns.indexOf(col.getName())+1) + "]" + missingIdxVec + " <- NA");
             }
         }
+	}
+
+	/**
+	 * clears the data of all columns for a given chunk and call GC after that
+	 * @param chunk
+	 */
+	public void clearChunk(int chunk) {
+		List<RDataColumn> columns = m_columnChunks.get(chunk);
+    	for(RDataColumn col : columns) {
+    		col.clearData();
+    	}
+    	System.gc();
+	}
+
+	/**
+	 * adds a column to a certain chunk
+	 * @param rColumn
+	 * @param chunk
+	 */
+	public void addColumnSpec(RDataColumn rColumn, int chunk) {
+		if(!m_columnChunks.containsKey(chunk))
+			m_columnChunks.put(chunk, new ArrayList<RDataColumn>());
+		m_columnChunks.get(chunk).add(rColumn);
+	}
+
+	/**
+	 * @return KNIME table spec
+	 */
+	public DataTableSpec createDataTableSpec() {
+		
+		DataColumnSpec[] colSpecs = new DataColumnSpec[this.m_numCols];
+		
+		for(Entry<Integer, ArrayList<RDataColumn>> chunkSet : this.m_columnChunks.entrySet()) {
+			for(RDataColumn rCol : chunkSet.getValue()) {
+				DataColumnSpecCreator newColumn = new DataColumnSpecCreator(rCol.getName(), rCol.getKnimeDataType());
+				DataColumnDomain domainInfo = rCol.getKnimeDomain(hasRows());
+				newColumn.setDomain(domainInfo);
+				colSpecs[rCol.getIndex()] = newColumn.createSpec();
+			}
+		}
+		
+		DataTableSpec tSpec = new DataTableSpec("Result from R", colSpecs);
+		
+		return tSpec;
+	}
+
+	/**
+	 * pulls data frame with a given name from R (in row chunks of a given size) and fills KNIME table with this data
+	 * @param con
+	 * @param connection
+	 * @param subExec
+	 * @param rOutName
+	 * @param rowChunkSize
+	 * @throws RserveException
+	 * @throws CanceledExecutionException 
+	 */
+	public void readDataFromR(BufferedDataContainer con, RConnection connection, ExecutionMonitor subExec, String rOutName, int rowChunkSize) throws RserveException, CanceledExecutionException {
+		
+		ArrayList<RDataColumn> cList = m_columnChunks.get(0);
+		
+		// get dataframe chunks (by n rows)
+		int startRow = 1;
+		//int rowIdx = 0;
+		while(startRow <= m_numRows) {
+			int endRow = startRow + rowChunkSize - 1;
+			if(endRow > m_numRows) endRow = m_numRows;
+			subExec.setMessage("retrieve rows " + startRow + " to " + endRow + " from R (cannot be cancelled)");
+			subExec.checkCanceled();
+			if(m_numCols > 0) {
+				RList data = ((REXPGenericVector)connection.eval(rOutName + "[" + startRow + ":" + endRow + ",,drop = FALSE]")).asList();
+				
+				for(RDataColumn col : cList) {
+					col.initDataVector(endRow - startRow);
+					col.addData((REXP)data.get(col.getName()));
+				}
+			}
+			
+			subExec.setProgress((double)endRow/(double)m_numRows);
+			
+			int dataIdx = 0;
+			for(int i = startRow; i <= endRow; i++) {
+				DefaultRow row = new DefaultRow(m_rowKeys[i-1], getListOfCells(dataIdx));
+				con.addRowToTable(row);
+				dataIdx++;
+			}
+			
+			startRow = endRow + 1;
+		}	
+		subExec.setProgress(1.0);
+	}
+
+	/**
+	 * @param rowIdx
+	 * @return data from a given row as KNIME cell list
+	 */
+	private List<DataCell> getListOfCells(int rowIdx) {
+		List<DataCell> cells = new ArrayList<DataCell>();
+		if(m_numCols > 0) {
+			for(RDataColumn col : m_columnChunks.get(0)) {
+				cells.add(col.getKNIMECell(rowIdx));
+			}
+		}
+		return cells;
+	}
+
+	/**
+	 * adds the row keys from a String vector
+	 * @param rowNames
+	 */
+	public void addRowNames(String[] rowNames) {
+		m_rowKeys = rowNames;
+	}
+
+	/**
+	 * @return TRUE, if table contains at least one data row; FALSE otherwise
+	 */
+	public boolean hasRows() {
+		return m_numRows > 0;
 	}
 	
 }

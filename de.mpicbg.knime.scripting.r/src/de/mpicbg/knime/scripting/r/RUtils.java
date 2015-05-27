@@ -11,15 +11,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.knime.core.data.BooleanValue;
@@ -34,8 +33,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
->>>>>>> improve R transfer: transfer to R seems to work now, introduced chunks for big tables
-import org.knime.core.data.date.DateAndTimeCell;
+
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -62,6 +60,7 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.generic.RPortObject;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
@@ -98,6 +97,12 @@ public class RUtils {
     /** enum for datatypes which can be pushed to R via R-serve */
     public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
     
+    /**
+     * maps KNIME data type to RType
+     * @param dataType
+     * @param hasDomainValues
+     * @return
+     */
 	public static RType getRType(DataType dataType, boolean hasDomainValues) {
 		// numeric values (order is important)
 		if(dataType.isCompatible(BooleanValue.class)) return RType.R_LOGICAL;
@@ -108,6 +113,23 @@ public class RUtils {
 		if(dataType.isCompatible(StringValue.class)) {
 			if(hasDomainValues) return RType.R_FACTOR;
 			else return RType.R_STRING;
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * maps R typeOf to RType
+	 * @param typeOf
+	 * @param isFactor
+	 * @return
+	 */
+	public static RType getRType(String typeOf, boolean isFactor) {
+		if(typeOf.equals("double")) return RType.R_DOUBLE;
+		if(typeOf.equals("character")) return RType.R_STRING;
+		if(typeOf.equals("logical")) return RType.R_LOGICAL;
+		if(typeOf.equals("integer")) {
+			return isFactor ? RType.R_FACTOR : RType.R_INT;
 		}
 		
 		return null;
@@ -146,7 +168,14 @@ public class RUtils {
     		//check if column type is supported, then add to columns to pass
     		RType type = getRType(cSpec.getType(), cSpec.getDomain().hasValues());
     		if(type != null) {
-    			rDFC.addColumnSpec(cName, type, chunkIdx, colIdx);
+    			RDataColumn rCol = new RDataColumn(cName, type, colIdx);
+    			
+        		if(type.equals(RType.R_FACTOR)) {
+        			Set<DataCell> levels = new LinkedHashSet<DataCell>();
+        			levels = cSpec.getDomain().getValues();
+        			rCol.setLevels(levels);
+        		}   			
+    			rDFC.addColumnSpec(rCol, chunkIdx);
     		
     			chunkCounter ++;
     			if(chunkCounter == colLimit || colIdx == (numCols - 1)) {
@@ -182,6 +211,7 @@ public class RUtils {
     			
     			rowIdx ++;
     		}
+    		if(!rDFC.hasRows()) subExec.setProgress(1);
     		
     		rDFC.pushChunk(chunk, connection, parName, subExec);
     		rDFC.clearChunk(chunk);
@@ -191,9 +221,15 @@ public class RUtils {
     	if(nChunks == 0) {
     		int rowIdx = 0;
     		for(DataRow row : bufTable) {
+    			
+    			exec.checkCanceled();
+    			exec.setProgress(((double)rowIdx+1)/(double)numRows);
+    			exec.setMessage("Row " + rowIdx);
+    			
     			rDFC.addRowKey(rowIdx, row.getKey().getString());
     			rowIdx ++;
     		}
+    		if(!rDFC.hasRows()) exec.setProgress(1);
     	}
     	
     	exec.setMessage("Create R data frame (cannot be cancelled)");
@@ -757,7 +793,14 @@ public class RUtils {
 			throw new KnimeScriptingException("Error : " + out.asString());
 	}
 
-
+	/**
+	 * check for syntax errors
+	 * @param connection
+	 * @param fixedScript
+	 * @throws RserveException
+	 * @throws KnimeScriptingException
+	 * @throws REXPMismatchException
+	 */
 	public static void parseScript(RConnection connection, String fixedScript)
 			throws RserveException, KnimeScriptingException,
 			REXPMismatchException {
@@ -1033,5 +1076,90 @@ public class RUtils {
 				
         System.out.println("done");
 		
+	}
+
+	public static BufferedDataTable pullTableFromR(String rOutName, RConnection connection, ExecutionContext exec) 
+	throws RserveException, REXPMismatchException, CanceledExecutionException {
+		
+		exec.setMessage("R snippet finished - pull data from R");
+		ExecutionMonitor subExec = exec.createSubProgress(1.0/2);
+
+		int numRows = ((REXPInteger)connection.eval("nrow(" + rOutName + ")")).asInteger();
+		int numCols = ((REXPInteger)connection.eval("ncol(" + rOutName + ")")).asInteger();
+		
+		RDataFrameContainer rDFC = new RDataFrameContainer(numRows, numCols);
+		
+		//get row names
+		String[] rowNames = new String[]{};
+		subExec.setMessage("retrieve row names from R (cannot be cancelled)");
+		if(numRows > 0) rowNames = connection.eval("rownames(" + rOutName + ")").asStrings();
+		rDFC.addRowNames(rowNames);
+
+		subExec.setMessage("retrieve column specs from R (cannot be cancelled)");
+		if(numCols > 0) {
+			//names(rOut)	column names
+			String[] cNames = getDataFrameColumnNames(numCols, connection, rOutName);
+			//sapply(rOut, typeof)		storage mode
+			String[] typeOf = getDataFrameColumnTypes(numCols, connection, rOutName);	
+			// sapply(rOut, is.factor)		is factor?
+			boolean[] isFactor = ((REXPLogical)connection.eval("sapply(" + rOutName + ", is.factor)")).isTRUE();
+
+			// iterate over columns to get their data types
+			for(int i = 0; i < numCols; i++) {		
+				RType t = getRType(typeOf[i], isFactor[i]);
+				RDataColumn rCol = new RDataColumn(cNames[i], t, i);
+				subExec.checkCanceled();
+				// add level information
+				if(rDFC.hasRows()) {
+					if(t.equals(RType.R_FACTOR)) {
+						String[] levels = ((REXPString)connection.eval("levels(" + rOutName + "[," + (i+1) + "])")).asStrings();
+						rCol.setLevels(levels);
+					}
+					if(t.equals(RType.R_LOGICAL)) {
+						String[] levels = {"false", "true"};
+						rCol.setLevels(levels);
+					}
+					// add information of lower / upper bounds
+					if(t.equals(RType.R_DOUBLE) || t.equals(RType.R_INT)) {
+						// range(rOut[,1],na.rm = TRUE)*1.0		returns min/max as doubles
+						double[] bounds = ((REXPDouble) connection.eval("range(" + rOutName + "[," + (i+1) + "], na.rm = TRUE)*1.0")).asDoubles();
+						rCol.setBounds(bounds);
+					}
+				}
+
+
+				rDFC.addColumnSpec(rCol, 0);		
+			}
+		}
+
+		// create DataTableSpec from rDFC
+		BufferedDataContainer con = exec.createDataContainer(rDFC.createDataTableSpec());
+		
+		// fill table with data
+		subExec.setMessage("retrieve data from R (cannot be cancelled)");
+		if(numRows > 0) {
+			int rowChunkSize = 1000;
+			rDFC.readDataFromR(con, connection, subExec, rOutName, rowChunkSize);
+		}
+
+		con.close();
+		return con.getTable();
+	}
+
+	private static String[] getDataFrameColumnTypes(int numCols, RConnection connection, String rOutName) throws RserveException, REXPMismatchException {
+		// ((REXPString)connection.eval("sapply(" + rOutName + ", typeof)")).asStrings();
+		if(numCols == 1) {
+			return new String[]{((REXPString)connection.eval("sapply(" + rOutName + ", typeof)")).asString()};
+		} else {
+			return ((REXPString)connection.eval("sapply(" + rOutName + ", typeof)")).asStrings();
+		}
+	}
+
+	private static String[] getDataFrameColumnNames(int numCols, RConnection connection, String rOutName) throws RserveException, REXPMismatchException {
+		if(numCols == 1) {
+			return new String[]{((REXPString)connection.eval("names(" + rOutName + ")")).asString()};
+		} else {
+			return ((REXPString)connection.eval("names(" + rOutName + ")")).asStrings();
+		}
 	}
 }
