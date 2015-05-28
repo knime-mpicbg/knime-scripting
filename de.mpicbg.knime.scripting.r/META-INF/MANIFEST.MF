@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.r; singleton:=true
-Bundle-Version: 2.0.2.qualifier
+Bundle-Version: 2.0.3.qualifier
 Bundle-ClassPath: rsnippet.jar,
  lib/REngine.jar,
  lib/RserveEngine.jar
@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[2.10.0,3.0.0)",
  org.knime.base;bundle-version="[2.10.0,3.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[2.0.0,3.0.0)",
- de.mpicbg.knime.scripting.core;bundle-version="[2.0.2,3.0.0)",
+ de.mpicbg.knime.scripting.core;bundle-version="[2.0.4,3.0.0)",
  org.apache.commons.lang;bundle-version="2.6.0",
  org.knime.product
 Export-Package: de.mpicbg.knime.scripting.r,
