@@ -1,4 +1,22 @@
 ======================================================================================================
+2015-05-28
+VERSION		v2.0.4
+
+ISSUES
+
+Scripting
+* fixes #59: template configuration dialog has too much empty space
+
+Matlab
+* fixes NullPointer-Exception when executing a matlab node.
+* Simplifying the Matlab controller (only to work on the local machine)
+
+R
+* undo row names support as pushing row names like this suffers from an RServe-bug
+* closes issue #42: Use new Rserve version 1.7
+* changed R icons and fixed node types in xml and added icon for splash screen
+
+======================================================================================================
 2015-02-18
 VERSION		v2.0.2
 
