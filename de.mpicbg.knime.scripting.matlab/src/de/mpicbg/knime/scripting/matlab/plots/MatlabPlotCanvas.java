@@ -21,17 +21,22 @@ import java.awt.image.PixelGrabber;
  * @author Holger Brandl
  */
 public class MatlabPlotCanvas extends JPanel {
-    private BufferedImage baseImage;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	private BufferedImage baseImage;
     private BufferedImage scaledImage;
-    private MatlabPlotNodeModel plotModel;
+//    private MatlabPlotNodeModel plotModel;
 
-    private boolean isReCreatingImage = false;
+//    private boolean isReCreatingImage = false;
 
     public MatlabPlotCanvas(MatlabPlotNodeModel plotModel) {
         setFocusable(true);
         setPreferredSize(new Dimension(plotModel.getDefWidth(), plotModel.getDefHeight()));
 
-        this.plotModel = plotModel;
+//        this.plotModel = plotModel;
 
         baseImage = toBufferedImage(plotModel.getImage());
 
@@ -43,7 +48,7 @@ public class MatlabPlotCanvas extends JPanel {
                 }
 
                 BufferedImage bufImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-                Graphics2D g = bufImage.createGraphics();
+                bufImage.createGraphics();
                 AffineTransform at = AffineTransform.getScaleInstance((double) getWidth() / baseImage.getWidth(null),
                         (double) getHeight() / baseImage.getHeight(null));
 

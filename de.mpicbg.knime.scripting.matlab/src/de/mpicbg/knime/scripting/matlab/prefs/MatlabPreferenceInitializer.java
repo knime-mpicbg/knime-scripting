@@ -25,8 +25,8 @@
  */
 package de.mpicbg.knime.scripting.matlab.prefs;
 
+import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
-import de.mpicbg.knime.scripting.matlab.srv.Matlab;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -75,7 +75,7 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(MATLAB_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/script-templates.txt");
         store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/figure-templates.txt");
         
-        store.setDefault(MATLAB_TYPE, Matlab.DEFAULT_TYPE);
+        store.setDefault(MATLAB_TYPE, AbstractMatlabScriptingNodeModel.DEFAULT_TYPE);
         store.setDefault(MATLAB_TRANSFER_METHOD, "file");
     }
 }
