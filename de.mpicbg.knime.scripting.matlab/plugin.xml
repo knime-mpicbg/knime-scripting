@@ -21,8 +21,8 @@
               id="de.mpicbg.knime.scripting.matlab.MatlabSnippetNodeFactory"/>
 
         <node category-path="/community/matlab"
-              factory-class="de.mpicbg.knime.scripting.matlab.open.OpenInMatlabFactory"
-              id="de.mpicbg.knime.scripting.matlab.OpenInMatlabFactory"/>
+              factory-class="de.mpicbg.knime.scripting.matlab.open.OpenInMatlabNodeFactory"
+              id="de.mpicbg.knime.scripting.matlab.OpenInMatlabNodeFactory"/>
 
         <node category-path="/community/matlab"
               factory-class="de.mpicbg.knime.scripting.matlab.plots.MatlabPlotNodeFactory"
@@ -52,7 +52,7 @@
         <splashExtension
                 icon="resources/matlabicon.png"
                 id="Matlab"
-                tooltip="Some tools to ease HCS analysis">
+                tooltip="Run MATLAB scripts from KNIME">
         </splashExtension>
     </extension>
 

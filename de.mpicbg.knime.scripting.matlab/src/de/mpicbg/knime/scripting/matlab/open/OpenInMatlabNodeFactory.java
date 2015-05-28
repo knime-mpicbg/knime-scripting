@@ -10,14 +10,14 @@ import org.knime.core.node.NodeView;
 /**
  * @author Felix Meyenhofer
  */
-public class OpenInMatlabFactory extends NodeFactory<OpenInMatlab> {
+public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public OpenInMatlab createNodeModel() {
-        return new OpenInMatlab();
+    public OpenInMatlabNodeModel createNodeModel() {
+        return new OpenInMatlabNodeModel();
     }
 
 
@@ -34,8 +34,8 @@ public class OpenInMatlabFactory extends NodeFactory<OpenInMatlab> {
      * {@inheritDoc}
      */
     @Override
-    public NodeView<OpenInMatlab> createNodeView(final int viewIndex,
-                                                 final OpenInMatlab nodeModel) {
+    public NodeView<OpenInMatlabNodeModel> createNodeView(final int viewIndex,
+                                                 final OpenInMatlabNodeModel nodeModel) {
         throw null;
     }
 
