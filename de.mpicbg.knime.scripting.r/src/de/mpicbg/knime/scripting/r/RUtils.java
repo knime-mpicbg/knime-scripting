@@ -239,27 +239,6 @@ public class RUtils {
     	exec.setMessage("Successful transfer to R");
     }
 
-
-    /**
-     * Ensures that the column names in the input table are valid data.frame attribute names.
-     * Note: there is no column name which is not allowed in R data.frames (though maybe not recommended), unnecessary check?
-     *
-     * @throws RuntimeException if a column does not match the requirements as defined in the R language definition
-     */
-    private static void validateColumnNames(ExecutionContext exec, BufferedDataTable bufTable) throws CanceledExecutionException {
-        for (DataColumnSpec columnSpec : bufTable.getDataTableSpec()) {
-            exec.checkCanceled();
-
-            String colName = columnSpec.getName();
-
-            // fix column names which are not valid in R (that means containing invalid characters). cf. R-method 'make.names'
-//            if (!colName.matches("[\\w]+[\\d\\w_. ]*")) {
-            if (!colName.matches("[\\w]+.*")) {
-                throw new RuntimeException("The column named '" + colName + "' is not compatible (=start with somethine A-z) with R and needs to be renamed");
-            }
-        }
-    }
-
     // TODO: replace it
     public static BufferedDataTable convert2DataTable(ExecutionContext exec, REXP rexp, Map<String, DataType> typeMapping) {
         try {
@@ -1115,12 +1094,8 @@ public class RUtils {
 						String[] levels = ((REXPString)connection.eval("levels(" + rOutName + "[," + (i+1) + "])")).asStrings();
 						rCol.setLevels(levels);
 					}
-					if(t.equals(RType.R_LOGICAL)) {
-						String[] levels = {"false", "true"};
-						rCol.setLevels(levels);
-					}
 					// add information of lower / upper bounds
-					if(t.equals(RType.R_DOUBLE) || t.equals(RType.R_INT)) {
+					if(t.equals(RType.R_DOUBLE) || t.equals(RType.R_INT) || t.equals(RType.R_LOGICAL)) {
 						// range(rOut[,1],na.rm = TRUE)*1.0		returns min/max as doubles
 						double[] bounds = ((REXPDouble) connection.eval("range(" + rOutName + "[," + (i+1) + "], na.rm = TRUE)*1.0")).asDoubles();
 						rCol.setBounds(bounds);

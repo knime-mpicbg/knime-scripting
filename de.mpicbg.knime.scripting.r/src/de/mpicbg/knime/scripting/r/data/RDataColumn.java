@@ -375,18 +375,23 @@ public class RDataColumn {
 				dCDC.setLowerBound(new IntCell((int) m_bounds[0]));
 				dCDC.setUpperBound(new IntCell((int) m_bounds[1]));
 			}
+			if(m_type.equals(RType.R_LOGICAL)) {
+				
+				boolean lBound = m_bounds[0] != 0 ? true : false;
+				boolean uBound = m_bounds[1] != 0 ? true : false;
+				
+				dCDC.setLowerBound(BooleanCell.get(lBound));
+				dCDC.setUpperBound(BooleanCell.get(uBound));
+				Set<BooleanCell> vals = new LinkedHashSet<BooleanCell>();
+				vals.add(BooleanCell.get(uBound));
+				vals.add(BooleanCell.get(lBound));
+				dCDC.setValues(vals);
+			}
+			if(m_type.equals(RType.R_FACTOR)) {
+				dCDC.setValues(createDomainValueSet());
+			}
 		}
-		if(m_type.equals(RType.R_LOGICAL)) {
-			dCDC.setLowerBound(BooleanCell.get(false));
-			dCDC.setUpperBound(BooleanCell.get(true));
-			Set<BooleanCell> vals = new LinkedHashSet<BooleanCell>();
-			vals.add(BooleanCell.get(false));
-			vals.add(BooleanCell.get(true));
-			dCDC.setValues(vals);
-		}
-		if(m_type.equals(RType.R_FACTOR)) {
-			dCDC.setValues(createDomainValueSet());
-		}
+		
 		return dCDC.createDomain();
 	}
 

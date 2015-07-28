@@ -180,7 +180,7 @@ public class RDataFrameContainer {
     	m_chunkNames.add(chunkName);
     	
     	subExec.checkCanceled();
-    	subExec.setMessage("transfer chunk " + chunk + " to R (cannot be cancelled)");
+    	subExec.setMessage("transfer chunk " + (chunk+1) + " to R (cannot be cancelled)");
     	
     	// assign data to variable in R
     	logger.debug("transfer chunk " + chunkName + " to R");
