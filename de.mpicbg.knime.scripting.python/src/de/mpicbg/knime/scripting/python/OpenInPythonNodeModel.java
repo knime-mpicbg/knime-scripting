@@ -85,7 +85,12 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
             if (Utils.isMacOSPlatform()) {
                 Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
             } else if (Utils.isWindowsPlatform()) {
-                Runtime.getRuntime().exec(pythonExecPath + " " + scriptFile.getClientPath());
+                Runtime.getRuntime().exec(new String[] {
+                        "cmd",
+                        "/k",
+                        "\"" + pythonExecPath + "\"",
+                        "\"" + scriptFile.getClientPath() + "\""
+                });
             } else logger.error("Unsupported platform");
         } catch (Exception e) {
             throw new RuntimeException(e);
