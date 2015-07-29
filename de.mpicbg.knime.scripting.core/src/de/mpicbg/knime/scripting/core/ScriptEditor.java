@@ -4,7 +4,29 @@
 
 package de.mpicbg.knime.scripting.core;
 
-import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.SwingUtilities;
+import javax.swing.border.TitledBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -12,13 +34,7 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 
 
 /**
@@ -152,25 +168,13 @@ public class ScriptEditor extends JPanel {
             }
         }
 
-        // DEBUGGING OF CRASH ON SLOW MACHINES
-        String currentText = scriptEditorPanel.getText();
-        if (currentText == null) {
-            scriptEditorPanel.setText(script);
-            return;
-        }
-        // DEBUGGING OF CRASH ON SLOW MACHINES
-
-
-        if (currentText.equals(script)) {
-            return;
-        }
-
-        // the script has changed. let's replace it
-        scriptEditorPanel.selectAll();
-        scriptEditorPanel.replaceSelection(script);
-//        scriptEditorPanel.setText(script);
-
-
+        // the script has changed. let's replace it       
+        try {
+			scriptEditorPanel.getDocument().remove(0, scriptEditorPanel.getDocument().getLength());
+			scriptEditorPanel.replaceSelection(script);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
     }
 
 
@@ -328,7 +332,15 @@ public class ScriptEditor extends JPanel {
 
 
     public String getScript() {
-        return scriptEditorPanel.getText();
+    	
+    	Document doc = scriptEditorPanel.getDocument();
+    	try {
+			return doc.getText(0, doc.getLength());
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 
 
