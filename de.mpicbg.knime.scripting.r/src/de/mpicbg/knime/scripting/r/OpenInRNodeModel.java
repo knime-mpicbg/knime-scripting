@@ -49,6 +49,9 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
 
             // 1) convert exampleSet ihnto data-frame and put into the r-workspace
             logger.info("Pushing inputs to R...");
+            File workspaceFile = null;
+            
+            try {
 
             Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec);
 
@@ -59,11 +62,9 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
             connection.voidEval("tmpwfile = tempfile('openinrnode', fileext='.RData');");
             connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
 
-
             // 2) transfer the file to the local computer if necessary
             logger.info("Transferring workspace-file to localhost ...");
-
-            File workspaceFile = null;
+           
             if (RUtils.getHost().equals("localhost")) {
                 workspaceFile = new File(connection.eval("tmpwfile").asString());
             } else {
@@ -78,6 +79,11 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
             }
 
             connection.voidEval("rm(list = ls(all = TRUE));");
+            
+            } catch(Exception e) {
+            	connection.close();
+            	throw e;
+            }
             connection.close();
 
             logger.info("Spawning R-instance ...");

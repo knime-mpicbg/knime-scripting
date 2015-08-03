@@ -111,7 +111,7 @@ public class RPlotCanvas extends JPanel {
             baseImage = toBufferedImage(image);
             scaledImage = null;
 
-        } catch (Throwable e1) {
+        } catch (Exception e1) {
             if (connection != null) {
                 connection.close();
             }

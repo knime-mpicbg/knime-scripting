@@ -199,7 +199,7 @@ public class RPortObject implements PortObject {
             
             jep.setText(summary);
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             jep.setText("Failed to retrieve the structure of R objects from port file " + getFilePath());
         }
         

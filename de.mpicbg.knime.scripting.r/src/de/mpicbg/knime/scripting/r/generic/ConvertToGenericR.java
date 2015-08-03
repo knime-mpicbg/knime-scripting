@@ -38,6 +38,7 @@ public class ConvertToGenericR extends AbstractNodeModel {
 
         RConnection connection = RUtils.createConnection();
 
+        try {
         // 1) onvert the data and push them to R
         RUtils.pushToR(inObjects, connection, exec);
 
@@ -50,6 +51,10 @@ public class ConvertToGenericR extends AbstractNodeModel {
         }
 
         RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
+        }
 
         connection.close();
 

@@ -46,37 +46,42 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
     	
         RConnection connection = RUtils.createConnection();
 
-        // 1) restore the workspace in a different server session
-        RUtils.pushToR(inData, connection, exec);
-
-
-        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
-        String script = prepareScript();
-        String fixedScript = RUtils.fixEncoding(script);
-        
-        RUtils.parseScript(connection, fixedScript);
-        
-        if(useEvaluate) {
-        	// parse and run script
-        	// evaluation list, can be used to create a console view, throws first R-error-message
-        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
-        	// check for warnings
-        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-        	
-
-        } else {
-        	// parse and run script
-        	RUtils.evalScript(connection, fixedScript);     	
+        try {
+	        // 1) restore the workspace in a different server session
+	        RUtils.pushToR(inData, connection, exec);
+	
+	
+	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
+	        String script = prepareScript();
+	        String fixedScript = RUtils.fixEncoding(script);
+	        
+	        RUtils.parseScript(connection, fixedScript);
+	        
+	        if(useEvaluate) {
+	        	// parse and run script
+	        	// evaluation list, can be used to create a console view, throws first R-error-message
+	        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+	        	// check for warnings
+	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+	        	
+	
+	        } else {
+	        	// parse and run script
+	        	RUtils.evalScript(connection, fixedScript);     	
+	        }
+	
+	
+	        // 3) extract output data-frame from R
+	        if (rWorkspaceFile == null) {
+	            rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+	        }
+	
+	        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
         }
-
-
-        // 3) extract output data-frame from R
-        if (rWorkspaceFile == null) {
-            rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_OUTVAR_BASE_NAME);
-        }
-
-        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
 
         connection.close();
 

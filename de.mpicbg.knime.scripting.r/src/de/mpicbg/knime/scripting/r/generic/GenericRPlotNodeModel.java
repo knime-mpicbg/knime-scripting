@@ -37,20 +37,25 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
     @Override
     protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
         RConnection connection = RUtils.createConnection();
-
-        // 1) restore the workspace in a different server session
-        RUtils.pushToR(inData, connection, exec);
-
-        // 2) create the figure
-        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-        createFigure(connection);
-
-
-        // 3) prepare the output tables (which will do nothing in most cases, as most plot nodes don't have output)
-        PortObject[] nodeOutput = prepareOutput(exec, connection);
-
-        // 3) close the connection to R (which will also delete the temporary workspace on the server)
-        connection.close();
+        PortObject[] nodeOutput = null;
+        try {
+	        // 1) restore the workspace in a different server session
+	        RUtils.pushToR(inData, connection, exec);
+	
+	        // 2) create the figure
+	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
+	        createFigure(connection);
+	
+	
+	        // 3) prepare the output tables (which will do nothing in most cases, as most plot nodes don't have output)
+	        nodeOutput = prepareOutput(exec, connection);
+	
+	        // 3) close the connection to R (which will also delete the temporary workspace on the server)
+	        connection.close();
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
+        }
 
         return nodeOutput;
     }

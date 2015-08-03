@@ -57,21 +57,26 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 
         RConnection connection = RUtils.createConnection();
 
-        // 1) convert exampleSet ihnto data-frame and put into the r-workspace
-        RUtils.pushToR(inData, connection, exec);
+        // 1) convert exampleSet into data-frame and put into the r-workspace
+        try {
+        	RUtils.pushToR(inData, connection, exec);
 
-        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-        createFigure(connection);
+        	adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
+        	createFigure(connection);
         
-        // if the script has been evaluated with 'evaluate', check for warnings. returns empty list otherwise
-        ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-        if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+        	// if the script has been evaluated with 'evaluate', check for warnings. returns empty list otherwise
+        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+        } catch (Exception e) {
+        	connection.close();
+        	throw e;
+        }
 
         // close the connection to R
         connection.close();
 
 
-        // Retrun the image
+        // Rerun the image
         PNGImageContent content;
         File m_imageFile = File.createTempFile("RImage", ".png");
         ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", m_imageFile);

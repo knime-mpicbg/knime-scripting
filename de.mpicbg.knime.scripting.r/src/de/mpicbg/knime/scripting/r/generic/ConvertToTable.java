@@ -36,7 +36,9 @@ public class ConvertToTable extends AbstractNodeModel {
     protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 
         RConnection connection = RUtils.createConnection();
+        BufferedDataTable dataTable = null;
 
+        try {
         // 1) restore the workspace in a different server session
         RUtils.pushToR(inObjects, connection, exec);
 
@@ -57,9 +59,13 @@ public class ConvertToTable extends AbstractNodeModel {
         REXP rexp = connection.eval(RSnippetNodeModel.R_INVAR_BASE_NAME);
         String[] rowNames = connection.eval("rownames(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asStrings();
         
-        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, rexp, null);
+        dataTable = RUtils.convert2DataTable(exec, rexp, null);
 
         connection.voidEval("rm(list = ls(all = TRUE));");
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
+        }
         connection.close();
 
         return new BufferedDataTable[]{dataTable};

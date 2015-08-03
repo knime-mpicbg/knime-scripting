@@ -51,6 +51,7 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
     	logger.info("Creating R-connection");
         RConnection connection = RUtils.createConnection();
 
+        try {
         // push incoming data to R server
         logger.info("Pushing inputs to R...");
         RUtils.pushToR(inData, connection, exec);
@@ -58,6 +59,10 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
         // save workspace file and return it to local machine
         File rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_INVAR_BASE_NAME);
         RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_INVAR_BASE_NAME);
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
+        }
         
         // close connection to server
         connection.close();
