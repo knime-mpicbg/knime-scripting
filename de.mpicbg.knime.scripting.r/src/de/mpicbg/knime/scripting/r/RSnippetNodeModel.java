@@ -9,6 +9,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.REXP;
@@ -18,6 +19,7 @@ import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
@@ -55,7 +57,30 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     	// create connection
         RConnection connection = RUtils.createConnection();
         
-        RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
+        BufferedDataTable outTable = null;
+        try {
+        	outTable = transferAndEvaluate(inData, exec, connection);
+        } catch (Exception e) {
+			if(connection.isConnected()) {
+				connection.close();
+				throw e;
+			}
+		}
+        
+        return new BufferedDataTable[]{outTable};
+    }
+
+
+	private BufferedDataTable transferAndEvaluate(
+			final BufferedDataTable[] inData, final ExecutionContext exec,
+			RConnection connection)
+			throws KnimeScriptingException, RserveException,
+			REXPMismatchException, CanceledExecutionException {
+		
+		// check preferences
+    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
+		
+		RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
@@ -94,9 +119,8 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         
         // 4) extract output data-frame from R
         BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec);
-        
-        return new BufferedDataTable[]{outTable};
-    }
+		return outTable;
+	}
 
     private static Map<String, DataType> getColumnTypeMapping(BufferedDataTable bufferedDataTable) {
         Iterator<DataColumnSpec> dataColumnSpecIterator = bufferedDataTable.getSpec().iterator();
