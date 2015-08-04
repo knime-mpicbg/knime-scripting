@@ -1,6 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
-
+import java.awt.Color;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.BufferedInputStream;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -58,6 +59,7 @@ import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
@@ -1136,5 +1138,67 @@ public class RUtils {
 		} else {
 			return ((REXPString)connection.eval("names(" + rOutName + ")")).asStrings();
 		}
+	}
+
+	/**
+	 * if the input table contains a color model, it is pushed to R as a data frame
+	 * columns: 'value' and 'color'
+	 * @param tSpec	input TableSpec
+	 * @param con	R-serve connection
+	 * @param exec	Execution context
+	 * @throws KnimeScriptingException		if something went wrong pushing the data
+	 */
+	public static void pushColorModelToR(DataTableSpec tSpec, RConnection con, ExecutionContext exec) throws KnimeScriptingException {
+		
+		int colorIdx = ColorModelUtils.getColorColumn(tSpec);
+		
+		// no color model column has been found
+		if(colorIdx == -1) return;
+		
+		// data type of color model is not supported
+		RType t = RUtils.getRType(tSpec.getColumnSpec(colorIdx).getType(), false);
+		if(t == null) return;
+		
+		exec.setMessage("Push color model to R (cannot be cancelled)");
+		
+		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(colorIdx).getName(), t, 0);
+		HashMap<DataCell, Color> colorModel = null;
+		
+		// parse color model
+		if(ColorModelUtils.isNumeric(tSpec, colorIdx)) {
+			colorModel = ColorModelUtils.parseNumericColorModel(tSpec.getColumnSpec(colorIdx));
+		} else {
+			if(ColorModelUtils.isNominal(tSpec, colorIdx)) {
+				colorModel = ColorModelUtils.parseNominalColorModel(tSpec.getColumnSpec(colorIdx));
+			}
+		}
+		
+		if(colorModel == null) return;
+		
+		rC.initDataVector(colorModel.size());
+		
+		// convert color model (color as hex-String and R-data-column with the associated values
+		String[] colValues = new String[colorModel.size()];
+		int i = 0;
+		for(DataCell domVal : colorModel.keySet()) {
+			rC.addData(domVal,i);
+			Color col = colorModel.get(domVal);
+			colValues[i] = String.format("#%02x%02x%02x%02x", col.getRed(), col.getGreen(), col.getBlue(), col.getAlpha());
+			i++;
+		}
+		
+		// create color and value vectors for Rserve transfer
+		RList l = new RList();
+		l.put("value", rC.getREXPData());
+		l.put("color", new REXPString(colValues));
+
+		// push color model to R
+		try {
+			con.assign("knime.color.model", new REXPGenericVector(l));
+			con.voidEval("knime.color.model <- as.data.frame(knime.color.model)");
+		} catch (RserveException e) {
+			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e);
+		}
+		return;
 	}
 }

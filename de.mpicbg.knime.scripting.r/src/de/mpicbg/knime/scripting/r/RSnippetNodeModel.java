@@ -1,6 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.knutils.Utils;
+import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
@@ -64,6 +64,8 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 
     	// create connection
         RConnection connection = RUtils.createConnection();
+        
+        RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
