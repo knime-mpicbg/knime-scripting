@@ -57,6 +57,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     	// create connection
         RConnection connection = RUtils.createConnection();
         
+        // try to execute the node, close connection if anything fails and pass through the error
         BufferedDataTable outTable = null;
         try {
         	outTable = transferAndEvaluate(inData, exec, connection);
@@ -70,7 +71,17 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         return new BufferedDataTable[]{outTable};
     }
 
-
+    /**
+     * execute node
+     * @param inData
+     * @param exec
+     * @param connection
+     * @return out table
+     * @throws KnimeScriptingException
+     * @throws RserveException
+     * @throws REXPMismatchException
+     * @throws CanceledExecutionException
+     */
 	private BufferedDataTable transferAndEvaluate(
 			final BufferedDataTable[] inData, final ExecutionContext exec,
 			RConnection connection)
