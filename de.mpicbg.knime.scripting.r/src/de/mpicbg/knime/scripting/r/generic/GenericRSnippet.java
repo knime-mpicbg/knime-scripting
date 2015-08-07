@@ -1,11 +1,13 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
@@ -100,4 +102,17 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
     public String getDefaultScript() {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

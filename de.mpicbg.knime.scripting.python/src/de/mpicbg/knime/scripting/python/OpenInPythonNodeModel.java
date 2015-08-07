@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.python;
 
 import de.mpicbg.knime.knutils.Utils;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -100,4 +101,17 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
 
         return new BufferedDataTable[0];
     }
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

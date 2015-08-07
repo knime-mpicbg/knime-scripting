@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.matlab.plots;
 
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabFileTransfer;
@@ -373,4 +374,15 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         };
     }
     
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.python;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
@@ -109,4 +110,16 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         return resultTable;
     }
 
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

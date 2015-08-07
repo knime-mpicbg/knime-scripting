@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 
@@ -75,4 +76,17 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
     protected PortObject[] prepareOutput(ExecutionContext exec, RConnection connection) {
         return new BufferedDataTable[0];
     }
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

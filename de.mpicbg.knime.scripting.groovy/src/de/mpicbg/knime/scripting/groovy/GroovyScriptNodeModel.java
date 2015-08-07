@@ -4,6 +4,7 @@
 package de.mpicbg.knime.scripting.groovy;
 
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -200,4 +201,17 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
 //        ClassLoader loader = new PluginClassLoader(urls, this.getClass().getClassLoader());
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -22,6 +22,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
@@ -47,7 +48,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     private JTable table;
     private int outTableDefCounter = 1;
     private JCheckBox m_appendColsCB;
-
+    private JCheckBox m_openIn;
 
     private String defaultScript;
     private List<String> urlList;
@@ -62,6 +63,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     public static final String SCRIPT_TEMPLATE_DEFAULT = "";
 
+	public static final String OPEN_IN = "open.in";
+	public static final boolean OPEN_IN_DFT = false;
+
     /**
      * Will be set by tempaltes that are deployed as acutal knime nodes.
      */
@@ -74,13 +78,20 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
         this.defaultScript = defaultScript;
 
-
         // construct the panel for script loading/authoring
         scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());
+        
+        JPanel mainContainer = new JPanel(new BorderLayout());
+        
         JPanel scriptDialogContainer = new JPanel(new BorderLayout());
         scriptDialogContainer.add(scriptProvider, BorderLayout.CENTER);
-        this.addTabAt(0, SCRIPT_TAB_NAME, scriptDialogContainer);
-
+        
+        m_openIn = new JCheckBox("Open external");
+        mainContainer.add(m_openIn, BorderLayout.NORTH);
+        
+        mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
+        
+        this.addTabAt(0, SCRIPT_TAB_NAME, mainContainer);
 
         // create the template repository browser tab (if enabled)
         if (enableTemplateRepository) {
@@ -170,7 +181,14 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         scriptProvider.setContent(script, finalTemplate);
+        
+        boolean openIn = false;
+        try {
+			openIn = settings.getBoolean(OPEN_IN);
+		} catch (InvalidSettingsException e) {
+		}
 
+        m_openIn.setSelected(openIn);
     }
 
 
@@ -229,6 +247,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         templateProperty.saveSettingsTo(settings);
+        
+        SettingsModelBoolean openInProperty = AbstractScriptingNodeModel.createOpenInProperty();
+        openInProperty.setBooleanValue(m_openIn.isSelected());
+        openInProperty.saveSettingsTo(settings);
     }
 
     public void selectScriptTab() {

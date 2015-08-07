@@ -41,7 +41,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 
 
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected BufferedDataTable[] executeImpl(final BufferedDataTable[] inData,
                                           final ExecutionContext exec) throws Exception {
     	
     	// check preferences
@@ -126,5 +126,20 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     public String getDefaultScript() {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
+
+
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+/*
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		return null;
+	}*/
 }
 

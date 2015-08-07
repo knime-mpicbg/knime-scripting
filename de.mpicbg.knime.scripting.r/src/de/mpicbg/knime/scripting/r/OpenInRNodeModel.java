@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -147,4 +148,17 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
     /* private int calcTableSize(BufferedDataTable bufferedDataTable) {
         return bufferedDataTable.getDataTableSpec().getNumColumns() * bufferedDataTable.getRowCount();
     } */
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.core;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.rgg.RGGDialogPanel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
@@ -8,6 +9,7 @@ import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.*;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -29,6 +31,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      */
     protected final SettingsModelString script;
     protected final SettingsModelString template;
+    protected final SettingsModelBoolean openIn;
     protected int numOutputs;
     protected int numInputs;
 
@@ -49,10 +52,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
         script = createSnippetProperty(getDefaultScript());
         template = createTemplateProperty();
+        openIn = createOpenInProperty();
     }
 
-
-    public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
+	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
         // note we clone it here as it might be (and will be in most cases) an instance variable in the node factory.
         this.hardwiredTemplate = (ScriptTemplate) hardwiredTemplate.clone();
     }
@@ -71,19 +74,33 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     public static SettingsModelString createTemplateProperty() {
         return new SettingsModelString(ScriptingNodeDialog.SCRIPT_TEMPLATE, ScriptingNodeDialog.SCRIPT_TEMPLATE_DEFAULT);
     }
+    
+    public static SettingsModelBoolean createOpenInProperty() {
+		return new SettingsModelBoolean(ScriptingNodeDialog.OPEN_IN, ScriptingNodeDialog.OPEN_IN_DFT);
+	}
 
 
     @Override
     protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
-        throw new RuntimeException("Could not execute node: Node implementation needs to override execute behavior");
+    	if(openIn.getBooleanValue()) {
+    		openIn(inData, exec);
+    		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
+    	} else 
+    		return executeImpl(inData,exec);
     }
 
+    protected abstract BufferedDataTable[] executeImpl(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
 
-    @Override
+	protected abstract void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException;
+
+	@Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
         // adapt hardwired templates to the input specs. Important: this just applies to nodes with outputs.
         // Plot-nodes need to be handled separately
         adaptHardwiredTemplateToContext(inSpecs);
+        
+        if(openIn.getBooleanValue())
+        	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
         return super.configure(inSpecs);
     }
@@ -100,6 +117,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
         script.saveSettingsTo(settings);
         template.saveSettingsTo(settings);
+        openIn.saveSettingsTo(settings);
     }
 
 
@@ -113,6 +131,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
         try {
             script.loadSettingsFrom(settings);
+            openIn.loadSettingsFrom(settings);
         } catch (Throwable t) {
         }
 

@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
 
@@ -100,4 +101,17 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
     protected BufferedDataTable[] prepareOutput(ExecutionContext exec, RConnection connection) {
         return new BufferedDataTable[0];
     }
+    
+	@Override
+	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		throw new KnimeScriptingException("not yet implemented");
+	}
+
+
+	@Override
+	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
