@@ -4,6 +4,9 @@ import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createSn
 import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createTemplateProperty;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +14,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.border.Border;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -87,6 +93,17 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         scriptDialogContainer.add(scriptProvider, BorderLayout.CENTER);
         
         m_openIn = new JCheckBox("Open external");
+        m_openIn.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				AbstractButton abstractButton = (AbstractButton) actionEvent.getSource();
+		        boolean selected = abstractButton.getModel().isSelected();
+		        paintBorder(selected);
+			}
+        	
+        });
+        m_openIn.setBorderPainted(true);
         mainContainer.add(m_openIn, BorderLayout.NORTH);
         
         mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
@@ -189,10 +206,18 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 		}
 
         m_openIn.setSelected(openIn);
+        paintBorder(openIn);
     }
 
 
-    public static ScriptTemplate deserializeTemplate(String serializedTemplate) {
+    private void paintBorder(boolean openIn) {
+        if(openIn)
+        	m_openIn.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.RED));
+        else
+        	m_openIn.setBorder(BorderFactory.createEmptyBorder());
+	}
+
+	public static ScriptTemplate deserializeTemplate(String serializedTemplate) {
         if (serializedTemplate == null || StringUtils.isBlank(serializedTemplate)) {
             return null;
         }
