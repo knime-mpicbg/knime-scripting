@@ -10,6 +10,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPGenericVector;
 import org.rosuda.REngine.REXPInteger;
@@ -48,21 +49,25 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         super(numInputs, numOutputs);
     }
 
+    public String getDefaultScript() {
+        return RUtils.SCRIPT_PROPERTY_DEFAULT;
+    }
 
-    @Override
-    protected BufferedDataTable[] executeImpl(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-    	
-    	// check preferences
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// check preferences
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 
         RConnection connection = RUtils.createConnection();
         
         BufferedDataTable dataTable = null;
+        
+        BufferedDataTable[] inTables = RUtils.castToBDT(inData);
 
         try {
 	        // 1) convert exampleSet into data-frame and put into the r-workspace
-	        RUtils.pushToR(inData, connection, exec);
+	        RUtils.pushToR(inTables, connection, exec);
 	
 	        // 2) run the script  (remove all line breaks and other no space whitespace-characters
 	//        connection.eval(RUtils.prepare4RExecution(script.getStringValue()));
@@ -104,7 +109,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 	        // retrieve row names
 	        rowNames = connection.eval("rownames(" + R_OUTVAR_BASE_NAME + ")").asStrings();
 	
-	        Map<String, DataType> typeMapping = getColumnTypeMapping(inData[0]);
+	        Map<String, DataType> typeMapping = getColumnTypeMapping(inTables[0]);
 	
 	        // 3) extract output data-frame from R
 	        assert(out != null);
@@ -129,24 +134,19 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         }
 
         return typeMapping;
-    }
-
-
-    public String getDefaultScript() {
-        return RUtils.SCRIPT_PROPERTY_DEFAULT;
-    }
+	}
 
 
 	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec)
-			throws KnimeScriptingException {	
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
 		try {
 			String rawScript = prepareScript();
 			RUtils.openInR(inData, exec, rawScript, logger);   
 			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 		} catch (REXPMismatchException | IOException | REngineException e) {
 			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}
+		}		
 	}
 	
 

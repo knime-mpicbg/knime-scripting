@@ -13,6 +13,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -202,16 +203,21 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
     
+
+
+
 	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		throw new KnimeScriptingException("not yet implemented");
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
 	@Override
-	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
-			ExecutionContext exec) throws Exception {
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 }

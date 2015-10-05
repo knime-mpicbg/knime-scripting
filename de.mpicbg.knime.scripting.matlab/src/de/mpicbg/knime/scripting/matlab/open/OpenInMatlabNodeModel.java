@@ -4,6 +4,7 @@ import matlabcontrol.MatlabProxy;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
@@ -78,15 +79,19 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
         return new BufferedDataTable[0];
     }
 	
-	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		throw new KnimeScriptingException("not yet implemented");
-	}
+
 
 	@Override
-	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		
 	}
 }

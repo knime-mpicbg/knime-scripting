@@ -81,8 +81,8 @@ public abstract class AbstractNodeModel extends NodeModel {
     }
 
 
-    @Override
-    protected abstract BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
+/*    @Override
+    protected abstract BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;*/
 
     /**
      * add settings to a list

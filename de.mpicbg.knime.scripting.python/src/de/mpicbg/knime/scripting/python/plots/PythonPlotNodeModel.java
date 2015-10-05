@@ -231,15 +231,19 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         return image;
     }
     
-	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		throw new KnimeScriptingException("not yet implemented");
-	}
+
 
 	@Override
-	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
+	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		
 	}
 }

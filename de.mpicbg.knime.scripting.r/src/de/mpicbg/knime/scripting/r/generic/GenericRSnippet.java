@@ -103,16 +103,21 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
     
+
+
+
 	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		throw new KnimeScriptingException("not yet implemented");
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
 	@Override
-	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
-			ExecutionContext exec) throws Exception {
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 }

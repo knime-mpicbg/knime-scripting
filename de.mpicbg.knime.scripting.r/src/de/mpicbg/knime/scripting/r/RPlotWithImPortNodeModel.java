@@ -48,7 +48,7 @@ public class RPlotWithImPortNodeModel extends RPlotNodeModel {
 
     @Override
     protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-        BufferedDataTable[] result = super.execute(new BufferedDataTable[]{(BufferedDataTable) inData[0]}, exec);
+        BufferedDataTable[] result = (BufferedDataTable[]) super.executeImpl(new PortObject[]{ inData[0]}, exec);
 
         // create the image port object
         PNGImageContent content;

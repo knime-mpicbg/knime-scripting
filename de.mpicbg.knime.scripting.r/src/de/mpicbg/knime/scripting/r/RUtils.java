@@ -991,4 +991,17 @@ public class RUtils {
     	logger.info("Spawning R-instance ...");
     	RUtils.openWSFileInR(workspaceFile, rawScript);           
     }
+
+
+	public static BufferedDataTable[] castToBDT(PortObject[] inData) {		
+		BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
+		
+		int i = 0;
+		for(PortObject in : inData) {
+			if(in instanceof BufferedDataTable)
+				inTables[i] = (BufferedDataTable) in;
+			i++;
+		}		
+		return inTables;
+	}
 }

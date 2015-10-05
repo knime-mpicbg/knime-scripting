@@ -255,6 +255,6 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
         }
     }
     
-	@Override
-	protected abstract void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException;
+	//@Override
+	//protected abstract void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException;
 }

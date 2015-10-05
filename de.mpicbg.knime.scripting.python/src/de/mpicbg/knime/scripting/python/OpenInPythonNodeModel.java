@@ -7,6 +7,7 @@ import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
 import java.io.BufferedReader;
@@ -102,16 +103,21 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
         return new BufferedDataTable[0];
     }
     
+
+
+
 	@Override
-	protected void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		throw new KnimeScriptingException("not yet implemented");
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
 	@Override
-	protected BufferedDataTable[] executeImpl(BufferedDataTable[] inData,
-			ExecutionContext exec) throws Exception {
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 }

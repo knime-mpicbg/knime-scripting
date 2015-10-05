@@ -11,6 +11,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
@@ -79,19 +80,19 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 		return new SettingsModelBoolean(ScriptingNodeDialog.OPEN_IN, ScriptingNodeDialog.OPEN_IN_DFT);
 	}
 
-
     @Override
-    protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
+	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
+			throws Exception {
     	if(openIn.getBooleanValue()) {
-    		openIn(inData, exec);
+    		openIn(inObjects, exec);
     		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
     	} else 
-    		return executeImpl(inData,exec);
-    }
-
-    protected abstract BufferedDataTable[] executeImpl(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
-
-	protected abstract void openIn(BufferedDataTable[] inData, ExecutionContext exec) throws KnimeScriptingException;
+    		return executeImpl(inObjects,exec);
+	}
+    
+    protected abstract PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception;
+	
+	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException;
 
 	@Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
