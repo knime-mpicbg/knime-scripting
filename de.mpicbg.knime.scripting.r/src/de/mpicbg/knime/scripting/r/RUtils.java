@@ -967,7 +967,12 @@ public class RUtils {
     	String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
 
     	connection.voidEval("tmpwfile = tempfile('openinrnode', fileext='.RData');");
-    	connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
+    	
+    	// enable to save nothing in workspace files for source nodes
+    	if(pushTable.size() > 0)
+    		connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
+    	else
+    		connection.voidEval("save(file=tmpwfile); ");
 
     	// 2) transfer the file to the local computer if necessary
     	logger.info("Transferring workspace-file to localhost ...");

@@ -14,9 +14,12 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -41,7 +44,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
     }
 
 
-    @Override
+/*    @Override
     protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
     	
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
@@ -88,7 +91,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         connection.close();
 
         return new PortObject[]{new RPortObject(rWorkspaceFile)};
-    }
+    }*/
 
 
     @Override
@@ -109,15 +112,63 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
+    	
+        RConnection connection = RUtils.createConnection();
+
+        try {
+	        // 1) restore the workspace in a different server session
+	        RUtils.pushToR(inData, connection, exec);
+	
+	
+	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
+	        String script = prepareScript();
+	        String fixedScript = RUtils.fixEncoding(script);
+	        
+	        RUtils.parseScript(connection, fixedScript);
+	        
+	        if(useEvaluate) {
+	        	// parse and run script
+	        	// evaluation list, can be used to create a console view, throws first R-error-message
+	        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+	        	// check for warnings
+	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
+	        	
+	
+	        } else {
+	        	// parse and run script
+	        	RUtils.evalScript(connection, fixedScript);     	
+	        }
+	
+	
+	        // 3) extract output data-frame from R
+	        if (rWorkspaceFile == null) {
+	            rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+	        }
+	
+	        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+        } catch(Exception e) {
+        	connection.close();
+        	throw e;
+        }
+
+        connection.close();
+
+        return new PortObject[]{new RPortObject(rWorkspaceFile)};
 	}
 
 
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
+		try {
+			String rawScript = prepareScript();
+			RUtils.openInR(inData, exec, rawScript, logger);   
+			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
+		} catch (REXPMismatchException | IOException | REngineException e) {
+			throw new KnimeScriptingException("Failed to open in R\n" + e);
+		}
 		
 	}
 }
