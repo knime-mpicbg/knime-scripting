@@ -39,30 +39,9 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
         return AbstractMatlabScriptingNodeModel.DEFAULT_SNIPPET;
     }
 
-
-    /** 
-     * {@inheritDoc}
-     */
-/*    @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	super.configure(inSpecs);
-        return new DataTableSpec[]{null};
-    }*/
-
-
-    /**
-     * {@inheritDoc}
-     */
-/*    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-
-
-    }*/
-    
-
-
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -149,7 +128,9 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	return new BufferedDataTable[]{outData};
 	}
 
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {

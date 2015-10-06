@@ -106,15 +106,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-/*    @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-
-    }*/
-
     
     /**
      * {@inheritDoc}
@@ -270,7 +261,9 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     }
     
 
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -382,6 +375,9 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	return outPorts;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
