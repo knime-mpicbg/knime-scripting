@@ -97,7 +97,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
     @Override
     // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-//        checkRExecutable();
+    	super.configure(inSpecs);
         return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
     }
 

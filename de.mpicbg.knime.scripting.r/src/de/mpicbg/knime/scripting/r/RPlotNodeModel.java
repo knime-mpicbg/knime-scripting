@@ -48,7 +48,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        configure(new DataTableSpec[]{(DataTableSpec) inSpecs[0]});
+        super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 

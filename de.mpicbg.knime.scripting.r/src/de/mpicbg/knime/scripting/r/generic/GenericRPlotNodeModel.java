@@ -68,6 +68,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+    	super.configure(inSpecs);
         return new PortObjectSpec[0];
     }
 

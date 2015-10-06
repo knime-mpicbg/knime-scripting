@@ -94,7 +94,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 	
 	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException;
 
-	@Override
+/*	@Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
         // adapt hardwired templates to the input specs. Important: this just applies to nodes with outputs.
         // Plot-nodes need to be handled separately
@@ -104,10 +104,22 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
         return super.configure(inSpecs);
-    }
+    }*/
 
+    @Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+    	// adapt hardwired templates to the input specs. Important: this just applies to nodes with outputs.
+        // Plot-nodes need to be handled separately
+        adaptHardwiredTemplateToContext(inSpecs);
+        
+        if(openIn.getBooleanValue())
+        	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
-    public String getDefaultScript() {
+        return null;
+	}
+
+	public String getDefaultScript() {
         return "";
     }
 

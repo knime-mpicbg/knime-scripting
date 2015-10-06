@@ -43,19 +43,29 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     /** 
      * {@inheritDoc}
      */
-    @Override
+/*    @Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    	super.configure(inSpecs);
         return new DataTableSpec[]{null};
-    }
+    }*/
 
 
     /**
      * {@inheritDoc}
      */
-    @Override
+/*    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
                                           final ExecutionContext exec) throws Exception {
 
+
+    }*/
+    
+
+
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
     	BufferedDataTable outData = null;
     	
     	try {
@@ -74,7 +84,7 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 			codeFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_PREFIX, 
 					AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_SUFFIX);
 			
-			table = new MatlabTable(inData[0]);
+			table = new MatlabTable((BufferedDataTable)inData[0]);
 			
 			if (tableTransferMethod.equals("file")) {
 				// Convert the KNIME table and write it to the temp-directory
@@ -137,24 +147,13 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     	}
     	
     	return new BufferedDataTable[]{outData};
-    }
-    
-
-
-
-	@Override
-	protected PortObject[] executeImpl(PortObject[] inData,
-			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		
+		throw new KnimeScriptingException("The functionality to open data external is not yet implemented");
 	}
 
 }

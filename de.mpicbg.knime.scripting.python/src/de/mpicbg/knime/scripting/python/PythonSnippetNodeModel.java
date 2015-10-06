@@ -1,6 +1,10 @@
 package de.mpicbg.knime.scripting.python;
 
-import java.io.IOException;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
@@ -8,14 +12,6 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonClient;
-
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 
 
 /**
@@ -46,10 +42,11 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
     }
 
 
-    @Override
+/*    @Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    	super.configure(inSpecs);
         return new DataTableSpec[]{null};
-    }
+    }*/
 
 
 /*    *//**

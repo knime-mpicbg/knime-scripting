@@ -38,70 +38,10 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
     /**
      * {@inheritDoc}
      */
-    @Override
+/*    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-
-//        boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-//        if (!local) throw new RuntimeException("This node can only be used with a local python executable");
-
-        python = new LocalPythonClient();
-
-        createTempFiles();
-        pyOutFile = null;
-
-        // Write data into csv
-        logger.info("Writing table to CSV file");
-        PythonTableConverter.convertTableToCSV(exec, inData[0], kInFile.getClientFile(), logger);
-
-        // Create and execute script
-        String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
         
-        // get the full path of the python executable for MacOS
-        String pythonExecPathFull = pythonExecPath;
-        try {
-	        if (Utils.isMacOSPlatform()) {
-		        Runtime r = Runtime.getRuntime();
-		        Process p = r.exec("which " + pythonExecPath);
-		        p.waitFor();
-		        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		        pythonExecPathFull = reader.readLine();
-	        }
-        } catch (Exception e) {
-        	logger.error(e);
-        }
-
-        try {
-            Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
-            try {
-                // Write a shebang to invoke the python interpreter 
-                writer.write("#! " + pythonExecPathFull + " -i\n");
-                super.prepareScript(writer, false);
-            } finally {
-                writer.close();
-            }
-
-            scriptFile.getClientFile().setExecutable(true);
-
-            // Run the script
-            if (Utils.isMacOSPlatform()) {
-                Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
-            } else if (Utils.isWindowsPlatform()) {
-            	Runtime.getRuntime().exec(new String[] {
-            			"cmd",
-            			"/k",
-            			"start",
-            			pythonExecPath,
-            			"-i",
-            			"\"" + scriptFile.getClientPath() + "\""
-            	});
-            } else logger.error("Unsupported platform");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return new BufferedDataTable[0];
-    }
+    }*/
     
 
 
@@ -109,8 +49,67 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+
+//      boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
+//      if (!local) throw new RuntimeException("This node can only be used with a local python executable");
+
+      python = new LocalPythonClient();
+
+      createTempFiles();
+      pyOutFile = null;
+
+      // Write data into csv
+      logger.info("Writing table to CSV file");
+      PythonTableConverter.convertTableToCSV(exec, (BufferedDataTable)inData[0], kInFile.getClientFile(), logger);
+
+      // Create and execute script
+      String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+      
+      // get the full path of the python executable for MacOS
+      String pythonExecPathFull = pythonExecPath;
+      try {
+	        if (Utils.isMacOSPlatform()) {
+		        Runtime r = Runtime.getRuntime();
+		        Process p = r.exec("which " + pythonExecPath);
+		        p.waitFor();
+		        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		        pythonExecPathFull = reader.readLine();
+	        }
+      } catch (Exception e) {
+      	logger.error(e);
+      }
+
+      try {
+          Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
+          try {
+              // Write a shebang to invoke the python interpreter 
+              writer.write("#! " + pythonExecPathFull + " -i\n");
+              super.prepareScript(writer, false);
+          } finally {
+              writer.close();
+          }
+
+          scriptFile.getClientFile().setExecutable(true);
+
+          // Run the script
+          if (Utils.isMacOSPlatform()) {
+              Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
+          } else if (Utils.isWindowsPlatform()) {
+          	Runtime.getRuntime().exec(new String[] {
+          			"cmd",
+          			"/k",
+          			"start",
+          			pythonExecPath,
+          			"-i",
+          			"\"" + scriptFile.getClientPath() + "\""
+          	});
+          } else logger.error("Unsupported platform");
+      } catch (Exception e) {
+          throw new RuntimeException(e);
+      }
+
+      return new BufferedDataTable[0];
 	}
 
 
