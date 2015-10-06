@@ -63,7 +63,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         
         BufferedDataTable dataTable = null;
         
-        BufferedDataTable[] inTables = RUtils.castToBDT(inData);
+        BufferedDataTable[] inTables = castToBDT(inData);
 
         try {
 	        // 1) convert exampleSet into data-frame and put into the r-workspace

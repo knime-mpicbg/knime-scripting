@@ -250,4 +250,16 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         // replace flow-variables
         return FlowVarUtils.replaceFlowVars(script, this);
     }
+    
+	public static BufferedDataTable[] castToBDT(PortObject[] inData) {		
+		BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
+		
+		int i = 0;
+		for(PortObject in : inData) {
+			if(in instanceof BufferedDataTable)
+				inTables[i] = (BufferedDataTable) in;
+			i++;
+		}		
+		return inTables;
+	}
 }

@@ -76,7 +76,7 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
             try {
                 // Write a shebang to invoke the python interpreter 
                 writer.write("#! " + pythonExecPathFull + " -i\n");
-                super.prepareScript(writer);
+                super.prepareScript(writer, false);
             } finally {
                 writer.close();
             }

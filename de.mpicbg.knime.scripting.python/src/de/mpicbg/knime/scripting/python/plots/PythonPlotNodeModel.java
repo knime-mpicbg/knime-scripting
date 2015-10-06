@@ -85,7 +85,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     protected void prepareScript(Writer writer) throws IOException {
         writer.write("import matplotlib\nmatplotlib.use('Agg')\nfrom pylab import *\n");
 
-        super.prepareScript(writer);
+        super.prepareScript(writer, true);
 
         float dpi = 100;
         float width = getDefWidth() / dpi;
@@ -119,7 +119,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         return fileName;
     }
 
-    @Override
+/*    @Override
     protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
 
         // Determine what kind of connection to instantiate (local or remote)
@@ -208,7 +208,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
 
         return outPorts;
-    }
+    }*/
 
     public int getDefHeight() {
         return propHeight.getIntValue();
@@ -236,14 +236,98 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		// Determine what kind of connection to instantiate (local or remote)
+        IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+        boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
+        String host = preferences.getString(PythonPreferenceInitializer.PYTHON_HOST);
+        int port = preferences.getInt(PythonPreferenceInitializer.PYTHON_PORT);
+
+        // If the host is empty use a local client, otherwise use the server values
+        python = local ? new LocalPythonClient() : new PythonClient(host, port);
+
+        // Create the temp files that are needed throughout the node
+        createTempFiles();
+
+        // Don't need the output table
+        pyOutFile.delete();
+        pyOutFile = null;
+
+        // Prepare the script
+        Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
+        prepareScript(writer);
+
+        // Add plot-specific commands
+        PythonTempFile imageFile = new PythonTempFile(python, "pyplot", ".png");
+        writer.write("\nsavefig(r'" + imageFile.getServerPath() + "')\n");
+        writer.close();
+
+        // Copy the script file to the server
+        scriptFile.upload();
+
+        // Write the input table and upload it
+        PythonTableConverter.convertTableToCSV(exec, (BufferedDataTable) inData[0], kInFile.getClientFile(), logger);
+        kInFile.upload();
+
+        // Run the script
+        String pythonExecPath = local ? preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE) : "python";
+        CommandOutput output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getServerPath()});
+
+        // Log any output
+        for (String o : output.getStandardOutput()) {
+            logger.info(o);
+        }
+
+        for (String o : output.getErrorOutput()) {
+            logger.error(o);
+        }
+
+        // Copy back the remote image
+        imageFile.fetch();
+
+        // If the file wasn't found throw an exception
+        if (!imageFile.getClientFile().exists() || imageFile.getClientFile().length() == 0)
+            throw new RuntimeException("No output image found");
+
+        // Prepare it for the node view
+        image = PythonPlotCanvas.toBufferedImage(new ImageIcon(imageFile.getClientPath()).getImage());
+
+        // Write the image to a file if desired
+        String fileName = prepareOutputFileName();
+        if (!fileName.isEmpty()) {
+            if (!propOverwriteFile.getBooleanValue() && new File(fileName).exists()) {
+                throw new RuntimeException("Image file '" + fileName + "' already exists, enable overwrite to replace it");
+            }
+
+
+            try {
+                ImageIO.write((BufferedImage) image, "png", new File(fileName));
+            } catch (Throwable t) {
+                throw new RuntimeException("Error writing image file '" + fileName);
+            }
+        }
+
+        // Clean up temp files
+        deleteTempFiles();
+        imageFile.delete();
+
+        // Create the image port object
+        PNGImageContent content;
+        File m_imageFile = File.createTempFile("pythonImage", ".png");
+        ImageIO.write(PythonPlotCanvas.toBufferedImage(image), "png", m_imageFile);
+        FileInputStream in = new FileInputStream(m_imageFile);
+        content = new PNGImageContent(in);
+        in.close();
+
+        PortObject[] outPorts = new PortObject[1];
+        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
+
+        return outPorts;
 	}
 
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		
+		openInPython(inData, exec, logger);   
+		setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 	}
 }
