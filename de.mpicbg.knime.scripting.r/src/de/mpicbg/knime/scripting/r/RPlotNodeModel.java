@@ -45,56 +45,15 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         super(inPorts, outports);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 
-
- /*   @Override
-    protected PortObject[] execute(PortObject[] inData,
-                                   final ExecutionContext exec) throws Exception {
-
-        logger.info("Render the R Plot");
-
-        RConnection connection = RUtils.createConnection();
-
-        // 1) convert exampleSet into data-frame and put into the r-workspace
-        try {
-        	RUtils.pushToR(inData, connection, exec);
-
-        	adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-        	createFigure(connection);
-        
-        	// if the script has been evaluated with 'evaluate', check for warnings. returns empty list otherwise
-        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-        } catch (Exception e) {
-        	connection.close();
-        	throw e;
-        }
-
-        // close the connection to R
-        connection.close();
-
-
-        // Rerun the image
-        PNGImageContent content;
-        File m_imageFile = File.createTempFile("RImage", ".png");
-        ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", m_imageFile);
-        FileInputStream in = new FileInputStream(m_imageFile);
-        content = new PNGImageContent(in);
-        in.close();
-
-
-        PortObject[] outPorts = new PortObject[1];
-        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
-
-        return outPorts;
-    }
-*/
 
     /**
      * Prepares the ouput tables of this nodes. As most plot-nodes won't have any data output, this method won't be
@@ -105,6 +64,9 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         return new BufferedDataTable[0];
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -146,7 +108,9 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         return outPorts;
 	}
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {

@@ -45,11 +45,14 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
 	protected GenericOpenInRNodeModel() {
         super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0]);
     }
-
-    @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-    	
-    	//create connection to server
+   
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		//create connection to server
     	logger.info("Creating R-connection");
         RConnection connection = RUtils.createConnection();
         
@@ -75,20 +78,18 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
         OpenInRNodeModel.openWSFileInR(rWorkspaceFile, prepareScript());
 
         return new PortObject[0];
-    }
-   
-
-	@Override
-	protected PortObject[] executeImpl(PortObject[] inData,
-			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		
+		try {
+			executeImpl(inData, exec);
+		} catch (Exception e) {
+			throw new KnimeScriptingException(e.getMessage());
+		}
 	}
 }

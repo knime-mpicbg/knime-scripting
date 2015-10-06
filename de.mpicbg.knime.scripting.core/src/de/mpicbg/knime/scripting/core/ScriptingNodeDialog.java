@@ -54,6 +54,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     private JTable table;
     private int outTableDefCounter = 1;
     private JCheckBox m_appendColsCB;
+    // checkbox for "open external ..."
     private JCheckBox m_openIn;
 
     private String defaultScript;
@@ -69,6 +70,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     public static final String SCRIPT_TEMPLATE_DEFAULT = "";
 
+    /**
+     * node setting: functionality to open the input data externally
+     */
 	public static final String OPEN_IN = "open.in";
 	public static final boolean OPEN_IN_DFT = false;
 
@@ -210,6 +214,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     }
 
 
+    /**
+     * border of the "open external" checkbox should be red if selected, none otherwise
+     * @param openIn
+     */
     private void paintBorder(boolean openIn) {
         if(openIn)
         	m_openIn.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.RED));

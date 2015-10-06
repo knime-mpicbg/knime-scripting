@@ -37,13 +37,36 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
     }
 
 
+    public static void openWSFileInR(File workspaceFile, String script) throws IOException {
+        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
+        String rExecutable = prefStore.getString(RPreferenceInitializer.LOCAL_R_PATH);
+
+        // 3) spawn a new R process
+        if (Utils.isWindowsPlatform()) {
+            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+        } else if (Utils.isMacOSPlatform()) {
+
+            Runtime.getRuntime().exec("open -n -a " + rExecutable + " " + workspaceFile.getAbsolutePath());
+
+        } else { // linux and the rest of the world
+            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+        }
+
+        // copy the script in the clipboard
+        if (!script.isEmpty()) {
+            StringSelection data = new StringSelection(script);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(data, data);
+        }
+    }
+
+
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
         try {
 
             logger.info("Creating R-connection");
@@ -99,72 +122,19 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
         }
 
         return new BufferedDataTable[0];
-    }
-
-
-    public static void openWSFileInR(File workspaceFile, String script) throws IOException {
-        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
-        String rExecutable = prefStore.getString(RPreferenceInitializer.LOCAL_R_PATH);
-
-        // 3) spawn a new R process
-        if (Utils.isWindowsPlatform()) {
-            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
-        } else if (Utils.isMacOSPlatform()) {
-
-            Runtime.getRuntime().exec("open -n -a " + rExecutable + " " + workspaceFile.getAbsolutePath());
-
-        } else { // linux and the rest of the world
-            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
-        }
-
-        // copy the script in the clipboard
-        if (!script.isEmpty()) {
-            StringSelection data = new StringSelection(script);
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(data, data);
-        }
-    }
-
-
-    /**
-     * Attempts to find an upper bound of the number of values of node input.
-     * USAGE IN 'execute' method HAS BEEN REPLACED BY AN R-COMMAND - CAN BE DELETED AT SOME POINT
-     */
-    /* private int estimateNumValues(BufferedDataTable[] pushTable) {
-
-        int inputSize = 0;
-
-        for (BufferedDataTable inputTable : pushTable) {
-            if (inputTable != null) {
-                inputSize += calcTableSize(inputTable);
-            }
-        }
-
-
-        return (int) (10.1 * inputSize); // add some size for meta data like table headers
-
-    } */
-
-
-    /* private int calcTableSize(BufferedDataTable bufferedDataTable) {
-        return bufferedDataTable.getDataTableSpec().getNumColumns() * bufferedDataTable.getRowCount();
-    } */
-    
-
-
-
-	@Override
-	protected PortObject[] executeImpl(PortObject[] inData,
-			ExecutionContext exec) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
-
+    /**
+     * {@inheritDoc}
+     * @throws KnimeScriptingException 
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		
+		try {
+			executeImpl(inData, exec);
+		} catch (Exception e) {
+			throw new KnimeScriptingException(e.getMessage());
+		}
 	}
 }

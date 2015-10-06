@@ -43,57 +43,9 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         super(inPortTypes, outPortTypes);
     }
 
-
-/*    @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-    	
-    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-    	
-        RConnection connection = RUtils.createConnection();
-
-        try {
-	        // 1) restore the workspace in a different server session
-	        RUtils.pushToR(inData, connection, exec);
-	
-	
-	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
-	        String script = prepareScript();
-	        String fixedScript = RUtils.fixEncoding(script);
-	        
-	        RUtils.parseScript(connection, fixedScript);
-	        
-	        if(useEvaluate) {
-	        	// parse and run script
-	        	// evaluation list, can be used to create a console view, throws first R-error-message
-	        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
-	        	// check for warnings
-	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-	        	
-	
-	        } else {
-	        	// parse and run script
-	        	RUtils.evalScript(connection, fixedScript);     	
-	        }
-	
-	
-	        // 3) extract output data-frame from R
-	        if (rWorkspaceFile == null) {
-	            rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_OUTVAR_BASE_NAME);
-	        }
-	
-	        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
-        } catch(Exception e) {
-        	connection.close();
-        	throw e;
-        }
-
-        connection.close();
-
-        return new PortObject[]{new RPortObject(rWorkspaceFile)};
-    }*/
-
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
@@ -106,9 +58,9 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
     
-
-
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -158,7 +110,9 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         return new PortObject[]{new RPortObject(rWorkspaceFile)};
 	}
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {

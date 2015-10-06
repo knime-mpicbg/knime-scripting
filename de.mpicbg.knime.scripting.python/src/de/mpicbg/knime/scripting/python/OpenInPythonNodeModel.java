@@ -33,19 +33,12 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
     protected OpenInPythonNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports);
     }
+  
 
 
     /**
      * {@inheritDoc}
      */
-/*    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        
-    }*/
-    
-
-
-
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -112,11 +105,12 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
       return new BufferedDataTable[0];
 	}
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		
+		// nothing to do		
 	}
 }

@@ -99,6 +99,13 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
         if (scriptFile != null) scriptFile.delete();
     }
 
+    /**
+     * opens python externally and loads KNIME input data, script is put into clipboard
+     * @param inData
+     * @param exec
+     * @param logger
+     * @throws KnimeScriptingException
+     */
     protected void openInPython(PortObject[] inData, ExecutionContext exec, NodeLogger logger) throws KnimeScriptingException {
     	IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 

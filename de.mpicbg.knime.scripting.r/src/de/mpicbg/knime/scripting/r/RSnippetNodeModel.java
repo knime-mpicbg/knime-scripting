@@ -53,6 +53,9 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -136,7 +139,9 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         return typeMapping;
 	}
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {

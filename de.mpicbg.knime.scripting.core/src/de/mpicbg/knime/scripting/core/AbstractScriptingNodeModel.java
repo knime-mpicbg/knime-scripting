@@ -83,6 +83,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     @Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
 			throws Exception {
+    	// check whether the data should be opened externally
     	if(openIn.getBooleanValue()) {
     		openIn(inObjects, exec);
     		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
@@ -90,21 +91,23 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     		return executeImpl(inObjects,exec);
 	}
     
+    /**
+     * method to run the code while node execution
+     * @param inData
+     * @param exec
+     * @return
+     * @throws Exception
+     */
     protected abstract PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception;
 	
+    /**
+     * open data externally (in R, Python, ...)
+     * @param inData
+     * @param exec
+     * @throws KnimeScriptingException
+     */
 	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException;
 
-/*	@Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        // adapt hardwired templates to the input specs. Important: this just applies to nodes with outputs.
-        // Plot-nodes need to be handled separately
-        adaptHardwiredTemplateToContext(inSpecs);
-        
-        if(openIn.getBooleanValue())
-        	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
-
-        return super.configure(inSpecs);
-    }*/
 
     @Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
@@ -263,6 +266,11 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return FlowVarUtils.replaceFlowVars(script, this);
     }
     
+    /**
+     * cast an array of PortObjects into an array of BufferedDataTables
+     * @param inData
+     * @return array of BufferedDataTables
+     */
 	public static BufferedDataTable[] castToBDT(PortObject[] inData) {		
 		BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
 		

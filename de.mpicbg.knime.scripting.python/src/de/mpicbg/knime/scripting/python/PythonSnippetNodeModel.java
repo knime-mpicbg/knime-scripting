@@ -41,78 +41,9 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         return DEFAULT_SCRIPT;
     }
 
-
-/*    @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-    	super.configure(inSpecs);
-        return new DataTableSpec[]{null};
-    }*/
-
-
-/*    *//**
+    /**
      * {@inheritDoc}
-     *//*
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-        IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-
-        boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-
-        String host = preferences.getString(PythonPreferenceInitializer.PYTHON_HOST);
-        int port = preferences.getInt(PythonPreferenceInitializer.PYTHON_PORT);
-
-        // If the host is empty use a local client, otherwise use the server values
-        python = local ? new LocalPythonClient() : new PythonClient(host, port);
-
-        createTempFiles();
-
-        // Write data into csv
-        logger.info("Writing table to CSV file");
-        PythonTableConverter.convertTableToCSV(exec, inData[0], kInFile.getClientFile(), logger);
-        kInFile.upload();
-
-        // Execute script
-        logger.info("Creating and executing python script: " + scriptFile.getClientPath());
-
-        String script = prepareScript();
-
-        try {
-            // Get the path to the python executable
-            String pythonExecPath = local ? preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE) : "python";
-
-            CommandOutput output = python.executeCommand(new String[]{pythonExecPath, script});
-            for (String o : output.getStandardOutput()) {
-                logger.info(o);
-            }
-
-            for (String o : output.getErrorOutput()) {
-                logger.error(o);
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
-
-        // If an output file wasn't created, error out
-        pyOutFile.fetch();
-        if (!pyOutFile.getClientFile().exists()) {
-            throw new RuntimeException(pyOutFile.getClientPath() + ": file not found");
-        }
-
-        // Parse result, if any, back into table
-        boolean hasOutput = pyOutFile.getClientFile().exists() && pyOutFile.getClientFile().length() != 0;
-
-        if (!hasOutput) throw new RuntimeException("No python output table found, check script output");
-
-        logger.info("Reading python output into Knime table");
-        BufferedDataTable[] resultTable = new BufferedDataTable[]{PythonTableConverter.convertCSVToTable(exec, pyOutFile.getClientFile(), logger)};
-
-        deleteTempFiles();
-
-        return resultTable;
-    }*/
-
-
+     */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -175,7 +106,9 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         return resultTable;
 	}
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
