@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import java.io.File;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
@@ -10,6 +11,7 @@ import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -43,11 +45,14 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
 	protected GenericOpenInRNodeModel() {
         super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0]);
     }
-
-    @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-    	
-    	//create connection to server
+   
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		//create connection to server
     	logger.info("Creating R-connection");
         RConnection connection = RUtils.createConnection();
         
@@ -73,5 +78,18 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
         OpenInRNodeModel.openWSFileInR(rWorkspaceFile, prepareScript());
 
         return new PortObject[0];
-    }
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		try {
+			executeImpl(inData, exec);
+		} catch (Exception e) {
+			throw new KnimeScriptingException(e.getMessage());
+		}
+	}
 }

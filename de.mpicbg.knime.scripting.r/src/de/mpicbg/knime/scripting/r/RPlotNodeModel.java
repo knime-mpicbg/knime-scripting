@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
 
@@ -14,11 +15,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -41,19 +45,32 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         super(inPorts, outports);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        configure(new DataTableSpec[]{(DataTableSpec) inSpecs[0]});
+        super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 
 
-    @Override
-    protected PortObject[] execute(PortObject[] inData,
-                                   final ExecutionContext exec) throws Exception {
+    /**
+     * Prepares the ouput tables of this nodes. As most plot-nodes won't have any data output, this method won't be
+     * overridden in most cases. Just in case a node should have both (an review and a data table output), you may
+     * override it.
+     */
+    protected BufferedDataTable[] prepareOutput(ExecutionContext exec, RConnection connection) {
+        return new BufferedDataTable[0];
+    }
 
-        logger.info("Render the R Plot");
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		logger.info("Render the R Plot");
 
         RConnection connection = RUtils.createConnection();
 
@@ -89,15 +106,20 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
 
         return outPorts;
-    }
-
+	}
 
     /**
-     * Prepares the ouput tables of this nodes. As most plot-nodes won't have any data output, this method won't be
-     * overridden in most cases. Just in case a node should have both (an review and a data table output), you may
-     * override it.
+     * {@inheritDoc}
      */
-    protected BufferedDataTable[] prepareOutput(ExecutionContext exec, RConnection connection) {
-        return new BufferedDataTable[0];
-    }
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		try {
+			String rawScript = prepareScript();
+			RUtils.openInR(inData, exec, rawScript, logger);   
+			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
+		} catch (REXPMismatchException | IOException | REngineException e) {
+			throw new KnimeScriptingException("Failed to open in R\n" + e);
+		}	
+	}
 }

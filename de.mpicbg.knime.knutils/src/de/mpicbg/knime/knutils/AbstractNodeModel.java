@@ -80,10 +80,6 @@ public abstract class AbstractNodeModel extends NodeModel {
         return portTypes;
     }
 
-
-    @Override
-    protected abstract BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
-
     /**
      * add settings to a list
      *

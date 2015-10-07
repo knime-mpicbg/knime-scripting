@@ -4,6 +4,9 @@ import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createSn
 import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createTemplateProperty;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +14,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.border.Border;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -22,6 +28,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
@@ -47,7 +54,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     private JTable table;
     private int outTableDefCounter = 1;
     private JCheckBox m_appendColsCB;
-
+    // checkbox for "open external ..."
+    private JCheckBox m_openIn;
 
     private String defaultScript;
     private List<String> urlList;
@@ -63,7 +71,13 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public static final String SCRIPT_TEMPLATE_DEFAULT = "";
 
     /**
-     * Will be set by tempaltes that are deployed as acutal knime nodes.
+     * node setting: functionality to open the input data externally
+     */
+	public static final String OPEN_IN = "open.in";
+	public static final boolean OPEN_IN_DFT = false;
+
+    /**
+     * Will be set by templates that are deployed as actual knime nodes.
      */
     private ScriptTemplate hardwiredTemplate;
 
@@ -72,15 +86,47 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * New pane for configuring ScriptedNode node dialog
      */
     public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
-        this.defaultScript = defaultScript;
+        this(defaultScript, colNameReformater, enableTemplateRepository, true);
+    }
 
+    /**
+     * Scripting Dialog
+     * @param defaultScript
+     * @param colNameReformater
+     * @param enableTemplateRepository - true if the Tab with the Template-Repository should be displayed
+     * @param useOpenExternal - true, if the checkbox "open external" should be enabled
+     */
+    public ScriptingNodeDialog(String defaultScript,
+    		ColNameReformater colNameReformater,
+			boolean enableTemplateRepository, boolean useOpenExternal) {
+    	this.defaultScript = defaultScript;
 
         // construct the panel for script loading/authoring
         scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());
+        
+        JPanel mainContainer = new JPanel(new BorderLayout());
+        
         JPanel scriptDialogContainer = new JPanel(new BorderLayout());
         scriptDialogContainer.add(scriptProvider, BorderLayout.CENTER);
-        this.addTabAt(0, SCRIPT_TAB_NAME, scriptDialogContainer);
+        
+        m_openIn = new JCheckBox("Open external");
+        m_openIn.addActionListener(new ActionListener() {
 
+			@Override
+			public void actionPerformed(ActionEvent actionEvent) {
+				AbstractButton abstractButton = (AbstractButton) actionEvent.getSource();
+		        boolean selected = abstractButton.getModel().isSelected();
+		        paintBorder(selected);
+			}
+        	
+        });
+        m_openIn.setBorderPainted(true);
+        m_openIn.setEnabled(useOpenExternal);
+        mainContainer.add(m_openIn, BorderLayout.NORTH);
+        
+        mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
+        
+        this.addTabAt(0, SCRIPT_TAB_NAME, mainContainer);
 
         // create the template repository browser tab (if enabled)
         if (enableTemplateRepository) {
@@ -96,9 +142,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         removeTab("Options");
         selectTab(SCRIPT_TAB_NAME);
-    }
+	}
 
-    /**
+	/**
      * parses a preference string and fills list of URLs
      *
      * @param templatesFromPreferences
@@ -170,11 +216,30 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         scriptProvider.setContent(script, finalTemplate);
+        
+        boolean openIn = false;
+        try {
+			openIn = settings.getBoolean(OPEN_IN);
+		} catch (InvalidSettingsException e) {
+		}
 
+        m_openIn.setSelected(openIn);
+        paintBorder(openIn);
     }
 
 
-    public static ScriptTemplate deserializeTemplate(String serializedTemplate) {
+    /**
+     * border of the "open external" checkbox should be red if selected, none otherwise
+     * @param openIn
+     */
+    private void paintBorder(boolean openIn) {
+        if(openIn)
+        	m_openIn.setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, Color.RED));
+        else
+        	m_openIn.setBorder(BorderFactory.createEmptyBorder());
+	}
+
+	public static ScriptTemplate deserializeTemplate(String serializedTemplate) {
         if (serializedTemplate == null || StringUtils.isBlank(serializedTemplate)) {
             return null;
         }
@@ -229,6 +294,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         templateProperty.saveSettingsTo(settings);
+        
+        SettingsModelBoolean openInProperty = AbstractScriptingNodeModel.createOpenInProperty();
+        openInProperty.setBooleanValue(m_openIn.isSelected());
+        openInProperty.saveSettingsTo(settings);
     }
 
     public void selectScriptTab() {

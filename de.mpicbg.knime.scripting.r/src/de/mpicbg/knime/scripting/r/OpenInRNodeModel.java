@@ -2,11 +2,13 @@ package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.Rserve.RConnection;
 
@@ -35,13 +37,36 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
     }
 
 
+    public static void openWSFileInR(File workspaceFile, String script) throws IOException {
+        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
+        String rExecutable = prefStore.getString(RPreferenceInitializer.LOCAL_R_PATH);
+
+        // 3) spawn a new R process
+        if (Utils.isWindowsPlatform()) {
+            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+        } else if (Utils.isMacOSPlatform()) {
+
+            Runtime.getRuntime().exec("open -n -a " + rExecutable + " " + workspaceFile.getAbsolutePath());
+
+        } else { // linux and the rest of the world
+            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+        }
+
+        // copy the script in the clipboard
+        if (!script.isEmpty()) {
+            StringSelection data = new StringSelection(script);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(data, data);
+        }
+    }
+
+
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
         try {
 
             logger.info("Creating R-connection");
@@ -97,54 +122,19 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
         }
 
         return new BufferedDataTable[0];
-    }
-
-
-    public static void openWSFileInR(File workspaceFile, String script) throws IOException {
-        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
-        String rExecutable = prefStore.getString(RPreferenceInitializer.LOCAL_R_PATH);
-
-        // 3) spawn a new R process
-        if (Utils.isWindowsPlatform()) {
-            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
-        } else if (Utils.isMacOSPlatform()) {
-
-            Runtime.getRuntime().exec("open -n -a " + rExecutable + " " + workspaceFile.getAbsolutePath());
-
-        } else { // linux and the rest of the world
-            Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
-        }
-
-        // copy the script in the clipboard
-        if (!script.isEmpty()) {
-            StringSelection data = new StringSelection(script);
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(data, data);
-        }
-    }
-
+	}
 
     /**
-     * Attempts to find an upper bound of the number of values of node input.
-     * USAGE IN 'execute' method HAS BEEN REPLACED BY AN R-COMMAND - CAN BE DELETED AT SOME POINT
+     * {@inheritDoc}
+     * @throws KnimeScriptingException 
      */
-    /* private int estimateNumValues(BufferedDataTable[] pushTable) {
-
-        int inputSize = 0;
-
-        for (BufferedDataTable inputTable : pushTable) {
-            if (inputTable != null) {
-                inputSize += calcTableSize(inputTable);
-            }
-        }
-
-
-        return (int) (10.1 * inputSize); // add some size for meta data like table headers
-
-    } */
-
-
-    /* private int calcTableSize(BufferedDataTable bufferedDataTable) {
-        return bufferedDataTable.getDataTableSpec().getNumColumns() * bufferedDataTable.getRowCount();
-    } */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		try {
+			executeImpl(inData, exec);
+		} catch (Exception e) {
+			throw new KnimeScriptingException(e.getMessage());
+		}
+	}
 }

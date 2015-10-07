@@ -8,7 +8,9 @@ import de.mpicbg.knime.scripting.r.RPlotNodeFactory;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -32,7 +34,7 @@ import java.util.Date;
  *
  * @author Holger Brandl
  */
-public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
+public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
 
     public Image image;
     public File nodeImageFile;
@@ -252,4 +254,5 @@ public class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
             image = ((ImageIcon) obj_in.readObject()).getImage();
         }
     }
+    
 }

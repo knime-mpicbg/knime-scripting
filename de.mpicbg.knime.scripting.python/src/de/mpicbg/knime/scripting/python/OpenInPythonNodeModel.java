@@ -1,11 +1,13 @@
 package de.mpicbg.knime.scripting.python;
 
 import de.mpicbg.knime.knutils.Utils;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
 import java.io.BufferedReader;
@@ -31,33 +33,35 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
     protected OpenInPythonNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports);
     }
+  
 
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
-//        boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-//        if (!local) throw new RuntimeException("This node can only be used with a local python executable");
+//      boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
+//      if (!local) throw new RuntimeException("This node can only be used with a local python executable");
 
-        python = new LocalPythonClient();
+      python = new LocalPythonClient();
 
-        createTempFiles();
-        pyOutFile = null;
+      createTempFiles();
+      pyOutFile = null;
 
-        // Write data into csv
-        logger.info("Writing table to CSV file");
-        PythonTableConverter.convertTableToCSV(exec, inData[0], kInFile.getClientFile(), logger);
+      // Write data into csv
+      logger.info("Writing table to CSV file");
+      PythonTableConverter.convertTableToCSV(exec, (BufferedDataTable)inData[0], kInFile.getClientFile(), logger);
 
-        // Create and execute script
-        String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
-        
-        // get the full path of the python executable for MacOS
-        String pythonExecPathFull = pythonExecPath;
-        try {
+      // Create and execute script
+      String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+      
+      // get the full path of the python executable for MacOS
+      String pythonExecPathFull = pythonExecPath;
+      try {
 	        if (Utils.isMacOSPlatform()) {
 		        Runtime r = Runtime.getRuntime();
 		        Process p = r.exec("which " + pythonExecPath);
@@ -65,39 +69,48 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
 		        BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		        pythonExecPathFull = reader.readLine();
 	        }
-        } catch (Exception e) {
-        	logger.error(e);
-        }
+      } catch (Exception e) {
+      	logger.error(e);
+      }
 
-        try {
-            Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
-            try {
-                // Write a shebang to invoke the python interpreter 
-                writer.write("#! " + pythonExecPathFull + " -i\n");
-                super.prepareScript(writer);
-            } finally {
-                writer.close();
-            }
+      try {
+          Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
+          try {
+              // Write a shebang to invoke the python interpreter 
+              writer.write("#! " + pythonExecPathFull + " -i\n");
+              super.prepareScript(writer, false);
+          } finally {
+              writer.close();
+          }
 
-            scriptFile.getClientFile().setExecutable(true);
+          scriptFile.getClientFile().setExecutable(true);
 
-            // Run the script
-            if (Utils.isMacOSPlatform()) {
-                Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
-            } else if (Utils.isWindowsPlatform()) {
-            	Runtime.getRuntime().exec(new String[] {
-            			"cmd",
-            			"/k",
-            			"start",
-            			pythonExecPath,
-            			"-i",
-            			"\"" + scriptFile.getClientPath() + "\""
-            	});
-            } else logger.error("Unsupported platform");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+          // Run the script
+          if (Utils.isMacOSPlatform()) {
+              Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
+          } else if (Utils.isWindowsPlatform()) {
+          	Runtime.getRuntime().exec(new String[] {
+          			"cmd",
+          			"/k",
+          			"start",
+          			pythonExecPath,
+          			"-i",
+          			"\"" + scriptFile.getClientPath() + "\""
+          	});
+          } else logger.error("Unsupported platform");
+      } catch (Exception e) {
+          throw new RuntimeException(e);
+      }
 
-        return new BufferedDataTable[0];
-    }
+      return new BufferedDataTable[0];
+	}
+
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		// nothing to do		
+	}
 }

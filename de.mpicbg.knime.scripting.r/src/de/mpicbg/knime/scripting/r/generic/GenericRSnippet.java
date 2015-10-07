@@ -1,20 +1,25 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -38,10 +43,27 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         super(inPortTypes, outPortTypes);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
-    	
+    // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+    	super.configure(inSpecs);
+        return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
+    }
+
+
+    public String getDefaultScript() {
+        return RUtils.SCRIPT_PROPERTY_DEFAULT;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
     	
         RConnection connection = RUtils.createConnection();
@@ -86,18 +108,21 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
         connection.close();
 
         return new PortObject[]{new RPortObject(rWorkspaceFile)};
-    }
+	}
 
-
-    @Override
-    // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-//        checkRExecutable();
-        return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
-    }
-
-
-    public String getDefaultScript() {
-        return RUtils.SCRIPT_PROPERTY_DEFAULT;
-    }
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		try {
+			String rawScript = prepareScript();
+			RUtils.openInR(inData, exec, rawScript, logger);   
+			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
+		} catch (REXPMismatchException | IOException | REngineException e) {
+			throw new KnimeScriptingException("Failed to open in R\n" + e);
+		}
+		
+	}
 }

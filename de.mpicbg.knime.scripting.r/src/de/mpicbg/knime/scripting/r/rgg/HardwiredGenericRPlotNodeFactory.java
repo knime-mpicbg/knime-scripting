@@ -4,6 +4,7 @@ import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.r.generic.GenericRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
+import de.mpicbg.knime.scripting.r.plots.RPlotNodeDialog;
 
 import org.knime.core.node.NodeDialogPane;
 
@@ -36,17 +37,12 @@ public abstract class HardwiredGenericRPlotNodeFactory extends AbstractRPlotNode
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        ScriptingNodeDialog configPane = (ScriptingNodeDialog) super.createNodeDialogPane();
+        ScriptingNodeDialog configPane = new RPlotNodeDialog(createNodeModel().getDefaultScript(), false, false);
 
         ScriptTemplate template = HardwiredRSnippetNodeFactory.loadTemplate(this);
         configPane.setHardwiredTemplate(template);
 
 
         return configPane;
-    }
-
-
-    protected boolean enableTemplateRepository() {
-        return false;
     }
 }
