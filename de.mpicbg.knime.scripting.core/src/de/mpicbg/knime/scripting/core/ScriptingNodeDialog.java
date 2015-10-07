@@ -77,7 +77,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 	public static final boolean OPEN_IN_DFT = false;
 
     /**
-     * Will be set by tempaltes that are deployed as acutal knime nodes.
+     * Will be set by templates that are deployed as actual knime nodes.
      */
     private ScriptTemplate hardwiredTemplate;
 
@@ -86,7 +86,20 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * New pane for configuring ScriptedNode node dialog
      */
     public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
-        this.defaultScript = defaultScript;
+        this(defaultScript, colNameReformater, enableTemplateRepository, true);
+    }
+
+    /**
+     * Scripting Dialog
+     * @param defaultScript
+     * @param colNameReformater
+     * @param enableTemplateRepository - true if the Tab with the Template-Repository should be displayed
+     * @param useOpenExternal - true, if the checkbox "open external" should be enabled
+     */
+    public ScriptingNodeDialog(String defaultScript,
+    		ColNameReformater colNameReformater,
+			boolean enableTemplateRepository, boolean useOpenExternal) {
+    	this.defaultScript = defaultScript;
 
         // construct the panel for script loading/authoring
         scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());
@@ -108,6 +121,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         	
         });
         m_openIn.setBorderPainted(true);
+        m_openIn.setEnabled(useOpenExternal);
         mainContainer.add(m_openIn, BorderLayout.NORTH);
         
         mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
@@ -128,9 +142,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         removeTab("Options");
         selectTab(SCRIPT_TAB_NAME);
-    }
+	}
 
-    /**
+	/**
      * parses a preference string and fills list of URLs
      *
      * @param templatesFromPreferences
