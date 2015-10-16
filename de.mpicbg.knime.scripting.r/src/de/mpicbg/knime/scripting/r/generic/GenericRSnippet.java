@@ -75,7 +75,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
 	        String script = prepareScript();
-	        String fixedScript = RUtils.fixEncoding(script);
+	        String fixedScript = fixEncoding(script);
 	        
 	        RUtils.parseScript(connection, fixedScript);
 	        

@@ -3,6 +3,8 @@ package de.mpicbg.knime.scripting.r;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -14,6 +16,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -38,6 +43,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.property.ShapeFactory;
+import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -45,20 +52,14 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
-import org.rosuda.REngine.REXP;
-import org.rosuda.REngine.REXPDouble;
-import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPInteger;
-import org.rosuda.REngine.REXPList;
-import org.rosuda.REngine.REXPLogical;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REXPString;
-import org.rosuda.REngine.REXPVector;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
+import de.mpicbg.knime.knutils.data.property.ShapeModelUtils;
+import de.mpicbg.knime.knutils.data.property.SizeModelUtils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
@@ -97,6 +98,22 @@ public class RUtils {
     
     /** enum for datatypes which can be pushed to R via R-serve */
     public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
+    
+    public static final Map<String, Integer> R_SHAPES;
+    static {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+        map.put(ShapeFactory.ASTERISK, 8);
+        map.put(ShapeFactory.CIRCLE, 16);
+        map.put(ShapeFactory.CROSS, 4);
+        map.put(ShapeFactory.DIAMOND, 18);
+        map.put(ShapeFactory.HORIZONTAL_LINE, 45);
+        map.put(ShapeFactory.RECTANGLE, 15);
+        map.put(ShapeFactory.REVERSE_TRIANGLE, 25);
+        map.put(ShapeFactory.TRIANGLE, 17);
+        map.put(ShapeFactory.VERTICAL_LINE, 124);
+        map.put(ShapeFactory.X_SHAPE, 4);
+        R_SHAPES = Collections.unmodifiableMap(map);
+    }
     
     /**
      * maps KNIME data type to RType
@@ -1199,5 +1216,79 @@ public class RUtils {
 			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e);
 		}
 		return;
+	}
+
+	public static void pushShapeModelToR(DataTableSpec tSpec,
+			RConnection con, ExecutionContext exec) throws KnimeScriptingException {
+		int shapeIdx = ShapeModelUtils.getShapeColumn(tSpec);
+		
+		// no shape model column has been found
+		if(shapeIdx == -1) return;
+		
+		// data type of color model is not supported
+		RType t = RUtils.getRType(tSpec.getColumnSpec(shapeIdx).getType(), false);
+		if(t == null) return;
+		
+		exec.setMessage("Push shape model to R (cannot be cancelled)");
+		
+		// retrieve shape model
+		HashMap<DataCell, Shape> shapeModel = null;		
+		shapeModel = ShapeModelUtils.parseNominalShapeModel(tSpec.getColumnSpec(shapeIdx));
+		
+		assert shapeModel != null;
+		
+		// create R data vector
+		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(shapeIdx).getName(), t, 0);
+		rC.initDataVector(shapeModel.size());
+		
+		// convert shape model (shape as String and R-data-column with the associated values)
+		String[] shapeValues = new String[shapeModel.size()];
+		Integer[] shapePch = new Integer[shapeModel.size()];
+		int i = 0;
+		for(DataCell domVal : shapeModel.keySet()) {
+			rC.addData(domVal,i);
+			shapeValues[i] = shapeModel.get(domVal).toString();
+			shapePch[i] = R_SHAPES.get(shapeValues[i]);
+			i++;
+		}
+		
+		// create shape and value vectors for Rserve transfer
+		RList l = new RList();
+		l.put("value", rC.getREXPData());
+		l.put("shape", new REXPString(shapeValues));
+		l.put("pch", new REXPInteger(ArrayUtils.toPrimitive(shapePch)));
+		
+		// push color model to R
+		try {
+			con.assign("knime.shape.model", new REXPGenericVector(l));
+			con.voidEval("knime.shape.model <- as.data.frame(knime.shape.model)");
+		} catch (RserveException e) {
+			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e);
+		}
+		return;
+	}
+
+	public static void pushSizeModelToR(DataTableSpec tSpec,
+			RConnection con, ExecutionContext exec) {
+		/*int sizeIdx = SizeModelUtils.getSizeColumn(tSpec);
+		
+		// no shape model column has been found
+		if(shapeIdx == -1) return;
+		
+		// data type of color model is not supported
+		RType t = RUtils.getRType(tSpec.getColumnSpec(shapeIdx).getType(), false);
+		if(t == null) return;
+		
+		exec.setMessage("Push shape model to R (cannot be cancelled)");
+		
+		// retrieve shape model
+		HashMap<DataCell, Shape> shapeModel = null;		
+		shapeModel = ShapeModelUtils.parseNominalShapeModel(tSpec.getColumnSpec(shapeIdx));
+		
+		assert shapeModel != null;
+		
+		// create R data vector
+		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(shapeIdx).getName(), t, 0);
+		rC.initDataVector(shapeModel.size());*/
 	}
 }

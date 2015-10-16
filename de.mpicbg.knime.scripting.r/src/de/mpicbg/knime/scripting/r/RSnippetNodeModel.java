@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,7 +61,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         // try to execute the node, close connection if anything fails and pass through the error
         BufferedDataTable outTable = null;
         try {
-        	outTable = transferAndEvaluate(inData, exec, connection);
+        	outTable = transferAndEvaluate(castToBDT(inData), exec, connection);
         } catch (Exception e) {
 			if(connection.isConnected()) {
 				connection.close();
@@ -92,6 +93,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 		
 		RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
+		RUtils.pushShapeModelToR(inData[0].getDataTableSpec(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
