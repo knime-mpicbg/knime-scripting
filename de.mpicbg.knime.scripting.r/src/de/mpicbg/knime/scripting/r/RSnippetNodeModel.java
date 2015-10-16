@@ -94,6 +94,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 		
 		RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
 		RUtils.pushShapeModelToR(inData[0].getDataTableSpec(), connection, exec);
+		RUtils.pushSizeModelToR(inData[0].getDataTableSpec(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));

@@ -50,7 +50,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
@@ -59,7 +62,9 @@ import org.rosuda.REngine.Rserve.RserveException;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
 import de.mpicbg.knime.knutils.data.property.ShapeModelUtils;
+import de.mpicbg.knime.knutils.data.property.SizeModel.Mapping;
 import de.mpicbg.knime.knutils.data.property.SizeModelUtils;
+import de.mpicbg.knime.knutils.data.property.SizeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
@@ -1258,37 +1263,71 @@ public class RUtils {
 		l.put("shape", new REXPString(shapeValues));
 		l.put("pch", new REXPInteger(ArrayUtils.toPrimitive(shapePch)));
 		
-		// push color model to R
+		// push shape model to R
 		try {
 			con.assign("knime.shape.model", new REXPGenericVector(l));
 			con.voidEval("knime.shape.model <- as.data.frame(knime.shape.model)");
 		} catch (RserveException e) {
-			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e);
+			throw new KnimeScriptingException("Failed to push nominal shape model to R: " + e);
 		}
 		return;
 	}
 
 	public static void pushSizeModelToR(DataTableSpec tSpec,
-			RConnection con, ExecutionContext exec) {
-		/*int sizeIdx = SizeModelUtils.getSizeColumn(tSpec);
+			RConnection con, ExecutionContext exec) throws KnimeScriptingException {
+		int sizeIdx = SizeModelUtils.getSizeColumn(tSpec);
 		
 		// no shape model column has been found
-		if(shapeIdx == -1) return;
+		if(sizeIdx == -1) return;
 		
 		// data type of color model is not supported
-		RType t = RUtils.getRType(tSpec.getColumnSpec(shapeIdx).getType(), false);
+		RType t = RUtils.getRType(tSpec.getColumnSpec(sizeIdx).getType(), false);
 		if(t == null) return;
 		
-		exec.setMessage("Push shape model to R (cannot be cancelled)");
+		exec.setMessage("Push size model to R (cannot be cancelled)");
 		
-		// retrieve shape model
-		HashMap<DataCell, Shape> shapeModel = null;		
-		shapeModel = ShapeModelUtils.parseNominalShapeModel(tSpec.getColumnSpec(shapeIdx));
-		
-		assert shapeModel != null;
-		
-		// create R data vector
-		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(shapeIdx).getName(), t, 0);
-		rC.initDataVector(shapeModel.size());*/
+		// get KNIME size model
+		ModelContent model = new ModelContent("Size"); 
+        tSpec.getColumnSpec(sizeIdx).getSizeHandler().save(model);
+        
+        String sizeModelFunction = null;
+        try {
+        	Config cfg = model.getConfig("size_model");
+			double minv = cfg.getDouble("min");
+			double maxv = cfg.getDouble("max");
+	        double fac = cfg.getDouble("factor");
+	        String method = cfg.getString("mapping");
+	        
+	        SizeModel sModel = new SizeModel(minv, maxv, fac, method);
+	        sizeModelFunction = getSizeModelFunction(sModel);
+	        
+		} catch (InvalidSettingsException e) {
+			throw new KnimeScriptingException("KNIME size model does not contain expected keys. This is most likely due to implementation changes");
+		}
+        
+        assert sizeModelFunction != null;
+        
+        // push size model function to R
+        try {
+        	con.voidEval(sizeModelFunction);
+        } catch (RserveException e) {
+        	throw new KnimeScriptingException("Failed to push numeric size model to R: " + e);
+        }
+        return;     	
+	}
+
+	private static String getSizeModelFunction(SizeModel sModel) {
+		double min = sModel.getMin();
+		double max = sModel.getMax();
+		double factor = sModel.getFactor();
+		if(sModel.getMethod().equals(Mapping.LINEAR))
+			return "knime.size.model.fun <- function(v) {	(((v - " + min + ") / (" + max + " - " + min + ")) * (" + factor + " - 1)) + 1 }";
+		if(sModel.getMethod().equals(Mapping.EXPONENTIAL))
+			return "knime.size.model.fun <- function(v) {	(((v^2 - " + min + "^2) / (" + max + "^2 - " + min + "^2)) * (" + factor + " - 1)) + 1}";
+		if(sModel.getMethod().equals(Mapping.LOGARITHMIC))
+			return "knime.size.model.fun <- function(v) {	(((log(v) - log(" + min + ")) / (log(" + max + ") - log(" + min + "))) * (" + factor + " - 1)) + 1}";
+		if(sModel.getMethod().equals(Mapping.SQUARE_ROOT))
+			return "knime.size.model.fun <- function(v) {	(((sqrt(v) - sqrt(" + min + ")) / (sqrt(" + max + ") - sqrt(" + min + "))) * (" + factor + " - 1)) + 1}";
+		return null;
 	}
 }
