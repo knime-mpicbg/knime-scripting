@@ -17,7 +17,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 
 /**
- * The class provides methods around KNIME color model access
+ * The class provides methods around KNIME color model
  * 
  * @author Antje Janosch
  *

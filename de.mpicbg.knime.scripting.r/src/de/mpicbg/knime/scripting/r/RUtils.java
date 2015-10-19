@@ -104,6 +104,7 @@ public class RUtils {
     /** enum for datatypes which can be pushed to R via R-serve */
     public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
     
+    /** map with possible KNIME shapes */
     public static final Map<String, Integer> R_SHAPES;
     static {
         Map<String, Integer> map = new HashMap<String, Integer>();
@@ -1162,7 +1163,7 @@ public class RUtils {
 	}
 
 	/**
-	 * if the input table contains a color model, it is pushed to R as a data frame
+	 * if the input table contains a color model, it is pushed to R as a data frame 'knime.color.model'
 	 * columns: 'value' and 'color'
 	 * @param tSpec	input TableSpec
 	 * @param con	R-serve connection
@@ -1223,6 +1224,14 @@ public class RUtils {
 		return;
 	}
 
+	/**
+	 * if the input table contains a shape model, it is pushed to R as a data frame 'knime.shape.model'
+	 * columns: 'value' and 'shape' and 'pch'
+	 * @param tSpec
+	 * @param con
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	public static void pushShapeModelToR(DataTableSpec tSpec,
 			RConnection con, ExecutionContext exec) throws KnimeScriptingException {
 		int shapeIdx = ShapeModelUtils.getShapeColumn(tSpec);
@@ -1273,6 +1282,13 @@ public class RUtils {
 		return;
 	}
 
+	/**
+	 * if the input table contains a size model, it is pushed to R as a function 'knime.size.model.fun'
+	 * @param tSpec
+	 * @param con
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	public static void pushSizeModelToR(DataTableSpec tSpec,
 			RConnection con, ExecutionContext exec) throws KnimeScriptingException {
 		int sizeIdx = SizeModelUtils.getSizeColumn(tSpec);
@@ -1316,6 +1332,11 @@ public class RUtils {
         return;     	
 	}
 
+	/**
+	 * creates the R function definition based on the given size model
+	 * @param sModel sizeModel
+	 * @return R function definition as String
+	 */
 	private static String getSizeModelFunction(SizeModel sModel) {
 		double min = sModel.getMin();
 		double max = sModel.getMax();

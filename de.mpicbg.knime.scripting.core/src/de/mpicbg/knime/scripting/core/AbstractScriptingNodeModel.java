@@ -295,6 +295,11 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 		return inTables;
 	}
 
+	/**
+	 * ensure UTF-8 encoding
+	 * @param stringValue
+	 * @return
+	 */
     public static String fixEncoding(String stringValue) {
         String encodedString = new String(stringValue.getBytes(StandardCharsets.UTF_8));
         return encodedString.replace("\r","");
