@@ -61,7 +61,7 @@ public class BufTableUtils {
     /**
      * check if the execution monitor was canceled.
      */
-    public static void updateProgress(ExecutionContext exec, int done, int all) throws CanceledExecutionException {
+    public static void updateProgress(ExecutionContext exec, int done, long all) throws CanceledExecutionException {
         exec.checkCanceled();
         exec.setProgress((double) done / (double) all);
     }

@@ -76,7 +76,9 @@ public class RUtils {
         List<Object> columArrays = new ArrayList<Object>();
         Map<Integer, DataType> converters = new TreeMap<Integer, DataType>();
 
-        int numRows = bufTable.getRowCount();
+        long numRows = bufTable.size();
+        if(numRows > Integer.MAX_VALUE)
+        	throw new CanceledExecutionException("Cannot process tables with more than " + Integer.MAX_VALUE + " rows (Integer.MAX_VALUE)");
 
         // 1) initialize the arrays
         for (int i = 0; i < tableSpecs.getNumColumns(); i++) {
@@ -91,13 +93,13 @@ public class RUtils {
             converters.put(i, colType);
 
             if (colType.equals(DoubleCell.TYPE)) {
-                columArrays.add(new double[numRows]);
+                columArrays.add(new double[(int)numRows]);
 
             } else if (colType.equals(StringCell.TYPE) || colType.equals(DateAndTimeCell.TYPE)) {
-                columArrays.add(new String[numRows]);
+                columArrays.add(new String[(int)numRows]);
 
             } else if (colType.equals(IntCell.TYPE)) {
-                columArrays.add(new int[numRows]);
+                columArrays.add(new int[(int)numRows]);
 
             } else {
                 throw new RuntimeException("value type of attribute '" + colSpec.getName() + "' not supported");

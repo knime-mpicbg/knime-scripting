@@ -52,13 +52,13 @@ public class RowMultiFilterIterator extends RowIterator {
     private final ExecutionMonitor m_exec;
 
     // the row count in the original table
-    private final int m_totalCountInOrig;
+    private final long m_totalCountInOrig;
 
     public RowMultiFilterIterator(final BufferedDataTable origTable, final List<RowFilter> filters, final ExecutionMonitor exec, final boolean retainIfAllMatch, final boolean retainMatchingRows) {
         m_filters = filters;
         m_orig = origTable.iterator();
 
-        m_totalCountInOrig = ((BufferedDataTable) origTable).getRowCount();
+        m_totalCountInOrig = ((BufferedDataTable) origTable).size();
         m_exec = exec == null ? new ExecutionMonitor() : exec;
 
         m_rowNumber = 0;
