@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.r; singleton:=true
-Bundle-Version: 2.0.3.qualifier
+Bundle-Version: 2.0.400.qualifier
 Bundle-ClassPath: rsnippet.jar,
  lib/REngine.jar,
  lib/RserveEngine.jar
@@ -10,13 +10,13 @@ Bundle-Activator: de.mpicbg.knime.scripting.r.R4KnimeBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
- org.knime.workbench.core;bundle-version="[2.10.0,3.0.0)",
- org.knime.workbench.repository;bundle-version="[2.10.0,3.0.0)",
- org.knime.base;bundle-version="[2.10.0,3.0.0)",
+ org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
+ org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
+ org.knime.base;bundle-version="[3.0.0,4.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[2.0.0,3.0.0)",
  de.mpicbg.knime.scripting.core;bundle-version="[2.0.4,3.0.0)",
- org.apache.commons.lang;bundle-version="2.6.0",
- org.knime.product
+ org.apache.commons.lang;bundle-version="[2.6.0,3.0.0)",
+ org.knime.product;bundle-version="[3.0.0,4.0.0)"
 Export-Package: de.mpicbg.knime.scripting.r,
  de.mpicbg.knime.scripting.r.generic,
  de.mpicbg.knime.scripting.r.plots,
