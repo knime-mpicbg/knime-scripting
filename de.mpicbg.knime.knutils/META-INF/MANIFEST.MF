@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Utilities for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.knutils; singleton:=true
-Bundle-Version: 2.0.100.qualifier
+Bundle-Version: 3.0.000.qualifier
 Bundle-ClassPath: knutils.jar
 Bundle-Activator: de.mpicbg.knime.knutils.KnutilsBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
