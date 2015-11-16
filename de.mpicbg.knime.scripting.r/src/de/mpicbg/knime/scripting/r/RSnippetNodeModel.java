@@ -92,15 +92,16 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 		// check preferences
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 		
+    	// push color/size/shape model to R
 		RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
 		RUtils.pushShapeModelToR(inData[0].getDataTableSpec(), connection, exec);
 		RUtils.pushSizeModelToR(inData[0].getDataTableSpec(), connection, exec);
+		
+		// push flow variables to R
+		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
-        
-        // TODO: push color/size/shape model to R
-        // TODO: push flow variables to R
 
         // 2) prepare and parse script
         String script = prepareScript();

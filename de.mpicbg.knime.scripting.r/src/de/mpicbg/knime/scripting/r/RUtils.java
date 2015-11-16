@@ -55,6 +55,7 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.FlowVariable;
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -1350,5 +1351,49 @@ public class RUtils {
 		if(sModel.getMethod().equals(Mapping.SQUARE_ROOT))
 			return "knime.size.model.fun <- function(v) {	(((sqrt(v) - sqrt(" + min + ")) / (sqrt(" + max + ") - sqrt(" + min + "))) * (" + factor + " - 1)) + 1}";
 		return null;
+	}
+
+	/**
+	 * input flow variables are pushed to R as knime.flow.in
+	 * @param flowVariables
+	 * @param con
+	 * @param exec
+	 * @throws KnimeScriptingException 
+	 */
+	public static void pushFlowVariablesToR(Map<String, FlowVariable> flowVariables, RConnection con, ExecutionContext exec) throws KnimeScriptingException {
+		
+		RList l = new RList();
+		
+		exec.setMessage("Push KNIME flow variables to R (cannot be cancelled)");
+		
+		// put flow variables into an RList
+		for(String flowVarName : flowVariables.keySet()) {
+			FlowVariable flowvar = flowVariables.get(flowVarName);
+			String name = flowvar.getName();
+			REXP value = null;
+			
+			switch(flowvar.getType()){
+			case STRING: 
+				value = new REXPString(flowvar.getStringValue());
+				break;
+			case DOUBLE:
+				value = new REXPDouble(flowvar.getDoubleValue());
+				break;
+			case INTEGER:
+				value = new REXPInteger(flowvar.getIntValue());
+				break;
+			default:
+				throw new KnimeScriptingException("Flow variable type '" + flowvar.getType() + "' is not yet supported");
+			}
+			
+			if(value != null) l.put(name, value);
+		}
+		
+		// push flow variables to R
+		try {
+			con.assign("knime.flow.in", new REXPGenericVector(l));
+		} catch (RserveException e) {
+			throw new KnimeScriptingException("Failed to push KNIME flow variables to R: " + e);
+		}
 	}
 }
