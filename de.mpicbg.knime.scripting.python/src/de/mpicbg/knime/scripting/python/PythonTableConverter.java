@@ -135,7 +135,6 @@ public class PythonTableConverter {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
             DataTableSpec tableSpec = inputTable.getDataTableSpec();
 
-            int numRows = inputTable.getRowCount();
             List<String> columnNames = getColumnNames(tableSpec);
 
             // The first line is the column names
@@ -149,7 +148,7 @@ public class PythonTableConverter {
                 if (type.equals(IntCell.TYPE)) outputTypes.add("INT");
                 else if (type.equals(DoubleCell.TYPE)) outputTypes.add("FLOAT");
                 else if (type.equals(StringCell.TYPE)) outputTypes.add("STRING");
-                else if (type.isCompatible(StringCell.getPreferredValueClass())) outputTypes.add("STRING");
+                else if (type.isCompatible(StringValue.class)) outputTypes.add("STRING");
             }
 
             // The second line is the column types
