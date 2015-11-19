@@ -5,6 +5,10 @@ import static de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel.createTe
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -16,10 +20,12 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.border.Border;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -29,6 +35,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
@@ -48,15 +55,18 @@ import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
 public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
     public static final String SCRIPT_TAB_NAME = "Script Editor";
+    
+    private static final String OPTIONS_TAB_NAME = "Chunk Settings";
 
     private static final NodeLogger logger = NodeLogger.getLogger(ScriptingNodeDialog.class);
 
-    private JTable table;
-    private int outTableDefCounter = 1;
-    private JCheckBox m_appendColsCB;
     // checkbox for "open external ..."
     private JCheckBox m_openIn;
-
+    
+    // models for chunk settings
+    SpinnerNumberModel m_spinnerChunkIn;
+    SpinnerNumberModel m_spinnerChunkOut;
+    
     private String defaultScript;
     private List<String> urlList;
 
@@ -75,6 +85,19 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      */
 	public static final String OPEN_IN = "open.in";
 	public static final boolean OPEN_IN_DFT = false;
+	
+	/**
+	 * node setting: chunk size to push input table, columns per chunk (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_IN = "chunk.in";
+	public static final int CHUNK_IN_DFT = -1;
+	
+	/**
+	 * node setting: chunk size to pull result table (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_OUT = "chunk.out";
+	public static final int CHUNK_OUT_DFT = -1;
+	
 
     /**
      * Will be set by templates that are deployed as actual knime nodes.
@@ -139,9 +162,66 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
             this.addTabAt(1, "Templates", templateWizard);
         }
-
+        
+        // chunk settings panel
+        JPanel optionsPanel = new JPanel();
+        populateOptionsPanel(optionsPanel);
+        this.addTab(OPTIONS_TAB_NAME, optionsPanel);
+        
         removeTab("Options");
         selectTab(SCRIPT_TAB_NAME);
+	}
+
+	private void populateOptionsPanel(JPanel optionsPanel) {
+		
+		// init components
+		JLabel label1 = new JLabel("Chunk size to push incoming data (tables only):");
+        JLabel label2 = new JLabel("Chunk size to pull result data (tables only):");
+        m_spinnerChunkIn = new SpinnerNumberModel(CHUNK_IN_DFT, -1, Integer.MAX_VALUE, 1);
+        m_spinnerChunkOut = new SpinnerNumberModel(CHUNK_OUT_DFT, -1, Integer.MAX_VALUE, 1);
+        JSpinner spinner1 = new JSpinner(m_spinnerChunkIn);
+        JSpinner spinner2 = new JSpinner(m_spinnerChunkOut);
+        JButton resetButton = new JButton(""
+        		+ "<html>"
+        		+ "Reset settings"
+        		+ "<br />"
+        		+ "(Do not chunk data for transfer)"
+        		+ "</html>");
+        resetButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				m_spinnerChunkIn.setValue(CHUNK_IN_DFT);
+				m_spinnerChunkOut.setValue(CHUNK_OUT_DFT);
+			}
+		});
+        
+        // put components into a grid
+        JPanel gridPanel = new JPanel();
+        gridPanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.LINE_START;
+        c.insets = new Insets(0,0,0,10);
+        
+        c.gridx = 0;
+        c.gridy = 0;
+        gridPanel.add(label1, c);
+        c.gridx = 0;
+        c.gridy = 1;
+        gridPanel.add(label2, c);
+        c.gridx = 1;
+        c.gridy = 0;
+        gridPanel.add(spinner1, c);
+        c.gridx = 1;
+        c.gridy = 1;
+        gridPanel.add(spinner2, c);
+        c.gridx = 0;
+        c.gridy = 2;
+        c.insets = new Insets(25, 0, 0, 10);
+        gridPanel.add(resetButton,c);
+        
+        optionsPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        optionsPanel.add(gridPanel);
 	}
 
 	/**
@@ -218,13 +298,20 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         scriptProvider.setContent(script, finalTemplate);
         
         boolean openIn = false;
+        int chunkIn = CHUNK_IN_DFT;
+        int chunkOut = CHUNK_OUT_DFT;
         try {
 			openIn = settings.getBoolean(OPEN_IN);
+			chunkIn = settings.getInt(CHUNK_IN);
+			chunkOut = settings.getInt(CHUNK_OUT);
 		} catch (InvalidSettingsException e) {
 		}
 
         m_openIn.setSelected(openIn);
         paintBorder(openIn);
+        
+        m_spinnerChunkIn.setValue(chunkIn);
+        m_spinnerChunkOut.setValue(chunkOut);
     }
 
 
@@ -298,6 +385,14 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         SettingsModelBoolean openInProperty = AbstractScriptingNodeModel.createOpenInProperty();
         openInProperty.setBooleanValue(m_openIn.isSelected());
         openInProperty.saveSettingsTo(settings);
+        
+        SettingsModelIntegerBounded smChunkIn = AbstractScriptingNodeModel.createChunkInProperty();
+        smChunkIn.setIntValue(m_spinnerChunkIn.getNumber().intValue());
+        smChunkIn.saveSettingsTo(settings);
+        
+        SettingsModelIntegerBounded smChunkOut = AbstractScriptingNodeModel.createChunkOutProperty();
+        smChunkOut.setIntValue(m_spinnerChunkOut.getNumber().intValue());
+        smChunkOut.saveSettingsTo(settings);
     }
 
     public void selectScriptTab() {

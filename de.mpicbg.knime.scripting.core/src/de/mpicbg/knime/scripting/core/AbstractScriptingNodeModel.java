@@ -1,26 +1,30 @@
 package de.mpicbg.knime.scripting.core;
 
-import de.mpicbg.knime.knutils.AbstractNodeModel;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.core.rgg.RGGDialogPanel;
-import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
-import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.*;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.core.rgg.RGGDialogPanel;
+import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
+import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 
 
 /**
@@ -36,6 +40,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     protected final SettingsModelString script;
     protected final SettingsModelString template;
     protected final SettingsModelBoolean openIn;
+    
+    protected final SettingsModelInteger sm_chunkIn;
+    protected final SettingsModelInteger sm_chunkOut;
+    
     protected int numOutputs;
     protected int numInputs;
 
@@ -57,6 +65,9 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         script = createSnippetProperty(getDefaultScript());
         template = createTemplateProperty();
         openIn = createOpenInProperty();
+        
+        sm_chunkIn = createChunkInProperty();
+        sm_chunkOut = createChunkOutProperty();
     }
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
@@ -81,6 +92,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     
     public static SettingsModelBoolean createOpenInProperty() {
 		return new SettingsModelBoolean(ScriptingNodeDialog.OPEN_IN, ScriptingNodeDialog.OPEN_IN_DFT);
+	}
+    
+    public static SettingsModelIntegerBounded createChunkInProperty() {
+		return new SettingsModelIntegerBounded(ScriptingNodeDialog.CHUNK_IN, ScriptingNodeDialog.CHUNK_IN_DFT, -1, Integer.MAX_VALUE);
+	}
+    
+    public static SettingsModelIntegerBounded createChunkOutProperty() {
+		return new SettingsModelIntegerBounded(ScriptingNodeDialog.CHUNK_OUT, ScriptingNodeDialog.CHUNK_OUT_DFT, -1, Integer.MAX_VALUE);
 	}
 
     @Override
@@ -128,6 +147,22 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 	public String getDefaultScript() {
         return "";
     }
+	
+	/**
+	 * get chunk size for pushing data
+	 * @return
+	 */
+	protected int getChunkInSize() {
+		return sm_chunkIn.getIntValue();
+	}
+	
+	/** 
+	 * get chunk size for retrieving data 
+	 * @return
+	 */
+	protected int getChunkOutSize() {
+		return sm_chunkOut.getIntValue();
+	}
 
 
     @Override
@@ -137,6 +172,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         script.saveSettingsTo(settings);
         template.saveSettingsTo(settings);
         openIn.saveSettingsTo(settings);
+        sm_chunkIn.saveSettingsTo(settings);
+        sm_chunkOut.saveSettingsTo(settings);
     }
 
 
@@ -151,6 +188,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         try {
             script.loadSettingsFrom(settings);
             openIn.loadSettingsFrom(settings);
+            sm_chunkIn.loadSettingsFrom(settings);
+            sm_chunkOut.loadSettingsFrom(settings);
         } catch (Throwable t) {
         }
 
