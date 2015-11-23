@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 
@@ -40,7 +41,7 @@ public class ConvertToTable extends AbstractNodeModel {
 
         try {
         // 1) restore the workspace in a different server session
-        RUtils.pushToR(inObjects, connection, exec);
+        RUtils.pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
         // 2) Make sure that the R-object in the persistied workspace is of type data-frame
         boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());

@@ -3,14 +3,17 @@ package de.mpicbg.knime.scripting.r.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataType;
@@ -18,8 +21,12 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.IntCell.IntCellFactory;
+import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPDouble;
@@ -66,13 +73,14 @@ public class RDataColumn {
 	private Object[] m_data;
 	
 	/** list of missing value indicees - zero based*/
-	private List<Integer> m_missingFlags = new ArrayList<Integer>();
+	private HashSet<Integer> m_missingFlags = new HashSet<Integer>();
 	
 	/** column levels(R)/domain values(KNIME) with index - zero-based */
 	private HashMap<Integer, String> m_levels = new HashMap<Integer, String>();
 	
 	/** column upper and lower bound */
 	private double[] m_bounds = new double[2];
+	
 	
 	/**
 	 * constructor
@@ -404,7 +412,7 @@ public class RDataColumn {
 		
 		try {
 			boolean[] missingVals = data.isNA();
-			m_missingFlags = new ArrayList<Integer>();
+			m_missingFlags = new HashSet<Integer>();
 			for(int i = 0; i < missingVals.length; i++)
 				if(missingVals[i])
 					m_missingFlags.add(i);
@@ -439,23 +447,26 @@ public class RDataColumn {
 	 */
 	public DataCell getKNIMECell(int rowIdx) {
 		
-		if(m_missingFlags.contains(rowIdx))
-			return DataType.getMissingCell();
+		if(m_missingFlags.size() > 0)
+			if(m_missingFlags.contains(rowIdx))
+				return DataType.getMissingCell();
 		
 		switch(m_type) {
 		case R_LOGICAL:
-			return BooleanCell.get((boolean) m_data[rowIdx]);
+			return BooleanCellFactory.create((boolean)m_data[rowIdx]);
+			//return BooleanCell.get((boolean) m_data[rowIdx]);
 		case R_INT:
-			return new IntCell((Integer) m_data[rowIdx]);
+			return IntCellFactory.create((int) m_data[rowIdx]);
+			//return new IntCell((Integer) m_data[rowIdx]);
 		case R_DOUBLE:
-			return new DoubleCell((Double) m_data[rowIdx]);
+			return DoubleCellFactory.create((double) m_data[rowIdx]);
+			//return new DoubleCell((Double) m_data[rowIdx]);
 		case R_FACTOR:
 		case R_STRING:
-			return new StringCell((String) m_data[rowIdx]);
+			return StringCellFactory.create((String) m_data[rowIdx]);
+			//return new StringCell((String) m_data[rowIdx]);
 		default:
 		}
 		return null;
 	}
-
-
 }

@@ -6,18 +6,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPGenericVector;
 import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -91,17 +91,24 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
 		
 		// check preferences
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-		
+        DataTableSpec inSpec = inData[0].getDataTableSpec();
+    	
+    	// retrieve chunk settings
+        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inSpec);
+        int chunkOutSize = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_OUT)).getIntValue();
+    	
     	// push color/size/shape model to R
-		RUtils.pushColorModelToR(inData[0].getDataTableSpec(), connection, exec);
-		RUtils.pushShapeModelToR(inData[0].getDataTableSpec(), connection, exec);
-		RUtils.pushSizeModelToR(inData[0].getDataTableSpec(), connection, exec);
+		RUtils.pushColorModelToR(inSpec, connection, exec);
+		RUtils.pushShapeModelToR(inSpec, connection, exec);
+		RUtils.pushSizeModelToR(inSpec, connection, exec);
 		
 		// push flow variables to R
 		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         // 1) convert input table into data-frame and put into the r-workspace
-        RUtils.pushToR(inData, connection, exec.createSubProgress(1.0/2));
+        RUtils.pushToR(inData, connection, exec, chunkInSize);
+        
+        exec.setMessage("Evaluate R-script (cannot be cancelled)");
 
         // 2) prepare and parse script
         String script = prepareScript();
@@ -133,7 +140,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
         
         // 4) extract output data-frame from R
-        BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec);
+        BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec, chunkOutSize);
 		return outTable;
 	}
 

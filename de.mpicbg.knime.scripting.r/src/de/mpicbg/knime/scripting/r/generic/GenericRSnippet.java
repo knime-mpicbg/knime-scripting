@@ -70,7 +70,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
         try {
 	        // 1) restore the workspace in a different server session
-	        RUtils.pushToR(inData, connection, exec);
+	        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters

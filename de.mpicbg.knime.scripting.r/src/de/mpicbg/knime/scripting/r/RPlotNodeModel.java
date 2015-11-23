@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptProvider;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
@@ -76,7 +77,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 
         // 1) convert exampleSet into data-frame and put into the r-workspace
         try {
-        	RUtils.pushToR(inData, connection, exec);
+        	RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
         	adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
         	createFigure(connection);

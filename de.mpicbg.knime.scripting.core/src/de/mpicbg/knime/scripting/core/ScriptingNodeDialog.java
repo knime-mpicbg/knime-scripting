@@ -75,28 +75,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public ScriptTemplateWizard templateWizard;
 
 
-    public static final String SCRIPT_PROPERTY = "node.script";
-    public static String SCRIPT_TEMPLATE = "node.template";
 
-    public static final String SCRIPT_TEMPLATE_DEFAULT = "";
-
-    /**
-     * node setting: functionality to open the input data externally
-     */
-	public static final String OPEN_IN = "open.in";
-	public static final boolean OPEN_IN_DFT = false;
-	
-	/**
-	 * node setting: chunk size to push input table, columns per chunk (-1 => not split into chunks)
-	 */
-	public static final String CHUNK_IN = "chunk.in";
-	public static final int CHUNK_IN_DFT = -1;
-	
-	/**
-	 * node setting: chunk size to pull result table (-1 => not split into chunks)
-	 */
-	public static final String CHUNK_OUT = "chunk.out";
-	public static final int CHUNK_OUT_DFT = -1;
 	
 
     /**
@@ -177,8 +156,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 		// init components
 		JLabel label1 = new JLabel("Chunk size to push incoming data (tables only):");
         JLabel label2 = new JLabel("Chunk size to pull result data (tables only):");
-        m_spinnerChunkIn = new SpinnerNumberModel(CHUNK_IN_DFT, -1, Integer.MAX_VALUE, 1);
-        m_spinnerChunkOut = new SpinnerNumberModel(CHUNK_OUT_DFT, -1, Integer.MAX_VALUE, 1);
+        m_spinnerChunkIn = new SpinnerNumberModel(AbstractScriptingNodeModel.CHUNK_IN_DFT, -1, Integer.MAX_VALUE, 1);
+        m_spinnerChunkOut = new SpinnerNumberModel(AbstractScriptingNodeModel.CHUNK_OUT_DFT, -1, Integer.MAX_VALUE, 1);
         JSpinner spinner1 = new JSpinner(m_spinnerChunkIn);
         JSpinner spinner2 = new JSpinner(m_spinnerChunkOut);
         JButton resetButton = new JButton(""
@@ -191,8 +170,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				m_spinnerChunkIn.setValue(CHUNK_IN_DFT);
-				m_spinnerChunkOut.setValue(CHUNK_OUT_DFT);
+				m_spinnerChunkIn.setValue(AbstractScriptingNodeModel.CHUNK_IN_DFT);
+				m_spinnerChunkOut.setValue(AbstractScriptingNodeModel.CHUNK_OUT_DFT);
 			}
 		});
         
@@ -253,11 +232,11 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
                                            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
 
-        String serializedTemplate = settings.getString(SCRIPT_TEMPLATE, SCRIPT_TEMPLATE_DEFAULT);
+        String serializedTemplate = settings.getString(AbstractScriptingNodeModel.SCRIPT_TEMPLATE, AbstractScriptingNodeModel.SCRIPT_TEMPLATE_DEFAULT);
 
 
         ScriptTemplate template = null;
-        if (getHardwiredTemplate() != null && serializedTemplate.equals(SCRIPT_TEMPLATE_DEFAULT)) {
+        if (getHardwiredTemplate() != null && serializedTemplate.equals(AbstractScriptingNodeModel.SCRIPT_TEMPLATE_DEFAULT)) {
             template = getHardwiredTemplate();
 
         } else {
@@ -283,7 +262,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
 
         final ScriptTemplate finalTemplate = template;
-        final String script = settings.getString(SCRIPT_PROPERTY, defaultScript);
+        final String script = settings.getString(AbstractScriptingNodeModel.SCRIPT_PROPERTY, defaultScript);
 
         // update the ui but not from within the application thread
 //        SwingUtilities.invokeLater(new Runnable() {
@@ -298,12 +277,12 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         scriptProvider.setContent(script, finalTemplate);
         
         boolean openIn = false;
-        int chunkIn = CHUNK_IN_DFT;
-        int chunkOut = CHUNK_OUT_DFT;
+        int chunkIn = AbstractScriptingNodeModel.CHUNK_IN_DFT;
+        int chunkOut = AbstractScriptingNodeModel.CHUNK_OUT_DFT;
         try {
-			openIn = settings.getBoolean(OPEN_IN);
-			chunkIn = settings.getInt(CHUNK_IN);
-			chunkOut = settings.getInt(CHUNK_OUT);
+			openIn = settings.getBoolean(AbstractScriptingNodeModel.OPEN_IN);
+			chunkIn = settings.getInt(AbstractScriptingNodeModel.CHUNK_IN);
+			chunkOut = settings.getInt(AbstractScriptingNodeModel.CHUNK_OUT);
 		} catch (InvalidSettingsException e) {
 		}
 

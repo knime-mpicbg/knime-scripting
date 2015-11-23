@@ -60,7 +60,7 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
         try {
         // push incoming data to R server
         logger.info("Pushing inputs to R...");
-        RUtils.pushToR(inData, connection, exec);
+        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
         
         // save workspace file and return it to local machine
         rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_INVAR_BASE_NAME);

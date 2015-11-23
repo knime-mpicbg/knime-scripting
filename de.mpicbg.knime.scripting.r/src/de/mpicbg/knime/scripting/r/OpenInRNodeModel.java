@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.knutils.Utils;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
@@ -78,7 +79,7 @@ public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
             
             try {
 
-            Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec);
+            Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
             // save the work-space to a temporary file and open R
 

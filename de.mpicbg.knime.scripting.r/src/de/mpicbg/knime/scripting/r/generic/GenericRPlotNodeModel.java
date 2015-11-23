@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import java.io.IOException;
 
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptProvider;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -67,7 +68,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
-	        RUtils.pushToR(inData, connection, exec);
+	        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));

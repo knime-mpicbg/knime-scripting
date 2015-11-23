@@ -593,15 +593,17 @@ public class RUtils {
      * push all incoming KNIME-objects to R
      * @param inObjects
      * @param connection
-     * @param exec
+     * @param exec 
+     * @param chunkInSize 
      * @return
      * @throws KnimeScriptingException
      */
-    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionMonitor exec) throws KnimeScriptingException {
+    public static Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionMonitor exec, int chunkInSize) throws KnimeScriptingException {
         Map<String, Object> inputMapping = createPortMapping(inObjects);
         
         double nInput = inputMapping.size();
         exec.setMessage("Transfer to R");
+        ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
 
         // first push the generic inputs
         Map<String, File> genPortMapping = getGenericPorts(inputMapping);
@@ -616,7 +618,7 @@ public class RUtils {
         Map<String, BufferedDataTable> tablePortMapping = getDataTablePorts(inputMapping);
         double nTables = tablePortMapping.size();
         try {
-            if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, exec.createSubProgress(nTables/nInput));
+            if(tablePortMapping.size() > 0) RUtils.loadTableInputs(connection, tablePortMapping, transferToExec.createSubProgress(nTables/nInput), chunkInSize);
         } catch (Throwable e) {
             throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
         }
@@ -628,15 +630,13 @@ public class RUtils {
      * @param connection
      * @param tableMapping
      * @param exec
+     * @param chunkInSize 
      * @throws REXPMismatchException
      * @throws RserveException
      * @throws CanceledExecutionException
      */
-    private static void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionMonitor exec) throws REXPMismatchException, RserveException, CanceledExecutionException {
-    	//TODO: add chunk-size as node setting
-    	int chunksize = 4;
-
-    	// transfer KNIME-tables to R
+    private static void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionMonitor exec, int chunkInSize) throws REXPMismatchException, RserveException, CanceledExecutionException {
+       	// transfer KNIME-tables to R
         for (String varName : tableMapping.keySet()) {
             BufferedDataTable input = tableMapping.get(varName);
 
@@ -644,7 +644,7 @@ public class RUtils {
                 throw new RuntimeException("null tables are not allowed in the table input mapping");
             }
 
-            transferRDataContainer(exec.createSubProgress(1.0/tableMapping.size()), input, chunksize, connection, varName);           
+            transferRDataContainer(exec.createSubProgress(1.0/tableMapping.size()), input, chunkInSize, connection, varName);           
         }
     }
 
@@ -986,7 +986,7 @@ public class RUtils {
     	// 1) convert exampleSet into data-frame and put into the r-workspace
     	logger.info("Pushing inputs to R...");
 
-    	Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec);
+    	Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
     	// save the work-space to a temporary file and open R
     	String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
@@ -1082,7 +1082,7 @@ public class RUtils {
 		
 	}
 
-	public static BufferedDataTable pullTableFromR(String rOutName, RConnection connection, ExecutionContext exec) 
+	public static BufferedDataTable pullTableFromR(String rOutName, RConnection connection, ExecutionContext exec, int chunkOutSize) 
 	throws RserveException, REXPMismatchException, CanceledExecutionException {
 		
 		exec.setMessage("R snippet finished - pull data from R");
@@ -1090,6 +1090,8 @@ public class RUtils {
 
 		int numRows = ((REXPInteger)connection.eval("nrow(" + rOutName + ")")).asInteger();
 		int numCols = ((REXPInteger)connection.eval("ncol(" + rOutName + ")")).asInteger();
+		// correct chunksize if it is -1 or 0 (no chunking)
+		chunkOutSize = chunkOutSize <= 0 ? numRows : chunkOutSize;
 		
 		RDataFrameContainer rDFC = new RDataFrameContainer(numRows, numCols);
 		
@@ -1100,6 +1102,9 @@ public class RUtils {
 		rDFC.addRowNames(rowNames);
 
 		subExec.setMessage("retrieve column specs from R (cannot be cancelled)");
+		subExec.checkCanceled();
+		
+		// get column specs
 		if(numCols > 0) {
 			//names(rOut)	column names
 			String[] cNames = getDataFrameColumnNames(numCols, connection, rOutName);
@@ -1137,9 +1142,10 @@ public class RUtils {
 		
 		// fill table with data
 		subExec.setMessage("retrieve data from R (cannot be cancelled)");
+		subExec.checkCanceled();
+		
 		if(numRows > 0) {
-			int rowChunkSize = 1000;
-			rDFC.readDataFromR(con, connection, subExec, rOutName, rowChunkSize);
+			rDFC.readDataFromR(con, connection, subExec, rOutName, chunkOutSize);
 		}
 
 		con.close();
@@ -1396,4 +1402,15 @@ public class RUtils {
 			throw new KnimeScriptingException("Failed to push KNIME flow variables to R: " + e);
 		}
 	}
+
+	/**
+	 * if chunk size setting is -1 or 0, set chunk size to the number of columns available (= no data chunking)
+	 * @param cIn
+	 * @param inSpec
+	 * @return chunksize
+	 */
+	public static int getChunkIn(int cIn, DataTableSpec inSpec) {
+		return cIn <= 0 ? inSpec.getNumColumns() : cIn;
+	}
+	
 }

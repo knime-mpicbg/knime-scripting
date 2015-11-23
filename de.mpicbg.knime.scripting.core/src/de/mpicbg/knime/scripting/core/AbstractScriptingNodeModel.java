@@ -11,9 +11,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -37,12 +35,28 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     /**
      * The property for the string.
      */
-    protected final SettingsModelString script;
-    protected final SettingsModelString template;
-    protected final SettingsModelBoolean openIn;
-    
-    protected final SettingsModelInteger sm_chunkIn;
-    protected final SettingsModelInteger sm_chunkOut;
+    public static final String SCRIPT_PROPERTY = "node.script";
+    public static final String SCRIPT_TEMPLATE = "node.template";
+
+    public static final String SCRIPT_TEMPLATE_DEFAULT = "";
+
+    /**
+     * node setting: functionality to open the input data externally
+     */
+	public static final String OPEN_IN = "open.in";
+	public static final boolean OPEN_IN_DFT = false;
+	
+	/**
+	 * node setting: chunk size to push input table, columns per chunk (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_IN = "chunk.in";
+	public static final int CHUNK_IN_DFT = -1;
+	
+	/**
+	 * node setting: chunk size to pull result table (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_OUT = "chunk.out";
+	public static final int CHUNK_OUT_DFT = -1;
     
     protected int numOutputs;
     protected int numInputs;
@@ -53,7 +67,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, false);
+    	this(inPorts, outPorts, true);
     }
     
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
@@ -62,12 +76,11 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         numInputs = inPorts.length;
         numOutputs = outPorts.length;
 
-        script = createSnippetProperty(getDefaultScript());
-        template = createTemplateProperty();
-        openIn = createOpenInProperty();
-        
-        sm_chunkIn = createChunkInProperty();
-        sm_chunkOut = createChunkOutProperty();
+        this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
+        this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
+        this.addModelSetting(OPEN_IN, createOpenInProperty());
+        this.addModelSetting(CHUNK_IN, createChunkInProperty());
+        this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
     }
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
@@ -82,31 +95,31 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public static SettingsModelString createSnippetProperty(String defaultScript) {
-        return new SettingsModelString(ScriptingNodeDialog.SCRIPT_PROPERTY, defaultScript);
+        return new SettingsModelString(SCRIPT_PROPERTY, defaultScript);
     }
 
 
     public static SettingsModelString createTemplateProperty() {
-        return new SettingsModelString(ScriptingNodeDialog.SCRIPT_TEMPLATE, ScriptingNodeDialog.SCRIPT_TEMPLATE_DEFAULT);
+        return new SettingsModelString(SCRIPT_TEMPLATE, SCRIPT_TEMPLATE_DEFAULT);
     }
     
     public static SettingsModelBoolean createOpenInProperty() {
-		return new SettingsModelBoolean(ScriptingNodeDialog.OPEN_IN, ScriptingNodeDialog.OPEN_IN_DFT);
+		return new SettingsModelBoolean(OPEN_IN, OPEN_IN_DFT);
 	}
     
     public static SettingsModelIntegerBounded createChunkInProperty() {
-		return new SettingsModelIntegerBounded(ScriptingNodeDialog.CHUNK_IN, ScriptingNodeDialog.CHUNK_IN_DFT, -1, Integer.MAX_VALUE);
+		return new SettingsModelIntegerBounded(CHUNK_IN, CHUNK_IN_DFT, -1, Integer.MAX_VALUE);
 	}
     
     public static SettingsModelIntegerBounded createChunkOutProperty() {
-		return new SettingsModelIntegerBounded(ScriptingNodeDialog.CHUNK_OUT, ScriptingNodeDialog.CHUNK_OUT_DFT, -1, Integer.MAX_VALUE);
+		return new SettingsModelIntegerBounded(CHUNK_OUT, CHUNK_OUT_DFT, -1, Integer.MAX_VALUE);
 	}
 
     @Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
 			throws Exception {
     	// check whether the data should be opened externally
-    	if(openIn.getBooleanValue()) {
+    	if(((SettingsModelBoolean) this.getModelSetting(OPEN_IN)).getBooleanValue()) {
     		openIn(inObjects, exec);
     		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
     	} else 
@@ -138,7 +151,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         // Plot-nodes need to be handled separately
         adaptHardwiredTemplateToContext(inSpecs);
         
-        if(openIn.getBooleanValue())
+        if(((SettingsModelBoolean) this.getModelSetting(OPEN_IN)).getBooleanValue())
         	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
         return null;
@@ -148,59 +161,6 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return "";
     }
 	
-	/**
-	 * get chunk size for pushing data
-	 * @return
-	 */
-	protected int getChunkInSize() {
-		return sm_chunkIn.getIntValue();
-	}
-	
-	/** 
-	 * get chunk size for retrieving data 
-	 * @return
-	 */
-	protected int getChunkOutSize() {
-		return sm_chunkOut.getIntValue();
-	}
-
-
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        super.saveSettingsTo(settings);
-
-        script.saveSettingsTo(settings);
-        template.saveSettingsTo(settings);
-        openIn.saveSettingsTo(settings);
-        sm_chunkIn.saveSettingsTo(settings);
-        sm_chunkOut.saveSettingsTo(settings);
-    }
-
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        super.loadValidatedSettingsFrom(settings);
-
-        // It can be safely assumed that the settings are valided by the
-        // method below.
-
-        try {
-            script.loadSettingsFrom(settings);
-            openIn.loadSettingsFrom(settings);
-            sm_chunkIn.loadSettingsFrom(settings);
-            sm_chunkOut.loadSettingsFrom(settings);
-        } catch (Throwable t) {
-        }
-
-        try {
-            template.loadSettingsFrom(settings);
-        } catch (Throwable t) {
-            throw new RuntimeException("Could not unpersist template");
-        }
-
-    }
-
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -251,7 +211,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     private Map<String, Object> getTemplateConfigInternal() {
-        ScriptTemplate deserializedTemplate = ScriptingNodeDialog.deserializeTemplate(template.getStringValue());
+    	String template = ((SettingsModelString) getModelSetting(SCRIPT_TEMPLATE)).getStringValue();
+        ScriptTemplate deserializedTemplate = ScriptingNodeDialog.deserializeTemplate(template);
 
         if (deserializedTemplate == null) {
 
@@ -285,14 +246,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
         String script;
+        String serializedTemplate = ((SettingsModelString) getModelSetting(SCRIPT_TEMPLATE)).getStringValue();
 
-        String serializedTemplate = template.getStringValue();
         ScriptTemplate restoredTemplate = ScriptingNodeDialog.deserializeTemplate(serializedTemplate);
 
 
         // if the node is a hard-wired one, use the default template, otherwise use the script as saved in the template definition
         if (contextAwareHWTemplateText == null || hardwiredTemplate == null || (restoredTemplate != null && !restoredTemplate.isLinkedToScript())) {
-            script = this.script.getStringValue();
+            script = ((SettingsModelString) getModelSetting(SCRIPT_PROPERTY)).getStringValue();
 
         } else {
             ScriptTemplate contextAwareHWTemplate = new ScriptTemplate();

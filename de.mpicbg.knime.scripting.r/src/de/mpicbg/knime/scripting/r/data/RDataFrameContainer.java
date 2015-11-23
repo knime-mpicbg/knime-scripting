@@ -314,7 +314,10 @@ public class RDataFrameContainer {
 			
 			int dataIdx = 0;
 			for(int i = startRow; i <= endRow; i++) {
-				DefaultRow row = new DefaultRow(m_rowKeys[i-1], getListOfCells(dataIdx));
+				subExec.setMessage("create row " + i);
+				subExec.checkCanceled();
+				
+				DefaultRow row = new DefaultRow(m_rowKeys[i-1], getListOfCells(dataIdx, cList));
 				con.addRowToTable(row);
 				dataIdx++;
 			}
@@ -326,12 +329,13 @@ public class RDataFrameContainer {
 
 	/**
 	 * @param rowIdx
+	 * @param columnList 
 	 * @return data from a given row as KNIME cell list
 	 */
-	private List<DataCell> getListOfCells(int rowIdx) {
+	private List<DataCell> getListOfCells(int rowIdx, ArrayList<RDataColumn> columnList) {
 		List<DataCell> cells = new ArrayList<DataCell>();
 		if(m_numCols > 0) {
-			for(RDataColumn col : m_columnChunks.get(0)) {
+			for(RDataColumn col : columnList) {
 				cells.add(col.getKNIMECell(rowIdx));
 			}
 		}
