@@ -1,12 +1,12 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.ScriptProvider;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
-import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
-import org.knime.core.data.DataTableSpec;
+import javax.imageio.ImageIO;
+
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -15,16 +15,15 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
-import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
+import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
 
 
 /**
@@ -33,9 +32,6 @@ import java.util.ArrayList;
  * @author Holger Brandl (MPI-CBG)
  */
 public class RPlotNodeModel extends AbstractRPlotNodeModel {
-
-    protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
-
 
     public RPlotNodeModel() {
         super(createPorts(1), new PortType[]{ImagePortObject.TYPE});

@@ -1,32 +1,39 @@
 package de.mpicbg.knime.scripting.r.plots;
 
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.FlowVarUtils;
-import de.mpicbg.knime.scripting.core.TemplateConfigurator;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.RPlotNodeFactory;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
-import de.mpicbg.knime.scripting.r.RUtils;
+import java.awt.Image;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-import org.knime.core.node.BufferedDataTable;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+
+import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.FlowVarUtils;
+import de.mpicbg.knime.scripting.core.TemplateConfigurator;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.r.RUtils;
 
 
 /**
@@ -35,18 +42,34 @@ import java.util.Date;
  * @author Holger Brandl
  */
 public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
+	
+	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
     public Image image;
     public File nodeImageFile;
     private File rWorkspaceFile;
     private File nodeRWorkspaceFile;
-
-    protected SettingsModelInteger propWidth = RPlotNodeFactory.createPropFigureWidth();
-    protected SettingsModelInteger propHeight = RPlotNodeFactory.createPropFigureHeight();
-    protected SettingsModelString propOutputFile = RPlotNodeFactory.createPropOutputFile();
-    protected SettingsModelBoolean propEnableFile = RPlotNodeFactory.createEnableFile();
-    protected SettingsModelBoolean propOverwriteFile = RPlotNodeFactory.createOverwriteFile();
-    private SettingsModelString propOutputType = RPlotNodeFactory.createPropOutputType();
+    
+    /**
+     * MODEL - SETTINGS
+     */
+    public static final String CFG_WIDTH = "figure.width";
+    public static final int CFG_WIDTH_DFT = 1000;
+    
+    public static final String CFG_HEIGHT = "figure.height";
+    public static final int CFG_HEIGHT_DFT = 700;
+    
+    public static final String CFG_OUTFILE = "figure.output.file";
+    
+    public static final String CFG_OVERWRITE = "overwrite.ok";
+    public static final boolean CFG_OVERWRITE_DFT = false;
+    
+    public static final String CFG_WRITE = "write.output.file";
+    public static final boolean CFG_WRITE_DFT = true;
+    
+    public static final String CFG_IMGTYPE = "figure.ouput.type";
+    public static final String CFG_IMGTYPE_DFT = "png";
+   
 
     public static final String DEFAULT_R_PLOTCMD = "plot(1:10)";
 
@@ -59,22 +82,69 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
 
 
     /**
-     * This constructor justs needs to be used dirif a plot node should have additional data table outputs.
+     * This constructor just needs to be used if a plot node should have additional data table outputs.
      */
     public AbstractRPlotNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports);
-
-        addSetting(propWidth);
-        addSetting(propHeight);
-
-        addSetting(propOutputFile);
-        addSetting(propEnableFile);
-        addSetting(propOverwriteFile);
-        addSetting(propOutputType);
+        
+        this.addModelSetting(CFG_HEIGHT, createHeightSM());
+        this.addModelSetting(CFG_WIDTH, createWidthSM());
+        this.addModelSetting(CFG_IMGTYPE, createImgTypeSM());
+        this.addModelSetting(CFG_OUTFILE, createOutputFileSM());
+        this.addModelSetting(CFG_OVERWRITE, createOverwriteSM());
+        this.addModelSetting(CFG_WRITE, createWriteFileSM());
     }
 
+    /**
+     * create settings model: enable output to file yes/no
+     * @return
+     */
+    public static SettingsModelBoolean createWriteFileSM() {
+		return new SettingsModelBoolean(CFG_WRITE, CFG_WRITE_DFT);
+	}
 
     /**
+     * create settings model: overwrite output to file yes/no
+     * @return
+     */
+	public static SettingsModelBoolean createOverwriteSM() {
+		return new SettingsModelBoolean(CFG_OVERWRITE, CFG_OVERWRITE_DFT);
+	}
+
+    /**
+     * create settings model: output file
+     * @return
+     */
+	public static SettingsModelString createOutputFileSM() {
+		return new SettingsModelString(CFG_OUTFILE, null);
+	}
+
+    /**
+     * create settings model: image type
+     * @return
+     */
+	public static SettingsModelString createImgTypeSM() {
+		return new SettingsModelString(CFG_IMGTYPE, CFG_IMGTYPE_DFT);
+	}
+
+    /**
+     * create settings model: image width in pixels
+     * @return
+     */
+	public static SettingsModelIntegerBounded createWidthSM() {
+    	return new SettingsModelIntegerBounded(CFG_WIDTH, CFG_WIDTH_DFT, 0, Integer.MAX_VALUE);
+	}
+
+    /**
+     * create settings model: image height in pixels
+     * @return
+     */
+	public static SettingsModelIntegerBounded createHeightSM() {
+		return new SettingsModelIntegerBounded(CFG_HEIGHT, CFG_HEIGHT_DFT, 0, Integer.MAX_VALUE);
+	}
+
+
+	/**
      * Creates a figure using the R-variable in the current connection's workspace as input.
      * @throws KnimeScriptingException 
      */
@@ -86,10 +156,14 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
         // 2) create the image the script
         String script = prepareScript();
         image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
-
+        
+        boolean enableFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
         // no need to save image to file ?
-        if(!propEnableFile.getBooleanValue()) return;
-        String fileName = propOutputFile.getStringValue();
+        if(!enableFileOutput) return;
+        
+        String fileName = ((SettingsModelString) getModelSetting(CFG_OUTFILE)).getStringValue();
+        boolean overwriteFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
+        
         if(fileName == null) return;
         if(fileName.length() == 0) return;
 
@@ -100,7 +174,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
         	File imageFile = new File(fileName);
         	// check if the file already exists but should not be overwritten
         	if(imageFile.exists()) {
-        		if(!propOverwriteFile.getBooleanValue())
+        		if(!overwriteFileOutput)
         			throw new KnimeScriptingException("Overwrite file is disabled but image file '" + fileName + "' already exsists.");
         	} else {
         		try {
@@ -151,18 +225,17 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
 
 
     public String getDevice() {
-        //return "jpeg";
-        return propOutputType.getStringValue();
+        return ((SettingsModelString) getModelSetting(CFG_IMGTYPE)).getStringValue();
     }
 
 
     public int getDefHeight() {
-        return propHeight.getIntValue();
+        return ((SettingsModelIntegerBounded) getModelSetting(CFG_HEIGHT)).getIntValue();
     }
 
 
     public int getDefWidth() {
-        return propWidth.getIntValue();
+    	return ((SettingsModelIntegerBounded) getModelSetting(CFG_WIDTH)).getIntValue();
     }
 
 

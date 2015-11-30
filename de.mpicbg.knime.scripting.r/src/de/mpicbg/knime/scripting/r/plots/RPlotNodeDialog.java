@@ -20,20 +20,21 @@ import java.util.Arrays;
  */
 public class RPlotNodeDialog extends ScriptingNodeDialog {
 
-	SettingsModelString fileSM = AbstractRPlotNodeFactory.createPropOutputFile();
-	SettingsModelBoolean overwriteSM = AbstractRPlotNodeFactory.createOverwriteFile();
-
 	public RPlotNodeDialog(String defaultScript, boolean enableTemplateRepository) {
 		this(defaultScript, enableTemplateRepository, true);
 	}
 
 	public RPlotNodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
 		super(defaultScript, new RColNameReformater(), enableTemplateRepository, enableOpenExternal);
+		
+		SettingsModelString fileSM = AbstractRPlotNodeModel.createOutputFileSM();
+		SettingsModelBoolean overwriteSM = AbstractRPlotNodeModel.createOverwriteSM();
+		SettingsModelBoolean writeImageSM = AbstractRPlotNodeModel.createWriteFileSM();
 
 		createNewTab("Output Options");
-		addDialogComponent(new DialogComponentStringSelection(AbstractRPlotNodeFactory.createPropOutputType(), "File Type", Arrays.asList("png", "jpeg")));
-		addDialogComponent(new DialogComponentNumber(AbstractRPlotNodeFactory.createPropFigureWidth(), "Width", 10));
-		addDialogComponent(new DialogComponentNumber(AbstractRPlotNodeFactory.createPropFigureHeight(), "Height", 10));
+		addDialogComponent(new DialogComponentStringSelection(AbstractRPlotNodeModel.createImgTypeSM(), "File Type", Arrays.asList("png", "jpeg")));
+		addDialogComponent(new DialogComponentNumber(AbstractRPlotNodeModel.createWidthSM(), "Width", 10));
+		addDialogComponent(new DialogComponentNumber(AbstractRPlotNodeModel.createHeightSM(), "Height", 10));
 
 		createNewGroup("Save plot to file"); 
 		DialogComponentFileChooser chooser = new DialogComponentFileChooser(fileSM, "rplot.output.file", JFileChooser.SAVE_DIALOG, ".png",".jpeg") {
@@ -55,7 +56,7 @@ public class RPlotNodeDialog extends ScriptingNodeDialog {
 
 		addDialogComponent(chooser);
 		setHorizontalPlacement(true);
-		SettingsModelBoolean writeImageSM = AbstractRPlotNodeFactory.createEnableFile();
+		
 		writeImageSM.addChangeListener(new ChangeListener() {			
 			@Override
 			public void stateChanged(ChangeEvent e) {
