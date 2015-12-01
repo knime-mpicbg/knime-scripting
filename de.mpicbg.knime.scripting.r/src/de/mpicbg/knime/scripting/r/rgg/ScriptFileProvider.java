@@ -7,6 +7,10 @@ package de.mpicbg.knime.scripting.r.rgg;
  */
 public interface ScriptFileProvider {
 
+	/**
+	 * retrieve RGG file name
+	 * @return
+	 */
     String getTemplateFileName();
 
 
