@@ -53,6 +53,11 @@ import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
  * @author Holger Brandl
  */
 public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
+	
+	private boolean m_provideScriptTab = true;
+	private boolean m_provideOptionsTab = true;
+	private boolean m_provideOpenInOption = true;
+	private boolean m_enableTemplateRepository = true;
 
     public static final String SCRIPT_TAB_NAME = "Script Editor";
     
@@ -101,37 +106,59 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public ScriptingNodeDialog(String defaultScript,
     		ColNameReformater colNameReformater,
 			boolean enableTemplateRepository, boolean useOpenExternal) {
+    	// set default script
     	this.defaultScript = defaultScript;
-
         // construct the panel for script loading/authoring
-        scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());
+        scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());       
+        this.m_provideOpenInOption = useOpenExternal;
+        this.m_enableTemplateRepository = enableTemplateRepository;
         
-        JPanel mainContainer = new JPanel(new BorderLayout());
-        
-        JPanel scriptDialogContainer = new JPanel(new BorderLayout());
-        scriptDialogContainer.add(scriptProvider, BorderLayout.CENTER);
-        
-        m_openIn = new JCheckBox("Open external");
-        m_openIn.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent actionEvent) {
-				AbstractButton abstractButton = (AbstractButton) actionEvent.getSource();
-		        boolean selected = abstractButton.getModel().isSelected();
-		        paintBorder(selected);
-			}
-        	
-        });
-        m_openIn.setBorderPainted(true);
-        m_openIn.setEnabled(useOpenExternal);
-        mainContainer.add(m_openIn, BorderLayout.NORTH);
-        
-        mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
-        
-        this.addTabAt(0, SCRIPT_TAB_NAME, mainContainer);
+        initComponents(SCRIPT_TAB_NAME);
+	}
+    
+    /**
+     * constructor, only providing the chunk settings
+     * used by "Open In ..."
+     */
+    public ScriptingNodeDialog() {
+    	
+    	this.m_provideScriptTab = false;
+    	this.m_enableTemplateRepository = false;
+    	this.m_provideOpenInOption = false;
+    	
+    	initComponents(OPTIONS_TAB_NAME);
+    }
+    
+    private void initComponents(String selectTab) {
+    	// create scripting tab
+    	if(m_provideScriptTab) {
+	    	JPanel mainContainer = new JPanel(new BorderLayout());
+	        
+	        JPanel scriptDialogContainer = new JPanel(new BorderLayout());
+	        scriptDialogContainer.add(scriptProvider, BorderLayout.CENTER);
+	        
+	        m_openIn = new JCheckBox("Open external");
+	        m_openIn.addActionListener(new ActionListener() {
+	
+				@Override
+				public void actionPerformed(ActionEvent actionEvent) {
+					AbstractButton abstractButton = (AbstractButton) actionEvent.getSource();
+			        boolean selected = abstractButton.getModel().isSelected();
+			        paintBorder(selected);
+				}
+	        	
+	        });
+	        m_openIn.setBorderPainted(true);
+	        m_openIn.setEnabled(m_provideOpenInOption);
+	        mainContainer.add(m_openIn, BorderLayout.NORTH);
+	        
+	        mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
+	        
+	        this.addTabAt(0, SCRIPT_TAB_NAME, mainContainer);
+    	}
 
         // create the template repository browser tab (if enabled)
-        if (enableTemplateRepository) {
+        if (m_enableTemplateRepository) {
 
             updateUrlList(getTemplatesFromPreferences());
             List<ScriptTemplate> templates = updateTemplates();
@@ -143,13 +170,17 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
         
         // chunk settings panel
-        JPanel optionsPanel = new JPanel();
-        populateOptionsPanel(optionsPanel);
-        this.addTab(OPTIONS_TAB_NAME, optionsPanel);
+        if(m_provideOptionsTab) {
+	        JPanel optionsPanel = new JPanel();
+	        populateOptionsPanel(optionsPanel);
+	        this.addTab(OPTIONS_TAB_NAME, optionsPanel);
+        }
         
         removeTab("Options");
-        selectTab(SCRIPT_TAB_NAME);
-	}
+        selectTab(selectTab);
+    }
+    
+
 
 	private void populateOptionsPanel(JPanel optionsPanel) {
 		
@@ -231,9 +262,34 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
                                            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadAdditionalSettingsFrom(settings, specs);
+        
+        if(m_provideScriptTab)
+        	loadScriptSettings(settings, specs);
 
-        String serializedTemplate = settings.getString(AbstractScriptingNodeModel.SCRIPT_TEMPLATE, AbstractScriptingNodeModel.SCRIPT_TEMPLATE_DEFAULT);
+        if(m_provideOpenInOption) {
+        	boolean openIn = false;
+        	try {
+    			openIn = settings.getBoolean(AbstractScriptingNodeModel.OPEN_IN);
+        	} catch (InvalidSettingsException e) {}
+        	m_openIn.setSelected(openIn);
+        	paintBorder(openIn);
+        }
+        
+        if(m_provideOptionsTab) {
+	        int chunkIn = AbstractScriptingNodeModel.CHUNK_IN_DFT;
+	        int chunkOut = AbstractScriptingNodeModel.CHUNK_OUT_DFT;
+	        try {
+				chunkIn = settings.getInt(AbstractScriptingNodeModel.CHUNK_IN);
+				chunkOut = settings.getInt(AbstractScriptingNodeModel.CHUNK_OUT);
+			} catch (InvalidSettingsException e) {}
 
+	        m_spinnerChunkIn.setValue(chunkIn);
+	        m_spinnerChunkOut.setValue(chunkOut);
+        }
+    }
+
+	private void loadScriptSettings(NodeSettingsRO settings, PortObjectSpec[] specs) {
+    	String serializedTemplate = settings.getString(AbstractScriptingNodeModel.SCRIPT_TEMPLATE, AbstractScriptingNodeModel.SCRIPT_TEMPLATE_DEFAULT);
 
         ScriptTemplate template = null;
         if (getHardwiredTemplate() != null && serializedTemplate.equals(AbstractScriptingNodeModel.SCRIPT_TEMPLATE_DEFAULT)) {
@@ -264,10 +320,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         final ScriptTemplate finalTemplate = template;
         final String script = settings.getString(AbstractScriptingNodeModel.SCRIPT_PROPERTY, defaultScript);
 
-        // update the ui but not from within the application thread
-//        SwingUtilities.invokeLater(new Runnable() {
-//            public void run() {
-
         try {
             scriptProvider.updateInputModel(specs);
         } catch (NotConfigurableException e) {
@@ -275,26 +327,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         }
 
         scriptProvider.setContent(script, finalTemplate);
-        
-        boolean openIn = false;
-        int chunkIn = AbstractScriptingNodeModel.CHUNK_IN_DFT;
-        int chunkOut = AbstractScriptingNodeModel.CHUNK_OUT_DFT;
-        try {
-			openIn = settings.getBoolean(AbstractScriptingNodeModel.OPEN_IN);
-			chunkIn = settings.getInt(AbstractScriptingNodeModel.CHUNK_IN);
-			chunkOut = settings.getInt(AbstractScriptingNodeModel.CHUNK_OUT);
-		} catch (InvalidSettingsException e) {
-		}
+	}
 
-        m_openIn.setSelected(openIn);
-        paintBorder(openIn);
-        
-        m_spinnerChunkIn.setValue(chunkIn);
-        m_spinnerChunkOut.setValue(chunkOut);
-    }
-
-
-    /**
+	/**
      * border of the "open external" checkbox should be red if selected, none otherwise
      * @param openIn
      */
@@ -334,44 +369,48 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         super.saveAdditionalSettingsTo(settings);
+        
+        if(m_provideScriptTab) {
+	        SettingsModelString scriptProperty = createSnippetProperty(defaultScript);
+	        scriptProperty.setStringValue(scriptProvider.getScript());
+	        scriptProperty.saveSettingsTo(settings);
+	        
+	        ScriptTemplate template = scriptProvider.getTemplate();
+	        SettingsModelString templateProperty = createTemplateProperty();
 
-        SettingsModelString scriptProperty = createSnippetProperty(defaultScript);
-        scriptProperty.setStringValue(scriptProvider.getScript());
-        scriptProperty.saveSettingsTo(settings);
+	        if (template != null) {
 
-//        settings.addString(SCRIPT_PROPERTY, scriptProvider.getScript());
+	            // save the state of the configuration dialog if there's a template and it is linked to the script
+	            if (template.isLinkedToScript() && template.isRGG()) {
+	                HashMap<String, Object> persistedUIConfig = scriptProvider.getTemplateConfigurator().persisteTemplateUIState();
+	                template.setPersistedConfig(persistedUIConfig);
+	            }
 
-        ScriptTemplate template = scriptProvider.getTemplate();
-        SettingsModelString templateProperty = createTemplateProperty();
+	            // save the template as xml (with is kinda hacky) but makes live much easier here
+	            templateProperty.setStringValue(new XStream().toXML(scriptProvider.getTemplate()));
 
-        if (template != null) {
-
-            // save the state of the configuration dialog if there's a template and it is linked to the script
-            if (template.isLinkedToScript() && template.isRGG()) {
-                HashMap<String, Object> persistedUIConfig = scriptProvider.getTemplateConfigurator().persisteTemplateUIState();
-                template.setPersistedConfig(persistedUIConfig);
-            }
-
-            // save the template as xml (with is kinda hacky) but makes live much easier here
-            templateProperty.setStringValue(new XStream().toXML(scriptProvider.getTemplate()));
-
-        } else {
-            templateProperty.setStringValue("");
+	        } else {
+	            templateProperty.setStringValue("");
+	        }
+	        
+	        templateProperty.saveSettingsTo(settings);
         }
-
-        templateProperty.saveSettingsTo(settings);
+    
+        if(m_provideOpenInOption) {
+	        SettingsModelBoolean openInProperty = AbstractScriptingNodeModel.createOpenInProperty();
+	        openInProperty.setBooleanValue(m_openIn.isSelected());
+	        openInProperty.saveSettingsTo(settings);
+        }
         
-        SettingsModelBoolean openInProperty = AbstractScriptingNodeModel.createOpenInProperty();
-        openInProperty.setBooleanValue(m_openIn.isSelected());
-        openInProperty.saveSettingsTo(settings);
-        
-        SettingsModelIntegerBounded smChunkIn = AbstractScriptingNodeModel.createChunkInProperty();
-        smChunkIn.setIntValue(m_spinnerChunkIn.getNumber().intValue());
-        smChunkIn.saveSettingsTo(settings);
-        
-        SettingsModelIntegerBounded smChunkOut = AbstractScriptingNodeModel.createChunkOutProperty();
-        smChunkOut.setIntValue(m_spinnerChunkOut.getNumber().intValue());
-        smChunkOut.saveSettingsTo(settings);
+        if(m_provideOptionsTab) {
+	        SettingsModelIntegerBounded smChunkIn = AbstractScriptingNodeModel.createChunkInProperty();
+	        smChunkIn.setIntValue(m_spinnerChunkIn.getNumber().intValue());
+	        smChunkIn.saveSettingsTo(settings);
+	        
+	        SettingsModelIntegerBounded smChunkOut = AbstractScriptingNodeModel.createChunkOutProperty();
+	        smChunkOut.setIntValue(m_spinnerChunkOut.getNumber().intValue());
+	        smChunkOut.saveSettingsTo(settings);
+        }
     }
 
     public void selectScriptTab() {

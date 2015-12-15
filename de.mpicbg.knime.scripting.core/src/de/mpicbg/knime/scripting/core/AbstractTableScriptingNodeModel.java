@@ -17,6 +17,9 @@ import org.knime.core.node.port.PortType;
  */
 public abstract class AbstractTableScriptingNodeModel extends AbstractScriptingNodeModel {
 
+	protected AbstractTableScriptingNodeModel(boolean openInNode, int numInPorts, int numOutPorts, int... optionalInputs) {
+		super(openInNode, createPorts(numInPorts, optionalInputs), createPorts(numOutPorts));
+	}
 
     protected AbstractTableScriptingNodeModel(int numInPorts, int numOutPorts, int... optionalInputs) {
         this(createPorts(numInPorts, optionalInputs), createPorts(numOutPorts));

@@ -67,21 +67,27 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, true);
+    	this(inPorts, outPorts, true, false);
     }
     
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap, boolean openInNode) {
         super(inPorts, outPorts, useNewSettingsHashmap);
 
         numInputs = inPorts.length;
         numOutputs = outPorts.length;
 
-        this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
-        this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
-        this.addModelSetting(OPEN_IN, createOpenInProperty());
+        if(!openInNode) {
+        	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
+        	this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
+        	this.addModelSetting(OPEN_IN, createOpenInProperty());
+        }
         this.addModelSetting(CHUNK_IN, createChunkInProperty());
         this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
     }
+
+	public AbstractScriptingNodeModel(boolean openInNode, PortType[] inPorts, PortType[] outPorts) {
+		this(inPorts, outPorts, true, true);
+	}
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
         // note we clone it here as it might be (and will be in most cases) an instance variable in the node factory.
@@ -119,11 +125,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
 			throws Exception {
     	// check whether the data should be opened externally
-    	if(((SettingsModelBoolean) this.getModelSetting(OPEN_IN)).getBooleanValue()) {
-    		openIn(inObjects, exec);
-    		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
-    	} else 
-    		return executeImpl(inObjects,exec);
+    	SettingsModelBoolean openInSM = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
+    	if(openInSM != null) {
+	    	if(openInSM.getBooleanValue()) {
+	    		openIn(inObjects, exec);
+	    		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
+	    	} 
+    	}
+    	return executeImpl(inObjects,exec);
 	}
     
     /**
@@ -151,8 +160,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         // Plot-nodes need to be handled separately
         adaptHardwiredTemplateToContext(inSpecs);
         
-        if(((SettingsModelBoolean) this.getModelSetting(OPEN_IN)).getBooleanValue())
-        	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
+        SettingsModelBoolean openInSetting = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
+        if(openInSetting != null)
+        	if(openInSetting.getBooleanValue())
+        		this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
         return null;
 	}

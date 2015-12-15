@@ -19,8 +19,8 @@
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"/>
 
 
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.OpenInRNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory"/>
+        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"
+              id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory2"/>
 
         <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RPlotNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
