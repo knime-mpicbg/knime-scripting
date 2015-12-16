@@ -1,6 +1,8 @@
 package de.mpicbg.knime.scripting.core;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -295,15 +297,15 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * @return array of BufferedDataTables
      */
 	public static BufferedDataTable[] castToBDT(PortObject[] inData) {		
-		BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
 		
-		int i = 0;
+		List<BufferedDataTable> inTables = new ArrayList<BufferedDataTable>();
+		
 		for(PortObject in : inData) {
 			if(in instanceof BufferedDataTable)
-				inTables[i] = (BufferedDataTable) in;
-			i++;
-		}		
-		return inTables;
+				inTables.add((BufferedDataTable) in);
+		}	
+		
+		return inTables.toArray(new BufferedDataTable[inTables.size()]);
 	}
 
 	/**

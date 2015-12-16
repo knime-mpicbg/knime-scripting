@@ -94,7 +94,7 @@ public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
     	
     	// retrieve chunk settings
-        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inSpec);
+        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
         int chunkOutSize = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_OUT)).getIntValue();
     	
     	// push color/size/shape model to R

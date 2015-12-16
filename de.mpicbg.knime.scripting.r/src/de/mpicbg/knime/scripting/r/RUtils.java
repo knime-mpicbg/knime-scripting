@@ -1405,12 +1405,21 @@ public class RUtils {
 
 	/**
 	 * if chunk size setting is -1 or 0, set chunk size to the number of columns available (= no data chunking)
+	 * for multiple inputs use the maximum number of columns of all input tables
 	 * @param cIn
 	 * @param inSpec
 	 * @return chunksize
 	 */
-	public static int getChunkIn(int cIn, DataTableSpec inSpec) {
-		return cIn <= 0 ? inSpec.getNumColumns() : cIn;
+	public static int getChunkIn(int cIn, BufferedDataTable[] inTables) {
+		
+		if(cIn > 0) return cIn;
+		
+		int nColumnMax = 0;
+		for(int i = 0; i < inTables.length; i++) {
+			int n = inTables[i].getSpec().getNumColumns();
+			nColumnMax = n > nColumnMax ? n : nColumnMax;
+		}
+		return nColumnMax;
 	}
 	
 }
