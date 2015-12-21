@@ -4,11 +4,15 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
+import de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2;
+
 
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
  *
  * @author Holger Brandl (MPI-CBG)
+ * 
+ * @deprecated use {@link OpenInRNodeFactory2} instead.
  */
 public class OpenInRNodeFactory
         extends NodeFactory<OpenInRNodeModel> {

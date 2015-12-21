@@ -4,12 +4,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.ScriptingOpenInDialog;
 
 
 /**
- * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
+ * <code>NodeFactory</code> for the "Open in R" Node.
  *
  * @author Holger Brandl (MPI-CBG)
  */
@@ -52,7 +51,9 @@ public class OpenInRNodeFactory2
         return true;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected NodeDialogPane createNodeDialogPane() {
 		return new ScriptingOpenInDialog();

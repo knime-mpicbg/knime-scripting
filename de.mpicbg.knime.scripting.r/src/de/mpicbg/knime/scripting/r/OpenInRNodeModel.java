@@ -4,6 +4,7 @@ import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeModel2;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -26,6 +27,7 @@ import java.util.Map;
  * This is the model implementation of RSnippet. Improved R Integration for Knime
  *
  * @author Holger Brandl (MPI-CBG)
+ * @deprecated use {@link OpenInRNodeModel2} instead.
  */
 public class OpenInRNodeModel extends AbstractTableScriptingNodeModel {
 

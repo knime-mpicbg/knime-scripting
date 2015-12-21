@@ -24,7 +24,7 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
- * This is the model implementation of RSnippet. Improved R Integration for Knime
+ * This is the model implementation of OpenInR.
  *
  * @author Antje Janosch (MPI-CBG)
  */
@@ -75,20 +75,21 @@ public class OpenInRNodeModel2 extends AbstractTableScriptingNodeModel {
         exec.setMessage("Pushing inputs to R...");
         File workspaceFile = null;
         
-        // retrieve chunk settings
+        // retrieve chunk settings and push input data to R
         int chunkIn = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue();
         int chunkInSize = RUtils.getChunkIn(chunkIn, castToBDT);
         Map<String, Object> pushTable = RUtils.pushToR(castToBDT, connection, exec, chunkInSize);
 
         String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
 
+        // save R workspace to disk and transfer to localhost
         exec.setMessage("Write workspace to disk (Cannot be cancelled)");
         try {
         	// save the work-space to a temporary file
         	connection.voidEval("tmpwfile = tempfile('openinrnode', fileext='.RData');");
         	connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
 
-        	// 2) transfer the file to the local computer if necessary
+        	// transfer the file to the local computer if necessary
         	logger.info("Transferring workspace-file to localhost ...");
 
         	if (RUtils.getHost().equals("localhost")) {
@@ -115,6 +116,7 @@ public class OpenInRNodeModel2 extends AbstractTableScriptingNodeModel {
 
         connection.close();
         
+        // spawn R instance and load workspace
         exec.setMessage("Spawning R-instance ...");
         try {
 			openWSFileInR(workspaceFile);
