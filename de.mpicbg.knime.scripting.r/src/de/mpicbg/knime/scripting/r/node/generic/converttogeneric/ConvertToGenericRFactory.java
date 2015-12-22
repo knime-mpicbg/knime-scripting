@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r.generic;
+package de.mpicbg.knime.scripting.r.node.generic.converttogeneric;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -10,11 +10,11 @@ import org.knime.core.node.NodeView;
  *
  * @author Holger Brandl (MPI-CBG)
  */
-public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericR> {
+public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericRModel> {
 
     @Override
-    public ConvertToGenericR createNodeModel() {
-        return new ConvertToGenericR();
+    public ConvertToGenericRModel createNodeModel() {
+        return new ConvertToGenericRModel();
     }
 
 
@@ -25,7 +25,7 @@ public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericR> {
 
 
     @Override
-    public NodeView<ConvertToGenericR> createNodeView(final int viewIndex, final ConvertToGenericR nodeModel) {
+    public NodeView<ConvertToGenericRModel> createNodeView(final int viewIndex, final ConvertToGenericRModel nodeModel) {
         return null;
     }
 

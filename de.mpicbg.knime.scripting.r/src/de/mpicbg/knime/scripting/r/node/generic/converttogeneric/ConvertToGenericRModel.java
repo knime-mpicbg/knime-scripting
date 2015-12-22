@@ -1,9 +1,11 @@
-package de.mpicbg.knime.scripting.r.generic;
+package de.mpicbg.knime.scripting.r.node.generic.converttogeneric;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.generic.RPortObject;
+import de.mpicbg.knime.scripting.r.generic.RPortObjectSpec;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -23,12 +25,12 @@ import static de.mpicbg.knime.scripting.r.RSnippetNodeModel.R_OUTVAR_BASE_NAME;
  *
  * @author Holger Brandl
  */
-public class ConvertToGenericR extends AbstractNodeModel {
+public class ConvertToGenericRModel extends AbstractNodeModel {
 
     private File rWorkspaceFile;
 
 
-    public ConvertToGenericR() {
+    public ConvertToGenericRModel() {
         // the input port is optional just to allow generative R nodes
         super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
     }

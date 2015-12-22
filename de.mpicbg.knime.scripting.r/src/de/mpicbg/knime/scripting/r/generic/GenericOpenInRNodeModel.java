@@ -2,7 +2,6 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import java.io.File;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
