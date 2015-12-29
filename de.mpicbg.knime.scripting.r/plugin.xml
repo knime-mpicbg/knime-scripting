@@ -120,6 +120,17 @@
              tooltip="An integration of R into Knime">
        </splashExtension>
     </extension>
+    <extension
+          point="org.knime.core.PortType">
+       <portType
+             color="yellow"
+             hidden="false"
+             name="de.mpicbg.knime.scripting.r.port.RPortType"
+             objectClass="de.mpicbg.knime.scripting.r.port.RPortObject"
+             objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObject$PortObjectSerializer"
+             specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec">
+       </portType>
+    </extension>
 
     <!-- disabled because it looks the same as the r-extenion splash icon from the knime r-extension -->
     <!--<extension point="org.knime.product.splashExtension">-->

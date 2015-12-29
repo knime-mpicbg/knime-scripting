@@ -4,6 +4,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
+import de.mpicbg.knime.scripting.core.ScriptingOpenInDialog;
+
 
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
@@ -32,13 +34,13 @@ public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericRModel
 
     @Override
     public boolean hasDialog() {
-        return false;
+        return true;
     }
 
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return null;
+    	return new ScriptingOpenInDialog();
     }
 
 }

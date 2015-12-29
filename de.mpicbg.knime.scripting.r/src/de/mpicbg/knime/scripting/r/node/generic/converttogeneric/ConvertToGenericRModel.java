@@ -4,8 +4,8 @@ import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.generic.RPortObject;
-import de.mpicbg.knime.scripting.r.generic.RPortObjectSpec;
+import de.mpicbg.knime.scripting.r.port.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -27,7 +27,9 @@ import static de.mpicbg.knime.scripting.r.RSnippetNodeModel.R_OUTVAR_BASE_NAME;
  */
 public class ConvertToGenericRModel extends AbstractNodeModel {
 
-    private File rWorkspaceFile;
+    //private File rWorkspaceFile;
+    
+    public final String R_WS_IN_NAME = "wsIn";
 
 
     public ConvertToGenericRModel() {
@@ -40,20 +42,21 @@ public class ConvertToGenericRModel extends AbstractNodeModel {
     protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 
         RConnection connection = RUtils.createConnection();
-
+        File rWorkspaceFile = null;
+        
         try {
-        // 1) onvert the data and push them to R
-        RUtils.pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        	// 1) onvert the data and push them to R
+        	RUtils.pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
-        connection.voidEval(R_OUTVAR_BASE_NAME + " <- " + R_INVAR_BASE_NAME);
+        	//connection.voidEval(R_OUTVAR_BASE_NAME + " <- " + R_INVAR_BASE_NAME);
 
 
-        // 2) write a local workspace file which contains the input table of the node
-        if (rWorkspaceFile == null) {
-            rWorkspaceFile = File.createTempFile("genericR", "R");  //Note: this r is just a filename suffix
-        }
+        	// 2) write a local workspace file which contains the input table of the node
+        	if (rWorkspaceFile == null) {
+        		rWorkspaceFile = File.createTempFile("genericR", "R");  //Note: this r is just a filename suffix
+        	}
 
-        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+        	RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost());
         } catch(Exception e) {
         	connection.close();
         	throw e;
@@ -61,7 +64,7 @@ public class ConvertToGenericRModel extends AbstractNodeModel {
 
         connection.close();
 
-        return new PortObject[]{new RPortObject(rWorkspaceFile)};
+        return new PortObject[]{new RPortObject(m_warningMessage, m_warningMessage)};
     }
 
 

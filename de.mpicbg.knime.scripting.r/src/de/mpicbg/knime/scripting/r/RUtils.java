@@ -38,7 +38,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -56,21 +55,32 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowVariable;
-import org.rosuda.REngine.*;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPDouble;
+import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPInteger;
+import org.rosuda.REngine.REXPList;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPString;
+import org.rosuda.REngine.REXPVector;
+import org.rosuda.REngine.REngineException;
+import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
 import de.mpicbg.knime.knutils.data.property.ShapeModelUtils;
+import de.mpicbg.knime.knutils.data.property.SizeModel;
 import de.mpicbg.knime.knutils.data.property.SizeModel.Mapping;
 import de.mpicbg.knime.knutils.data.property.SizeModelUtils;
-import de.mpicbg.knime.knutils.data.property.SizeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
-import de.mpicbg.knime.scripting.r.generic.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObject;
+//import de.mpicbg.knime.scripting.r.generic.RPortObject;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
@@ -468,8 +478,8 @@ public class RUtils {
 
         for (String varName : varFileMapping.keySet()) {
 
-            // summary of happens below: create a copy of the current workspace file in r, load it in r and rename the content to match the current nodes connectivity pattern
-
+            // summary of happens below: create a copy of the current workspace file in r, load it in r 
+        	
             // mirror the ws-file on the server side
             connection.voidEval("tmpwfile <- 'tempRws';");
             connection.voidEval("file.create(tmpwfile);");
@@ -477,26 +487,11 @@ public class RUtils {
 
             writeFile(varFileMapping.get(varName), serverWSFile, connection);
 
-            // load the workspace on the server side
-            connection.voidEval("load(tmpwfile);");
-
-            // rename the input structure to match the current environment ones
-
-            // rename kIn if file is still using the old naming scheme
-            List<String> wsVariableNames = Arrays.asList(connection.eval("ls()").asStrings());
-
-            if (wsVariableNames.contains("R")) {
-                // rename the old R-variable to the new format
-                connection.voidEval(RSnippetNodeModel.R_OUTVAR_BASE_NAME + " <- R;");
-            }
-
-            // if its the plotting node the input is still names kIn, so just rename if there no such variable already present
-            if (!wsVariableNames.contains(varName)) {
-                connection.eval(varName + " <- " + RSnippetNodeModel.R_OUTVAR_BASE_NAME + ";");
-
-                // do some cleanup
-                connection.voidEval("rm(" + RSnippetNodeModel.R_OUTVAR_BASE_NAME + ");");
-            }
+            // load the workspace on the server side within a new environment and convert that to a list
+            // it helps not to overwrite R objects with the same name if multiple workspaces are loaded
+            connection.voidEval("x <- new.env()");
+            connection.voidEval("load(tmpwfile)");
+            connection.voidEval(varName + " <- as.list(x)");
         }
     }
 
@@ -522,7 +517,7 @@ public class RUtils {
     }
 
 
-    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host, String... objectNames) 
+    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host) 
     		throws RserveException, IOException, REXPMismatchException, REngineException, KnimeScriptingException {
 
         connection.voidEval("tmpwfile = tempfile('tempRws');");
