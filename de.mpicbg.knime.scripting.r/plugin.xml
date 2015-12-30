@@ -45,7 +45,7 @@
               id="de.mpicbg.tds.knime.scripting.r.genericr.GenericOpenInRNodeFactory"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttogeneric.ConvertToGenericRFactory"
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttogeneric.ConvertToGenericRFactory2"
               id="de.mpicbg.tds.knime.scripting.r.genericr.ConvertToGenericRFactory"/>
 
         <node category-path="/community/r/genericr"
@@ -123,12 +123,13 @@
     <extension
           point="org.knime.core.PortType">
        <portType
-             color="yellow"
+             color="#FF0000"
              hidden="false"
              name="de.mpicbg.knime.scripting.r.port.RPortType"
              objectClass="de.mpicbg.knime.scripting.r.port.RPortObject"
-             objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObject$PortObjectSerializer"
-             specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec">
+             objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSerializer"
+             specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec"
+             specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec$SpecSerializer">
        </portType>
     </extension>
 

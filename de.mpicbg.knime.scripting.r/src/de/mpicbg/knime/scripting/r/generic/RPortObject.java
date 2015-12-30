@@ -61,6 +61,7 @@ import de.mpicbg.knime.scripting.r.RUtils;
 
 
 /**
+ * {@deprecated}
  * A port object for R model port providing a file containing a R model.
  *
  * @author Kilian Thiel, University of Konstanz

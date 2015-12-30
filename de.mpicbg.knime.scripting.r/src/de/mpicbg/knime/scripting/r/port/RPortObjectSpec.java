@@ -19,6 +19,8 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  *
  */
 public class RPortObjectSpec implements PortObjectSpec {
+	
+	public static final RPortObjectSpec INSTANCE = new RPortObjectSpec();
 
 	/** names of all R objects provided by the R workspace and their R-type */
 	private HashMap<String, String> m_rObjects;
@@ -31,6 +33,13 @@ public class RPortObjectSpec implements PortObjectSpec {
 	}
 
 	/**
+	 * constructor
+	 */
+	public RPortObjectSpec() {
+		this.m_rObjects = new HashMap<String, String>();
+	}
+
+	/**
 	 * view provided at configuration state?
 	 * {@inheritDoc}
 	 */
@@ -40,50 +49,42 @@ public class RPortObjectSpec implements PortObjectSpec {
 	}
 
 	/**
-	 * Serializer used to save this port object spec.
-	 *
-	 * @return a {@link RPortObjectSpec}
-	 */
-	public static PortObjectSpecSerializer<RPortObjectSpec> getPortObjectSpecSerializer() {
-		
-		return new PortObjectSpecSerializer<RPortObjectSpec>() {
-
-			/**
-			 * {@inheritDoc}
-			 */
-			@Override
-			public void savePortObjectSpec(RPortObjectSpec portObjectSpec, PortObjectSpecZipOutputStream out)
-					throws IOException {
-				out.putNextEntry(new ZipEntry("content.dat"));
-	            new ObjectOutputStream(out).writeObject(portObjectSpec
-	                    .getRObjects());
-				
-			}
-
-			/**
-			 * {@inheritDoc}
-			 */
-			@Override
-			public RPortObjectSpec loadPortObjectSpec(PortObjectSpecZipInputStream in) throws IOException {
-				in.getNextEntry();
-				final ObjectInputStream ois = new ObjectInputStream(in);
-	            try {
-	                @SuppressWarnings("unchecked")
-					final HashMap<String,String> rObjects = (HashMap<String,String>)ois.readObject();
-	                return new RPortObjectSpec(rObjects);
-	            } catch (final ClassNotFoundException e) {
-	                throw new IOException(e.getMessage(), e.getCause());
-	            }
-			}
-			
-		};
-	}
-
-	/**
 	 * @return a hash map with the names of R objects and their R-type
 	 */
 	protected HashMap<String, String> getRObjects() {
 		return m_rObjects;
+	}
+	
+	public static final class SpecSerializer extends PortObjectSpecSerializer<RPortObjectSpec> {
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void savePortObjectSpec(RPortObjectSpec portObjectSpec, PortObjectSpecZipOutputStream out)
+				throws IOException {
+			out.putNextEntry(new ZipEntry("content.dat"));
+            new ObjectOutputStream(out).writeObject(portObjectSpec
+                    .getRObjects());
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public RPortObjectSpec loadPortObjectSpec(PortObjectSpecZipInputStream in) throws IOException {
+			in.getNextEntry();
+			final ObjectInputStream ois = new ObjectInputStream(in);
+            try {
+                @SuppressWarnings("unchecked")
+				final HashMap<String,String> rObjects = (HashMap<String,String>)ois.readObject();
+                return new RPortObjectSpec(rObjects);
+            } catch (final ClassNotFoundException e) {
+                throw new IOException(e.getMessage(), e.getCause());
+            }
+		}
+	
 	}
 
 }

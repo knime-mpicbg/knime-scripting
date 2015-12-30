@@ -3,11 +3,14 @@ package de.mpicbg.knime.scripting.r.port;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -18,6 +21,7 @@ import javax.swing.text.DefaultCaret;
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.Rserve.RConnection;
@@ -29,12 +33,10 @@ import de.mpicbg.knime.scripting.r.RUtils;
 public class RPortObject implements PortObject {
 	
 	private final File m_WorkspaceFile;
-	private String m_workspaceName;
 	private HashMap<String, String> m_rObjects;
 
-	public RPortObject(String workspaceName, String workspaceFilePath) {
-		this.m_WorkspaceFile = new File(workspaceFilePath);
-		this.m_workspaceName = workspaceName;
+	public RPortObject(File workspaceFile) {
+		this.m_WorkspaceFile = workspaceFile;
 		this.m_rObjects = getRObjects();
 	}
 
@@ -50,7 +52,7 @@ public class RPortObject implements PortObject {
 		RConnection connection = null;
 		try {
 			connection = RUtils.createConnection();
-			RUtils.loadGenericInputs(Collections.singletonMap(m_workspaceName, m_WorkspaceFile), connection);
+			RUtils.loadWorkspace(m_WorkspaceFile, connection);
 			REXPString objTypes = (REXPString) connection.eval("sapply(mget(ls(), .GlobalEnv), class)"); 
 			REXPString objNames = (REXPString) objTypes.getAttribute("names");
 			
@@ -61,7 +63,7 @@ public class RPortObject implements PortObject {
 				rObjects.put(names[i], types[i]);
 			}
 			
-		} catch (KnimeScriptingException | RserveException | REXPMismatchException | IOException e) {
+		} catch (KnimeScriptingException | RserveException e) {
 			if(connection != null) connection.close();
 			e.printStackTrace();
 			return rObjects;
@@ -104,7 +106,7 @@ public class RPortObject implements PortObject {
         jep.setFont(new Font("Monospaced", Font.PLAIN, 14));
 
         try {
-            RUtils.loadGenericInputs(Collections.singletonMap(m_workspaceName, m_WorkspaceFile), connection);
+            RUtils.loadWorkspace(m_WorkspaceFile, connection);
                         
             // to get structure information about the output object, one needs to use capture the output
             // str(...) does not provide any return value
@@ -141,6 +143,7 @@ public class RPortObject implements PortObject {
 	public File getFile() {
 		return m_WorkspaceFile;
 	}
+
 
 
 }

@@ -111,6 +111,8 @@ public class RUtils {
     public static final String VAR_RKNIME_COLOR = "knime.colors";
     /** KNIME input script */
     public static final String VAR_RKNIME_SCRIPT = "knime.script.in";
+    /** KNIME workspace handle */
+    public static final String VAR_RKNIME_WS_IN = "knime.ws.in";
     
     /** enum for datatypes which can be pushed to R via R-serve */
     public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
@@ -516,8 +518,19 @@ public class RUtils {
         }
     }
 
-
-    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host) 
+    /**
+     * {@deprecated}
+     * @param rWorkspaceFile
+     * @param connection
+     * @param host
+     * @param objectNames
+     * @throws RserveException
+     * @throws IOException
+     * @throws REXPMismatchException
+     * @throws REngineException
+     * @throws KnimeScriptingException
+     */
+    public static void saveToLocalFile(File rWorkspaceFile, RConnection connection, String host, String... objectNames) 
     		throws RserveException, IOException, REXPMismatchException, REngineException, KnimeScriptingException {
 
         connection.voidEval("tmpwfile = tempfile('tempRws');");
@@ -562,7 +575,12 @@ public class RUtils {
 
     }
 
-
+    /**
+     * {@deprecated} use {@link Files.copy(...)} instead
+     * @param sourceFile
+     * @param destFile
+     * @throws IOException
+     */
     public static void copyFile(File sourceFile, File destFile) throws IOException {
         if (!destFile.exists()) {
             destFile.createNewFile();
@@ -1415,6 +1433,90 @@ public class RUtils {
 			nColumnMax = n > nColumnMax ? n : nColumnMax;
 		}
 		return nColumnMax;
+	}
+
+	/**
+	 * save R workspace to file
+	 * @param rWorkspaceFile
+	 * @param connection
+	 * @param host
+	 * @throws KnimeScriptingException 
+	 */
+	public static void saveWorkspaceToFile(File rWorkspaceFile, RConnection connection, String host) throws KnimeScriptingException 
+	{
+		assert host != null;
+		// (Do not create new R objects in workspace before saving!)
+
+		if(host.equals("localhost") || host.equals("127.0.0.1")) {
+			// save workspace to local file
+			try {
+				connection.voidEval("save.image(file=\"" + rWorkspaceFile.toPath() + "\")");
+			} catch (RserveException e) {
+				throw new KnimeScriptingException("Failed to save R workspace: " + e.getMessage());
+			}
+		} else {
+			// create temporary file name on server side 
+			String tempfile = null;
+			try {
+				tempfile = ((REXPString) connection.eval("tempfile('tempRws');")).asString();
+				connection.voidEval("unlink(" + tempfile + ")");
+				// save R workspace 
+				connection.voidEval("save.image(file=" + tempfile + ")");
+			} catch (RserveException | REXPMismatchException e) {
+				throw new KnimeScriptingException("Failed to save R workspace: " + e.getMessage());
+			}
+
+			// if the file already exists, delete it
+			if (rWorkspaceFile.isFile())
+				rWorkspaceFile.delete();
+			try {
+				rWorkspaceFile.createNewFile();
+			} catch (IOException e) {
+				throw new KnimeScriptingException("Failed to create workspace file: " + e.getMessage());
+			}
+
+			// get binary representation of remote workspace file, delete it and write bytes to local
+			REXP xp;
+			try {
+				xp = connection.parseAndEval(
+						"r=readBin(" + tempfile + ",'raw',file.size(" + tempfile + ")); unlink(" + tempfile + "); r");
+				FileOutputStream oo = new FileOutputStream(rWorkspaceFile);
+				oo.write(xp.asBytes());
+				oo.close();
+			} catch (REngineException | REXPMismatchException | IOException e) {
+				throw new KnimeScriptingException("Faile to transfer workspace file to localhost: " + e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * loads R workspace data into R session
+	 * @param workspaceFile
+	 * @param connection
+	 * @throws KnimeScriptingException
+	 */
+	public static void loadWorkspace(File workspaceFile, RConnection connection) 
+			throws KnimeScriptingException {
+		
+		// create temporary workspace file on server side
+		File serverWSFile = null;
+		try {
+			connection.voidEval("tmpwfile <- tempfile(pattern = \"R-ws-\", tmpdir = tempdir())");
+			connection.voidEval("file.create(tmpwfile)");
+			serverWSFile = new File(connection.eval("tmpwfile").asString());
+		} catch (RserveException | REXPMismatchException e) {
+			throw new KnimeScriptingException("Failed to create temporary workspace file on server side: " + e.getMessage());
+		}
+
+        // transfer workspace from local to remote
+        writeFile(workspaceFile, serverWSFile, connection);
+
+        // load the workspace on the server side within a new environment
+        try {
+			connection.voidEval("load(tmpwfile)");
+		} catch (RserveException e) {
+			throw new KnimeScriptingException("Failed to load the workspace: " + e.getMessage());
+		}
 	}
 	
 }

@@ -12,11 +12,11 @@ import de.mpicbg.knime.scripting.core.ScriptingOpenInDialog;
  *
  * @author Holger Brandl (MPI-CBG)
  */
-public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericRModel> {
+public class ConvertToGenericRFactory2 extends NodeFactory<ConvertToGenericRModel2> {
 
     @Override
-    public ConvertToGenericRModel createNodeModel() {
-        return new ConvertToGenericRModel();
+    public ConvertToGenericRModel2 createNodeModel() {
+        return new ConvertToGenericRModel2();
     }
 
 
@@ -27,7 +27,7 @@ public class ConvertToGenericRFactory extends NodeFactory<ConvertToGenericRModel
 
 
     @Override
-    public NodeView<ConvertToGenericRModel> createNodeView(final int viewIndex, final ConvertToGenericRModel nodeModel) {
+    public NodeView<ConvertToGenericRModel2> createNodeView(final int viewIndex, final ConvertToGenericRModel2 nodeModel) {
         return null;
     }
 
