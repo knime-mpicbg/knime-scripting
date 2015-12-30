@@ -3,14 +3,10 @@ package de.mpicbg.knime.scripting.r.port;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -21,8 +17,6 @@ import javax.swing.text.DefaultCaret;
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortObjectZipOutputStream;
-import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -40,33 +34,58 @@ public class RPortObject implements PortObject {
 		this.m_rObjects = getRObjects();
 	}
 
+	public RPortObject(RConnection connection, File workspaceFile) {
+		this.m_WorkspaceFile = workspaceFile;
+		this.m_rObjects = getRObjects(connection);
+	}
+
 	@Override
 	public PortObjectSpec getSpec() {
 		final RPortObjectSpec spec = new RPortObjectSpec(m_rObjects);
 		return spec;
 	}
-
-	private HashMap<String, String> getRObjects() {
-		
+	
+	/**
+	 * retrieve all R objects and their type from an existing connection
+	 * @param connection
+	 * @return hashmap containing the names of all R-objects and their class
+	 * @throws RserveException 
+	 */
+	private HashMap<String, String> getRObjects(RConnection connection) {
 		HashMap<String, String> rObjects = new HashMap<String, String>();
-		RConnection connection = null;
+
 		try {
-			connection = RUtils.createConnection();
-			RUtils.loadWorkspace(m_WorkspaceFile, connection);
-			REXPString objTypes = (REXPString) connection.eval("sapply(mget(ls(), .GlobalEnv), class)"); 
+			REXPString objTypes = (REXPString) connection.eval("sapply(mget(ls(), .GlobalEnv), class)");
 			REXPString objNames = (REXPString) objTypes.getAttribute("names");
-			
+
 			String[] types = objTypes.asStrings();
 			String[] names = objNames.asStrings();
-			
+
 			for(int i = 0; i < objTypes.length(); i++) {
 				rObjects.put(names[i], types[i]);
 			}
-			
-		} catch (KnimeScriptingException | RserveException e) {
+		} catch (RserveException e) {
+			e.printStackTrace();
+		} 
+
+		return rObjects;
+	}
+
+	/**
+	 * retrieve all R objects and their type by loading the workspace file (new connection)
+	 * @return hashmap containing the names of all R-objects and their class
+	 */
+	private HashMap<String, String> getRObjects() {
+		
+		RConnection connection = null;
+		HashMap<String, String> rObjects = null;
+		try {
+			connection = RUtils.createConnection();	
+			RUtils.loadWorkspace(m_WorkspaceFile, connection);
+			rObjects = getRObjects(connection);
+		} catch (KnimeScriptingException e) {
 			if(connection != null) connection.close();
 			e.printStackTrace();
-			return rObjects;
 		}
 		
 		connection.close();

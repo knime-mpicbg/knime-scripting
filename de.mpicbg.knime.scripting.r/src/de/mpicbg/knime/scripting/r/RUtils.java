@@ -497,7 +497,12 @@ public class RUtils {
         }
     }
 
-
+    /**
+     * write local workspace to remote workspace
+     * @param wsFile
+     * @param serverWSFile
+     * @param connection
+     */
     private static void writeFile(File wsFile, File serverWSFile, RConnection connection) {
         try {
             assert wsFile.isFile();
@@ -1458,10 +1463,10 @@ public class RUtils {
 			// create temporary file name on server side 
 			String tempfile = null;
 			try {
-				tempfile = ((REXPString) connection.eval("tempfile('tempRws');")).asString();
-				connection.voidEval("unlink(" + tempfile + ")");
+				tempfile = ((REXPString) connection.eval("tempfile(pattern = \"R-ws-\");")).asString();
+				connection.voidEval("unlink(\"" + tempfile + "\")");
 				// save R workspace 
-				connection.voidEval("save.image(file=" + tempfile + ")");
+				connection.voidEval("save.image(file=\"" + tempfile + "\")");
 			} catch (RserveException | REXPMismatchException e) {
 				throw new KnimeScriptingException("Failed to save R workspace: " + e.getMessage());
 			}
@@ -1478,9 +1483,11 @@ public class RUtils {
 			// get binary representation of remote workspace file, delete it and write bytes to local
 			REXP xp;
 			try {
+				System.out.println("write process");
 				xp = connection.parseAndEval(
-						"r=readBin(" + tempfile + ",'raw',file.size(" + tempfile + ")); unlink(" + tempfile + "); r");
+						"r=readBin(\"" + tempfile + "\",'raw',file.size(\"" + tempfile + "\")); unlink(\"" + tempfile + "\"); r");
 				FileOutputStream oo = new FileOutputStream(rWorkspaceFile);
+				connection.voidEval("unlink(\"" + tempfile + "\")");
 				oo.write(xp.asBytes());
 				oo.close();
 			} catch (REngineException | REXPMismatchException | IOException e) {
@@ -1497,13 +1504,15 @@ public class RUtils {
 	 */
 	public static void loadWorkspace(File workspaceFile, RConnection connection) 
 			throws KnimeScriptingException {
+		// (Do not create new R objects in workspace before loading!)
 		
 		// create temporary workspace file on server side
 		File serverWSFile = null;
+		String fileName = null;
 		try {
-			connection.voidEval("tmpwfile <- tempfile(pattern = \"R-ws-\", tmpdir = tempdir())");
-			connection.voidEval("file.create(tmpwfile)");
-			serverWSFile = new File(connection.eval("tmpwfile").asString());
+			fileName = ((REXPString) connection.eval("tempfile(pattern = \"R-ws-\")")).asString();
+			connection.voidEval("file.create(\"" + fileName + "\")");
+			serverWSFile = new File(fileName);
 		} catch (RserveException | REXPMismatchException e) {
 			throw new KnimeScriptingException("Failed to create temporary workspace file on server side: " + e.getMessage());
 		}
@@ -1513,7 +1522,8 @@ public class RUtils {
 
         // load the workspace on the server side within a new environment
         try {
-			connection.voidEval("load(tmpwfile)");
+			connection.voidEval("load(\"" + fileName + "\")");
+			connection.voidEval("unlink(\"" + fileName + "\")");
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to load the workspace: " + e.getMessage());
 		}

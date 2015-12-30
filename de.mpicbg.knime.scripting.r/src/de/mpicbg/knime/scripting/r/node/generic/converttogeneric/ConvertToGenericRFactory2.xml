@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../ricon.png" type="Manipulator">
+<knimeNode icon="../../ricon.png" type="Manipulator">
     <name>Convert to R</name>
 
     <shortDescription>
@@ -10,26 +10,21 @@
     <fullDescription>
         <intro>Takes a data table as input and converts it into a generic R object.
 
-            Make sure that Rserve is running somewhere, and Knime is accordingly configured (Knime->Preferences).
+            Make sure that Rserve is running somewhere, and KNIME is accordingly configured (KNIME->Preferences).
             <br/>
             <br/>
-            Detailed documentation about the scripting integration:
-            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
+            Detailed documentation about the R generic nodes:
+            <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Generic-R">
                 MPI-CBG SWEG Wiki
             </a>
         </intro>
 
-
-        <!--<option name="short name of first option (like in the dialog)">description of first option</option>-->
-        <!--<option name="short name of second option (like in the dialog)">description of second option</option>-->
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="in">A data table which should be processed using non-table based GenericR pipline.
+        <inPort index="0" name="input table">A data table which should be processed using non-table based GenericR pipeline.
         </inPort>
-        <outPort index="0" name="out">The same table as before but now wrapped as a generic R instance.</outPort>
-        <!--<inPort index="1" name="in2">Another table which should be pushed to R.</inPort>-->
-        <!--<inPort index="2" name="in3">Another table which should be pushed to R.</inPort>-->
+        <outPort index="0" name="R workspace">R workspace containing the input table as data frame</outPort>
     </ports>
 
 </knimeNode>

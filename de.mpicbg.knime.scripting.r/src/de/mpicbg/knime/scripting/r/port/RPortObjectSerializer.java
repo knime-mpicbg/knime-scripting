@@ -3,6 +3,7 @@ package de.mpicbg.knime.scripting.r.port;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.zip.ZipEntry;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -21,6 +22,7 @@ public final class RPortObjectSerializer extends PortObjectSerializer<RPortObjec
 			throws IOException, CanceledExecutionException {
 		out.putNextEntry(new ZipEntry(ZIP_ENTRY_WS));
 		Files.copy(portObject.getFile().toPath(), out);
+		out.flush();
 		out.closeEntry();
 		out.close();
 	}
@@ -33,8 +35,8 @@ public final class RPortObjectSerializer extends PortObjectSerializer<RPortObjec
 			throw new IOException("Expected zip entry '" + ZIP_ENTRY_WS + "' not present");
 		}
 		
-		File tempFile = File.createTempFile("genericR", "R");
-		Files.copy(in, tempFile.toPath());
+		File tempFile = File.createTempFile("genericR", ".RData");
+		Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		
 		in.close();
 		return new RPortObject(tempFile);
