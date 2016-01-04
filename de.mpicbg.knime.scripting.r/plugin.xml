@@ -32,9 +32,8 @@
         <!-- register the generic R nodes -->
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.generic.GenericRSnippetFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRSnippetFactory"/>
-
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeFactory2"
+              id="de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeFactory2"/>
 
         <node category-path="/community/r/genericr"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericRSnippetSourceFactory"

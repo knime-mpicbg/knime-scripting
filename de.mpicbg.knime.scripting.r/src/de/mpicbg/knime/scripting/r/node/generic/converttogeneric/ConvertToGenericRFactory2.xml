@@ -18,6 +18,9 @@
                 Wiki on GitHub: knime-scripting
             </a>
         </intro>
+        <option name="Chunk size to push incoming data">
+        Number of columns to push as one data chunk to R. The default (-1) leads to data transfer without splitting the data in chunks.
+        </option>
 
     </fullDescription>
 

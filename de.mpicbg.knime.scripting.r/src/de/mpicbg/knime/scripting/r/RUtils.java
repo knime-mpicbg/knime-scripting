@@ -623,11 +623,11 @@ public class RUtils {
         exec.setMessage("Transfer to R");
         ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
 
-        // first push the generic inputs
-        Map<String, File> genPortMapping = getGenericPorts(inputMapping);
-        double nGenerics = genPortMapping.size();
+        // first push the generic input (limited to one workspace input)
+        File rWorkspaceFile = getWorkspaceFile(inputMapping);
         try {
-            if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
+           // if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
+        	if(rWorkspaceFile != null) RUtils.loadWorkspace(rWorkspaceFile, connection);
         } catch (Throwable e) {
             throw new KnimeScriptingException("Failed to convert generic node inputs into r workspace variables: " + e);
         }
@@ -682,23 +682,20 @@ public class RUtils {
     }
 
     /**
-     * delivers a map containing generic input ports mapped to an R variable name
+     * delivers a workspace file. As the nodes do only support one workspace input port, return the first workspace file
      * @param inputMapping
      * @return map with generic input ports only
      */
-    private static Map<String, File> getGenericPorts(Map<String, Object> inputMapping) {
-        TreeMap<String, File> genericSubMapping = new TreeMap<String, File>();
-
+    private static File getWorkspaceFile(Map<String, Object> inputMapping) {
+        
         for (String varName : inputMapping.keySet()) {
             Object curValue = inputMapping.get(varName);
             if (curValue instanceof File) {
-
-                genericSubMapping.put(varName, (File) curValue);
+                return (File) curValue;
             }
 
         }
-
-        return genericSubMapping;
+        return null;
     }
 
 
@@ -810,7 +807,7 @@ public class RUtils {
 		
 		REXP out;
 		// evaluate script
-		out = connection.eval("try({" + fixedScript + "}, silent = TRUE)");
+		out = connection.eval("try({\n" + fixedScript + "\n}, silent = TRUE)");
 		if( out.inherits("try-error"))
 			throw new KnimeScriptingException("Error : " + out.asString());
 	}
