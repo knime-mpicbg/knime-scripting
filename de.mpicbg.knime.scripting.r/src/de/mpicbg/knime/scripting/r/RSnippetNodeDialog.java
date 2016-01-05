@@ -21,12 +21,25 @@ public class RSnippetNodeDialog extends ScriptingNodeDialog {
      * New pane for configuring ScriptedNode node dialog
      *
      * @param defaultScript
-     * @param hasOutput
      * @param useTemplateRepository
      */
     public RSnippetNodeDialog(String defaultScript, boolean useTemplateRepository) {
         super(defaultScript, new RColNameReformater(), useTemplateRepository);
     }
+    
+    /**
+     * configuration dialog for generic nodes
+     * 
+     * @param defaultScript
+     * @param useTemplateRepository
+     * @param useOpenIn
+     */
+    public RSnippetNodeDialog(String defaultScript, 
+    		boolean useTemplateRepository, 
+    		boolean useOpenIn,
+    		boolean useChunkSettings) {
+		super(defaultScript, new RColNameReformater(), useTemplateRepository, useOpenIn, useChunkSettings);
+	}
 
     @Override
     public String getTemplatesFromPreferences() {

@@ -29,22 +29,29 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  * @author Holger Brandl, Antje Janosch
  */
 public class GenericRSnippetNodeModel2 extends AbstractScriptingNodeModel {
+	
+	/** default R script */
+	public static final String GENERIC_SNIPPET_DFT = 
+			"# put your R code here\n"
+			+ "# availableObjects <- ls()";
 
 	/**
 	 * constructor for 1 RPort input and 1 RPort output
 	 */
     public GenericRSnippetNodeModel2() {
         // the input port is optional just to allow generative R nodes
-        this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
+        this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class), false);
     }
 
     /**
      * constructor
      * @param inPortTypes
      * @param outPortTypes
+     * @param useChunkSettings 
+     * @param useOpenIn 
      */
-    protected GenericRSnippetNodeModel2(PortType[] inPortTypes, PortType[] outPortTypes) {
-        super(inPortTypes, outPortTypes);
+    public GenericRSnippetNodeModel2(PortType[] inPortTypes, PortType[] outPortTypes, boolean useChunkSettings) {
+        super(inPortTypes, outPortTypes, true, false, useChunkSettings);
     }
 
     /**
@@ -59,7 +66,7 @@ public class GenericRSnippetNodeModel2 extends AbstractScriptingNodeModel {
 
     
     public String getDefaultScript() {
-    	return "# put your R code here\n# availableObjects <- ls()";
+    	return GENERIC_SNIPPET_DFT;
     }
     
     /**

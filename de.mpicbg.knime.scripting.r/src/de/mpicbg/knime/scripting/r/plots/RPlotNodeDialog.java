@@ -25,7 +25,7 @@ public class RPlotNodeDialog extends ScriptingNodeDialog {
 	}
 
 	public RPlotNodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
-		super(defaultScript, new RColNameReformater(), enableTemplateRepository, enableOpenExternal);
+		super(defaultScript, new RColNameReformater(), enableTemplateRepository, enableOpenExternal, true);
 		
 		SettingsModelString fileSM = AbstractRPlotNodeModel.createOutputFileSM();
 		SettingsModelBoolean overwriteSM = AbstractRPlotNodeModel.createOverwriteSM();

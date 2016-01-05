@@ -22,7 +22,7 @@ import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
-import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -32,14 +32,15 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  *
  * @author Holger Brandl (MPI-CBG)
  */
-public class RSnippetNodeModel extends AbstractTableScriptingNodeModel {
+public class RSnippetNodeModel extends AbstractScriptingNodeModel {
 
     public static final String R_INVAR_BASE_NAME = "kIn";
     public static final String R_OUTVAR_BASE_NAME = "rOut";
 
 
     public RSnippetNodeModel(int numInputs, int numOutputs) {
-        super(numInputs, numOutputs);
+        //super(numInputs, numOutputs);
+        super(createPorts(numInputs), createPorts(numOutputs));
     }
 
     public String getDefaultScript() {

@@ -93,7 +93,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * New pane for configuring ScriptedNode node dialog
      */
     public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
-        this(defaultScript, colNameReformater, enableTemplateRepository, true);
+        this(defaultScript, colNameReformater, enableTemplateRepository, true, true);
     }
 
     /**
@@ -102,16 +102,20 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * @param colNameReformater
      * @param enableTemplateRepository - true if the Tab with the Template-Repository should be displayed
      * @param useOpenExternal - true, if the checkbox "open external" should be enabled
+     * @param useChunkSettings - true, if chunk settings should be available
      */
     public ScriptingNodeDialog(String defaultScript,
     		ColNameReformater colNameReformater,
-			boolean enableTemplateRepository, boolean useOpenExternal) {
+			boolean enableTemplateRepository, 
+			boolean useOpenExternal,
+			boolean useChunkSettings) {
     	// set default script
     	this.defaultScript = defaultScript;
         // construct the panel for script loading/authoring
         scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());       
         this.m_provideOpenInOption = useOpenExternal;
         this.m_enableTemplateRepository = enableTemplateRepository;
+        this.m_provideOptionsTab = useChunkSettings;
         
         initComponents(SCRIPT_TAB_NAME);
 	}

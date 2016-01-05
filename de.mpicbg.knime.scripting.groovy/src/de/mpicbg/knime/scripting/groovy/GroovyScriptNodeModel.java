@@ -3,18 +3,6 @@
  */
 package de.mpicbg.knime.scripting.groovy;
 
-import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObject;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.MalformedURLException;
@@ -23,13 +11,24 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
+
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+
 
 /**
  * This is the base implementation of the "JPython Script" node
  *
  * @author Tripos
  */
-public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
+public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 
 
     public static final String DEFAULT_SCRIPT_OLD = "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
@@ -80,20 +79,15 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
 
 
     protected GroovyScriptNodeModel() {
-        super(2, 1, 1, 2);
+        //super(2, 1, 1, 2);
+        super(createPorts(2, 1, 2), createPorts(1));
     }
 
 
     protected GroovyScriptNodeModel(int nrInDataPorts, int nrOutDataPorts) {
-        super(nrInDataPorts, nrOutDataPorts);
+        //super(nrInDataPorts, nrOutDataPorts);
+    	super(createPorts(nrInDataPorts), createPorts(nrOutDataPorts));
     }
-
-
-    @Override
-    public String getDefaultScript() {
-        return DEFAULT_SCRIPT;
-    }
-
 
     private ClassLoader createClassLoader() throws MalformedURLException {
         IPreferenceStore prefStore = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();

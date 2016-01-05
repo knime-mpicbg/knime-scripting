@@ -68,26 +68,33 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, true, false);
+    	this(inPorts, outPorts, true, false, true);
     }
     
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap, boolean openInNode) {
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, 
+    		boolean useNewSettingsHashmap, 
+    		boolean openInNode,
+    		boolean useChunkSettings) {
         super(inPorts, outPorts, useNewSettingsHashmap);
 
         numInputs = inPorts.length;
         numOutputs = outPorts.length;
 
+        // if the node is an "OpenIn" node it does not need script and openIn setting
         if(!openInNode) {
         	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
         	this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
         	this.addModelSetting(OPEN_IN, createOpenInProperty());
         }
-        this.addModelSetting(CHUNK_IN, createChunkInProperty());
-        this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
+        
+        if(useChunkSettings) {
+        	this.addModelSetting(CHUNK_IN, createChunkInProperty());
+        	this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
+        }
     }
 
 	public AbstractScriptingNodeModel(boolean openInNode, PortType[] inPorts, PortType[] outPorts) {
-		this(inPorts, outPorts, true, true);
+		this(inPorts, outPorts, true, true, true);
 	}
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
