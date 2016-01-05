@@ -40,7 +40,7 @@ public class GenericRSnippetNodeModel2 extends AbstractScriptingNodeModel {
 	 */
     public GenericRSnippetNodeModel2() {
         // the input port is optional just to allow generative R nodes
-        this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class), false);
+        this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class), true);
     }
 
     /**
@@ -50,8 +50,8 @@ public class GenericRSnippetNodeModel2 extends AbstractScriptingNodeModel {
      * @param useChunkSettings 
      * @param useOpenIn 
      */
-    public GenericRSnippetNodeModel2(PortType[] inPortTypes, PortType[] outPortTypes, boolean useChunkSettings) {
-        super(inPortTypes, outPortTypes, true, false, useChunkSettings);
+    public GenericRSnippetNodeModel2(PortType[] inPortTypes, PortType[] outPortTypes, boolean useOpenIn) {
+        super(inPortTypes, outPortTypes, true, useOpenIn, false);
     }
 
     /**

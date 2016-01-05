@@ -65,10 +65,37 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, true, false, true);
+    	this(inPorts, outPorts, true, true, true);
     }
     
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, 
+    /**
+     * constructor able to add settings to node model by flags
+     * @param inPorts
+     * @param outPorts
+     * @param useScriptSettings
+     * @param useOpenIn
+     * @param useChunkSettings
+     */
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts,
+    		boolean useScriptSettings,
+    		boolean useOpenIn,
+    		boolean useChunkSettings) {
+    	super(inPorts, outPorts, true);
+    	
+        if(useScriptSettings) {
+        	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
+        	this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
+        }
+        if(useOpenIn) {
+        	this.addModelSetting(OPEN_IN, createOpenInProperty());
+        }
+        if(useChunkSettings) {
+        	this.addModelSetting(CHUNK_IN, createChunkInProperty());
+        	this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
+        }
+    }
+    
+    /*public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, 
     		boolean useNewSettingsHashmap, 
     		boolean openInNode,
     		boolean useChunkSettings) {
@@ -85,10 +112,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         	this.addModelSetting(CHUNK_IN, createChunkInProperty());
         	this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
         }
-    }
+    }*/
 
-	public AbstractScriptingNodeModel(boolean openInNode, PortType[] inPorts, PortType[] outPorts) {
-		this(inPorts, outPorts, true, true, true);
+	public AbstractScriptingNodeModel(boolean useChunkSettings, PortType[] inPorts, PortType[] outPorts) {
+		this(inPorts, outPorts, false, true, useChunkSettings);
 	}
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {

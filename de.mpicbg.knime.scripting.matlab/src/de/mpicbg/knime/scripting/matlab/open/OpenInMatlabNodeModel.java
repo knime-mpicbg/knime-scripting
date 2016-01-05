@@ -21,7 +21,7 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
      */
 	protected OpenInMatlabNodeModel() {
 		// Define the ports and use a hash-map for setting models 
-        super(createPorts(1), createPorts(0), true);
+        super(createPorts(1), createPorts(0));
 	}
 	
 

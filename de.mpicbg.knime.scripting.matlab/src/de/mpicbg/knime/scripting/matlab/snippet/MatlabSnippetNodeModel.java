@@ -27,7 +27,7 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
      * Constructor for the node model.
      */
     protected MatlabSnippetNodeModel() {
-        super(createPorts(1), createPorts(1), true);
+        super(createPorts(1), createPorts(1));
     }
 
     

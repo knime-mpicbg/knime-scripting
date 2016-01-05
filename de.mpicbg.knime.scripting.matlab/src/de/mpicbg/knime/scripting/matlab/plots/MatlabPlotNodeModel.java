@@ -89,7 +89,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
      * @param outports
      */
     public MatlabPlotNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports, true);
+        super(inPorts, outports);
 
         addModelSetting(FIGURE_HEIGHT_SETTING_NAME, createPropFigureHeightSetting());
         addModelSetting(FIGURE_WIDTH_SETTING_NAME, createPropFigureWidthSetting());

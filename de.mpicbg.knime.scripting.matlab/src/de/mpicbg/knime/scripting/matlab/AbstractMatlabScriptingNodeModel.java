@@ -110,8 +110,8 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      * @param outPorts
      * @throws MatlabConnectionException 
      */
-    protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
-        super(inPorts, outPorts, useNewSettingsHashmap, false, true);
+    protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
+        super(inPorts, outPorts, true, false, true);
         
     	matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
     	tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);

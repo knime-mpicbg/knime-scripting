@@ -35,7 +35,6 @@ public class OpenInRNodeModel2 extends AbstractScriptingNodeModel {
      * Constructor for the node model.
      */
     protected OpenInRNodeModel2() {
-        //super(true, 3, 0, 2, 3);
     	super(true, createPorts(3, 2,3), createPorts(0));
     }
 
