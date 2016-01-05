@@ -145,7 +145,7 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
         Binding binding = new Binding();
 
 
-        switch (numInputs) {
+        switch (getNrInPorts()) {
             case 2:
                 in2 = (BufferedDataTable) inData[1];
                 binding.setVariable("input2", in2);

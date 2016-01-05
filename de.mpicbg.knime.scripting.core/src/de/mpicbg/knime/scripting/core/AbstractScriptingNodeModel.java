@@ -58,9 +58,6 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 	 */
 	public static final String CHUNK_OUT = "chunk.out";
 	public static final int CHUNK_OUT_DFT = -1;
-    
-    protected int numOutputs;
-    protected int numInputs;
 
 
     private ScriptTemplate hardwiredTemplate = null;
@@ -76,9 +73,6 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     		boolean openInNode,
     		boolean useChunkSettings) {
         super(inPorts, outPorts, useNewSettingsHashmap);
-
-        numInputs = inPorts.length;
-        numOutputs = outPorts.length;
 
         // if the node is an "OpenIn" node it does not need script and openIn setting
         if(!openInNode) {
@@ -185,17 +179,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-
-        // e.g. if the count is in a certain range (which is ensured by the
-        // SettingsModel).
-        // Do not actually set any values of any member variables.
-
-//        script.validateSettings(settings);
     }
 
-
-    protected boolean hasOutput() {
-        return numOutputs > 0;
+    /**
+     * does the node has output ports?
+     * @return
+     */
+    protected boolean hasOutput() {  	
+        return getNrOutPorts() > 0;
     }
 
 
