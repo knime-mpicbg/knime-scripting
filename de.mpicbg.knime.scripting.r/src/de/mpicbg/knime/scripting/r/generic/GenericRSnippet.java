@@ -27,6 +27,7 @@ import java.util.ArrayList;
  * A generic R node which transforms generic R objects and not just BufferedDataTables (aka. data frames)
  *
  * @author Holger Brandl
+ * {@deprecated}
  */
 public class GenericRSnippet extends AbstractScriptingNodeModel {
 

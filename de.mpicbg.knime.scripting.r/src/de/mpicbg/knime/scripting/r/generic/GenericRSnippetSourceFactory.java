@@ -13,6 +13,7 @@ import org.knime.core.node.port.PortType;
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
  *
  * @author Holger Brandl (MPI-CBG)
+ * {@deprecated}
  */
 public class GenericRSnippetSourceFactory
         extends NodeFactory<GenericRSnippet> {

@@ -12,6 +12,7 @@ import org.knime.core.node.NodeView;
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
  *
  * @author Holger Brandl (MPI-CBG)
+ * {@deprecated}
  */
 public class GenericRSnippetFactory
         extends NodeFactory<GenericRSnippet> {

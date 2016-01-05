@@ -21,6 +21,7 @@ import java.io.File;
  * BufferedDatatables.
  *
  * @author Holger Brandl
+ * {@deprecated}
  */
 public class ConvertToTable extends AbstractNodeModel {
 
