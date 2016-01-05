@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="../rgeneric_icon.png" type="Manipulator">
-    <name>R Snippet</name>
+    <name>Convert to Table</name>
 
     <shortDescription>
-        A generic R scripting node that takes an R workspace input and returns the altered R workspace as output
+        Takes a R workspace as input and extracts a data frame as KNIME table.
     </shortDescription>
 
     <fullDescription>
-        <intro>A generic R scripting node that takes an R workspace input and returns the altered R workspace as output.
+        <intro>Takes a R workspace as input. 
+        	An R data frame assigned to 'kIn' will be converted back into a KNIME table.
 
             Make sure that Rserve is running somewhere, and KNIME is accordingly configured (KNIME->Preferences).
             <br/>
@@ -18,12 +19,14 @@
                 Wiki on GitHub: knime-scripting
             </a>
         </intro>
-
+        <option name="Chunk size to pull result data">
+        	Number of rows to push as one data chunk to R. The default (-1) leads to data transfer without splitting the data in chunks.
+        </option>
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="existing R workspace">An R workspace.</inPort>
-        <outPort index="0" name="altered R workspace">The altered R workspace</outPort>
+        <inPort index="0" name="existing R workspace">R workspace.</inPort>
+        <outPort index="0" name="data frame">The 'kIn' data-frame converted back into a KNIME table.</outPort>
     </ports>
 
 </knimeNode>

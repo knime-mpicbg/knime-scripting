@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../../ricon.png" type="Manipulator">
+<knimeNode icon="../rgeneric_icon.png" type="Manipulator">
     <name>Convert to R</name>
 
     <shortDescription>
-        Takes a data table as input and converts it into a generic R object.
+        Takes a data table as input and pushes it to R
     </shortDescription>
 
     <fullDescription>
-        <intro>Takes a data table as input and converts it into a generic R object.
+        <intro>Takes a data table as input and pushes it to a new R workspace as 'kIn' data frame.
 
             Make sure that Rserve is running somewhere, and KNIME is accordingly configured (KNIME->Preferences).
             <br/>
@@ -27,7 +27,7 @@
     <ports>
         <inPort index="0" name="input table">A data table which should be processed using non-table based GenericR pipeline.
         </inPort>
-        <outPort index="0" name="R workspace">R workspace containing the input table as data frame</outPort>
+        <outPort index="0" name="R workspace">R workspace containing the input table as data frame (named 'kIn')</outPort>
     </ports>
 
 </knimeNode>

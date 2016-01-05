@@ -8,7 +8,7 @@ import de.mpicbg.knime.scripting.core.ScriptingOpenInDialog;
 
 
 /**
- * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
+ * Factory: A generic R node which pushes a KNIME table into an R workspace
  *
  * @author Holger Brandl (MPI-CBG)
  */

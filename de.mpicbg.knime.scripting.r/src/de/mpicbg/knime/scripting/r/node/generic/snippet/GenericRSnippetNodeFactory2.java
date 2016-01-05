@@ -54,7 +54,7 @@ public class GenericRSnippetNodeFactory2
 	 */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, false, true, false);
+        return new RSnippetNodeDialog(GenericRSnippetNodeModel2.GENERIC_SNIPPET_DFT, false, true, false);
     }
 
 }

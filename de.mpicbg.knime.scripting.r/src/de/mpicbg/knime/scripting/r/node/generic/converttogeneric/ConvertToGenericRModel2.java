@@ -29,7 +29,6 @@ public class ConvertToGenericRModel2 extends AbstractNodeModel {
 	 * constructor
 	 */
     public ConvertToGenericRModel2() {
-        // the input port is optional just to allow generative R nodes
         super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
     }
 

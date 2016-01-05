@@ -36,8 +36,8 @@
               id="de.mpicbg.tds.knime.scripting.r.gnode.generic.converttogeneric.ConvertToGenericRFactory"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.generic.ConvertToTableFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.ConvertToTableFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"
+              id="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"/>
 
         <node category-path="/community/r/genericr"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericRPlotFactory"
@@ -55,6 +55,10 @@
         <node category-path="/community/r/genericr"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericRSnippetSourceFactory"
               id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRSnippetSourceFactory"/> 
+              
+       	<node category-path="/community/r/genericr"
+              factory-class="de.mpicbg.knime.scripting.r.generic.ConvertToTableFactory"
+              id="de.mpicbg.tds.knime.scripting.r.genericr.ConvertToTableFactory"/>
 
 		>> not needed anymore
         <node category-path="/community/r/utils"
@@ -76,7 +80,7 @@
               name="R Scripting"
               path="/community"/>
         <category
-              icon="resources/ricon.png"
+              icon="src/de/mpicbg/knime/scripting/r/node/generic/rgeneric_icon.png"
               level-id="genericr"
               name="Generic R"
               path="/community/r"/>
