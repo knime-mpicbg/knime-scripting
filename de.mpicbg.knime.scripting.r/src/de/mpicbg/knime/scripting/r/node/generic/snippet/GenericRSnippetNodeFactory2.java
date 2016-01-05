@@ -9,41 +9,52 @@ import org.knime.core.node.NodeView;
 
 
 /**
- * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
+ * Factory: A generic R node which modifies an R workspace
  *
- * @author Holger Brandl (MPI-CBG)
+ * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
 public class GenericRSnippetNodeFactory2
         extends NodeFactory<GenericRSnippetNodeModel2> {
 
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public GenericRSnippetNodeModel2 createNodeModel() {
         return new GenericRSnippetNodeModel2();
     }
 
-
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public int getNrNodeViews() {
         return 0;
     }
 
-
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public NodeView<GenericRSnippetNodeModel2> createNodeView(final int viewIndex,
                                                     final GenericRSnippetNodeModel2 nodeModel) {
         return null;
     }
 
-
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public boolean hasDialog() {
         return true;
     }
 
-
+	/**
+	 * {@inheritDoc}
+	 */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, false);
+        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, false, true, false);
     }
 
 }

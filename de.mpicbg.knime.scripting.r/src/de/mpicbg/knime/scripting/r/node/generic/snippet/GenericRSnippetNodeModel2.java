@@ -24,7 +24,7 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
- * A generic R node which modifies an R workspace
+ * Model: A generic R node which modifies an R workspace
  *
  * @author Holger Brandl, Antje Janosch
  */
