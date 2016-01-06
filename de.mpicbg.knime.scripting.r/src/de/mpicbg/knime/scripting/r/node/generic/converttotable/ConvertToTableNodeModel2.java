@@ -37,7 +37,7 @@ public class ConvertToTableNodeModel2 extends AbstractScriptingNodeModel {
 	 * constructor
 	 */
     public ConvertToTableNodeModel2() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class));
+        super(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), true, true, true);
     }
 
     /**

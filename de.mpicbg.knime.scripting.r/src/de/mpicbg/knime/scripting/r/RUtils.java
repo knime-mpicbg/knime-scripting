@@ -1001,37 +1001,11 @@ public class RUtils {
     	// 1) convert exampleSet into data-frame and put into the r-workspace
     	logger.info("Pushing inputs to R...");
 
-    	Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
-
-    	// save the work-space to a temporary file and open R
-    	String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
-
-    	connection.voidEval("tmpwfile = tempfile('openinrnode', fileext='.RData');");
+    	RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
     	
-    	// enable to save nothing in workspace files for source nodes
-    	if(pushTable.size() > 0)
-    		connection.voidEval("save(" + allParams + ", file=tmpwfile); ");
-    	else
-    		connection.voidEval("save(file=tmpwfile); ");
-
-    	// 2) transfer the file to the local computer if necessary
-    	logger.info("Transferring workspace-file to localhost ...");
-
-    	File workspaceFile = null;
-    	if (RUtils.getHost().equals("localhost")) {
-    		workspaceFile = new File(connection.eval("tmpwfile").asString());
-    	} else {
-    		// create another local file  and transfer the workspace file from the rserver
-    		workspaceFile = File.createTempFile("rplugin", ".RData");
-    		workspaceFile.deleteOnExit();
-
-    		REXP xp = connection.parseAndEval("r=readBin(tmpwfile,'raw',file.info(tmpwfile)$size); unlink(tmpwfile); r");
-    		FileOutputStream oo = new FileOutputStream(workspaceFile);
-    		oo.write(xp.asBytes());
-    		oo.close();
-    	}
-    	connection.voidEval("rm(list = ls(all = TRUE));");
-    	connection.close();
+    	// save the work-space to a temporary file and open R
+    	File workspaceFile = File.createTempFile("openInR_", ".RData");    	
+    	saveWorkspaceToFile(workspaceFile, connection, RUtils.getHost());
 
     	logger.info("Spawning R-instance ...");
     	RUtils.openWSFileInR(workspaceFile, rawScript);           

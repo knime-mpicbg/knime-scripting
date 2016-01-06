@@ -13,6 +13,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
@@ -23,26 +24,34 @@ import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
  *
  * @author Antje Janosch
  */
-public class ConvertToGenericRModel2 extends AbstractNodeModel {
+public class ConvertToGenericRModel2 extends AbstractScriptingNodeModel {
 
 	/**
 	 * constructor
 	 */
     public ConvertToGenericRModel2() {
-        super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
+        super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class), false, false, true);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
+    // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new PortObjectSpec[]{RPortObjectSpec.INSTANCE};
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
         RConnection connection = RUtils.createConnection();
         File rWorkspaceFile = null;
         RPortObject outPort = null;
         
-        BufferedDataTable[] inTables = AbstractScriptingNodeModel.castToBDT(inObjects);
+        BufferedDataTable[] inTables = AbstractScriptingNodeModel.castToBDT(inData);
         DataTableSpec inSpec = inTables[0].getDataTableSpec();
         
         int chunkInSize = RUtils.getChunkIn(
@@ -57,13 +66,12 @@ public class ConvertToGenericRModel2 extends AbstractNodeModel {
     		// push flow variables to R
     		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
-        	// 1) convert the data and push them to R
-        	// TODO: implement chunk usage
+        	// convert the data and push them to R
         	RUtils.pushToR(inTables, connection, exec, chunkInSize);
         	
         	exec.setMessage("Save R-workspace (cannot be cancelled)");
 
-        	// 2) write a local workspace file which contains the input table of the node
+        	// write a local workspace file which contains the input table of the node
         	if (rWorkspaceFile == null) {
         		rWorkspaceFile = File.createTempFile("genericR", ".RData");  //Note: this r is just a filename suffix
         	}
@@ -80,17 +88,14 @@ public class ConvertToGenericRModel2 extends AbstractNodeModel {
         connection.close();
 
         return new PortObject[]{outPort};
-    }
+	}
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{RPortObjectSpec.INSTANCE};
-    }
-
-
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		// nothing to do here?
+	}
 
 }

@@ -322,5 +322,4 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         String encodedString = new String(stringValue.getBytes(StandardCharsets.UTF_8));
         return encodedString.replace("\r","");
     }
-
 }

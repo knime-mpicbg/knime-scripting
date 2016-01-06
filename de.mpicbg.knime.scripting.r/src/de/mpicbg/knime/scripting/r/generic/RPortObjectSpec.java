@@ -36,6 +36,7 @@ import java.io.IOException;
  * A port object spec for R model port.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * {@deprecated}
  */
 public final class RPortObjectSpec implements PortObjectSpec {
 
