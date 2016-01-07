@@ -5,17 +5,11 @@ import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColNameReformater;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-
 
 /**
- * <code>NodeDialog</code> for the "RSnippet" Node. Improved R Integration for Knime
- * <p/>
- * This node dialog derives from {@link DefaultNodeSettingsPane} which allows creation of a simple dialog with standard
- * components. If you need a more complex dialog please derive directly from {@link
- * org.knime.core.node.NodeDialogPane}.
+ * <code>NodeDialog</code> for the "RSnippet" Node.
  *
- * @author Holger Brandl (MPI-CBG)
+ * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
 public class RSnippetNodeDialog extends ScriptingNodeDialog {
 
@@ -43,6 +37,9 @@ public class RSnippetNodeDialog extends ScriptingNodeDialog {
 		super(defaultScript, new RColNameReformater(), useTemplateRepository, useOpenIn, useChunkSettings);
 	}
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getTemplatesFromPreferences() {
         return R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);

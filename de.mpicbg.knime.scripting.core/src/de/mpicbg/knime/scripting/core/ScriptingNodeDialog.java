@@ -60,8 +60,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 	private boolean m_enableTemplateRepository = true;
 
     public static final String SCRIPT_TAB_NAME = "Script Editor";
-    
     private static final String OPTIONS_TAB_NAME = "Chunk Settings";
+    private static final String TEMPLATES_TAB_NAME = "Templates";
 
     private static final NodeLogger logger = NodeLogger.getLogger(ScriptingNodeDialog.class);
 
@@ -170,7 +170,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             //templateWizard = new ScriptTemplateWizard(templateResources);
             templateWizard = new ScriptTemplateWizard(this, templates);
             templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
-            this.addTabAt(1, "Templates", templateWizard);
+            this.addTabAt(1, TEMPLATES_TAB_NAME, templateWizard);
+            selectTab = TEMPLATES_TAB_NAME;
         }
         
         // chunk settings panel
@@ -432,6 +433,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         this.hardwiredTemplate = predefinedTemplate;
     }
 
+    /**
+     * retrieve string value from preference settings 'templates'
+     * @return
+     */
     public abstract String getTemplatesFromPreferences();
 
     public List<ScriptTemplate> updateTemplates() {

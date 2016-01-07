@@ -5,7 +5,7 @@
     <name>R Snippet</name>
 
     <shortDescription>
-        Executes a snippet with R within Knime.
+        Executes an R script within KNIME.
     </shortDescription>
 
     <fullDescription>
@@ -16,10 +16,10 @@
                 RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
                 is used to configure the R code using a graphical user interface in a way that the user does not need to
                 know scripting in R.
-                URL of the template file can be set in Knime->Preferences->Knime->R-Scripting
+                URL of the template file can be set in KNIME->Preferences->KNIME->R-Scripting
                 <br/>
-                The input data table is sent to R as a data frame named "kIn". The output data table is sent back to
-                Knime as "rOut".
+                The input data table is sent to R as a data frame named 'kIn'. The output data table is pulled from R. 
+                It has to be an R data frame named 'rOut'.
             </p>
             <p>
                 Script Editor:
@@ -36,15 +36,10 @@
                 Then configure the GUI according to your input data.
             </p>
             <p>
-                Output Options:
-                <br/>
-                Specify the output table to avoid that the node shows a warning.
-            </p>
-            <p>
                 IMPORTANT :
                 <br/>
-                This node is using R as backend, make sure that Rserve is running somewhere, and Knime is accordingly
-                configured (Knime->Preferences->Knime->R-Scripting).
+                This node is using R as back end, make sure that Rserve is running somewhere, and KNIME is accordingly
+                configured (KNIME->Preferences->KNIME->R-Scripting).
                 <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/R-server-for-knime">Scripting integration
                     Wiki (R server)
                 </a>
@@ -60,13 +55,10 @@
         <option name="Templates/Gallery">Generate a temporary webpage shown in a browser which gives an overview about
             all available templates.
         </option>
-        <option name="Templates/Description,Source">Desciption explains what this snippet does. Source displays the RGG
+        <option name="Templates/Description,Source">Description explains what this snippet does. Source displays the RGG
             script.
         </option>
         <option name="Templates/Use this template">Click to load the GUI (or double-click onto the template)
-        </option>
-        <option name="Output Options/Add/Remove output columns">Specify the colummn names and types of the output table.
-            If this is not done then Knime shows a warning, because the output table is not defined.
         </option>
 
     </fullDescription>
