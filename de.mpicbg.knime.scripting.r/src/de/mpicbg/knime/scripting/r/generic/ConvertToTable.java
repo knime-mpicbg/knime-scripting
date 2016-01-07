@@ -2,8 +2,8 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;

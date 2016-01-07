@@ -5,8 +5,8 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortType;
 
-import de.mpicbg.knime.scripting.r.RSnippetNodeDialog;
 import de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeModel2;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 
 

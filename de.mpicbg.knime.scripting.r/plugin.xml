@@ -3,9 +3,8 @@
 <plugin>
 
     <extension point="org.knime.workbench.repository.nodes">
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"
+        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"/>
-
 
         <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"
               id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory2"/>

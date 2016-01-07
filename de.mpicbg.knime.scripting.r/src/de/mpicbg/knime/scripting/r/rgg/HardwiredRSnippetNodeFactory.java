@@ -4,8 +4,8 @@ import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
-import de.mpicbg.knime.scripting.r.RSnippetNodeFactory;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 import org.knime.core.node.NodeDialogPane;
 

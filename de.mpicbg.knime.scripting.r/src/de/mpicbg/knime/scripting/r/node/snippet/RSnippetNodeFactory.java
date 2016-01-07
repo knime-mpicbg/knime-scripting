@@ -1,4 +1,6 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.node.snippet;
+
+import de.mpicbg.knime.scripting.r.AbstractRSnippetNodeFactory;
 
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime

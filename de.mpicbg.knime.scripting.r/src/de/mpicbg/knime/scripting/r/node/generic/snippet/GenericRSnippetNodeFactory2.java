@@ -1,7 +1,7 @@
 package de.mpicbg.knime.scripting.r.node.generic.snippet;
 
-import de.mpicbg.knime.scripting.r.RSnippetNodeDialog;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

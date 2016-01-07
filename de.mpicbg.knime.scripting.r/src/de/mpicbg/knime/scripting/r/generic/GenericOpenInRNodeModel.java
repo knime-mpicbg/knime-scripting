@@ -12,8 +12,8 @@ import org.rosuda.REngine.Rserve.RConnection;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 
 /**

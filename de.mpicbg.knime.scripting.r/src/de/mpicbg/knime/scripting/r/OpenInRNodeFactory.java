@@ -5,6 +5,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 import de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 
 
 /**

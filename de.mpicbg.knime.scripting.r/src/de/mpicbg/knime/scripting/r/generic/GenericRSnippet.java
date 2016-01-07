@@ -3,8 +3,8 @@ package de.mpicbg.knime.scripting.r.generic;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.knime.core.node.BufferedDataTable;

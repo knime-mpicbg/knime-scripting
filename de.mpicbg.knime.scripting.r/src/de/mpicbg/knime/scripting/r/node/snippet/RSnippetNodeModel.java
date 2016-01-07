@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.node.snippet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,6 +19,8 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 

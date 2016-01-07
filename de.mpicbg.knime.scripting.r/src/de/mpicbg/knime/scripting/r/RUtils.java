@@ -79,6 +79,7 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 //import de.mpicbg.knime.scripting.r.generic.RPortObject;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;

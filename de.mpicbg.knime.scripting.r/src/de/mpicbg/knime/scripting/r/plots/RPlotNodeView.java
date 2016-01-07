@@ -13,7 +13,7 @@ public class RPlotNodeView<RPlotModel extends AbstractRPlotNodeModel> extends No
     /**
      * Creates a new view.
      *
-     * @param nodeModel The model (class: {@link de.mpicbg.knime.scripting.r.RSnippetNodeModel})
+     * @param nodeModel The model (class: {@link de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel})
      */
     public RPlotNodeView(final RPlotModel nodeModel) {
         super(nodeModel);

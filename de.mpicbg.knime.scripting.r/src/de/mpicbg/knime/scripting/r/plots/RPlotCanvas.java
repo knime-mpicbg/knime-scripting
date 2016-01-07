@@ -8,6 +8,9 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import javax.swing.*;
+
+import static de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel.R_INVAR_BASE_NAME;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
@@ -15,8 +18,6 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
 import java.util.Collections;
-
-import static de.mpicbg.knime.scripting.r.RSnippetNodeModel.R_INVAR_BASE_NAME;
 
 
 /**

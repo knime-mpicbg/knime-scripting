@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
 import de.mpicbg.knime.scripting.core.ColNameReformater;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 import org.knime.core.data.DataType;
 
