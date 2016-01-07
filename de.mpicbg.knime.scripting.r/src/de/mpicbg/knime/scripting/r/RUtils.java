@@ -93,7 +93,8 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 public class RUtils {
 
 	// TODO: this needs to go to snippet nodes? or refactor with a nice name?
-    public static final String SCRIPT_PROPERTY_DEFAULT = "rOut <- kIn";
+    public static final String CFG_SCRIPT_DFT = "rOut <- kIn";
+    public static final String CFG_SCRIPT2_DFT = "rOut <- kIn1";
 
     public static int MAX_FACTOR_LEVELS = 500;
     

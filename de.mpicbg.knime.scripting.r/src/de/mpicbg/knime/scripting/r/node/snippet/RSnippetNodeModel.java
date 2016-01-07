@@ -43,12 +43,15 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
         super(createPorts(numInputs), createPorts(numOutputs));
     }
 
-    /**
+	/**
      * {@inheritDoc}
      */
     @Override
     public String getDefaultScript() {
-        return RUtils.SCRIPT_PROPERTY_DEFAULT;
+    	if(this.getNrInPorts() > 1)
+    		return RUtils.CFG_SCRIPT2_DFT;
+    	else
+    		return RUtils.CFG_SCRIPT_DFT;
     }
 
     /**

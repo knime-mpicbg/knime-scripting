@@ -56,7 +56,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
 
     public String getDefaultScript() {
-        return RUtils.SCRIPT_PROPERTY_DEFAULT;
+        return RUtils.CFG_SCRIPT_DFT;
     }
     
     /**

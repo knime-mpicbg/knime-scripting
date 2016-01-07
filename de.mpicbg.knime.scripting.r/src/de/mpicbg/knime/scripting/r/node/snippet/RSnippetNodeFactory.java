@@ -51,7 +51,7 @@ public class RSnippetNodeFactory extends NodeFactory<RSnippetNodeModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, true);
+        return new RSnippetNodeDialog(RUtils.CFG_SCRIPT_DFT, true);
     }
 }
 

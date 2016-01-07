@@ -46,6 +46,9 @@
             </p>
         </intro>
 
+		<option name="Open external">If checked, R will be opened externally, the KNIME input will be loaded as data frame 
+		and the script will be available at the clipboard.
+        </option>
         <option name="Scipt Editor/Unlink from Template">Gives access to the R script after adaptation by the GUI.
         </option>
         <option name="Scipt Editor/Edit Template">Gives access to the RGG script.
@@ -59,6 +62,13 @@
             script.
         </option>
         <option name="Templates/Use this template">Click to load the GUI (or double-click onto the template)
+        </option>
+        
+        <option name="Chunk size to push incoming data">
+        Number of columns to push as one data chunk to R. The default (-1) leads to data transfer without splitting the data in chunks.
+        </option>
+        <option name="Chunk size to pull result data">
+        	Number of rows to push as one data chunk to R. The default (-1) leads to data transfer without splitting the data in chunks.
         </option>
 
     </fullDescription>

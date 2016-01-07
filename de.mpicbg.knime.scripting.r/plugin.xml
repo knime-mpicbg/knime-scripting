@@ -12,7 +12,7 @@
         <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RPlotNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
 
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory21"
+        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.snippet21.RSnippetNodeFactory21"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>
 
         <!-- register the generic R nodes -->
