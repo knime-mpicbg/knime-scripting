@@ -136,6 +136,21 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     private void initComponents(String selectTab) {
     	// create scripting tab
     	if(m_provideScriptTab) {
+    		
+            // create the template repository browser tab (if enabled)
+            if (m_enableTemplateRepository) {
+
+                updateUrlList(getTemplatesFromPreferences());
+                List<ScriptTemplate> templates = updateTemplates();
+
+                //templateWizard = new ScriptTemplateWizard(templateResources);
+                templateWizard = new ScriptTemplateWizard(this, templates);
+                templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
+                this.addTab(TEMPLATES_TAB_NAME, templateWizard);
+                selectTab = TEMPLATES_TAB_NAME;
+            }
+            
+            // Create scripting tab
 	    	JPanel mainContainer = new JPanel(new BorderLayout());
 	        
 	        JPanel scriptDialogContainer = new JPanel(new BorderLayout());
@@ -158,21 +173,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 	        
 	        mainContainer.add(scriptDialogContainer, BorderLayout.CENTER);
 	        
-	        this.addTabAt(0, SCRIPT_TAB_NAME, mainContainer);
+	        this.addTab(SCRIPT_TAB_NAME, mainContainer);
     	}
-
-        // create the template repository browser tab (if enabled)
-        if (m_enableTemplateRepository) {
-
-            updateUrlList(getTemplatesFromPreferences());
-            List<ScriptTemplate> templates = updateTemplates();
-
-            //templateWizard = new ScriptTemplateWizard(templateResources);
-            templateWizard = new ScriptTemplateWizard(this, templates);
-            templateWizard.addUseTemplateListener(new UseTemplateListenerImpl(this));
-            this.addTabAt(1, TEMPLATES_TAB_NAME, templateWizard);
-            selectTab = TEMPLATES_TAB_NAME;
-        }
         
         // chunk settings panel
         if(m_provideOptionsTab) {
