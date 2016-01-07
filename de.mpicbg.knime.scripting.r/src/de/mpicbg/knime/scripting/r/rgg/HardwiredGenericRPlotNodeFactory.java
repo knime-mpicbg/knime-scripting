@@ -3,8 +3,8 @@ package de.mpicbg.knime.scripting.r.rgg;
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.r.generic.GenericRPlotNodeModel;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeDialog;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
-import de.mpicbg.knime.scripting.r.plots.RPlotNodeDialog;
 
 import org.knime.core.node.NodeDialogPane;
 

@@ -9,7 +9,7 @@
         <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"
               id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory2"/>
 
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RPlotNodeFactory"
+        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.plot.RPlotNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
 
         <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.snippet21.RSnippetNodeFactory21"

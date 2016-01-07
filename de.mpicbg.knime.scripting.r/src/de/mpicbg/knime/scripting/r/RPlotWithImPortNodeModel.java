@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;

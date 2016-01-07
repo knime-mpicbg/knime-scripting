@@ -60,9 +60,6 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		// check preferences
-    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-
     	// create connection
         RConnection connection = RUtils.createConnection();
         

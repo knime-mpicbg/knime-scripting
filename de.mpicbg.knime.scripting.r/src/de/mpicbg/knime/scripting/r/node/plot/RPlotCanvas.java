@@ -1,8 +1,9 @@
-package de.mpicbg.knime.scripting.r.plots;
+package de.mpicbg.knime.scripting.r.node.plot;
 
 import de.mpicbg.knime.scripting.core.ImageClipper;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.rosuda.REngine.Rserve.RConnection;

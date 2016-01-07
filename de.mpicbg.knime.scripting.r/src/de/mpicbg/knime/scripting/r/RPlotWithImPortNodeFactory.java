@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
 
 

@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.node.plot;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,10 +7,12 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -18,12 +20,15 @@ import org.knime.core.node.port.image.ImagePortObject;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptProvider;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
-import de.mpicbg.knime.scripting.r.plots.RPlotCanvas;
+import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -51,16 +56,6 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 
-
-    /**
-     * Prepares the ouput tables of this nodes. As most plot-nodes won't have any data output, this method won't be
-     * overridden in most cases. Just in case a node should have both (an review and a data table output), you may
-     * override it.
-     */
-    protected BufferedDataTable[] prepareOutput(ExecutionContext exec, RConnection connection) {
-        return new BufferedDataTable[0];
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -68,8 +63,22 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		logger.info("Render the R Plot");
-
+		
+		// create connection
         RConnection connection = RUtils.createConnection();
+        
+        // try to execute the node, close connection if anything fails and pass through the error
+        BufferedDataTable outTable = null;
+        try {
+        	outTable = transferAndEvaluate(castToBDT(inData), exec, connection);
+        } catch (Exception e) {
+			if(connection.isConnected()) {
+				connection.close();
+				throw e;
+			}
+		}
+
+
 
         // 1) convert exampleSet into data-frame and put into the r-workspace
         try {
@@ -105,7 +114,41 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         return outPorts;
 	}
 
-    /**
+    private BufferedDataTable transferAndEvaluate(BufferedDataTable[] inData, ExecutionContext exec,
+			RConnection connection) throws KnimeScriptingException, RserveException, REXPMismatchException {
+    	// check preferences
+    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
+        DataTableSpec inSpec = inData[0].getDataTableSpec();
+    	
+    	// retrieve chunk settings
+        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
+    	
+    	// push color/size/shape model to R
+		RUtils.pushColorModelToR(inSpec, connection, exec);
+		RUtils.pushShapeModelToR(inSpec, connection, exec);
+		RUtils.pushSizeModelToR(inSpec, connection, exec);
+		
+		// push flow variables to R
+		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
+
+        // CONVERT input table into data-frame and put into the r-workspace
+        RUtils.pushToR(inData, connection, exec, chunkInSize);
+        
+        exec.setMessage("Evaluate R-script (cannot be cancelled)");
+
+        // PREPARE and parse script
+        String script = prepareScript();
+        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
+        // stop support !
+        //rawScript = RUtils.supportOldVarNames(rawScript);   
+        RUtils.parseScript(connection, script);
+        
+        
+		return null;
+	}
+
+
+	/**
      * {@inheritDoc}
      */
 	@Override

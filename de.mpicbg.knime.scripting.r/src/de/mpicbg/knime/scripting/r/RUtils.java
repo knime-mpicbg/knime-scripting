@@ -741,7 +741,12 @@ public class RUtils {
         return portVarMapping;
     }
 
-
+    /**
+     * {@deprecated}
+     * @param script
+     * @return
+     * @throws RserveException
+     */
     public static String supportOldVarNames(String script) throws RserveException {
         if (script.contains("(R)") ||
                 script.contains("R[") ||
@@ -849,7 +854,7 @@ public class RUtils {
 	    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
 	    	
 	        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-	        script = supportOldVarNames(script);
+	        //script = supportOldVarNames(script);
 	
 	        String tempFileName = "rmPlotFile." + device;
 	

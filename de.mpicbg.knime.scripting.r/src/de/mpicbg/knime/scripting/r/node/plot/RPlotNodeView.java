@@ -1,10 +1,12 @@
-package de.mpicbg.knime.scripting.r.plots;
+package de.mpicbg.knime.scripting.r.node.plot;
 
 import org.knime.core.node.NodeView;
 
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
+
 
 /**
- * <code>NodeView</code> for the "RSnippet" Node. Improved R Integration for Knime
+ * <code>NodeView</code> for the "RSnippet" Node.
  *
  * @author Holger Brandl (MPI-CBG)
  */

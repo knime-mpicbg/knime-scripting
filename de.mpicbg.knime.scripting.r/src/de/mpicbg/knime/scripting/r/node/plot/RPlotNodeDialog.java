@@ -1,8 +1,9 @@
-package de.mpicbg.knime.scripting.r.plots;
+package de.mpicbg.knime.scripting.r.node.plot;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColNameReformater;
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.knime.core.node.InvalidSettingsException;

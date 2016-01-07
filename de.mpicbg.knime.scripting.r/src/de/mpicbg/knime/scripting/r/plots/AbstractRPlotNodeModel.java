@@ -33,6 +33,7 @@ import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 
@@ -150,10 +151,10 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
      */
     protected void createFigure(RConnection connection) throws RserveException, IOException, REXPMismatchException, REngineException, KnimeScriptingException {
 
-        RUtils.saveToLocalFile(getTempWSFile(), connection, RUtils.getHost(), RSnippetNodeModel.R_INVAR_BASE_NAME);
+        // workspace file saved as internal and used to recreate image 
+        RUtils.saveWorkspaceToFile(getTempWSFile(), connection, RUtils.getHost());
 
-
-        // 2) create the image the script
+        // create the image the script
         String script = prepareScript();
         image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
         

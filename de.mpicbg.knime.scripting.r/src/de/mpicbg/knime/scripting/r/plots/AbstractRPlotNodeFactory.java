@@ -4,6 +4,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeDialog;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeView;
+
 
 /**
  * @author Holger Brandl
