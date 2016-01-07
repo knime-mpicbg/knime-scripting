@@ -2,13 +2,8 @@ package de.mpicbg.knime.scripting.r;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -28,21 +23,28 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
- * This is the model implementation of RSnippet. Improved R Integration for Knime
+ * This is the model implementation of RSnippet.
  *
- * @author Holger Brandl (MPI-CBG)
+ * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
 public class RSnippetNodeModel extends AbstractScriptingNodeModel {
 
     public static final String R_INVAR_BASE_NAME = "kIn";
     public static final String R_OUTVAR_BASE_NAME = "rOut";
 
-
+    /**
+     * constructor
+     * @param numInputs
+     * @param numOutputs
+     */
     public RSnippetNodeModel(int numInputs, int numOutputs) {
-        //super(numInputs, numOutputs);
         super(createPorts(numInputs), createPorts(numOutputs));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getDefaultScript() {
         return RUtils.SCRIPT_PROPERTY_DEFAULT;
     }
@@ -106,19 +108,19 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
 		// push flow variables to R
 		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
-        // 1) convert input table into data-frame and put into the r-workspace
+        // CONVERT input table into data-frame and put into the r-workspace
         RUtils.pushToR(inData, connection, exec, chunkInSize);
         
         exec.setMessage("Evaluate R-script (cannot be cancelled)");
 
-        // 2) prepare and parse script
+        // PREPARE and parse script
         String script = prepareScript();
         // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
         // stop support !
         //rawScript = RUtils.supportOldVarNames(rawScript);   
         RUtils.parseScript(connection, script);
 
-        // 3) evaluate script
+        // EVALUATE script
         if(useEvaluate) {
         	// parse and run script
         	// evaluation list, can be used to create a console view, throws first R-error-message
@@ -133,27 +135,16 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
         	RUtils.evalScript(connection, script);     	
         }
 
-        // check if result data frame is present
+        // CHECK if result data frame is present
     	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
     		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");    	
         REXP out = connection.eval(R_OUTVAR_BASE_NAME);
         if(!out.inherits("data.frame")) 
         	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
         
-        // 4) extract output data-frame from R
+        // EXTRACT output data-frame from R
         BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec, chunkOutSize);
 		return outTable;
-	}
-
-    private static Map<String, DataType> getColumnTypeMapping(BufferedDataTable bufferedDataTable) {
-        Iterator<DataColumnSpec> dataColumnSpecIterator = bufferedDataTable.getSpec().iterator();
-        Map<String, DataType> typeMapping = new HashMap<String, DataType>();
-        while (dataColumnSpecIterator.hasNext()) {
-            DataColumnSpec dataColumnSpec = dataColumnSpecIterator.next();
-            typeMapping.put(dataColumnSpec.getName(), dataColumnSpec.getType());
-        }
-
-        return typeMapping;
 	}
 
     /**

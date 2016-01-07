@@ -178,6 +178,9 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return null;
 	}
 
+    /**
+     * @return default script
+     */
 	public String getDefaultScript() {
         return "";
     }
