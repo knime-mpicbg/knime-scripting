@@ -1,10 +1,11 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.misc;
 
 import org.rosuda.REngine.*;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RUtils;
 
 import java.io.File;
 import java.io.IOException;

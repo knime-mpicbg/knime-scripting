@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r.generic;
+package de.mpicbg.knime.scripting.r.misc;
 
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPMismatchException;

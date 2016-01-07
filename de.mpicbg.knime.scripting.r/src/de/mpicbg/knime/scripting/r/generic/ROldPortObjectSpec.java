@@ -38,32 +38,32 @@ import java.io.IOException;
  * @author Thomas Gabriel, University of Konstanz
  * {@deprecated}
  */
-public final class RPortObjectSpec implements PortObjectSpec {
+public final class ROldPortObjectSpec implements PortObjectSpec {
 
     /**
      * The port object spec instance.
      */
-    public static final RPortObjectSpec INSTANCE = new RPortObjectSpec();
+    public static final ROldPortObjectSpec INSTANCE = new ROldPortObjectSpec();
 
 
     /**
      * Creating a new instance of <code>RPortObjectSpec</code>.
      */
-    private RPortObjectSpec() {
+    private ROldPortObjectSpec() {
     }
 
 
     /**
      * Serializer used to save this port object spec.
      *
-     * @return a {@link RPortObjectSpec}
+     * @return a {@link ROldPortObjectSpec}
      */
-    public static PortObjectSpecSerializer<RPortObjectSpec>
+    public static PortObjectSpecSerializer<ROldPortObjectSpec>
     getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<RPortObjectSpec>() {
+        return new PortObjectSpecSerializer<ROldPortObjectSpec>() {
             /** {@inheritDoc} */
             @Override
-            public RPortObjectSpec loadPortObjectSpec(
+            public ROldPortObjectSpec loadPortObjectSpec(
                     final PortObjectSpecZipInputStream in)
                     throws IOException {
                 return INSTANCE;
@@ -72,7 +72,7 @@ public final class RPortObjectSpec implements PortObjectSpec {
 
             /** {@inheritDoc} */
             @Override
-            public void savePortObjectSpec(final RPortObjectSpec portObjectSpec,
+            public void savePortObjectSpec(final ROldPortObjectSpec portObjectSpec,
                                            final PortObjectSpecZipOutputStream out)
                     throws IOException {
 

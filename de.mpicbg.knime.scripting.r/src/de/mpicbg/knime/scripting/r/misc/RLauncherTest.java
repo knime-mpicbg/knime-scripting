@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.misc;
 
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;

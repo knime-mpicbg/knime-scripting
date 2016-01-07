@@ -28,7 +28,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 
 
     public GenericRPlotNodeModel() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class));
+        super(createPorts(1, ROldPortObject.TYPE, ROldPortObject.class));
     }
 
 

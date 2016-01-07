@@ -36,7 +36,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
     public GenericRSnippet() {
         // the input port is optional just to allow generative R nodes
-        this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
+        this(createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), createPorts(1, ROldPortObject.TYPE, ROldPortObject.class));
     }
 
 
@@ -51,7 +51,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
     // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
     	super.configure(inSpecs);
-        return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
+        return hasOutput() ? new PortObjectSpec[]{ROldPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
     }
 
 
@@ -108,7 +108,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
         connection.close();
 
-        return new PortObject[]{new RPortObject(rWorkspaceFile)};
+        return new PortObject[]{new ROldPortObject(rWorkspaceFile)};
 	}
 
     /**

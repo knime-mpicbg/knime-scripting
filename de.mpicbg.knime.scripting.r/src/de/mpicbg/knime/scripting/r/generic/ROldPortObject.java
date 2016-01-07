@@ -66,15 +66,15 @@ import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
  *
  * @author Kilian Thiel, University of Konstanz
  */
-public class RPortObject implements PortObject {
+public class ROldPortObject implements PortObject {
 
     /**
      * Convenience access member for <code>new PortType(RPortObject.class)</code>.
      */
-    public static final PortType TYPE = new PortType(RPortObject.class);
+    public static final PortType TYPE = new PortType(ROldPortObject.class);
 
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(RPortObject.class);
+            NodeLogger.getLogger(ROldPortObject.class);
 
     private final File m_fileR;
 
@@ -84,7 +84,7 @@ public class RPortObject implements PortObject {
      *
      * @param fileR The file containing a R model.
      */
-    public RPortObject(final File fileR) {
+    public ROldPortObject(final File fileR) {
         m_fileR = fileR;
     }
 
@@ -92,8 +92,8 @@ public class RPortObject implements PortObject {
     /**
      * {@inheritDoc}
      */
-    public RPortObjectSpec getSpec() {
-        return RPortObjectSpec.INSTANCE;
+    public ROldPortObjectSpec getSpec() {
+        return ROldPortObjectSpec.INSTANCE;
     }
 
 
@@ -118,14 +118,14 @@ public class RPortObject implements PortObject {
     /**
      * Serializer used to save this port object.
      *
-     * @return a {@link RPortObject}
+     * @return a {@link ROldPortObject}
      */
-    public static PortObjectSerializer<RPortObject>
+    public static PortObjectSerializer<ROldPortObject>
     getPortObjectSerializer() {
-        return new PortObjectSerializer<RPortObject>() {
+        return new PortObjectSerializer<ROldPortObject>() {
             /** {@inheritDoc} */
             @Override
-            public void savePortObject(final RPortObject portObject,
+            public void savePortObject(final ROldPortObject portObject,
                                        final PortObjectZipOutputStream out,
                                        final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
@@ -139,7 +139,7 @@ public class RPortObject implements PortObject {
 
             /** {@inheritDoc} */
             @Override
-            public RPortObject loadPortObject(
+            public ROldPortObject loadPortObject(
                     final PortObjectZipInputStream in,
                     final PortObjectSpec spec,
                     final ExecutionMonitor exec)
@@ -150,7 +150,7 @@ public class RPortObject implements PortObject {
                 FileUtil.copy(in, fos);
                 in.close();
                 fos.close();
-                return new RPortObject(fileR);
+                return new ROldPortObject(fileR);
             }
         };
     }
@@ -252,10 +252,10 @@ public class RPortObject implements PortObject {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof RPortObject)) {
+        if (!(obj instanceof ROldPortObject)) {
             return false;
         }
-        RPortObject rPort = (RPortObject) obj;
+        ROldPortObject rPort = (ROldPortObject) obj;
         return m_fileR.equals(rPort.m_fileR);
     }
 

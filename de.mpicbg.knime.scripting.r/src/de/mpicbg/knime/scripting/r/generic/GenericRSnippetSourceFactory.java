@@ -20,7 +20,7 @@ public class GenericRSnippetSourceFactory
 
     @Override
     public GenericRSnippet createNodeModel() {
-        return new GenericRSnippet(new PortType[0], GenericRSnippet.createPorts(1, RPortObject.TYPE, RPortObject.class));
+        return new GenericRSnippet(new PortType[0], GenericRSnippet.createPorts(1, ROldPortObject.TYPE, ROldPortObject.class));
     }
 
 

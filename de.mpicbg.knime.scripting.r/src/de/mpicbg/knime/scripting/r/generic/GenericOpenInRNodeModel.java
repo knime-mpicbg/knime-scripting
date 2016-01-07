@@ -42,7 +42,7 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
     }
 
 	protected GenericOpenInRNodeModel() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0]);
+        super(createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), new PortType[0]);
     }
    
 	/**

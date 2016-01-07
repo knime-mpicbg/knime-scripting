@@ -30,7 +30,7 @@ public class ConvertToTable extends AbstractNodeModel {
 
     public ConvertToTable() {
         // the input port is optional just to allow generative R nodes
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class));
+        super(createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class));
     }
 
 
