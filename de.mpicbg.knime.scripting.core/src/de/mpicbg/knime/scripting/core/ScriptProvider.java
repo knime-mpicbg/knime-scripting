@@ -72,7 +72,7 @@ public class ScriptProvider extends JPanel{
      */
     public void updateInputModel(PortObjectSpec[] specs) throws NotConfigurableException {
 
-        Map<Integer, List<DataColumnSpec>> inputModel = reshapeInputStructure(specs, m_colSupport);
+        Map<Integer, List<DataColumnSpec>> inputModel = getPushableInputSpec(specs, m_colSupport);
 
         scriptEditor.updateInputModel(inputModel);
         templateConfigurator.setNodeInputModel(inputModel);
@@ -82,7 +82,7 @@ public class ScriptProvider extends JPanel{
     public Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObject[] inData) {
         PortObjectSpec[] portSpecs = unwrapPortSpecs(inData);
 
-        return reshapeInputStructure(portSpecs, m_colSupport);
+        return getPushableInputSpec(portSpecs, m_colSupport);
     }
 
 
@@ -101,7 +101,7 @@ public class ScriptProvider extends JPanel{
      * @param specs - array of input port specs
      * @return map
      */
-    public static Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObjectSpec[] specs, ColumnSupport colSupport) {
+    public static Map<Integer, List<DataColumnSpec>> getPushableInputSpec(PortObjectSpec[] specs, ColumnSupport colSupport) {
         Map<Integer, List<DataColumnSpec>> inputModel = new HashMap<Integer, List<DataColumnSpec>>();
 
         for (int inputIndex = 0; inputIndex < specs.length; inputIndex++) {

@@ -204,19 +204,22 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return getNrOutPorts() > 0;
     }
 
-
+    /**
+     * if the node has an hardwired template, it's script needs to be adapted (RGG placeholders)
+     * @param inData
+     */
     protected void adaptHardwiredTemplateToContext(PortObjectSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData, m_colSupport);
-            contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.getPushableInputSpec(inData, m_colSupport);
+            contextAwareHWTemplateText = TemplateUtils.replaceRGGPlaceholders(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }
 
 
     protected void adaptHardwiredTemplateToContext(DataTableSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData, m_colSupport);
-            contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.getPushableInputSpec(inData, m_colSupport);
+            contextAwareHWTemplateText = TemplateUtils.replaceRGGPlaceholders(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }
 

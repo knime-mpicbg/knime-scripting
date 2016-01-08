@@ -107,8 +107,6 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 
     private void transferAndParse(BufferedDataTable[] inData, ExecutionContext exec,
 			RConnection connection) throws KnimeScriptingException, RserveException, REXPMismatchException {
-    	// check preferences
-    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
         DataTableSpec inSpec = inData[0].getDataTableSpec();
     	
     	// retrieve chunk settings

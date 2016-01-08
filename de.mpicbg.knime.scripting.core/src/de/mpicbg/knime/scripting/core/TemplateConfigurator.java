@@ -53,7 +53,7 @@ public class TemplateConfigurator extends JPanel {
         // create a dialog if there's a template with ui-config which is no detached
         this.template = newTemplate;
 
-        String templateText = TemplateUtils.prepareScript(newTemplate.getTemplate(), nodeInputModel);
+        String templateText = TemplateUtils.replaceRGGPlaceholders(newTemplate.getTemplate(), nodeInputModel);
         InputStream xmlStream = new BufferedInputStream(new ByteArrayInputStream(templateText.getBytes(Charset.forName("UTF-8"))));
 
         rggDialog = new RGGDialogPanel(xmlStream);

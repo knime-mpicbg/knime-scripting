@@ -101,7 +101,7 @@ public class TemplateUtils {
      * @param inputAttributes
      * @return adapted template
      */
-    public static String prepareScript(String templateText, Map<Integer, List<DataColumnSpec>> inputAttributes) {
+    public static String replaceRGGPlaceholders(String templateText, Map<Integer, List<DataColumnSpec>> inputAttributes) {
         if (templateText.contains(RGG_NUM_PARNAMES))
             templateText = templateText.replace(RGG_NUM_PARNAMES, concatNumParNames(inputAttributes.get(0)));
         if (templateText.contains(RGG_STR_PARNAMES))
