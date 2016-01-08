@@ -44,11 +44,11 @@ public class ScriptEditor extends JPanel {
 
     private DefaultListModel attributeListModel = new DefaultListModel();
 
-    ColNameReformater colNameReformater;
+    ColumnSupport colNameReformater;
     private ScriptProvider scriptProvider;
 
 
-    public ScriptEditor(ColNameReformater colNameReformater, final ScriptProvider scriptProvider) {
+    public ScriptEditor(ColumnSupport colNameReformater, final ScriptProvider scriptProvider) {
         this.colNameReformater = colNameReformater;
         this.scriptProvider = scriptProvider;
 

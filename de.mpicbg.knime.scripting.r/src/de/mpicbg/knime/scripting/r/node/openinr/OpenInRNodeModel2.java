@@ -19,6 +19,7 @@ import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -35,7 +36,7 @@ public class OpenInRNodeModel2 extends AbstractScriptingNodeModel {
      * Constructor for the node model.
      */
     protected OpenInRNodeModel2() {
-    	super(true, createPorts(3, 2,3), createPorts(0));
+    	super(true, createPorts(3, 2,3), createPorts(0), new RColumnSupport());
     }
 
     /**

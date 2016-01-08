@@ -2,7 +2,7 @@ package de.mpicbg.knime.scripting.r.node.snippet;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.knime.scripting.r.RColNameReformater;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
@@ -20,7 +20,7 @@ public class RSnippetNodeDialog extends ScriptingNodeDialog {
      * @param useTemplateRepository
      */
     public RSnippetNodeDialog(String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new RColNameReformater(), useTemplateRepository);
+        super(defaultScript, new RColumnSupport(), useTemplateRepository);
     }
     
     /**
@@ -34,7 +34,7 @@ public class RSnippetNodeDialog extends ScriptingNodeDialog {
     		boolean useTemplateRepository, 
     		boolean useOpenIn,
     		boolean useChunkSettings) {
-		super(defaultScript, new RColNameReformater(), useTemplateRepository, useOpenIn, useChunkSettings);
+		super(defaultScript, new RColumnSupport(), useTemplateRepository, useOpenIn, useChunkSettings);
 	}
 
     /**

@@ -62,10 +62,12 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
     private ScriptTemplate hardwiredTemplate = null;
     private String contextAwareHWTemplateText;
+    
+    protected ColumnSupport m_colSupport = null;
 
 
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, true, true, true);
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
+    	this(inPorts, outPorts, colSupport, true, true, true);
     }
     
     /**
@@ -76,11 +78,13 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * @param useOpenIn
      * @param useChunkSettings
      */
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts,
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport,
     		boolean useScriptSettings,
     		boolean useOpenIn,
     		boolean useChunkSettings) {
     	super(inPorts, outPorts, true);
+    	
+    	this.m_colSupport = colSupport;
     	
         if(useScriptSettings) {
         	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
@@ -95,8 +99,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         }
     }
 
-	public AbstractScriptingNodeModel(boolean useChunkSettings, PortType[] inPorts, PortType[] outPorts) {
-		this(inPorts, outPorts, false, true, useChunkSettings);
+	public AbstractScriptingNodeModel(boolean useChunkSettings, PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
+		this(inPorts, outPorts, colSupport, false, true, useChunkSettings);
 	}
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
@@ -203,7 +207,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
     protected void adaptHardwiredTemplateToContext(PortObjectSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData, m_colSupport);
             contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }
@@ -211,7 +215,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
     protected void adaptHardwiredTemplateToContext(DataTableSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData, m_colSupport);
             contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }

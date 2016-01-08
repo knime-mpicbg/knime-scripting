@@ -33,7 +33,7 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
     protected IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
     protected AbstractPythonScriptingNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports);
+        super(inPorts, outports, new PythonColumnSupport());
     }
 
     protected void prepareScript(Writer writer, boolean useScript) throws IOException {

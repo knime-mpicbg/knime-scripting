@@ -95,7 +95,12 @@ public class TemplateUtils {
         return sb.toString();
     }
 
-
+    /**
+     * replace RGG-placeholder with input specific data
+     * @param templateText
+     * @param inputAttributes
+     * @return adapted template
+     */
     public static String prepareScript(String templateText, Map<Integer, List<DataColumnSpec>> inputAttributes) {
         if (templateText.contains(RGG_NUM_PARNAMES))
             templateText = templateText.replace(RGG_NUM_PARNAMES, concatNumParNames(inputAttributes.get(0)));
@@ -109,11 +114,22 @@ public class TemplateUtils {
             templateText = templateText.replace(RGG_CAT_PARNAMES, concatCatParNames(inputAttributes.get(0)));
         if (templateText.contains(RGG_PARNAMES))
             templateText = templateText.replace(RGG_PARNAMES, concatParNames(inputAttributes.get(0)));
+        
+        // check if DOMAIN placeholder has to be replaced
+        // TODO: enable for two or more inputs
+        Pattern pattern = Pattern.compile(RGG_DOMAIN);
+        Matcher matcher = pattern.matcher(templateText);
+        if (matcher.find()) 
+        	templateText = replaceDomains(templateText, inputAttributes.get(0));
+        
+        // done, if there is only a single input
+        if(inputAttributes.size() == 1)
+        	return templateText;
 
         // now replace the parameters for scripting nodes that have several inputs and need to distinguish between those
         for (int inputIndex = 0; inputIndex < 2; inputIndex++) {
+        	
             List<DataColumnSpec> tableInputModel = inputAttributes.get(inputIndex);
-
             int enduserIndex = inputIndex + 1;
 
             if (templateText.contains(createInputSpecificVarPattern(enduserIndex, RGG_NUM_PARNAMES)))
@@ -129,14 +145,17 @@ public class TemplateUtils {
                 templateText = templateText.replace(createInputSpecificVarPattern(enduserIndex, RGG_PARNAMES), concatParNames(tableInputModel));
         }
 
-
-        if (templateText.contains("$$$DOMAIN"))
-            templateText = replaceDomains(templateText, inputAttributes.get(0));
-
         return templateText;
     }
 
-
+    /**
+     * returns rgg-placeholder for multiple inputs
+     * like $$$NUM_ATTRIBUTES_1$$$
+     * note: replacement is a bit fishy but works as long as placeholder defaults end with 'S$$$'
+     * @param enduserIndex - input table index starting with 1
+     * @param basePattern - default placeholder string
+     * @return adapted placeholder string
+     */
     private static String createInputSpecificVarPattern(int enduserIndex, String basePattern) {
         return basePattern.replace("S$", "S_" + enduserIndex + "$");
     }

@@ -20,6 +20,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
@@ -37,7 +38,8 @@ public class ConvertToTableNodeModel2 extends AbstractScriptingNodeModel {
 	 * constructor
 	 */
     public ConvertToTableNodeModel2() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), true, true, true);
+        super(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), 
+        		new RColumnSupport(), true, true, true);
     }
 
     /**

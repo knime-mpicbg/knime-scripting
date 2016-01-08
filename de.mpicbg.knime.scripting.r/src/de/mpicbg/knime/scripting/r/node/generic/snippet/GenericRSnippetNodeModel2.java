@@ -17,6 +17,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
@@ -51,7 +52,7 @@ public class GenericRSnippetNodeModel2 extends AbstractScriptingNodeModel {
      * @param useOpenIn 
      */
     public GenericRSnippetNodeModel2(PortType[] inPortTypes, PortType[] outPortTypes, boolean useOpenIn) {
-        super(inPortTypes, outPortTypes, true, useOpenIn, false);
+        super(inPortTypes, outPortTypes, new RColumnSupport(), true, useOpenIn, false);
     }
 
     /**

@@ -111,7 +111,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
      * @throws MatlabConnectionException 
      */
     protected AbstractMatlabScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-        super(inPorts, outPorts, true, false, true);
+        super(inPorts, outPorts, new MatlabColumnSupport(),true, false, true);
         
     	matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
     	tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);

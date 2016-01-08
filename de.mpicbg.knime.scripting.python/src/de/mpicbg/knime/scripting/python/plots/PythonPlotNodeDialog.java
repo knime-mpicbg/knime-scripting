@@ -1,7 +1,7 @@
 package de.mpicbg.knime.scripting.python.plots;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
-import de.mpicbg.knime.scripting.python.PythonColReformatter;
+import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
@@ -20,7 +20,7 @@ import javax.swing.*;
 public class PythonPlotNodeDialog extends ScriptingNodeDialog {
 
     public PythonPlotNodeDialog(String templateResources, String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new PythonColReformatter(), useTemplateRepository);
+        super(defaultScript, new PythonColumnSupport(), useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentNumber(PythonPlotNodeFactory.createPropFigureWidth(), "Width", 10));

@@ -14,6 +14,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
@@ -30,7 +31,8 @@ public class ConvertToGenericRModel2 extends AbstractScriptingNodeModel {
 	 * constructor
 	 */
     public ConvertToGenericRModel2() {
-        super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class), false, false, true);
+        super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class), 
+        		new RColumnSupport(), false, false, true);
     }
 
     /**

@@ -78,9 +78,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     // the two main user interface elements: the template editor/configurator and the template repository browser
     private ScriptProvider scriptProvider;
     public ScriptTemplateWizard templateWizard;
-
-
-
 	
 
     /**
@@ -92,8 +89,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     /**
      * New pane for configuring ScriptedNode node dialog
      */
-    public ScriptingNodeDialog(String defaultScript, ColNameReformater colNameReformater, boolean enableTemplateRepository) {
-        this(defaultScript, colNameReformater, enableTemplateRepository, true, true);
+    public ScriptingNodeDialog(String defaultScript, ColumnSupport colSupport, boolean enableTemplateRepository) {
+        this(defaultScript, colSupport, enableTemplateRepository, true, true);
     }
 
     /**
@@ -105,14 +102,14 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * @param useChunkSettings - true, if chunk settings should be available
      */
     public ScriptingNodeDialog(String defaultScript,
-    		ColNameReformater colNameReformater,
+    		ColumnSupport colSupport,
 			boolean enableTemplateRepository, 
 			boolean useOpenExternal,
 			boolean useChunkSettings) {
     	// set default script
     	this.defaultScript = defaultScript;
         // construct the panel for script loading/authoring
-        scriptProvider = new ScriptProvider(colNameReformater, isReconfigurable());       
+        scriptProvider = new ScriptProvider(colSupport, isReconfigurable());       
         this.m_provideOpenInOption = useOpenExternal;
         this.m_enableTemplateRepository = enableTemplateRepository;
         this.m_provideOptionsTab = useChunkSettings;

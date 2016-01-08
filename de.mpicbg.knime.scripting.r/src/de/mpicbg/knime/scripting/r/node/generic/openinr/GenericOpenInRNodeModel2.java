@@ -12,6 +12,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeModel2;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
@@ -37,7 +38,8 @@ public class GenericOpenInRNodeModel2 extends AbstractScriptingNodeModel {
      * constructor: 1 R Port input, no output
      */
 	protected GenericOpenInRNodeModel2() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0], false, false, false);
+        super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0], 
+        		new RColumnSupport(), false, false, false);
     }
    
 	/**

@@ -80,13 +80,13 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 
     protected GroovyScriptNodeModel() {
         //super(2, 1, 1, 2);
-        super(createPorts(2, 1, 2), createPorts(1));
+        super(createPorts(2, 1, 2), createPorts(1), new GroovyColumnSupport());
     }
 
 
     protected GroovyScriptNodeModel(int nrInDataPorts, int nrOutDataPorts) {
         //super(nrInDataPorts, nrOutDataPorts);
-    	super(createPorts(nrInDataPorts), createPorts(nrOutDataPorts));
+    	super(createPorts(nrInDataPorts), createPorts(nrOutDataPorts), new GroovyColumnSupport());
     }
 
     private ClassLoader createClassLoader() throws MalformedURLException {

@@ -32,6 +32,7 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
@@ -86,7 +87,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
      * This constructor just needs to be used if a plot node should have additional data table outputs.
      */
     public AbstractRPlotNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports);
+        super(inPorts, outports, new RColumnSupport());
         
         this.addModelSetting(CFG_HEIGHT, createHeightSM());
         this.addModelSetting(CFG_WIDTH, createWidthSM());

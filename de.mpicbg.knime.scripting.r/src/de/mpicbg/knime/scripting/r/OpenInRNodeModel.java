@@ -35,7 +35,7 @@ public class OpenInRNodeModel extends AbstractScriptingNodeModel {
      * Constructor for the node model.
      */
     protected OpenInRNodeModel() {
-        super(createPorts(3, 2, 3), createPorts(0));
+        super(createPorts(3, 2, 3), createPorts(0), new RColumnSupport());
     }
 
 

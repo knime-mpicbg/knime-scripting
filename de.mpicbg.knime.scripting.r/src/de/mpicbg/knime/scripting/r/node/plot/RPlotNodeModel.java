@@ -67,10 +67,18 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 		// create connection
         RConnection connection = RUtils.createConnection();
         
-        // try to execute the node, close connection if anything fails and pass through the error
-        BufferedDataTable outTable = null;
+        // try to push data, close connection if anything fails and pass through the error
         try {
-        	outTable = transferAndEvaluate(castToBDT(inData), exec, connection);
+        	transferAndParse(castToBDT(inData), exec, connection);
+        	
+        	adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
+        	createFigure(connection);
+        	
+        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+        	if(warningMessages.size() > 0) 
+        		setWarningMessage("R-script produced " + warningMessages.size() + 
+        				" warnings. See R-console view for further details");
+        	
         } catch (Exception e) {
 			if(connection.isConnected()) {
 				connection.close();
@@ -79,25 +87,8 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 		}
 
 
-
-        // 1) convert exampleSet into data-frame and put into the r-workspace
-        try {
-        	RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
-
-        	adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-        	createFigure(connection);
-        
-        	// if the script has been evaluated with 'evaluate', check for warnings. returns empty list otherwise
-        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-        } catch (Exception e) {
-        	connection.close();
-        	throw e;
-        }
-
         // close the connection to R
         connection.close();
-
 
         // Rerun the image
         PNGImageContent content;
@@ -114,7 +105,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         return outPorts;
 	}
 
-    private BufferedDataTable transferAndEvaluate(BufferedDataTable[] inData, ExecutionContext exec,
+    private void transferAndParse(BufferedDataTable[] inData, ExecutionContext exec,
 			RConnection connection) throws KnimeScriptingException, RserveException, REXPMismatchException {
     	// check preferences
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
@@ -142,9 +133,6 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         // stop support !
         //rawScript = RUtils.supportOldVarNames(rawScript);   
         RUtils.parseScript(connection, script);
-        
-        
-		return null;
 	}
 
 

@@ -20,6 +20,7 @@ import org.rosuda.REngine.Rserve.RserveException;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -40,7 +41,8 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
      * @param numOutputs
      */
     public RSnippetNodeModel(int numInputs, int numOutputs) {
-        super(createPorts(numInputs), createPorts(numOutputs));
+        super(createPorts(numInputs), createPorts(numOutputs), new RColumnSupport());
+        this.m_colSupport = new RColumnSupport();
     }
 
 	/**

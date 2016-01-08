@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * @author Holger Brandl
  */
-public class ScriptProvider extends JPanel {
+public class ScriptProvider extends JPanel{
 
     public static final String SCRIPT_EDITOR = "script_editor";
     public static final String TEMPLATE_DIALOG = "template_ui";
@@ -31,12 +31,16 @@ public class ScriptProvider extends JPanel {
     // the script (which may come along with user interface description or not) currently used by this script provider
     private ScriptTemplate template;
 
-    // the 2 main UI containers: a smple editor and an rgg-based visual script configurator
+    // the 2 main UI containers: a simple editor and an rgg-based visual script configurator
     public ScriptEditor scriptEditor;
     public TemplateConfigurator templateConfigurator;
+    
+    ColumnSupport m_colSupport;
 
-
-    public ScriptProvider(ColNameReformater colNameReformater, boolean isReconfigurable) {
+    public ScriptProvider(ColumnSupport colNameReformater, boolean isReconfigurable) {
+    	
+    	this.m_colSupport = colNameReformater;
+    	
         setLayout(new ResizableCardLayout());
 
         scriptEditor = new ScriptEditor(colNameReformater, this);
@@ -68,17 +72,17 @@ public class ScriptProvider extends JPanel {
      */
     public void updateInputModel(PortObjectSpec[] specs) throws NotConfigurableException {
 
-        Map<Integer, List<DataColumnSpec>> inputModel = reshapeInputStructure(specs);
+        Map<Integer, List<DataColumnSpec>> inputModel = reshapeInputStructure(specs, m_colSupport);
 
         scriptEditor.updateInputModel(inputModel);
         templateConfigurator.setNodeInputModel(inputModel);
     }
 
 
-    public static Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObject[] inData) {
+    public Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObject[] inData) {
         PortObjectSpec[] portSpecs = unwrapPortSpecs(inData);
 
-        return reshapeInputStructure(portSpecs);
+        return reshapeInputStructure(portSpecs, m_colSupport);
     }
 
 
@@ -91,13 +95,19 @@ public class ScriptProvider extends JPanel {
         return portSpecs;
     }
 
-
-    public static Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObjectSpec[] specs) {
+    /**
+     * creates a map with entries per input port, data table inputs get a R compatible columns as values
+     * (List of DataColumnSpecs)
+     * @param specs - array of input port specs
+     * @return map
+     */
+    public static Map<Integer, List<DataColumnSpec>> reshapeInputStructure(PortObjectSpec[] specs, ColumnSupport colSupport) {
         Map<Integer, List<DataColumnSpec>> inputModel = new HashMap<Integer, List<DataColumnSpec>>();
 
         for (int inputIndex = 0; inputIndex < specs.length; inputIndex++) {
             PortObjectSpec spec = specs[inputIndex];
 
+            // no data table: add to map and give null as value
             if (!(spec instanceof DataTableSpec)) {
                 inputModel.put(inputIndex, null);
                 continue;
@@ -110,17 +120,10 @@ public class ScriptProvider extends JPanel {
             for (int colIndex = 0; colIndex < tableSpec.getNumColumns(); colIndex++) {
                 DataColumnSpec cspec = tableSpec.getColumnSpec(colIndex);
                 DataType type = cspec.getType();
-
-                if (type.isCompatible(IntValue.class)) {
-                    compatibleColSpecs.add(cspec);
-                } else if (type.isCompatible(DoubleValue.class)) {
-                    compatibleColSpecs.add(cspec);
-                } else if (type.isCompatible(StringValue.class)) {
-                    compatibleColSpecs.add(cspec);
-                }
+                
+                if(colSupport.isSupported(type))
+                	compatibleColSpecs.add(cspec);
             }
-
-
             inputModel.put(inputIndex, compatibleColSpecs);
         }
         return inputModel;

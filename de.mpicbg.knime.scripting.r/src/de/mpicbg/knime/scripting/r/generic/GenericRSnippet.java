@@ -3,6 +3,7 @@ package de.mpicbg.knime.scripting.r.generic;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
@@ -41,7 +42,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
 
     protected GenericRSnippet(PortType[] inPortTypes, PortType[] outPortTypes) {
-        super(inPortTypes, outPortTypes);
+        super(inPortTypes, outPortTypes, new RColumnSupport());
     }
 
     /**

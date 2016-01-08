@@ -2,7 +2,7 @@ package de.mpicbg.knime.scripting.r.node.plot;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.knime.scripting.r.RColNameReformater;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -26,7 +26,7 @@ public class RPlotNodeDialog extends ScriptingNodeDialog {
 	}
 
 	public RPlotNodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
-		super(defaultScript, new RColNameReformater(), enableTemplateRepository, enableOpenExternal, true);
+		super(defaultScript, new RColumnSupport(), enableTemplateRepository, enableOpenExternal, true);
 		
 		SettingsModelString fileSM = AbstractRPlotNodeModel.createOutputFileSM();
 		SettingsModelBoolean overwriteSM = AbstractRPlotNodeModel.createOverwriteSM();
