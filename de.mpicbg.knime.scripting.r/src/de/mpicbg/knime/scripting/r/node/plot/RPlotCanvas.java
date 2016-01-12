@@ -106,7 +106,7 @@ public class RPlotCanvas extends JPanel {
 
             String script = plotModel.prepareScript();
 
-            Image image = RUtils.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
+            Image image = AbstractRPlotNodeModel.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
 
             connection.close();
 

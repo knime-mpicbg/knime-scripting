@@ -113,15 +113,15 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
     	
     	// push color/size/shape model to R
-		RUtils.pushColorModelToR(inSpec, connection, exec);
-		RUtils.pushShapeModelToR(inSpec, connection, exec);
-		RUtils.pushSizeModelToR(inSpec, connection, exec);
+		pushColorModelToR(inSpec, connection, exec);
+		pushShapeModelToR(inSpec, connection, exec);
+		pushSizeModelToR(inSpec, connection, exec);
 		
 		// push flow variables to R
-		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
+		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         // CONVERT input table into data-frame and put into the r-workspace
-        RUtils.pushToR(inData, connection, exec, chunkInSize);
+        pushToR(inData, connection, exec, chunkInSize);
         
         exec.setMessage("Evaluate R-script (cannot be cancelled)");
 
@@ -130,7 +130,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
         // stop support !
         //rawScript = RUtils.supportOldVarNames(rawScript);   
-        RUtils.parseScript(connection, script);
+        parseScript(connection, script);
 	}
 
 
@@ -140,12 +140,12 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		try {
+		/*try {
 			String rawScript = prepareScript();
 			RUtils.openInR(inData, exec, rawScript, logger);   
 			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 		} catch (REXPMismatchException | IOException | REngineException e) {
 			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}	
+		}	*/
 	}
 }

@@ -65,7 +65,6 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     
     protected ColumnSupport m_colSupport = null;
 
-
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
     	this(inPorts, outPorts, colSupport, true, true, true);
     }
@@ -99,9 +98,16 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         }
     }
 
-	public AbstractScriptingNodeModel(boolean useChunkSettings, PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
-		this(inPorts, outPorts, colSupport, false, true, useChunkSettings);
+	public AbstractScriptingNodeModel(ScriptingModelConfig cfg) {
+		this(
+				cfg.getM_inPorts(), 
+				cfg.getM_outPorts(), 
+				cfg.getM_colSupport(), 
+				cfg.isM_useScriptSettings(),
+				cfg.isM_useOpenIn(),
+				cfg.isM_useChunkSettings());
 	}
+
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
         // note we clone it here as it might be (and will be in most cases) an instance variable in the node factory.
@@ -322,6 +328,16 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 		
 		return inTables.toArray(new BufferedDataTable[inTables.size()]);
 	}
+	
+    /**
+     * cast a PortObjects into a BufferedDataTables
+     * @param inData
+     * @return BufferedDataTable or null
+     */
+	public static BufferedDataTable castToBDT(PortObject inData) {
+		if(inData instanceof BufferedDataTable) return (BufferedDataTable) inData;
+		return null;
+	}
 
 	/**
 	 * ensure UTF-8 encoding
@@ -332,4 +348,6 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         String encodedString = new String(stringValue.getBytes(StandardCharsets.UTF_8));
         return encodedString.replace("\r","");
     }
+
+
 }

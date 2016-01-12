@@ -1,6 +1,6 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 
 import org.knime.core.node.NodeDialogPane;
@@ -47,7 +47,7 @@ public class GenericRSnippetSourceFactory
     @Override
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);
-        return new RSnippetNodeDialog(RUtils.CFG_SCRIPT_DFT, true);
+        return new RSnippetNodeDialog(AbstractRScriptingNodeModel.CFG_SCRIPT_DFT, true);
     }
 
 }

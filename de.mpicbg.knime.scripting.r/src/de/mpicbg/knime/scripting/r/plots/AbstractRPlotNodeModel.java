@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -32,6 +33,7 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
@@ -43,7 +45,7 @@ import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
  *
  * @author Holger Brandl
  */
-public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel {
+public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel {
 	
 	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
@@ -157,7 +159,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
 
         // create the image the script
         String script = prepareScript();
-        image = RUtils.createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
+        image = createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
         
         boolean enableFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
         // no need to save image to file ?
@@ -220,7 +222,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
 
         if (rWorkspaceFile == null) {
             // note: this 'R' is not a workspace variable name but a file suffix
-            rWorkspaceFile = File.createTempFile("genericR", "R");
+            rWorkspaceFile = File.createTempFile("genericR", ".RData");
         }
         return rWorkspaceFile;
     }
@@ -285,7 +287,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractScriptingNodeModel 
         if (rWorkspaceFile != null) {
             File f = new File(nodeDir, "pushtable.R");
 
-            RUtils.copyFile(rWorkspaceFile, f);
+            Files.copy(rWorkspaceFile.toPath(), f.toPath());
         }
 
         if (image != null) {

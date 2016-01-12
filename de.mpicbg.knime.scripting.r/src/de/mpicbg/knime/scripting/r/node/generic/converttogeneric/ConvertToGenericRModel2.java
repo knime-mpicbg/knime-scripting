@@ -13,7 +13,9 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
@@ -25,14 +27,21 @@ import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
  *
  * @author Antje Janosch
  */
-public class ConvertToGenericRModel2 extends AbstractScriptingNodeModel {
+public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
+	
+	private static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), // 1 data table input
+			createPorts(1, RPortObject.TYPE, RPortObject.class), 			// 1 generic output
+			new RColumnSupport(), 
+			false, 	// no script
+			false, 	// no open in R
+			true);	// use chunk settings
 
 	/**
 	 * constructor
 	 */
     public ConvertToGenericRModel2() {
-        super(createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), createPorts(1, RPortObject.TYPE, RPortObject.class), 
-        		new RColumnSupport(), false, false, true);
+        super(nodeModelConfig);
     }
 
     /**
@@ -61,15 +70,15 @@ public class ConvertToGenericRModel2 extends AbstractScriptingNodeModel {
 
         try {
         	// push color/size/shape model to R
-    		RUtils.pushColorModelToR(inSpec, connection, exec);
-    		RUtils.pushShapeModelToR(inSpec, connection, exec);
-    		RUtils.pushSizeModelToR(inSpec, connection, exec);
+    		pushColorModelToR(inSpec, connection, exec);
+    		pushShapeModelToR(inSpec, connection, exec);
+    		pushSizeModelToR(inSpec, connection, exec);
     		
     		// push flow variables to R
-    		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
+    		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         	// convert the data and push them to R
-        	RUtils.pushToR(inTables, connection, exec, chunkInSize);
+        	pushToR(inTables, connection, exec, chunkInSize);
         	
         	exec.setMessage("Save R-workspace (cannot be cancelled)");
 

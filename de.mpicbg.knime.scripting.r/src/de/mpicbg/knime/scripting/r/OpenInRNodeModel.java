@@ -28,7 +28,7 @@ import java.util.Map;
  * @author Holger Brandl (MPI-CBG)
  * @deprecated use {@link OpenInRNodeModel2} instead.
  */
-public class OpenInRNodeModel extends AbstractScriptingNodeModel {
+public class OpenInRNodeModel extends AbstractRScriptingNodeModel {
 
 
     /**
@@ -80,7 +80,7 @@ public class OpenInRNodeModel extends AbstractScriptingNodeModel {
             
             try {
 
-            Map<String, Object> pushTable = RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+            Map<String, Object> pushTable = pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
             // save the work-space to a temporary file and open R
 

@@ -11,6 +11,7 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -23,7 +24,7 @@ import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
  *
  * @author Holger Brandl (MPI-CBG)
  */
-public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
+public class GenericOpenInRNodeModel extends AbstractRScriptingNodeModel {
 
 	/* (non-Javadoc)
 	 * @see de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel#hasOutput()
@@ -60,7 +61,7 @@ public class GenericOpenInRNodeModel extends AbstractScriptingNodeModel {
         try {
         // push incoming data to R server
         logger.info("Pushing inputs to R...");
-        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
         
         // save workspace file and return it to local machine
         rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_INVAR_BASE_NAME);

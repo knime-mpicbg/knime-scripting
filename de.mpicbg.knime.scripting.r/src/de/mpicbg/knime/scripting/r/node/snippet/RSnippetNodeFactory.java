@@ -4,7 +4,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node.
@@ -51,7 +51,7 @@ public class RSnippetNodeFactory extends NodeFactory<RSnippetNodeModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RSnippetNodeDialog(RUtils.CFG_SCRIPT_DFT, true);
+        return new RSnippetNodeDialog(AbstractRScriptingNodeModel.CFG_SCRIPT_DFT, true);
     }
 }
 

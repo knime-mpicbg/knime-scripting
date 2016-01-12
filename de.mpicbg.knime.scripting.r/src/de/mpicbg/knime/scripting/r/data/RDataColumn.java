@@ -36,7 +36,9 @@ import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
 
-import de.mpicbg.knime.scripting.r.RUtils.RType;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel.RType;
+
+
 
 /**
  * <p>

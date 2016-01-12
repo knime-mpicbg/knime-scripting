@@ -68,7 +68,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
-	        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+	        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
@@ -94,12 +94,12 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		try {
+		/*try {
 			String rawScript = prepareScript();
-			RUtils.openInR(inData, exec, rawScript, logger);   
+			openInR(inData, exec, rawScript, logger);   
 			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 		} catch (REXPMismatchException | IOException | REngineException e) {
 			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}
+		}*/
 	}
 }

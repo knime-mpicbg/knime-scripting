@@ -19,6 +19,7 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -30,7 +31,7 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  *
  * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
-public class RSnippetNodeModel extends AbstractScriptingNodeModel {
+public class RSnippetNodeModel extends AbstractRScriptingNodeModel {
 
     public static final String R_INVAR_BASE_NAME = "kIn";
     public static final String R_OUTVAR_BASE_NAME = "rOut";
@@ -51,9 +52,9 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
     @Override
     public String getDefaultScript() {
     	if(this.getNrInPorts() > 1)
-    		return RUtils.CFG_SCRIPT2_DFT;
+    		return CFG_SCRIPT2_DFT;
     	else
-    		return RUtils.CFG_SCRIPT_DFT;
+    		return CFG_SCRIPT_DFT;
     }
 
     /**
@@ -105,15 +106,15 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
         int chunkOutSize = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_OUT)).getIntValue();
     	
     	// push color/size/shape model to R
-		RUtils.pushColorModelToR(inSpec, connection, exec);
-		RUtils.pushShapeModelToR(inSpec, connection, exec);
-		RUtils.pushSizeModelToR(inSpec, connection, exec);
+		pushColorModelToR(inSpec, connection, exec);
+		pushShapeModelToR(inSpec, connection, exec);
+		pushSizeModelToR(inSpec, connection, exec);
 		
 		// push flow variables to R
-		RUtils.pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
+		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         // CONVERT input table into data-frame and put into the r-workspace
-        RUtils.pushToR(inData, connection, exec, chunkInSize);
+        pushToR(inData, connection, exec, chunkInSize);
         
         exec.setMessage("Evaluate R-script (cannot be cancelled)");
 
@@ -122,13 +123,13 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
         // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
         // stop support !
         //rawScript = RUtils.supportOldVarNames(rawScript);   
-        RUtils.parseScript(connection, script);
+        parseScript(connection, script);
 
         // EVALUATE script
         if(useEvaluate) {
         	// parse and run script
         	// evaluation list, can be used to create a console view, throws first R-error-message
-        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(script, connection);
+        	REXPGenericVector knimeEvalObj = evaluateScript(script, connection);
         	// check for warnings
         	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
         	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
@@ -136,7 +137,7 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
 
         } else {
         	// parse and run script
-        	RUtils.evalScript(connection, script);     	
+        	evalScript(connection, script);     	
         }
 
         // CHECK if result data frame is present
@@ -147,24 +148,31 @@ public class RSnippetNodeModel extends AbstractScriptingNodeModel {
         	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
         
         // EXTRACT output data-frame from R
-        BufferedDataTable outTable = RUtils.pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec, chunkOutSize);
+        BufferedDataTable outTable = pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec, chunkOutSize);
 		return outTable;
+	}
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		super.openInR(inData, exec);	
 	}
 
     /**
      * {@inheritDoc}
      */
-	@Override
+/*	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
 		try {
 			String rawScript = prepareScript();
-			RUtils.openInR(inData, exec, rawScript, logger);   
+			openInR(rawScript, logger, );   
 			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 		} catch (REXPMismatchException | IOException | REngineException e) {
 			throw new KnimeScriptingException("Failed to open in R\n" + e);
 		}		
-	}
+	}*/
+	
+	
 	
 
 

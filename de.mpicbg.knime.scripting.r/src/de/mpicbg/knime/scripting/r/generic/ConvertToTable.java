@@ -2,6 +2,8 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
@@ -23,7 +25,7 @@ import java.io.File;
  * @author Holger Brandl
  * {@deprecated}
  */
-public class ConvertToTable extends AbstractNodeModel {
+public class ConvertToTable extends AbstractRScriptingNodeModel {
 
     private File rWorkspaceFile;
 
@@ -42,7 +44,7 @@ public class ConvertToTable extends AbstractNodeModel {
 
         try {
         // 1) restore the workspace in a different server session
-        RUtils.pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
         // 2) Make sure that the R-object in the persistied workspace is of type data-frame
         boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());
@@ -85,4 +87,18 @@ public class ConvertToTable extends AbstractNodeModel {
     protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
         throw new RuntimeException("fake implementation: This method should be never called");
     }
+
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		
+	}
 }

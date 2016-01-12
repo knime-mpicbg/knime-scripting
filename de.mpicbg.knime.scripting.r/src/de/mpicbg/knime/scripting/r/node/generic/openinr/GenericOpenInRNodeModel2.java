@@ -11,7 +11,9 @@ import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeModel2;
@@ -24,7 +26,23 @@ import de.mpicbg.knime.scripting.r.port.RPortObject;
  *
  * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
-public class GenericOpenInRNodeModel2 extends AbstractScriptingNodeModel {
+public class GenericOpenInRNodeModel2 extends AbstractRScriptingNodeModel {
+	
+	private static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
+			new PortType[0], 										// no output
+			new RColumnSupport(), 
+			false, 	// no script		
+			false,	// no open in R
+			false);	// no chunks
+
+
+    /**
+     * constructor: 1 R Port input, no output
+     */
+	protected GenericOpenInRNodeModel2() {
+        super(nodeModelConfig);
+    }
 	
 	/**
 	 * {@inheritDoc}
@@ -32,14 +50,6 @@ public class GenericOpenInRNodeModel2 extends AbstractScriptingNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return new PortObjectSpec[0];
-    }
-
-    /**
-     * constructor: 1 R Port input, no output
-     */
-	protected GenericOpenInRNodeModel2() {
-        super(createPorts(1, RPortObject.TYPE, RPortObject.class), new PortType[0], 
-        		new RColumnSupport(), false, false, false);
     }
    
 	/**
@@ -56,7 +66,7 @@ public class GenericOpenInRNodeModel2 extends AbstractScriptingNodeModel {
         try {
         	// push incoming data to R server
         	logger.info("Pushing inputs to R...");
-        	RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        	pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
         	
         	// write a local workspace file which contains the input table of the node
         	if (rWorkspaceFile == null) {

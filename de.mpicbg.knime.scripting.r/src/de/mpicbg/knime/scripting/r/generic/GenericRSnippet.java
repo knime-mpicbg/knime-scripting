@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
  * @author Holger Brandl
  * {@deprecated}
  */
-public class GenericRSnippet extends AbstractScriptingNodeModel {
+public class GenericRSnippet extends AbstractRScriptingNodeModel {
 
     private File rWorkspaceFile;
 
@@ -57,7 +58,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
 
     public String getDefaultScript() {
-        return RUtils.CFG_SCRIPT_DFT;
+        return AbstractRScriptingNodeModel.CFG_SCRIPT_DFT;
     }
     
     /**
@@ -72,19 +73,19 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 
         try {
 	        // 1) restore the workspace in a different server session
-	        RUtils.pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+	        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
 	        String script = prepareScript();
 	        String fixedScript = fixEncoding(script);
 	        
-	        RUtils.parseScript(connection, fixedScript);
+	        parseScript(connection, fixedScript);
 	        
 	        if(useEvaluate) {
 	        	// parse and run script
 	        	// evaluation list, can be used to create a console view, throws first R-error-message
-	        	REXPGenericVector knimeEvalObj = RUtils.evaluateScript(fixedScript, connection);
+	        	REXPGenericVector knimeEvalObj = evaluateScript(fixedScript, connection);
 	        	// check for warnings
 	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
 	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
@@ -92,7 +93,7 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 	
 	        } else {
 	        	// parse and run script
-	        	RUtils.evalScript(connection, fixedScript);     	
+	        	evalScript(connection, fixedScript);     	
 	        }
 	
 	
@@ -118,13 +119,13 @@ public class GenericRSnippet extends AbstractScriptingNodeModel {
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		try {
+		/*try {
 			String rawScript = prepareScript();
-			RUtils.openInR(inData, exec, rawScript, logger);   
+			openInR(inData, exec, rawScript, logger);   
 			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
 		} catch (REXPMismatchException | IOException | REngineException e) {
 			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}
+		}*/
 		
 	}
 }

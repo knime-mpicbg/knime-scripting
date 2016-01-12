@@ -17,7 +17,9 @@ import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
@@ -29,14 +31,21 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  *
  * @author Antje Janosch (MPI-CBG)
  */
-public class OpenInRNodeModel2 extends AbstractScriptingNodeModel {
+public class OpenInRNodeModel2 extends AbstractRScriptingNodeModel {
 
+	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(3, 2,3), 	// 3 inputs, input 2 and 3 optional
+			createPorts(0), 		// no output
+			new RColumnSupport(), 	
+			false, 					// no script
+			true, 					// open in functionality
+			true);					// use chunk settings
 
     /**
      * Constructor for the node model.
      */
     protected OpenInRNodeModel2() {
-    	super(true, createPorts(3, 2,3), createPorts(0), new RColumnSupport());
+    	super(nodeModelConfig);
     }
 
     /**
@@ -79,7 +88,7 @@ public class OpenInRNodeModel2 extends AbstractScriptingNodeModel {
         // retrieve chunk settings and push input data to R
         int chunkIn = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue();
         int chunkInSize = RUtils.getChunkIn(chunkIn, castToBDT);
-        Map<String, Object> pushTable = RUtils.pushToR(castToBDT, connection, exec, chunkInSize);
+        Map<String, Object> pushTable = pushToR(castToBDT, connection, exec, chunkInSize);
 
         String allParams = pushTable.keySet().toString().replace("[", "").replace("]", "").replace(" ", "");
 
