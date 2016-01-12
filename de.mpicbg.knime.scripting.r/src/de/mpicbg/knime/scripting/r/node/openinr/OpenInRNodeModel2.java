@@ -38,7 +38,7 @@ public class OpenInRNodeModel2 extends AbstractRScriptingNodeModel {
 			createPorts(0), 		// no output
 			new RColumnSupport(), 	
 			false, 					// no script
-			true, 					// open in functionality
+			false, 					// open in functionality
 			true);					// use chunk settings
 
     /**
