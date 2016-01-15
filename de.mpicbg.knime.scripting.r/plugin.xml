@@ -122,7 +122,7 @@
     <extension
           point="org.knime.core.PortType">
        <portType
-             color="#FF0000"
+             color="#000000"
              hidden="false"
              name="de.mpicbg.knime.scripting.r.port.RPortType"
              objectClass="de.mpicbg.knime.scripting.r.port.RPortObject"
