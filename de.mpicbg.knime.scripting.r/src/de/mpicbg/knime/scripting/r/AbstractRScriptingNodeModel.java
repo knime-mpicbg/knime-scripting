@@ -1168,7 +1168,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
         		// parse and run script
         		evalScript(m_con, script);     	
         	}
-        } catch (RserveException | REXPMismatchException e) {
+        } catch (RserveException | REXPMismatchException | KnimeScriptingException e) {
         	closeRConnection();
         	throw new KnimeScriptingException("Failed to evaluate the script:\n" + e.getMessage());
         }

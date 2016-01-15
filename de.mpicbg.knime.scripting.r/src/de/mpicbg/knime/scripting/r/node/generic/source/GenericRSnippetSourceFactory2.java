@@ -26,7 +26,7 @@ public class GenericRSnippetSourceFactory2
 			new RColumnSupport(),
 			true,
 			false,
-			true);
+			false);
 
 	/**
 	 * {@inheritDoc}
