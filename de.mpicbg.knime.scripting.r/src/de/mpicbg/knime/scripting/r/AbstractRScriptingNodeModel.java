@@ -155,6 +155,8 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		int nInData = getNumberOfUsedInputPorts(inData, false);
 		int nInTables = getNumberOfUsedInputPorts(inData, true);
 		int gIdx = getGenericIndex(inPorts);
+		
+		pushFlowVariablesToR(getAvailableFlowVariables(), exec);
 
 		// capture all exception to close the R connection in that case
 		try {
@@ -886,7 +888,9 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	 * @param exec
 	 * @throws KnimeScriptingException 
 	 */
-	public void pushFlowVariablesToR(Map<String, FlowVariable> flowVariables, RConnection con, ExecutionContext exec) throws KnimeScriptingException {
+	public void pushFlowVariablesToR(Map<String, FlowVariable> flowVariables, ExecutionContext exec) throws KnimeScriptingException {
+		
+		assert m_con != null;
 
 		RList l = new RList();
 
@@ -917,7 +921,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		// push flow variables to R
 		try {
-			con.assign("knime.flow.in", new REXPGenericVector(l));
+			m_con.assign("knime.flow.in", new REXPGenericVector(l));
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push KNIME flow variables to R: " + e);
 		}
@@ -1035,6 +1039,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			rDFC.readDataFromR(con, m_con, exec, rOutName, chunkOutSize);
 		}
 
+		con.close();
 		closeRConnection();
 		return con.getTable();
 	}
