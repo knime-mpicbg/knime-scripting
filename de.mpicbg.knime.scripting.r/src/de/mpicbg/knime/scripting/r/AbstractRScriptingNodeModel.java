@@ -152,7 +152,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		// assign ports to R variable names
 		Map<String, PortObject> inPorts = createPortMapping(inData);
 
-		int nInData = getNumberOfUsedInputPorts(inData, false);
 		int nInTables = getNumberOfUsedInputPorts(inData, true);
 		int gIdx = getGenericIndex(inPorts);
 		
@@ -194,18 +193,26 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		assert m_con != null;
 		
-		int nGeneric = 0;
+		int nGeneric = getNumberOfGenericOutputPorts();
 		int nTables = getNumberOfTableOututPorts();
+		
+		if(nGeneric > 1) {
+			closeRConnection();
+			throw new KnimeScriptingException("Implementation error: Multiple RPorts are not allowed");
+		}
 		
 		PortObject[] outData = new PortObject[nTables + nGeneric];
 		
 		for(int i = 0; i < getNrOutPorts(); i++) {
 			PortType pType = this.getOutPortType(i);
 			
-			if(pType.equals(RPortObject.TYPE)) {
-				nGeneric++;
-				if(nGeneric > 1) 
-					throw new KnimeScriptingException("Implementation error: Multiple RPorts are not allowed");
+			if(pType.equals(RPortObject.TYPE)) {				
+				try {
+					outData[i] = createROutPort();
+				} catch (IOException | KnimeScriptingException e) {
+					closeRConnection();
+					throw new KnimeScriptingException("Failed to create workspace output:\n" + e.getMessage());
+				}
 			}
 			else if(pType.equals(BufferedDataTable.TYPE)) {
 				String outVarName = R_OUTVAR_BASE_NAME + (nTables > 1 ? i : "");
@@ -221,7 +228,18 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			}
 		}
 		
+		closeRConnection();		
 		return outData;
+	}
+
+	private PortObject createROutPort() throws IOException, KnimeScriptingException {
+		// write a local workspace file which contains the input table of the node
+		File rWorkspaceFile = null;
+    	rWorkspaceFile = File.createTempFile("genericR", ".RData");  
+    	RUtils.saveWorkspaceToFile(rWorkspaceFile, m_con, RUtils.getHost());
+    	
+    	PortObject outPort = new RPortObject(m_con, rWorkspaceFile);
+    	return outPort;
 	}
 
 	/**
@@ -268,6 +286,14 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		int count = 0;
 		for(int i = 0; i < getNrOutPorts(); i++)
 			if(getOutPortType(i).equals(BufferedDataTable.TYPE))
+				count ++;
+		return count;
+	}
+	
+	private int getNumberOfGenericOutputPorts() {
+		int count = 0;
+		for(int i = 0; i < getNrOutPorts(); i++)
+			if(getOutPortType(i).equals(RPortObject.TYPE))
 				count ++;
 		return count;
 	}
@@ -666,7 +692,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
 		} catch (RserveException e) {
-			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e);
+			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e.getMessage());
 		}
 		return;
 	}
@@ -728,7 +754,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
 		} catch (RserveException e) {
-			throw new KnimeScriptingException("Failed to push nominal shape model to R: " + e);
+			throw new KnimeScriptingException("Failed to push nominal shape model to R: " + e.getMessage());
 		}
 		return;
 	}
@@ -781,7 +807,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			con.voidEval(sizeModelFunction);
 		} catch (RserveException e) {
-			throw new KnimeScriptingException("Failed to push numeric size model to R: " + e);
+			throw new KnimeScriptingException("Failed to push numeric size model to R: " + e.getMessage());
 		}
 		return;     	
 	}
@@ -942,7 +968,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			RUtils.openWSFileInR(workspaceFile, rawScript); 
 		} catch (IOException | KnimeScriptingException e) {
 			closeRConnection();
-			throw new KnimeScriptingException("Failed to open in R\n" + e);
+			throw new KnimeScriptingException("Failed to open in R\n" + e.getMessage());
 		}    
 		exec.setProgress(1.0);
 		closeRConnection();

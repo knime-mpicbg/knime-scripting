@@ -1,32 +1,16 @@
 package de.mpicbg.knime.scripting.r.node.generic.converttotable;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.rosuda.REngine.REXP;
-import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPLogical;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REngineException;
-import org.rosuda.REngine.Rserve.RConnection;
 
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
-import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
-import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -36,10 +20,15 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  */
 public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
 	
-	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
-			createPorts(1, RPortObject.TYPE, RPortObject.class),
-			createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class),
-			new RColumnSupport(), true, true, true);
+	public static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(1, RPortObject.TYPE, RPortObject.class),				// 1 generic input
+			createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class),	// 1 KNIME table output
+			new RColumnSupport(), 
+			true, 		// use script
+			true, 		// provide open in R
+			true);		// use chunks
+	
+	public static final String GENERIC_TOTABLE_DFT = "rOut <- iris";
 
 	/**
 	 * constructor
@@ -57,10 +46,24 @@ public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
     	return new PortObjectSpec[]{(DataTableSpec) null};
     }
 
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		super.executeImpl(inData, exec);
+		runScript(exec);
+		return pullOutputFromR(exec);
+	}
+
+	@Override
+	public String getDefaultScript() {
+		return GENERIC_TOTABLE_DFT;
+	}
+	
+	
+
     /**
      * {@inheritDoc}
      */
-	@Override
+	/*@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
 		
 		boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
@@ -112,15 +115,13 @@ public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
         return new BufferedDataTable[]{dataTable};
 	}
 
-	/*@Override
+	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
 		super.openInR(inData, exec);
-	}*/
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-/*	@Override
+
+	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
 		try {
 			String rawScript = prepareScript();
