@@ -109,6 +109,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	/** enum for datatypes which can be pushed to R via R-serve */
 	public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
 
+	/** connection to R-server */
 	RConnection m_con = null;
 
 	/**
@@ -122,18 +123,41 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 	}
 
+	/**
+	 * @param inPorts
+	 * @param outPorts
+	 * @param rColumnSupport
+	 */
 	public AbstractRScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, RColumnSupport rColumnSupport) {
 		super(inPorts, outPorts, rColumnSupport);
 	}
 
+	/**
+	 * 
+	 * @param inPorts
+	 * @param outPorts
+	 */
 	public AbstractRScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
 		super(inPorts, outPorts, new RColumnSupport());
 	}
 
+	/**
+	 * constructor with node configuration object
+	 * @param nodeModelConfig
+	 */
 	public AbstractRScriptingNodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
 	}
 
+	/**
+	 * main method to push available input to R
+	 * NOTE: method does not close the connection in case of exceptions
+	 * 
+	 * @param inData
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 * @throws CanceledExecutionException
+	 */
 	protected void pushInputToR(PortObject[] inData, ExecutionContext exec) 
 			throws KnimeScriptingException, CanceledExecutionException {
 
@@ -175,11 +199,17 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 				}
 			}
 		} catch (KnimeScriptingException e) {
-			closeRConnection();
 			throw e;
 		}
 	}
 	
+	/**
+	 * main method to retrieve data from R to provide the output ports
+	 * NOTE: this method closes the connection in case of Exceptions
+	 * @param exec
+	 * @return	array of port objects
+	 * @throws KnimeScriptingException
+	 */
 	protected PortObject[] pullOutputFromR(ExecutionContext exec) 
 			throws KnimeScriptingException {
 		ScriptingModelConfig cfg = getNodeCfg();
@@ -196,6 +226,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		int nGeneric = getNumberOfGenericOutputPorts();
 		int nTables = getNumberOfTableOututPorts();
 		
+		// implementation does only allow 1 generic output port
 		if(nGeneric > 1) {
 			closeRConnection();
 			throw new KnimeScriptingException("Implementation error: Multiple RPorts are not allowed");
@@ -203,9 +234,11 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		
 		PortObject[] outData = new PortObject[nTables + nGeneric];
 		
+		// for each output port
 		for(int i = 0; i < getNrOutPorts(); i++) {
 			PortType pType = this.getOutPortType(i);
 			
+			// pull R workspace for generic port
 			if(pType.equals(RPortObject.TYPE)) {				
 				try {
 					outData[i] = createROutPort();
@@ -214,6 +247,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 					throw new KnimeScriptingException("Failed to create workspace output:\n" + e.getMessage());
 				}
 			}
+			// pull data frame(s) from R for data table port(s)
 			else if(pType.equals(BufferedDataTable.TYPE)) {
 				String outVarName = R_OUTVAR_BASE_NAME + (nTables > 1 ? i : "");
 				BufferedDataTable table = null;
@@ -232,18 +266,24 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return outData;
 	}
 
-	private PortObject createROutPort() throws IOException, KnimeScriptingException {
+	/**
+	 * retrieve R workspace to create RPortObject
+	 * @return new RPortObject
+	 * @throws IOException
+	 * @throws KnimeScriptingException
+	 */
+	private RPortObject createROutPort() throws IOException, KnimeScriptingException {
 		// write a local workspace file which contains the input table of the node
 		File rWorkspaceFile = null;
     	rWorkspaceFile = File.createTempFile("genericR", ".RData");  
     	RUtils.saveWorkspaceToFile(rWorkspaceFile, m_con, RUtils.getHost());
     	
-    	PortObject outPort = new RPortObject(m_con, rWorkspaceFile);
+    	RPortObject outPort = new RPortObject(m_con, rWorkspaceFile);
     	return outPort;
 	}
 
 	/**
-	 * push KNIME table and its properties to R
+	 * push one KNIME table and its properties to R
 	 * @param inTable
 	 * @param varName
 	 * @param exec
@@ -272,6 +312,12 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 	}
 
+	/**
+	 * counts input ports (or only table input ports) which are connected
+	 * @param inData
+	 * @param tablesOnly
+	 * @return
+	 */
 	private int getNumberOfUsedInputPorts(PortObject[] inData, boolean tablesOnly) {
 		int i = 0;
 		for(PortObject obj : inData)
@@ -282,6 +328,9 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return i;
 	}
 	
+	/**
+	 * @return number of KNIME table output ports
+	 */
 	private int getNumberOfTableOututPorts() {
 		int count = 0;
 		for(int i = 0; i < getNrOutPorts(); i++)
@@ -290,6 +339,9 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return count;
 	}
 	
+	/**
+	 * @return number of RPortObject output ports
+	 */
 	private int getNumberOfGenericOutputPorts() {
 		int count = 0;
 		for(int i = 0; i < getNrOutPorts(); i++)
@@ -314,13 +366,23 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 	/**
 	 * execute method needs to be implemented in sub nodes to create appropriate output
+	 * this method may be called to any push input to R
 	 */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
-		pushInputToR(inData, exec);	
+		try {
+			pushInputToR(inData, exec);	
+		} catch(KnimeScriptingException | CanceledExecutionException e) {
+			closeRConnection();
+		}
 		return null;	
 	}
 
+	/**
+	 * main method, called if the 'open external' option is checked
+	 * pushes the input to R and opens R externally <br/>
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException, CanceledExecutionException {
 		pushInputToR(inData, exec);
@@ -349,7 +411,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	}
 
 	/**
-	 * The values of the map are either files or (buffered)data tables.
+	 * The map stores the R-names as key and the BDT as value; in case of RPorts, the name is 'generic'
 	 * @param inObjects
 	 * @return
 	 * @throws KnimeScriptingException thrown if more than one generic input ports or unsupported port type
@@ -392,102 +454,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 
 		return portVarMapping;
-	}
-
-	/**
-	 * push all incoming KNIME-objects to R
-	 * @param inObjects
-	 * @param connection
-	 * @param exec 
-	 * @param chunkInSize 
-	 * @return
-	 * @throws KnimeScriptingException
-	 */
-	/*    public Map<String, Object> pushToR(PortObject[] inObjects, RConnection connection, ExecutionMonitor exec, int chunkInSize) throws KnimeScriptingException {
-        Map<String, Object> inputMapping = createPortMapping(inObjects);
-
-        double nInput = inputMapping.size();
-        exec.setMessage("Transfer to R");
-        ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
-
-        // first push the generic input (limited to one workspace input)
-        File rWorkspaceFile = getWorkspaceFile(inputMapping);
-        try {
-           // if(genPortMapping.size() > 0) RUtils.loadGenericInputs(genPortMapping, connection);
-        	if(rWorkspaceFile != null) RUtils.loadWorkspace(rWorkspaceFile, connection);
-        } catch (Throwable e) {
-            throw new KnimeScriptingException("Failed to convert generic node inputs into r workspace variables: " + e);
-        }
-
-        // second, push the table inputs
-        Map<String, BufferedDataTable> tablePortMapping = getDataTablePorts(inputMapping);
-        double nTables = tablePortMapping.size();
-        try {
-            if(tablePortMapping.size() > 0) loadTableInputs(connection, tablePortMapping, transferToExec.createSubProgress(nTables/nInput), chunkInSize);
-        } catch (Throwable e) {
-            throw new KnimeScriptingException("Failed to convert table node inputs into r workspace variables: " + e);
-        }
-        return inputMapping;
-    }*/
-
-	/**
-	 * delivers a workspace file. As the nodes do only support one workspace input port, return the first workspace file
-	 * @param inputMapping
-	 * @return map with generic input ports only
-	 */
-	private File getWorkspaceFile(Map<String, Object> inputMapping) {
-
-		for (String varName : inputMapping.keySet()) {
-			Object curValue = inputMapping.get(varName);
-			if (curValue instanceof File) {
-				return (File) curValue;
-			}
-
-		}
-		return null;
-	}
-
-	/**
-	 * TODO: comment and check code
-	 * @param inputMapping
-	 * @return
-	 */
-	private Map<String, BufferedDataTable> getDataTablePorts(Map<String, Object> inputMapping) {
-		TreeMap<String, BufferedDataTable> tablePortMapping = new TreeMap<String, BufferedDataTable>();
-
-		for (String varName : inputMapping.keySet()) {
-			Object curValue = inputMapping.get(varName);
-			if (curValue instanceof BufferedDataTable) {
-
-				tablePortMapping.put(varName, (BufferedDataTable) curValue);
-			}
-
-		}
-
-		return tablePortMapping;
-	}
-
-	/**
-	 * transfers KNIME tables to R
-	 * @param connection
-	 * @param tableMapping
-	 * @param exec
-	 * @param chunkInSize 
-	 * @throws REXPMismatchException
-	 * @throws RserveException
-	 * @throws CanceledExecutionException
-	 */
-	private void loadTableInputs(RConnection connection, Map<String, BufferedDataTable> tableMapping, ExecutionMonitor exec, int chunkInSize) throws REXPMismatchException, RserveException, CanceledExecutionException {
-		// transfer KNIME-tables to R
-		for (String varName : tableMapping.keySet()) {
-			BufferedDataTable input = tableMapping.get(varName);
-
-			if (input == null) {
-				throw new RuntimeException("null tables are not allowed in the table input mapping");
-			}
-
-			transferRDataContainer(exec.createSubProgress(1.0/tableMapping.size()), input, chunkInSize, connection, varName);           
-		}
 	}
 
 	/**
@@ -832,6 +798,15 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return null;
 	}
 
+	/**
+	 * evaluate script
+	 * 
+	 * @param connection
+	 * @param fixedScript
+	 * @throws RserveException
+	 * @throws KnimeScriptingException
+	 * @throws REXPMismatchException
+	 */
 	public static void evalScript(RConnection connection, String fixedScript)
 			throws RserveException, KnimeScriptingException,
 			REXPMismatchException {
@@ -845,6 +820,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 	/**
 	 * check for syntax errors
+	 * 
 	 * @param connection
 	 * @param fixedScript
 	 * @throws RserveException
@@ -910,7 +886,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	/**
 	 * input flow variables are pushed to R as knime.flow.in
 	 * @param flowVariables
-	 * @param con
 	 * @param exec
 	 * @throws KnimeScriptingException 
 	 */
@@ -953,6 +928,13 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 	}
 
+	/**
+	 * save workspace to file, open r with that file, put script into clipboard
+	 * NOTE: if there is an exception the connection will be closed
+	 * @param inData
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	public void openInR(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
 
 		assert m_con != null;
@@ -973,18 +955,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		exec.setProgress(1.0);
 		closeRConnection();
 	}
-
-
-	/*    public void openInR(String rawScript, NodeLogger logger, RConnection connection) 
-    		throws IOException, KnimeScriptingException {
-
-    	// save the work-space to a temporary file and open R
-    	File workspaceFile = File.createTempFile("openInR_", ".RData");    	
-    	RUtils.saveWorkspaceToFile(workspaceFile, connection, RUtils.getHost());
-
-    	logger.info("Spawning R-instance ...");
-    	RUtils.openWSFileInR(workspaceFile, rawScript);           
-    }*/
 
 	/**
 	 * this methods pulls the content from an R data frame and puts it into a BKNIME table
@@ -1070,8 +1040,16 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return con.getTable();
 	}
 
+	/**
+	 * retrieve the column types of an R data frame
+	 * @param numCols
+	 * @param connection
+	 * @param rOutName
+	 * @return
+	 * @throws RserveException
+	 * @throws REXPMismatchException
+	 */
 	private String[] getDataFrameColumnTypes(int numCols, RConnection connection, String rOutName) throws RserveException, REXPMismatchException {
-		// ((REXPString)connection.eval("sapply(" + rOutName + ", typeof)")).asStrings();
 		if(numCols == 1) {
 			return new String[]{((REXPString)connection.eval("sapply(" + rOutName + ", typeof)")).asString()};
 		} else {
@@ -1079,6 +1057,15 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 	}
 
+	/**
+	 * retrieve the columns names of an R data frame
+	 * @param numCols
+	 * @param connection
+	 * @param rOutName
+	 * @return
+	 * @throws RserveException
+	 * @throws REXPMismatchException
+	 */
 	private String[] getDataFrameColumnNames(int numCols, RConnection connection, String rOutName) throws RserveException, REXPMismatchException {
 		if(numCols == 1) {
 			return new String[]{((REXPString)connection.eval("names(" + rOutName + ")")).asString()};
@@ -1139,6 +1126,11 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		return Toolkit.getDefaultToolkit().createImage(xp.asBytes());
 	}
 
+	/**
+	 * main method to run the script (after pushing data and before pulling result data)
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
 		
 		assert m_con != null;
@@ -1151,9 +1143,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
         // PREPARE and parse script
         String script = prepareScript();
-        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-        // stop support !
-        //rawScript = RUtils.supportOldVarNames(rawScript);   
+ 
         try {
 			parseScript(m_con, script);
 		} catch (RserveException | KnimeScriptingException | REXPMismatchException e) {
