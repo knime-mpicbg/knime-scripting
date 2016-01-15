@@ -44,7 +44,7 @@ public class ConvertToTable extends AbstractRScriptingNodeModel {
 
         try {
         // 1) restore the workspace in a different server session
-        pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        //pushToR(inObjects, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 
         // 2) Make sure that the R-object in the persistied workspace is of type data-frame
         boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());

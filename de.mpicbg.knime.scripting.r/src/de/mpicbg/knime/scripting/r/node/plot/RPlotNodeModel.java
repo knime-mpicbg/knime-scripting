@@ -59,7 +59,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
     /**
      * {@inheritDoc}
      */
-	@Override
+	/*@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		logger.info("Render the R Plot");
@@ -103,14 +103,14 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
 
         return outPorts;
-	}
+	}*/
 
-    private void transferAndParse(BufferedDataTable[] inData, ExecutionContext exec,
+ /*   private void transferAndParse(BufferedDataTable[] inData, ExecutionContext exec,
 			RConnection connection) throws KnimeScriptingException, RserveException, REXPMismatchException {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
     	
     	// retrieve chunk settings
-        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
+        int chunkInSize = getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
     	
     	// push color/size/shape model to R
 		pushColorModelToR(inSpec, connection, exec);
@@ -121,7 +121,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
 		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         // CONVERT input table into data-frame and put into the r-workspace
-        pushToR(inData, connection, exec, chunkInSize);
+        //pushToR(inData, connection, exec, chunkInSize);
         
         exec.setMessage("Evaluate R-script (cannot be cancelled)");
 
@@ -131,7 +131,7 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         // stop support !
         //rawScript = RUtils.supportOldVarNames(rawScript);   
         parseScript(connection, script);
-	}
+	}*/
 
 
 	/**

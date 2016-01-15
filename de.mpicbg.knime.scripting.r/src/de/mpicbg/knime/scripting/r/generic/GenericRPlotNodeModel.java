@@ -68,7 +68,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
-	        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));

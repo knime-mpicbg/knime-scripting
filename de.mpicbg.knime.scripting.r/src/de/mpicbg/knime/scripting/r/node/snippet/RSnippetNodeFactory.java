@@ -18,7 +18,7 @@ public class RSnippetNodeFactory extends NodeFactory<RSnippetNodeModel> {
 	 */
     @Override
     public RSnippetNodeModel createNodeModel() {
-        return new RSnippetNodeModel(1, 1);
+        return new RSnippetNodeModel();
     }
     
     /**

@@ -26,52 +26,52 @@ public class ScriptingModelConfig {
 		// TODO Auto-generated constructor stub
 	}
 
-	public PortType[] getM_inPorts() {
+	public PortType[] getInPorts() {
 		return m_inPorts;
 	}
 
-	public void setM_inPorts(PortType[] m_inPorts) {
-		this.m_inPorts = m_inPorts;
+	public void setInPorts(PortType[] inPorts) {
+		this.m_inPorts = inPorts;
 	}
 
-	public PortType[] getM_outPorts() {
+	public PortType[] getOutPorts() {
 		return m_outPorts;
 	}
 
-	public void setM_outPorts(PortType[] m_outPorts) {
-		this.m_outPorts = m_outPorts;
+	public void setOutPorts(PortType[] outPorts) {
+		this.m_outPorts = outPorts;
 	}
 
-	public ColumnSupport getM_colSupport() {
+	public ColumnSupport getColSupport() {
 		return m_colSupport;
 	}
 
-	public void setM_colSupport(ColumnSupport m_colSupport) {
-		this.m_colSupport = m_colSupport;
+	public void setColSupport(ColumnSupport colSupport) {
+		this.m_colSupport = colSupport;
 	}
 
-	public boolean isM_useScriptSettings() {
+	public boolean useScriptSettings() {
 		return m_useScriptSettings;
 	}
 
-	public void setM_useScriptSettings(boolean m_useScriptSettings) {
-		this.m_useScriptSettings = m_useScriptSettings;
+	public void setUseScriptSettings(boolean useScriptSettings) {
+		this.m_useScriptSettings = useScriptSettings;
 	}
 
-	public boolean isM_useOpenIn() {
+	public boolean useOpenIn() {
 		return m_useOpenIn;
 	}
 
-	public void setM_useOpenIn(boolean m_useOpenIn) {
-		this.m_useOpenIn = m_useOpenIn;
+	public void setUseOpenIn(boolean useOpenIn) {
+		this.m_useOpenIn = useOpenIn;
 	}
 
-	public boolean isM_useChunkSettings() {
+	public boolean useChunkSettings() {
 		return m_useChunkSettings;
 	}
 
-	public void setM_useChunkSettings(boolean m_useChunkSettings) {
-		this.m_useChunkSettings = m_useChunkSettings;
+	public void setUseChunkSettings(boolean useChunkSettings) {
+		this.m_useChunkSettings = useChunkSettings;
 	}
 	
 	

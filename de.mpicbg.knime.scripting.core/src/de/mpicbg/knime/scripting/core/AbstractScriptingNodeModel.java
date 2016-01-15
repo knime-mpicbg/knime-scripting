@@ -9,6 +9,7 @@ import java.util.Map;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -64,6 +65,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     private String contextAwareHWTemplateText;
     
     protected ColumnSupport m_colSupport = null;
+    
+    private ScriptingModelConfig m_nodeCfg = null;
 
     public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
     	this(inPorts, outPorts, colSupport, true, true, true);
@@ -96,16 +99,31 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         	this.addModelSetting(CHUNK_IN, createChunkInProperty());
         	this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
         }
+        
+        if(this.m_nodeCfg == null)
+        	this.m_nodeCfg = new ScriptingModelConfig(inPorts, outPorts, colSupport, useScriptSettings, useOpenIn, useChunkSettings);
     }
 
+    /**
+     * constructor with node configuration object
+     * @param cfg
+     */
 	public AbstractScriptingNodeModel(ScriptingModelConfig cfg) {
 		this(
-				cfg.getM_inPorts(), 
-				cfg.getM_outPorts(), 
-				cfg.getM_colSupport(), 
-				cfg.isM_useScriptSettings(),
-				cfg.isM_useOpenIn(),
-				cfg.isM_useChunkSettings());
+				cfg.getInPorts(), 
+				cfg.getOutPorts(), 
+				cfg.getColSupport(), 
+				cfg.useScriptSettings(),
+				cfg.useOpenIn(),
+				cfg.useChunkSettings());
+		this.m_nodeCfg = cfg;
+	}
+	
+	/**
+	 * @return node configuration
+	 */
+	protected ScriptingModelConfig getNodeCfg() {
+		return this.m_nodeCfg;
 	}
 
 
@@ -169,8 +187,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * @param inData
      * @param exec
      * @throws KnimeScriptingException
+     * @throws CanceledExecutionException 
      */
-	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException;
+	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) 
+			throws KnimeScriptingException, CanceledExecutionException;
 
 
     @Override
@@ -278,6 +298,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      */
     public String prepareScript() {
 
+    	if(!m_nodeCfg.m_useScriptSettings) return "";
 
         String script;
         String serializedTemplate = ((SettingsModelString) getModelSetting(SCRIPT_TEMPLATE)).getStringValue();

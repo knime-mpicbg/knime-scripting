@@ -72,7 +72,7 @@ public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
 
         try {
 	        // 1) restore the workspace in a different server session
-	        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
 	        String script = prepareScript();
@@ -112,10 +112,10 @@ public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
         return new BufferedDataTable[]{dataTable};
 	}
 
-	@Override
+	/*@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
 		super.openInR(inData, exec);
-	}
+	}*/
 
     /**
      * {@inheritDoc}

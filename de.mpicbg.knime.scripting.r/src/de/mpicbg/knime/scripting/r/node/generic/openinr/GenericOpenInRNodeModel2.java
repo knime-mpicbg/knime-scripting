@@ -66,7 +66,7 @@ public class GenericOpenInRNodeModel2 extends AbstractRScriptingNodeModel {
         try {
         	// push incoming data to R server
         	logger.info("Pushing inputs to R...");
-        	pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        	//pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
         	
         	// write a local workspace file which contains the input table of the node
         	if (rWorkspaceFile == null) {
@@ -84,7 +84,7 @@ public class GenericOpenInRNodeModel2 extends AbstractRScriptingNodeModel {
         // open R with workspace file
         exec.setMessage("Spawning R-instance ...");
         try {
-			OpenInRNodeModel2.openWSFileInR(rWorkspaceFile);
+			RUtils.openWSFileInR(rWorkspaceFile, "");
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new KnimeScriptingException("Spawning of R-process failed: " + e.getMessage());

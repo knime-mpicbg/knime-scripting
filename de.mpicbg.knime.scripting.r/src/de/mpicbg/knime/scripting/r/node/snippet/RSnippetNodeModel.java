@@ -1,29 +1,11 @@
 package de.mpicbg.knime.scripting.r.node.snippet;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
-import org.rosuda.REngine.REXP;
-import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPLogical;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REngineException;
-import org.rosuda.REngine.Rserve.RConnection;
-import org.rosuda.REngine.Rserve.RserveException;
 
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
-import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -32,19 +14,27 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  * @author Holger Brandl, Antje Janosch (MPI-CBG)
  */
 public class RSnippetNodeModel extends AbstractRScriptingNodeModel {
-
-    public static final String R_INVAR_BASE_NAME = "kIn";
-    public static final String R_OUTVAR_BASE_NAME = "rOut";
+    
+    private static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
+    			createPorts(1), 		// 1 input table
+    			createPorts(1), 		// 1 output table
+    			new RColumnSupport(), 	
+    			true, 					// script
+    			true,					// provide openIn
+    			true);					// use chunks
 
     /**
      * constructor
      * @param numInputs
      * @param numOutputs
      */
-    public RSnippetNodeModel(int numInputs, int numOutputs) {
-        super(createPorts(numInputs), createPorts(numOutputs), new RColumnSupport());
-        this.m_colSupport = new RColumnSupport();
+    public RSnippetNodeModel(ScriptingModelConfig cfg) {
+        super(cfg);
     }
+
+	public RSnippetNodeModel() {
+		super(nodeModelCfg);
+	}
 
 	/**
      * {@inheritDoc}
@@ -63,118 +53,13 @@ public class RSnippetNodeModel extends AbstractRScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-    	// create connection
-        RConnection connection = RUtils.createConnection();
-        
-        // try to execute the node, close connection if anything fails and pass through the error
-        BufferedDataTable outTable = null;
-        try {
-        	outTable = transferAndEvaluate(castToBDT(inData), exec, connection);
-        } catch (Exception e) {
-			if(connection.isConnected()) {
-				connection.close();
-				throw e;
-			}
-		}
-        
-        return new BufferedDataTable[]{outTable};
+		
+		super.executeImpl(inData, exec);
+		super.runScript(exec);
+		PortObject[] outData = super.pullOutputFromR(exec);
+   
+        return outData;
     }
-
-    /**
-     * execute node
-     * @param inData
-     * @param exec
-     * @param connection
-     * @return out table
-     * @throws KnimeScriptingException
-     * @throws RserveException
-     * @throws REXPMismatchException
-     * @throws CanceledExecutionException
-     */
-	private BufferedDataTable transferAndEvaluate(
-			final BufferedDataTable[] inData, final ExecutionContext exec,
-			RConnection connection)
-			throws KnimeScriptingException, RserveException,
-			REXPMismatchException, CanceledExecutionException {
-		
-		// check preferences
-    	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-        DataTableSpec inSpec = inData[0].getDataTableSpec();
-    	
-    	// retrieve chunk settings
-        int chunkInSize = RUtils.getChunkIn(((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_IN)).getIntValue(), inData);
-        int chunkOutSize = ((SettingsModelIntegerBounded) this.getModelSetting(CHUNK_OUT)).getIntValue();
-    	
-    	// push color/size/shape model to R
-		pushColorModelToR(inSpec, connection, exec);
-		pushShapeModelToR(inSpec, connection, exec);
-		pushSizeModelToR(inSpec, connection, exec);
-		
-		// push flow variables to R
-		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
-
-        // CONVERT input table into data-frame and put into the r-workspace
-        pushToR(inData, connection, exec, chunkInSize);
-        
-        exec.setMessage("Evaluate R-script (cannot be cancelled)");
-
-        // PREPARE and parse script
-        String script = prepareScript();
-        // LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-        // stop support !
-        //rawScript = RUtils.supportOldVarNames(rawScript);   
-        parseScript(connection, script);
-
-        // EVALUATE script
-        if(useEvaluate) {
-        	// parse and run script
-        	// evaluation list, can be used to create a console view, throws first R-error-message
-        	REXPGenericVector knimeEvalObj = evaluateScript(script, connection);
-        	// check for warnings
-        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
-        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
-        	
-
-        } else {
-        	// parse and run script
-        	evalScript(connection, script);     	
-        }
-
-        // CHECK if result data frame is present
-    	if( ((REXPLogical) connection.eval("exists(\"" + R_OUTVAR_BASE_NAME + "\")")).isFALSE()[0] ) 
-    		throw new KnimeScriptingException("R workspace does not contain " + R_OUTVAR_BASE_NAME + " after execution.");    	
-        REXP out = connection.eval(R_OUTVAR_BASE_NAME);
-        if(!out.inherits("data.frame")) 
-        	throw new KnimeScriptingException(R_OUTVAR_BASE_NAME + " is not a data frame");
-        
-        // EXTRACT output data-frame from R
-        BufferedDataTable outTable = pullTableFromR(R_OUTVAR_BASE_NAME, connection, exec, chunkOutSize);
-		return outTable;
-	}
-
-	@Override
-	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
-		super.openInR(inData, exec);	
-	}
-
-    /**
-     * {@inheritDoc}
-     */
-/*	@Override
-	protected void openIn(PortObject[] inData, ExecutionContext exec)
-			throws KnimeScriptingException {
-		try {
-			String rawScript = prepareScript();
-			openInR(rawScript, logger, );   
-			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
-		} catch (REXPMismatchException | IOException | REngineException e) {
-			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}		
-	}*/
 	
-	
-	
-
-
 }
 

@@ -69,7 +69,7 @@ public class OpenInRNodeModel extends AbstractRScriptingNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-        try {
+        /*try {
 
             logger.info("Creating R-connection");
             RConnection connection = RUtils.createConnection();
@@ -122,7 +122,7 @@ public class OpenInRNodeModel extends AbstractRScriptingNodeModel {
         } catch (Throwable e) {
             throw new RuntimeException("spawning of R-process failed", e);
         }
-
+*/
         return new BufferedDataTable[0];
 	}
 

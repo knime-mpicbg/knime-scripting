@@ -73,7 +73,7 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 
         try {
 	        // 1) restore the workspace in a different server session
-	        pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
 	
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters

@@ -56,7 +56,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
     /**
      * {@inheritDoc}
      */
-	@Override
+	/*@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
         RConnection connection = RUtils.createConnection();
         File rWorkspaceFile = null;
@@ -65,7 +65,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
         BufferedDataTable[] inTables = AbstractScriptingNodeModel.castToBDT(inData);
         DataTableSpec inSpec = inTables[0].getDataTableSpec();
         
-        int chunkInSize = RUtils.getChunkIn(
+        int chunkInSize = getChunkIn(
         		((SettingsModelIntegerBounded) this.getModelSetting(AbstractScriptingNodeModel.CHUNK_IN)).getIntValue(), inTables);
 
         try {
@@ -78,7 +78,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
     		pushFlowVariablesToR(getAvailableInputFlowVariables(), connection, exec);
 
         	// convert the data and push them to R
-        	pushToR(inTables, connection, exec, chunkInSize);
+        	//pushToR(inTables, connection, exec, chunkInSize);
         	
         	exec.setMessage("Save R-workspace (cannot be cancelled)");
 
@@ -99,7 +99,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
         connection.close();
 
         return new PortObject[]{outPort};
-	}
+	}*/
 
     /**
      * {@inheritDoc}
