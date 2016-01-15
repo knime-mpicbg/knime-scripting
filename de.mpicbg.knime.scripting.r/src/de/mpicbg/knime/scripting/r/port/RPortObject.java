@@ -17,6 +17,8 @@ import javax.swing.text.DefaultCaret;
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -25,6 +27,8 @@ import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 
 public class RPortObject implements PortObject {
+	
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(RPortObject.class);
 	
 	private final File m_WorkspaceFile;
 	private HashMap<String, String> m_rObjects;
@@ -40,7 +44,7 @@ public class RPortObject implements PortObject {
 	}
 
 	@Override
-	public PortObjectSpec getSpec() {
+	public RPortObjectSpec getSpec() {
 		final RPortObjectSpec spec = new RPortObjectSpec(m_rObjects);
 		return spec;
 	}
