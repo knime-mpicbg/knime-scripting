@@ -1,9 +1,12 @@
 package de.mpicbg.knime.scripting.r.rgg;
 
+import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
@@ -34,12 +37,13 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
 
 
     protected RSnippetNodeModel createNodeModelInternal() {
-        return new RSnippetNodeModel(getNumberOfInputPorts(), 1);
-
-        // before we were defining the default in an anonumous class like that
-//         public String getDefaultScript() {
-//              return HardwiredRSnippetNodeFactory.getDefaultScriptForModel(scriptFileProvider);
-//         }
+    	return new RSnippetNodeModel(new ScriptingModelConfig(
+    			AbstractNodeModel.createPorts(getNumberOfInputPorts()), 
+    			AbstractNodeModel.createPorts(1),
+    			new RColumnSupport(), 
+    			true, 
+    			false, 
+    			true));
     }
 
 
