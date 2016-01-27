@@ -24,8 +24,10 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
@@ -37,15 +39,19 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  * @author Holger Brandl (MPI-CBG)
  */
 public class RPlotNodeModel extends AbstractRPlotNodeModel {
+	
+	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(1), 	// 3 inputs, input 2 and 3 optional
+			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// no output
+			new RColumnSupport(), 	
+			true, 					// use script
+			true, 					// open in functionality
+			true);					// use chunk settings
 
     public RPlotNodeModel() {
-        super(createPorts(1), new PortType[]{ImagePortObject.TYPE});
+        super(nodeModelConfig);
     }
 
-
-    public RPlotNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports);
-    }
 
     /**
      * {@inheritDoc}
@@ -55,6 +61,8 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
+    
+    
 
     /**
      * {@inheritDoc}
@@ -132,6 +140,16 @@ public class RPlotNodeModel extends AbstractRPlotNodeModel {
         //rawScript = RUtils.supportOldVarNames(rawScript);   
         parseScript(connection, script);
 	}*/
+
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		super.executeImpl(inData, exec);
+		super.runScript(exec);
+		PortObject[] outData = super.pullOutputFromR(exec);
+		
+		return outData;
+	}
 
 
 	/**

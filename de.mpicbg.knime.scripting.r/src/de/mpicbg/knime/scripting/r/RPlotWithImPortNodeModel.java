@@ -1,7 +1,9 @@
 package de.mpicbg.knime.scripting.r;
 
-import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
-import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
+import java.io.File;
+import java.io.FileInputStream;
+
+import javax.imageio.ImageIO;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
@@ -10,19 +12,18 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 
-import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.FileInputStream;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
 
 
 /**
- * Document me!
+ * Not in use anymore
  *
  * @author Holger Brandl
+ * @deprecated
  */
 public class RPlotWithImPortNodeModel extends RPlotNodeModel {
 
@@ -30,7 +31,7 @@ public class RPlotWithImPortNodeModel extends RPlotNodeModel {
 
 
     public RPlotWithImPortNodeModel() {
-        super(createPorts(1), new PortType[]{ImagePortObject.TYPE});
+        super();
     }
 
 

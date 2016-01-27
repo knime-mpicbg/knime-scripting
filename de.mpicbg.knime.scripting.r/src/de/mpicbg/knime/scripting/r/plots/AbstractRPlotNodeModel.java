@@ -18,10 +18,12 @@ import javax.swing.ImageIcon;
 
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.rosuda.REngine.REXPMismatchException;
@@ -31,6 +33,7 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
@@ -80,15 +83,15 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
     public static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
 
-    public AbstractRPlotNodeModel(PortType[] inPorts) {
+    /*public AbstractRPlotNodeModel(PortType[] inPorts) {
         this(inPorts, new PortType[0]);
-    }
+    }*/
 
 
     /**
      * This constructor just needs to be used if a plot node should have additional data table outputs.
      */
-    public AbstractRPlotNodeModel(PortType[] inPorts, PortType[] outports) {
+    /*public AbstractRPlotNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports, new RColumnSupport());
         
         this.addModelSetting(CFG_HEIGHT, createHeightSM());
@@ -97,9 +100,26 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         this.addModelSetting(CFG_OUTFILE, createOutputFileSM());
         this.addModelSetting(CFG_OVERWRITE, createOverwriteSM());
         this.addModelSetting(CFG_WRITE, createWriteFileSM());
-    }
+    }*/
 
-    /**
+    public AbstractRPlotNodeModel(ScriptingModelConfig nodeModelConfig) {
+		super(nodeModelConfig);
+		
+		this.addModelSetting(CFG_HEIGHT, createHeightSM());
+        this.addModelSetting(CFG_WIDTH, createWidthSM());
+        this.addModelSetting(CFG_IMGTYPE, createImgTypeSM());
+        this.addModelSetting(CFG_OUTFILE, createOutputFileSM());
+        this.addModelSetting(CFG_OVERWRITE, createOverwriteSM());
+        this.addModelSetting(CFG_WRITE, createWriteFileSM());
+	}
+
+	@Override
+	protected PortObject[] pullOutputFromR(ExecutionContext exec) throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		return super.pullOutputFromR(exec);
+	}
+
+	/**
      * create settings model: enable output to file yes/no
      * @return
      */
