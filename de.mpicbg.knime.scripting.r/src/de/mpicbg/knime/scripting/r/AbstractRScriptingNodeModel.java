@@ -110,12 +110,12 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	public enum RType { R_DOUBLE, R_LOGICAL, R_INT, R_STRING, R_FACTOR };
 
 	/** connection to R-server */
-	RConnection m_con = null;
+	protected RConnection m_con = null;
 
 	/**
 	 * reset the connection member variable to null after closing
 	 */
-	private void closeRConnection() {
+	protected void closeRConnection() {
 		if(m_con != null) {
 			if(m_con.isConnected())
 				m_con.close();
@@ -223,6 +223,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		assert m_con != null;
 		
+		int nOut = getNrOutPorts();
 		int nGeneric = getNumberOfGenericOutputPorts();
 		int nTables = getNumberOfTableOututPorts();
 		
@@ -232,7 +233,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			throw new KnimeScriptingException("Implementation error: Multiple RPorts are not allowed");
 		}
 		
-		PortObject[] outData = new PortObject[nTables + nGeneric];
+		PortObject[] outData = new PortObject[nOut];
 		
 		// for each output port
 		for(int i = 0; i < getNrOutPorts(); i++) {
@@ -1074,57 +1075,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 	}
 
-	public static Image createImage(RConnection connection, String script, int width, int height, String device) 
-			throws REngineException, RserveException, REXPMismatchException, KnimeScriptingException {
-
-		// check preferences
-		boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-
-		// LEGACY: we still support the old R workspace variable names ('R' for input and 'R' also for output)
-		//script = supportOldVarNames(script);
-
-		String tempFileName = "rmPlotFile." + device;
-
-		String deviceArgs = device.equals("jpeg") ? "quality=97," : "";
-		REXP xp = connection.eval("try(" + device + "('" + tempFileName + "'," + deviceArgs + " width = " + width + ", height = " + height + "))");
-
-		if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
-			// this is analogous to 'warnings', but for us it's sufficient to get just the 1st warning
-			REXP w = connection.eval("if (exists('last.warning') && length(last.warning)>0) names(last.warning)[1] else 0");
-			if (w.isString()) System.err.println(w.asString());
-			throw new KnimeScriptingException("Can't open " + device + " graphics device:\n" + xp.asString());
-		}
-
-		// ok, so the device should be fine - let's plot - replace this by any plotting code you desire ...
-		String preparedScript = AbstractScriptingNodeModel.fixEncoding(script);
-		parseScript(connection, preparedScript);
-
-		if(useEvaluate) {
-			// parse and run script
-			// evaluation list, can be used to create a console view
-			evaluateScript(preparedScript, connection);
-
-		} else {
-			// parse and run script
-			evalScript(connection, preparedScript);     	
-		}
-
-		// close the image
-		connection.eval("dev.off();");
-		// check if the plot file has been written
-		int xpInt = connection.eval("file.access('" + tempFileName + "',0)").asInteger();
-		if(xpInt == -1) throw new KnimeScriptingException("Plot could not be created. Please check your script");
-
-		// we limit the file size to 1MB which should be sufficient and we delete the file as well
-		xp = connection.eval("try({ binImage <- readBin('" + tempFileName + "','raw',2024*2024); unlink('" + tempFileName + "'); binImage })");
-
-		if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
-			throw new KnimeScriptingException(xp.asString());
-		}
-
-		// now this is pretty boring AWT stuff - create an image from the data and display it ...
-		return Toolkit.getDefaultToolkit().createImage(xp.asBytes());
-	}
+	
 
 	/**
 	 * main method to run the script (after pushing data and before pulling result data)
