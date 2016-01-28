@@ -14,7 +14,7 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Holger Brandl
  */
-public abstract class HardwiredGenericRPlotNodeFactory extends AbstractRPlotNodeFactory<GenericRPlotNodeModel> implements ScriptFileProvider {
+public abstract class HardwiredGenericRPlotNodeFactory extends AbstractRPlotNodeFactory implements ScriptFileProvider {
 
     private ScriptTemplate hardwiredTemplate;
 

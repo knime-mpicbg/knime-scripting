@@ -11,10 +11,10 @@ import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeView;
 /**
  * @author Holger Brandl
  */
-public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotNodeModel> extends NodeFactory<RPlotModel> {
+public abstract class AbstractRPlotNodeFactory extends NodeFactory<AbstractRPlotNodeModel> {
 
     @Override
-    public abstract RPlotModel createNodeModel();
+    public abstract AbstractRPlotNodeModel createNodeModel();
 
 
     @Override
@@ -24,8 +24,8 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
 
     @Override
-    public NodeView<RPlotModel> createNodeView(final int viewIndex, final RPlotModel nodeModel) {
-        return new RPlotNodeView<RPlotModel>(nodeModel);
+    public NodeView<AbstractRPlotNodeModel> createNodeView(final int viewIndex, final AbstractRPlotNodeModel nodeModel) {
+        return new RPlotNodeView<AbstractRPlotNodeModel>(nodeModel);
     }
 
 

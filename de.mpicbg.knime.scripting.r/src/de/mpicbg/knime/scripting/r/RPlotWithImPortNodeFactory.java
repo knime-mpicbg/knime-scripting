@@ -7,7 +7,7 @@ import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
 /**
  * @author Holger Brandl (MPI-CBG)
  */
-public class RPlotWithImPortNodeFactory extends AbstractRPlotNodeFactory<RPlotNodeModel> {
+public class RPlotWithImPortNodeFactory extends AbstractRPlotNodeFactory {
 
     @Override
     public RPlotNodeModel createNodeModel() {

@@ -1,22 +1,19 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import java.io.IOException;
-
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
-import de.mpicbg.knime.scripting.core.ScriptProvider;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
-
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REngineException;
+import org.knime.core.node.port.image.ImagePortObject;
 import org.rosuda.REngine.Rserve.RConnection;
+
+import de.mpicbg.knime.scripting.core.ScriptProvider;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.RColumnSupport;
+import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 
 
 /**
@@ -25,18 +22,26 @@ import org.rosuda.REngine.Rserve.RConnection;
  * @author Holger Brandl
  */
 public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
+	
+	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), 	// 1 generic input
+			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// 1 image output
+			new RColumnSupport(), 	
+			true, 					// no script
+			true, 					// open in functionality
+			false);					// use chunk settings
 
 
     public GenericRPlotNodeModel() {
-        super(createPorts(1, ROldPortObject.TYPE, ROldPortObject.class));
+        super(nodeModelConfig);
     }
 
 
     /**
      * This constructor is just necessary to allow superclasses to create plot nodes with ouputs
      */
-    public GenericRPlotNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports);
+    public GenericRPlotNodeModel(ScriptingModelConfig cfg) {
+        super(cfg);
     }
 
     /**
