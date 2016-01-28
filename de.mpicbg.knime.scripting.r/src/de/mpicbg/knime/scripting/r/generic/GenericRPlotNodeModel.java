@@ -77,7 +77,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-	        createFigure(connection);
+	        createInternals(connection);
 	
 	
 	        // 3) prepare the output tables (which will do nothing in most cases, as most plot nodes don't have output)
