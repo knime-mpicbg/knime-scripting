@@ -55,7 +55,7 @@ public class RPlotWithImPortNodeModel extends RPlotNodeModel {
         // create the image port object
         PNGImageContent content;
         File m_imageFile = File.createTempFile("rportImage", ".png");
-        ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", m_imageFile);
+        ImageIO.write(getImage(), "png", m_imageFile);
         FileInputStream in = new FileInputStream(m_imageFile);
         content = new PNGImageContent(in);
         in.close();
