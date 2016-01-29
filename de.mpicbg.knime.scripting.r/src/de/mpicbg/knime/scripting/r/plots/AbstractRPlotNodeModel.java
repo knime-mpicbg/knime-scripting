@@ -1,6 +1,5 @@
 package de.mpicbg.knime.scripting.r.plots;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -17,10 +17,12 @@ import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
@@ -37,23 +39,22 @@ import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.node.plot.RPlotCanvas;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
- * Document me!
+ * abstract R plot node model class for implementation plot relevant methods
  *
- * @author Holger Brandl
+ * @author Holger Brandl, Antje Janosch
  */
 public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel {
 	
 	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
-    public BufferedImage image;						// image created by R
-    public File nodeImageFile;				// image file (internals)
-    private File rWorkspaceFile;			// workspace file (internals)
-    private File nodeRWorkspaceFile;		// is that necessary??
+    public BufferedImage m_image;						// image created by R
+    public File m_nodeImageFile;				// image file (internals)
+    private File m_rWorkspaceFile;			// workspace file (internals)
+    
     
     /**
      * MODEL - SETTINGS
@@ -80,6 +81,10 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 
     public static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
+    /**
+     * constructor with node config settings
+     * @param nodeModelConfig
+     */
     public AbstractRPlotNodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
 		
@@ -91,6 +96,11 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         this.addModelSetting(CFG_WRITE, createWriteFileSM());
 	}
 
+    /**
+     * {@inheritDoc}
+     * <br>
+     * adds functionality to create + save image and to prvode image output
+     */
 	@Override
 	protected PortObject[] pullOutputFromR(ExecutionContext exec) throws KnimeScriptingException {
 		
@@ -112,7 +122,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 			if(pType.equals(ImagePortObject.TYPE)) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				try {
-					ImageIO.write(image, "png", baos);
+					ImageIO.write(m_image, "png", baos);
 				} catch (IOException e) {
 					throw new KnimeScriptingException(e.getMessage());
 				}
@@ -134,7 +144,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         // no need to save image to file ?
         if(!enableFileOutput) return;
         
-        assert image != null;
+        assert m_image != null;
         
         String fileName = ((SettingsModelString) getModelSetting(CFG_OUTFILE)).getStringValue();
         boolean overwriteFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
@@ -162,7 +172,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         	FileOutputStream fsOut = null;
         	try {
 	            fsOut = new FileOutputStream(new File(fileName));
-	            ImageIO.write(RPlotCanvas.toBufferedImage(image), "png", fsOut);
+	            ImageIO.write(m_image, "png", fsOut);
 	            fsOut.close();
         	} catch (IOException e) {
         		throw new KnimeScriptingException("Failed to sava image to file:\n" + e.getMessage());
@@ -236,7 +246,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 
         // create the image the script
         String script = prepareScript();
-        image = createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
+        m_image = createImage(connection, script, getDefWidth(), getDefHeight(), getDevice());
     }
     
     /**
@@ -311,14 +321,14 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 	
 			if (xp.inherits("try-error")) { // if the result is of the class try-error then there was a problem
 				throw new KnimeScriptingException(xp.asString());
-			}
-			
+			}			
 			image = xp.asBytes();
-			
+	
 		} catch (RserveException | REXPMismatchException e) {
 			throw new KnimeScriptingException("Failed to close image device and to read in plot as binary:+\n" + e.getMessage());
 		}
 		
+		// create image object from bytes
 		BufferedImage img = null;
 		try {
 			img = ImageIO.read(new ByteArrayInputStream(image));
@@ -326,8 +336,6 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 			throw new KnimeScriptingException(e.getMessage());
 		}
 
-		// now this is pretty boring AWT stuff - create an image from the data and display it ...
-		//return Toolkit.getDefaultToolkit().createImage(image);
 		return img;
 	}
 
@@ -363,52 +371,82 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
      */
     private File getTempWSFile() throws IOException {
 
-        if (rWorkspaceFile == null) {
+        if (m_rWorkspaceFile == null) {
             // note: this 'R' is not a workspace variable name but a file suffix
-            rWorkspaceFile = File.createTempFile("genericR", ".RData");
+            m_rWorkspaceFile = File.createTempFile("genericR", ".RData");
         }
-        return rWorkspaceFile;
+        return m_rWorkspaceFile;
     }
 
+    /**
+     * {@inheritDoc}
+     * <br>
+     * added: remove temporary workspace file if existing
+     */
+    @Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		PortObjectSpec[] portSpecs = super.configure(inSpecs);
+		
+		try {
+			removeTempWorkspace();
+		} catch (IOException e) {
+			setWarningMessage("Failed to remove temporary R workspace file:" + e.getMessage());
+		}
+		
+		return portSpecs;
+	}
 
-    public String getDevice() {
+    /**
+     * remove temporary workspace file if it exists
+     * @throws IOException if it fails to delete that file
+     */
+    private void removeTempWorkspace() throws IOException {
+    	// delete temporary R workspace when node is configured
+    	if(m_rWorkspaceFile != null) {
+    		if(m_rWorkspaceFile.exists())
+    			Files.delete(m_rWorkspaceFile.toPath());
+    		m_rWorkspaceFile = null;
+    	}
+    }
+
+    /**
+     * @return image device setting
+     */
+	public String getDevice() {
         return ((SettingsModelString) getModelSetting(CFG_IMGTYPE)).getStringValue();
     }
 
-
+	/**
+	 * @return image height (pixels)
+	 */
     public int getDefHeight() {
         return ((SettingsModelIntegerBounded) getModelSetting(CFG_HEIGHT)).getIntValue();
     }
 
-
+    /**
+     * @return image width (pixels)
+     */
     public int getDefWidth() {
     	return ((SettingsModelIntegerBounded) getModelSetting(CFG_WIDTH)).getIntValue();
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String getDefaultScript() {
-        if (getHardwiredTemplate() == null) {
-            return DEFAULT_R_PLOTCMD;
-        } else {
-            return TemplateConfigurator.generateScript(getHardwiredTemplate());
-        }
+    public String getDefaultScript(String defaultScript) {
+        return super.getDefaultScript(DEFAULT_R_PLOTCMD);
     }
 
 
     public File getWSFile() {
-        if (rWorkspaceFile == null && nodeRWorkspaceFile != null && nodeRWorkspaceFile.isFile()) {
-            logger.warn("Using persisted data from disk. This might take a few seconds...");
-            return nodeRWorkspaceFile;
-        }
-
-        return rWorkspaceFile;
+        return m_rWorkspaceFile;
     }
 
 
-    public Image getImage() {
+    public BufferedImage getImage() {
         try {
-            if (image == null && nodeImageFile != null && nodeImageFile.isFile()) {
+            if (m_image == null && m_nodeImageFile != null && m_nodeImageFile.isFile()) {
                 logger.warn("Restoring image from disk. This might take a few seconds...");
                 deserializeImage();
             }
@@ -416,7 +454,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
             throw new RuntimeException(e);
         }
 
-        return image;
+        return m_image;
     }
 
 
@@ -427,16 +465,16 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 
     @Override
     protected void saveInternals(File nodeDir, ExecutionMonitor executionMonitor) throws IOException, CanceledExecutionException {
-        if (rWorkspaceFile != null) {
+        if (m_rWorkspaceFile != null) {
             File f = new File(nodeDir, "pushtable.R");
 
-            Files.copy(rWorkspaceFile.toPath(), f.toPath());
+            Files.copy(m_rWorkspaceFile.toPath(), f.toPath());
         }
 
-        if (image != null) {
+        if (m_image != null) {
             File imageFile = new File(nodeDir, "image.bin");
             
-            ImageIO.write(image, "png", imageFile);
+            ImageIO.write(m_image, "png", imageFile);
         }
     }
 
@@ -444,21 +482,43 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
     @Override
     protected void loadInternals(File nodeDir, ExecutionMonitor executionMonitor) throws IOException, CanceledExecutionException {
         super.loadInternals(nodeDir, executionMonitor);
-
         try {
+        	File internalWS = new File(nodeDir,"pushtable.R");
+        	m_rWorkspaceFile = getTempWSFile();
+            Files.copy(internalWS.toPath(), m_rWorkspaceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            
+            m_nodeImageFile = new File(nodeDir, "image.bin");
 
-            nodeRWorkspaceFile = new File(nodeDir, "pushtable.R");
-            nodeImageFile = new File(nodeDir, "image.bin");
-
-        } catch (Throwable ignored) {
+        } catch(IOException e) {
+        	throw new CanceledExecutionException("Failed to load internal representation of R workspace:\n" + e.getMessage());
         }
     }
 
 
-    private void deserializeImage() throws IOException, ClassNotFoundException {
-        if (nodeImageFile.isFile()) {
+    @Override
+	protected void reset() {
+		super.reset();
+		m_image = null;
+	}
 
-            image = ImageIO.read(nodeImageFile);
+	@Override
+	protected void onDispose() {
+		super.onDispose();
+		try {
+			removeTempWorkspace();
+		} catch (IOException e) {
+			logger.debug("temporary R workspace file could not be deleted:\t" + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * read image from file
+	 * @throws IOException
+	 */
+	private void deserializeImage() throws IOException {
+        if (m_nodeImageFile.isFile()) {
+            m_image = ImageIO.read(m_nodeImageFile);
         }
     }
     
