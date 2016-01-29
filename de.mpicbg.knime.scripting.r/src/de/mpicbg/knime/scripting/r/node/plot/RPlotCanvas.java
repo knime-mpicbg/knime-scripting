@@ -1,77 +1,80 @@
 package de.mpicbg.knime.scripting.r.node.plot;
 
-import de.mpicbg.knime.scripting.core.ImageClipper;
-import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
-import de.mpicbg.knime.scripting.r.RUtils;
-import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
-import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
-
-import org.rosuda.REngine.Rserve.RConnection;
-
-import javax.swing.*;
-
-import static de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel.R_INVAR_BASE_NAME;
-
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.PixelGrabber;
-import java.util.Collections;
+
+import javax.swing.JPanel;
+
+import org.rosuda.REngine.Rserve.RConnection;
+
+import de.mpicbg.knime.scripting.core.ImageClipper;
+import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 
 
 /**
- * A Rm-renderer which allows to display r-plots. It automatically adapts to the panel size by replotting the figures on
- * resize.
+ * A renderer which allows to display r-plots. It automatically adapts to the panel size by rescaling the figures on
+ * resize. Figure will be recreated by mouse click
  *
- * @author Holger Brandl
+ * @author Holger Brandl, Antje Janosch
  */
+@SuppressWarnings("serial")
 public class RPlotCanvas extends JPanel {
 
+    private BufferedImage m_baseImage;
+    private BufferedImage m_scaledImage;
+    private AbstractRPlotNodeModel m_plotModel;
 
-    private BufferedImage baseImage;
-    private BufferedImage scaledImage;
-    private AbstractRPlotNodeModel plotModel;
-
+    // flag to mark the process of recreating the image
     private boolean isReCreatingImage = false;
+    
+    // NOTE: Failed to trigger repainting as soon as the mouse is released after resizing
+    // instead: rescale while resizing and use single mouse click to recreate the plot
 
-
+    /**
+     * constructor
+     * @param plotModel
+     */
     public RPlotCanvas(AbstractRPlotNodeModel plotModel) {
         setFocusable(true);
         setPreferredSize(new Dimension(plotModel.getDefWidth(), plotModel.getDefHeight()));
 
-        this.plotModel = plotModel;
-
-        baseImage = plotModel.getImage();
-
+        this.m_plotModel = plotModel;
+        m_baseImage = plotModel.getImage();
+        
+        // if component resized
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
+            	           	
                 if (!isVisible()) {
                     return;
                 }
+                
+                // scale image
+                AffineTransform at = AffineTransform.getScaleInstance((double) getWidth() / m_baseImage.getWidth(null),
+                		(double) getHeight() / m_baseImage.getHeight(null));
 
-                boolean repaintOnResize = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.REPAINT_ON_RESIZE);
-                if (repaintOnResize) {
-                    recreateImage();
+                AffineTransformOp op = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
+                m_scaledImage = op.filter(m_baseImage, null);
 
-                } else {
-                    BufferedImage bufImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-                    Graphics2D g = bufImage.createGraphics();
-                    AffineTransform at = AffineTransform.getScaleInstance((double) getWidth() / baseImage.getWidth(null),
-                            (double) getHeight() / baseImage.getHeight(null));
-
-                    AffineTransformOp op = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-                    scaledImage = op.filter(baseImage, null);
-                }
             }
         });
 
+        // single click
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                if (mouseEvent.getClickCount() == 2 && !isReCreatingImage) {
+                if (!isReCreatingImage) {
                     isReCreatingImage = true;
                     recreateImage();
                     isReCreatingImage = false;
@@ -82,36 +85,37 @@ public class RPlotCanvas extends JPanel {
             }
         });
 
-        // add clipboard copy paste
+        // keys: copy => copy to clipboard
         addKeyListener(new KeyAdapter() {
-
+        	@Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_C && e.isMetaDown())
-                    new ImageClipper().copyToClipboard(RPlotCanvas.this.baseImage);
+                    new ImageClipper().copyToClipboard(RPlotCanvas.this.m_baseImage);
 
-//                    if (e.getKeyCode() == KeyEvent.VK_S && e.isControlDown())
-//                        showSaveImageDialog();
+                //nice idea: save image from view
+                //if (e.getKeyCode() == KeyEvent.VK_S && e.isControlDown())
+                //showSaveImageDialog();
             }
         });
 
     }
 
-
+    /**
+     * runs R code again to recreate the image with the panel dimensions
+     */
     public void recreateImage() {
         RConnection connection = null;
         try {
             connection = RUtils.createConnection();
 
-            RUtils.loadGenericInputs(Collections.singletonMap(R_INVAR_BASE_NAME, plotModel.getWSFile()), connection);
-
-            String script = plotModel.prepareScript();
-
-            BufferedImage image = AbstractRPlotNodeModel.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
+            RUtils.loadWorkspace(m_plotModel.getWSFile(), connection);
+            String script = m_plotModel.prepareScript();
+            BufferedImage image = AbstractRPlotNodeModel.createImage(connection, script, getWidth(), getHeight(), m_plotModel.getDevice());
 
             connection.close();
 
-            baseImage = image;
-            scaledImage = null;
+            m_baseImage = image;
+            m_scaledImage = null;
 
         } catch (Exception e1) {
             if (connection != null) {
@@ -121,80 +125,10 @@ public class RPlotCanvas extends JPanel {
         }
     }
 
-
+    /**
+     * draw image
+     */
     public void paint(Graphics g) {
-        g.drawImage(scaledImage != null ? scaledImage : baseImage, 0, 0, null);
-    }
-
-
-    public static BufferedImage toBufferedImage(Image image) {
-
-        if (image instanceof BufferedImage) {
-            return (BufferedImage) image;
-        }
-
-        // This code ensures that all the pixels in the image are loaded
-        image = new ImageIcon(image).getImage();
-
-        // Determine if the image has transparent pixels
-        boolean hasAlpha = hasAlpha(image);
-
-        // Create a buffered image with a format that's compatible with the
-        // screen
-        BufferedImage bimage = null;
-        GraphicsEnvironment ge = GraphicsEnvironment
-                .getLocalGraphicsEnvironment();
-        try {
-            // Determine the type of transparency of the new buffered image
-            int transparency = Transparency.OPAQUE;
-            if (hasAlpha == true) {
-                transparency = Transparency.BITMASK;
-            }
-
-            // Create the buffered image
-            GraphicsDevice gs = ge.getDefaultScreenDevice();
-            GraphicsConfiguration gc = gs.getDefaultConfiguration();
-            bimage = gc.createCompatibleImage(image.getWidth(null), image
-                    .getHeight(null), transparency);
-        } catch (HeadlessException e) {
-        } // No screen
-
-        if (bimage == null) {
-            // Create a buffered image using the default color model
-            int type = BufferedImage.TYPE_INT_RGB;
-            if (hasAlpha == true) {
-                type = BufferedImage.TYPE_INT_ARGB;
-            }
-            bimage = new BufferedImage(image.getWidth(null), image
-                    .getHeight(null), type);
-        }
-
-        // Copy image to buffered image
-        Graphics g = bimage.createGraphics();
-
-        // Paint the image onto the buffered image
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-
-        return bimage;
-    }
-
-
-    public static boolean hasAlpha(Image image) {
-        // If buffered image, the color model is readily available
-        if (image instanceof BufferedImage) {
-            return ((BufferedImage) image).getColorModel().hasAlpha();
-        }
-
-        // Use a pixel grabber to retrieve the image's color model;
-        // grabbing a single pixel is usually sufficient
-        PixelGrabber pg = new PixelGrabber(image, 0, 0, 1, 1, false);
-        try {
-            pg.grabPixels();
-        } catch (InterruptedException e) {
-        }
-
-        // Get the image's color model
-        return pg.getColorModel().hasAlpha();
+        g.drawImage(m_scaledImage != null ? m_scaledImage : m_baseImage, 0, 0, null);
     }
 }
