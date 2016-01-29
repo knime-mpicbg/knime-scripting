@@ -1,38 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../ricon.png" type="Visualizer">
+<knimeNode icon="../rgeneric_icon.png" type="Visualizer">
     <name>R Plot</name>
 
-    <shortDescription>
-        Create figures with R from within Knime.
+	<shortDescription>
+        A generic R plot node that takes an R workspace input and returns figure created by R
     </shortDescription>
 
     <fullDescription>
+        <intro>A generic R plot node that takes an R workspace input and returns figure created by R
 
-        <intro>Improved R-graphics Integration for KNIME (better repainting and rescaling).
-
-            Make sure that Rserve is running somewhere, and Knime is accordingly configured (Knime->Preferences).
-
-            Repainting behavior cam be also configured in the preferences.
+            Make sure that Rserve is running somewhere, and KNIME is accordingly configured (KNIME->Preferences).
             <br/>
             <br/>
-            Detailed documentation about the scripting integration:
-            <a href="https://wiki.mpi-cbg.de/wiki/sweng/index.php/Knime_Scripting">
-                MPI-CBG SWEG Wiki
+            Detailed documentation about the R generic nodes:
+            <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Generic-R">
+                Wiki on GitHub: knime-scripting
             </a>
         </intro>
 
-
-        <!--<option name="short name of first option (like in the dialog)">description of first option</option>-->
-        <!--<option name="short name of second option (like in the dialog)">description of second option</option>-->
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="in1">A genericR object which should be visulalized with R.</inPort>
+        <inPort index="0" name="existing R workspace">An R workspace.</inPort>
+        <outPort index="0" name="R plot">The generated R-figure</outPort>
     </ports>
-
-    <views>
-        <view index="0" name="R-Plot">The generated R-figure</view>
-    </views>
 
 </knimeNode>
