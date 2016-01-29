@@ -43,7 +43,7 @@ public class RPlotCanvas extends JPanel {
 
         this.plotModel = plotModel;
 
-        baseImage = toBufferedImage(plotModel.getImage());
+        baseImage = plotModel.getImage();
 
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -106,11 +106,11 @@ public class RPlotCanvas extends JPanel {
 
             String script = plotModel.prepareScript();
 
-            Image image = AbstractRPlotNodeModel.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
+            BufferedImage image = AbstractRPlotNodeModel.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
 
             connection.close();
 
-            baseImage = toBufferedImage(image);
+            baseImage = image;
             scaledImage = null;
 
         } catch (Exception e1) {
