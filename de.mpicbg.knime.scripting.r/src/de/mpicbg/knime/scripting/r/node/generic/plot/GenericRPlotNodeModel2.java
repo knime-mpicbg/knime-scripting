@@ -1,18 +1,13 @@
 package de.mpicbg.knime.scripting.r.node.generic.plot;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.image.ImagePortObject;
-import org.rosuda.REngine.Rserve.RConnection;
 
-import de.mpicbg.knime.scripting.core.ScriptProvider;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 import de.mpicbg.knime.scripting.r.port.RPortObject;
 
