@@ -39,8 +39,8 @@
               id="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.generic.GenericRPlotFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRPlotFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.plot.GenericRPlotFactory2"
+              id="de.mpicbg.knime.scripting.r.node.generic.plot.GenericRPlotFactory2"/>
 
 
         <!-- utils -->
@@ -62,6 +62,10 @@
         <node category-path="/community/r/genericr"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericOpenInRNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.genericr.GenericOpenInRNodeFactory"/>
+              
+        <node category-path="/community/r/genericr"
+              factory-class="de.mpicbg.knime.scripting.r.generic.GenericRPlotFactory"
+              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRPlotFactory"/>
 
 		>> not needed anymore
         <node category-path="/community/r/utils"
