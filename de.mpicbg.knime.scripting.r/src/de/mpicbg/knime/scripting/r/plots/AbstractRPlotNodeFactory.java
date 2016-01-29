@@ -37,7 +37,7 @@ public abstract class AbstractRPlotNodeFactory extends NodeFactory<AbstractRPlot
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), true);
+        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(""), true);
     }
 
 }

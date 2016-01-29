@@ -35,8 +35,8 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public String getDefaultScript() {
-        return AbstractMatlabScriptingNodeModel.DEFAULT_SNIPPET;
+    public String getDefaultScript(String defaultScript) {
+        return super.getDefaultScript(AbstractMatlabScriptingNodeModel.DEFAULT_SNIPPET);
     }
 
 	/**

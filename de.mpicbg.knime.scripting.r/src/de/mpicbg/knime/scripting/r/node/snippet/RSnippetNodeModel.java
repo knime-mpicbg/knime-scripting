@@ -40,11 +40,11 @@ public class RSnippetNodeModel extends AbstractRScriptingNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public String getDefaultScript() {
+    public String getDefaultScript(String defaultScript) {
     	if(this.getNrInPorts() > 1)
-    		return CFG_SCRIPT2_DFT;
+    		return super.getDefaultScript(CFG_SCRIPT2_DFT);
     	else
-    		return CFG_SCRIPT_DFT;
+    		return super.getDefaultScript(CFG_SCRIPT_DFT);
     }
 
     /**

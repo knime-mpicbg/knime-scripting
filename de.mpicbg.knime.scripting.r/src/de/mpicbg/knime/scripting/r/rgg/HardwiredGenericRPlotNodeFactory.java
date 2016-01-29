@@ -37,7 +37,7 @@ public abstract class HardwiredGenericRPlotNodeFactory extends AbstractRPlotNode
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        ScriptingNodeDialog configPane = new RPlotNodeDialog(createNodeModel().getDefaultScript(), false, false);
+        ScriptingNodeDialog configPane = new RPlotNodeDialog(createNodeModel().getDefaultScript(""), false, false);
 
         ScriptTemplate template = HardwiredRSnippetNodeFactory.loadTemplate(this);
         configPane.setHardwiredTemplate(template);

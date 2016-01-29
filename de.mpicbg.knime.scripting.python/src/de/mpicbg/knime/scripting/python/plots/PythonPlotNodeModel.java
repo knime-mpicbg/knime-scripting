@@ -127,12 +127,8 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     }
 
     @Override
-    public String getDefaultScript() {
-        if (getHardwiredTemplate() == null) {
-            return DEFAULT_PYTHON_PLOTCMD;
-        } else {
-            return TemplateConfigurator.generateScript(getHardwiredTemplate());
-        }
+    public String getDefaultScript(String defaultScript) {
+    	return super.getDefaultScript(DEFAULT_PYTHON_PLOTCMD);
     }
 
     public Image getImage() {

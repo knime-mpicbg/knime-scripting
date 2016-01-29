@@ -55,7 +55,7 @@ public class ConvertToTableNodeModel2 extends AbstractRScriptingNodeModel {
 	}
 
 	@Override
-	public String getDefaultScript() {
-		return GENERIC_TOTABLE_DFT;
+	public String getDefaultScript(String defaultScString) {
+		return super.getDefaultScript(GENERIC_TOTABLE_DFT);
 	}
 }

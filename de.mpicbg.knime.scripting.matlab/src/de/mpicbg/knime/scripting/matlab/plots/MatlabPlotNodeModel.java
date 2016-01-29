@@ -111,12 +111,8 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public String getDefaultScript() {
-        if (getHardwiredTemplate() == null) {
-            return AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD;
-        } else {
-            return TemplateConfigurator.generateScript(getHardwiredTemplate());
-        }
+    public String getDefaultScript(String defaultScript) {
+    	return super.getDefaultScript(AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD);
     }
 
 

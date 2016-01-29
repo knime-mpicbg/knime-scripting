@@ -89,7 +89,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     	this.m_colSupport = colSupport;
     	
         if(useScriptSettings) {
-        	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript()));
+        	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript("")));
         	this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
         }
         if(useOpenIn) {
@@ -211,8 +211,11 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
     /**
      * @return default script
      */
-	public String getDefaultScript() {
-        return "";
+	public String getDefaultScript(String defaultScript) {
+		if (getHardwiredTemplate() != null) {
+			return TemplateConfigurator.generateScript(getHardwiredTemplate());
+		}
+		return defaultScript;
     }
 	
 
