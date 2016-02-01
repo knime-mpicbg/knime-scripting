@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.misc;
 
 import java.io.File;
 import java.io.FileInputStream;

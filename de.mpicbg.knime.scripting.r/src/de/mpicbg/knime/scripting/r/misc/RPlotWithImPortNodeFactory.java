@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r;
+package de.mpicbg.knime.scripting.r.misc;
 
 import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;

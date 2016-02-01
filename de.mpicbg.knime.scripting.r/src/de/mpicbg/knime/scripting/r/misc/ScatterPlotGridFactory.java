@@ -1,6 +1,6 @@
 package de.mpicbg.knime.scripting.r.misc;
 
-import de.mpicbg.knime.scripting.r.rgg.HardwiredRPlotNodeFactory;
+import de.mpicbg.knime.scripting.r.oldhardwired.HardwiredRPlotNodeFactory;
 
 /**
  * @author Holger Brandl (MPI-CBG)
