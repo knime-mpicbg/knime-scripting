@@ -9,8 +9,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
-import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
+import de.mpicbg.knime.scripting.r.port.RPortObjectSpec2;
 
 
 /**
@@ -22,7 +22,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
 	
 	private static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
 			createPorts(1, BufferedDataTable.TYPE, BufferedDataTable.class), // 1 data table input
-			createPorts(1, RPortObject.TYPE, RPortObject.class), 			// 1 generic output
+			createPorts(1, RPortObject2.TYPE, RPortObject2.class), 			// 1 generic output
 			new RColumnSupport(), 
 			false, 	// no script
 			false, 	// no open in R
@@ -41,7 +41,7 @@ public class ConvertToGenericRModel2 extends AbstractRScriptingNodeModel {
     @Override
     // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{RPortObjectSpec.INSTANCE};
+        return new PortObjectSpec[]{RPortObjectSpec2.INSTANCE};
     }
 
 	@Override

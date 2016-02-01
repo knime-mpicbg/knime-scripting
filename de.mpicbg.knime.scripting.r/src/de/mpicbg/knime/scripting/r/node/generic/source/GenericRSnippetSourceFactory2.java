@@ -9,7 +9,7 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeModel2;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
 
 
 /**
@@ -22,7 +22,7 @@ public class GenericRSnippetSourceFactory2
 	
 	private static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
 			new PortType[0],
-			GenericRSnippetNodeModel2.createPorts(1, RPortObject.TYPE, RPortObject.class),
+			GenericRSnippetNodeModel2.createPorts(1, RPortObject2.TYPE, RPortObject2.class),
 			new RColumnSupport(),
 			true,
 			false,

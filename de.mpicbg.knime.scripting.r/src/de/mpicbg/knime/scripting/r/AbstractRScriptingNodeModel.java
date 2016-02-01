@@ -57,7 +57,7 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeModel {
@@ -182,7 +182,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			// generic input to push first
 			if(gIdx >= 0) {
-				File gWorkspaceFile = ((RPortObject)inData[gIdx]).getFile();
+				File gWorkspaceFile = ((RPortObject2)inData[gIdx]).getFile();
 				RUtils.loadWorkspace(gWorkspaceFile, m_con);
 			}
 
@@ -237,7 +237,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			PortType pType = this.getOutPortType(i);
 			
 			// pull R workspace for generic port
-			if(pType.equals(RPortObject.TYPE)) {				
+			if(pType.equals(RPortObject2.TYPE)) {				
 				try {
 					outData[i] = createROutPort();
 				} catch (IOException | KnimeScriptingException e) {
@@ -270,13 +270,13 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	 * @throws IOException
 	 * @throws KnimeScriptingException
 	 */
-	private RPortObject createROutPort() throws IOException, KnimeScriptingException {
+	private RPortObject2 createROutPort() throws IOException, KnimeScriptingException {
 		// write a local workspace file which contains the input table of the node
 		File rWorkspaceFile = null;
     	rWorkspaceFile = File.createTempFile("genericR", ".RData");  
     	RUtils.saveWorkspaceToFile(rWorkspaceFile, m_con, RUtils.getHost());
     	
-    	RPortObject outPort = new RPortObject(m_con, rWorkspaceFile);
+    	RPortObject2 outPort = new RPortObject2(m_con, rWorkspaceFile);
     	return outPort;
 	}
 
@@ -343,7 +343,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	private int getNumberOfGenericOutputPorts() {
 		int count = 0;
 		for(int i = 0; i < getNrOutPorts(); i++)
-			if(getOutPortType(i).equals(RPortObject.TYPE))
+			if(getOutPortType(i).equals(RPortObject2.TYPE))
 				count ++;
 		return count;
 	}
@@ -424,7 +424,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		for (PortObject inport : inObjects) {
 			if (inport != null) {
 				if(inport instanceof BufferedDataTable) nTableInputs++;
-				else if(inport instanceof RPortObject) nRPortInputs++;
+				else if(inport instanceof RPortObject2) nRPortInputs++;
 				else
 					throw new KnimeScriptingException("Implementation error: PortType " 
 							+ inport.getClass().getSimpleName() + "is not yet supported");
@@ -446,7 +446,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 				portVarMapping.put(RVariableName, inport);
 				i++;
 			}
-			if(pType.equals(RPortObject.TYPE) && inport != null) {
+			if(pType.equals(RPortObject2.TYPE) && inport != null) {
 				portVarMapping.put("generic", inport);
 			}
 		}

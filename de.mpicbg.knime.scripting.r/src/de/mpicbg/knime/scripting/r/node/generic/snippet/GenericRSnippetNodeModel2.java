@@ -8,8 +8,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
-import de.mpicbg.knime.scripting.r.port.RPortObjectSpec;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
+import de.mpicbg.knime.scripting.r.port.RPortObjectSpec2;
 
 
 /**
@@ -25,8 +25,8 @@ public class GenericRSnippetNodeModel2 extends AbstractRScriptingNodeModel {
 			+ "# availableObjects <- ls()";
 	
 	public static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
-			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
-			createPorts(1, RPortObject.TYPE, RPortObject.class)	, 	// 1 generic output
+			createPorts(1, RPortObject2.TYPE, RPortObject2.class), 	// 1 generic input
+			createPorts(1, RPortObject2.TYPE, RPortObject2.class)	, 	// 1 generic output
 			new RColumnSupport(), 		
 			true, 	// script
 			true, 	// open in R functionality
@@ -57,7 +57,7 @@ public class GenericRSnippetNodeModel2 extends AbstractRScriptingNodeModel {
     // note: This is not the usual configure but a more generic one with PortObjectSpec instead of DataTableSpec
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
     	super.configure(inSpecs);
-        return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec.INSTANCE} : new PortObjectSpec[0];
+        return hasOutput() ? new PortObjectSpec[]{RPortObjectSpec2.INSTANCE} : new PortObjectSpec[0];
     }
 
     

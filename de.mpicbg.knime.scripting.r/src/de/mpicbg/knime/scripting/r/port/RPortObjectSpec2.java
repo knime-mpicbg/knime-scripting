@@ -18,9 +18,9 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  * @author Antje Janosch
  *
  */
-public class RPortObjectSpec implements PortObjectSpec {
+public class RPortObjectSpec2 implements PortObjectSpec {
 	
-	public static final RPortObjectSpec INSTANCE = new RPortObjectSpec();
+	public static final RPortObjectSpec2 INSTANCE = new RPortObjectSpec2();
 
 	/** names of all R objects provided by the R workspace and their R-type */
 	private HashMap<String, String> m_rObjects;
@@ -28,14 +28,14 @@ public class RPortObjectSpec implements PortObjectSpec {
 	/**
 	 * @param rObjects
 	 */
-	public RPortObjectSpec(HashMap<String, String> rObjects) {
+	public RPortObjectSpec2(HashMap<String, String> rObjects) {
 		this.m_rObjects = rObjects;
 	}
 
 	/**
 	 * constructor
 	 */
-	public RPortObjectSpec() {
+	public RPortObjectSpec2() {
 		this.m_rObjects = new HashMap<String, String>();
 	}
 
@@ -55,13 +55,13 @@ public class RPortObjectSpec implements PortObjectSpec {
 		return m_rObjects;
 	}
 	
-	public static final class SpecSerializer extends PortObjectSpecSerializer<RPortObjectSpec> {
+	public static final class SpecSerializer extends PortObjectSpecSerializer<RPortObjectSpec2> {
 
 		/**
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void savePortObjectSpec(RPortObjectSpec portObjectSpec, PortObjectSpecZipOutputStream out)
+		public void savePortObjectSpec(RPortObjectSpec2 portObjectSpec, PortObjectSpecZipOutputStream out)
 				throws IOException {
 			out.putNextEntry(new ZipEntry("content.dat"));
             new ObjectOutputStream(out).writeObject(portObjectSpec
@@ -73,13 +73,13 @@ public class RPortObjectSpec implements PortObjectSpec {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public RPortObjectSpec loadPortObjectSpec(PortObjectSpecZipInputStream in) throws IOException {
+		public RPortObjectSpec2 loadPortObjectSpec(PortObjectSpecZipInputStream in) throws IOException {
 			in.getNextEntry();
 			final ObjectInputStream ois = new ObjectInputStream(in);
             try {
                 @SuppressWarnings("unchecked")
 				final HashMap<String,String> rObjects = (HashMap<String,String>)ois.readObject();
-                return new RPortObjectSpec(rObjects);
+                return new RPortObjectSpec2(rObjects);
             } catch (final ClassNotFoundException e) {
                 throw new IOException(e.getMessage(), e.getCause());
             }

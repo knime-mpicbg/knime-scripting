@@ -26,26 +26,26 @@ import org.rosuda.REngine.Rserve.RserveException;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 
-public class RPortObject implements PortObject {
+public class RPortObject2 implements PortObject {
 	
-    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(RPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(RPortObject2.class);
 	
 	private final File m_WorkspaceFile;
 	private HashMap<String, String> m_rObjects;
 
-	public RPortObject(File workspaceFile) {
+	public RPortObject2(File workspaceFile) {
 		this.m_WorkspaceFile = workspaceFile;
 		this.m_rObjects = getRObjects();
 	}
 
-	public RPortObject(RConnection connection, File workspaceFile) {
+	public RPortObject2(RConnection connection, File workspaceFile) {
 		this.m_WorkspaceFile = workspaceFile;
 		this.m_rObjects = getRObjects(connection);
 	}
 
 	@Override
-	public RPortObjectSpec getSpec() {
-		final RPortObjectSpec spec = new RPortObjectSpec(m_rObjects);
+	public RPortObjectSpec2 getSpec() {
+		final RPortObjectSpec2 spec = new RPortObjectSpec2(m_rObjects);
 		return spec;
 	}
 	

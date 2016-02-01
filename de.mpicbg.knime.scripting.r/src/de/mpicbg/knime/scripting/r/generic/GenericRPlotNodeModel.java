@@ -24,7 +24,7 @@ import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	
 	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
-			createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), 	// 1 generic input
+			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
 			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// 1 image output
 			new RColumnSupport(), 	
 			true, 					// no script

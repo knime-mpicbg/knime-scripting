@@ -9,7 +9,7 @@ import org.knime.core.node.port.image.ImagePortObject;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
 
 
 /**
@@ -21,7 +21,7 @@ public class GenericRPlotNodeModel2 extends AbstractRPlotNodeModel {
 	
 	/** node configuration */
 	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
-			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
+			createPorts(1, RPortObject2.TYPE, RPortObject2.class), 	// 1 generic input
 			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// 1 image output
 			new RColumnSupport(), 	
 			true, 					// no script

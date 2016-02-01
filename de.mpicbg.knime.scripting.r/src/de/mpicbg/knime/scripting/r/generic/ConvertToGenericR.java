@@ -26,7 +26,7 @@ public class ConvertToGenericR extends AbstractRScriptingNodeModel {
     
 	public static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
     		createPorts(1), 
-    		createPorts(1, ROldPortObject.TYPE, ROldPortObject.class), 
+    		createPorts(1, RPortObject.TYPE, RPortObject.class), 
     		new RColumnSupport(), 
     		false, 
     		true, 
@@ -40,7 +40,7 @@ public class ConvertToGenericR extends AbstractRScriptingNodeModel {
 
 	@Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{ROldPortObjectSpec.INSTANCE};
+        return new PortObjectSpec[]{RPortObjectSpec.INSTANCE};
     }
 
 
@@ -71,6 +71,6 @@ public class ConvertToGenericR extends AbstractRScriptingNodeModel {
     	}
     	closeRConnection();
 
-    	return new PortObject[]{new ROldPortObject(rWorkspaceFile)};
+    	return new PortObject[]{new RPortObject(rWorkspaceFile)};
     }
 }

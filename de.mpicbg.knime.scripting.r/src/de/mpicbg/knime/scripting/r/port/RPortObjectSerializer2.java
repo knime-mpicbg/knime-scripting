@@ -13,12 +13,12 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 
-public final class RPortObjectSerializer extends PortObjectSerializer<RPortObject> {
+public final class RPortObjectSerializer2 extends PortObjectSerializer<RPortObject2> {
 	
 	private static final String ZIP_ENTRY_WS = "Rworkspace.RData";
 
 	@Override
-	public void savePortObject(RPortObject portObject, PortObjectZipOutputStream out, ExecutionMonitor exec)
+	public void savePortObject(RPortObject2 portObject, PortObjectZipOutputStream out, ExecutionMonitor exec)
 			throws IOException, CanceledExecutionException {
 		out.putNextEntry(new ZipEntry(ZIP_ENTRY_WS));
 		Files.copy(portObject.getFile().toPath(), out);
@@ -28,7 +28,7 @@ public final class RPortObjectSerializer extends PortObjectSerializer<RPortObjec
 	}
 
 	@Override
-	public RPortObject loadPortObject(PortObjectZipInputStream in, PortObjectSpec spec, ExecutionMonitor exec)
+	public RPortObject2 loadPortObject(PortObjectZipInputStream in, PortObjectSpec spec, ExecutionMonitor exec)
 			throws IOException, CanceledExecutionException {
 		ZipEntry nextEntry = in.getNextEntry();
 		if ((nextEntry == null) || !nextEntry.getName().equals(ZIP_ENTRY_WS)) {
@@ -39,7 +39,7 @@ public final class RPortObjectSerializer extends PortObjectSerializer<RPortObjec
 		Files.copy(in, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		
 		in.close();
-		return new RPortObject(tempFile);
+		return new RPortObject2(tempFile);
 	}
 
 }

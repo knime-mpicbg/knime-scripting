@@ -128,11 +128,11 @@
        <portType
              color="#000000"
              hidden="false"
-             name="de.mpicbg.knime.scripting.r.port.RPortType"
-             objectClass="de.mpicbg.knime.scripting.r.port.RPortObject"
-             objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSerializer"
-             specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec"
-             specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec$SpecSerializer">
+             name="de.mpicbg.knime.scripting.r.port.RPortType2"
+             objectClass="de.mpicbg.knime.scripting.r.port.RPortObject2"
+             objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSerializer2"
+             specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2"
+             specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2$SpecSerializer">
        </portType>
     </extension>
 

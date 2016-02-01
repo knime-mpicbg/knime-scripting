@@ -9,7 +9,7 @@ import org.knime.core.node.port.PortType;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
+import de.mpicbg.knime.scripting.r.port.RPortObject2;
 
 
 /**
@@ -21,7 +21,7 @@ import de.mpicbg.knime.scripting.r.port.RPortObject;
 public class GenericOpenInRNodeModel2 extends AbstractRScriptingNodeModel {
 	
 	private static final ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
-			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
+			createPorts(1, RPortObject2.TYPE, RPortObject2.class), 	// 1 generic input
 			new PortType[0], 										// no output
 			new RColumnSupport(), 
 			false, 	// no script		
