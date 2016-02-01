@@ -1,13 +1,14 @@
 package de.mpicbg.knime.scripting.r.rgg;
 
+import org.knime.core.node.NodeDialogPane;
+
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptFileProvider;
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeDialog;
 import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeFactory;
 import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
-import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
-
-import org.knime.core.node.NodeDialogPane;
 
 
 /**
@@ -23,7 +24,7 @@ public abstract class HardwiredRPlotNodeFactory extends RPlotNodeFactory impleme
     @Override
     public RPlotNodeModel createNodeModel() {
         if (hardwiredTemplate == null) {
-            hardwiredTemplate = HardwiredRSnippetNodeFactory.loadTemplate(this);
+            hardwiredTemplate = AbstractScriptingNodeModel.loadTemplate(this);
         }
 
         RPlotNodeModel model = createNodeModelInternal();
@@ -42,7 +43,7 @@ public abstract class HardwiredRPlotNodeFactory extends RPlotNodeFactory impleme
     public NodeDialogPane createNodeDialogPane() {
     	ScriptingNodeDialog configPane =  new RPlotNodeDialog(createNodeModel().getDefaultScript(""), false, false);
 
-        ScriptTemplate template = HardwiredRSnippetNodeFactory.loadTemplate(this);
+        ScriptTemplate template = AbstractScriptingNodeModel.loadTemplate(this);
         configPane.setHardwiredTemplate(template);
 
         return configPane;

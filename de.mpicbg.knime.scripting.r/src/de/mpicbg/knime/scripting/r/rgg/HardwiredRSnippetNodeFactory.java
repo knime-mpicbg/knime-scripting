@@ -1,18 +1,18 @@
 package de.mpicbg.knime.scripting.r.rgg;
 
+import org.knime.core.node.NodeDialogPane;
+
 import de.mpicbg.knime.knutils.AbstractNodeModel;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptFileProvider;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
-import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
-
-import org.knime.core.node.NodeDialogPane;
-
-import java.io.InputStream;
 
 
 /**
@@ -26,7 +26,7 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
     @Override
     public RSnippetNodeModel createNodeModel() {
         if (hardwiredTemplate == null) {
-            hardwiredTemplate = loadTemplate(this);
+            hardwiredTemplate = AbstractScriptingNodeModel.loadTemplate(this);
         }
 
         RSnippetNodeModel snippetNodeModel = createNodeModelInternal();
@@ -71,19 +71,11 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
 
 
     public static String getDefaultScriptForModel(ScriptFileProvider fileProvider) {
-        ScriptTemplate template = loadTemplate(fileProvider);
+        ScriptTemplate template = AbstractScriptingNodeModel.loadTemplate(fileProvider);
 
         return TemplateConfigurator.generateScript(template);
     }
 
 
-    public static ScriptTemplate loadTemplate(ScriptFileProvider scriptFileProvider) {
-        String templateFileName = scriptFileProvider.getTemplateFileName();
-        InputStream scriptStream = scriptFileProvider.getClass().getResourceAsStream(templateFileName);
-        String unparsedTemplate = TemplateUtils.convertStreamToString(scriptStream);
-
-        ScriptTemplate scriptTemplate = new ScriptTemplate();
-        scriptTemplate.setTemplate(unparsedTemplate);
-        return scriptTemplate;
-    }
+    
 }
