@@ -19,6 +19,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.product;bundle-version="[3.0.0,4.0.0)"
 Export-Package: de.mpicbg.knime.scripting.r,
  de.mpicbg.knime.scripting.r.generic,
+ de.mpicbg.knime.scripting.r.node.generic.plot,
+ de.mpicbg.knime.scripting.r.node.hardwired,
  de.mpicbg.knime.scripting.r.node.plot,
  de.mpicbg.knime.scripting.r.node.snippet,
  de.mpicbg.knime.scripting.r.plots,
