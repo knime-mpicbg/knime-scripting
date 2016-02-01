@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r.rgg;
+package de.mpicbg.knime.scripting.r.oldhardwired;
 
 import org.knime.core.node.NodeDialogPane;
 
@@ -15,6 +15,7 @@ import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeModel;
  * Document me!
  *
  * @author Holger Brandl
+ * @deprecated
  */
 public abstract class HardwiredRPlotNodeFactory extends RPlotNodeFactory implements ScriptFileProvider {
 
@@ -22,6 +23,7 @@ public abstract class HardwiredRPlotNodeFactory extends RPlotNodeFactory impleme
 
 
     @Override
+    @Deprecated
     public RPlotNodeModel createNodeModel() {
         if (hardwiredTemplate == null) {
             hardwiredTemplate = AbstractScriptingNodeModel.loadTemplate(this);
@@ -40,6 +42,7 @@ public abstract class HardwiredRPlotNodeFactory extends RPlotNodeFactory impleme
 
 
     @Override
+    @Deprecated
     public NodeDialogPane createNodeDialogPane() {
     	ScriptingNodeDialog configPane =  new RPlotNodeDialog(createNodeModel().getDefaultScript(""), false, false);
 

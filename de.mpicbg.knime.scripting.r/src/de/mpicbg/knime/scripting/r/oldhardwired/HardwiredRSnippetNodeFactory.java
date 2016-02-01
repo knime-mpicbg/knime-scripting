@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r.rgg;
+package de.mpicbg.knime.scripting.r.oldhardwired;
 
 import org.knime.core.node.NodeDialogPane;
 
@@ -17,6 +17,7 @@ import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 /**
  * @author Holger Brandl
+ * @deprecated
  */
 public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory implements ScriptFileProvider {
 
@@ -24,6 +25,7 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
 
 
     @Override
+    @Deprecated
     public RSnippetNodeModel createNodeModel() {
         if (hardwiredTemplate == null) {
             hardwiredTemplate = AbstractScriptingNodeModel.loadTemplate(this);
@@ -36,6 +38,7 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
     }
 
 
+    @Deprecated
     protected RSnippetNodeModel createNodeModelInternal() {
     	return new RSnippetNodeModel(new ScriptingModelConfig(
     			AbstractNodeModel.createPorts(getNumberOfInputPorts()), 
@@ -46,7 +49,7 @@ public abstract class HardwiredRSnippetNodeFactory extends RSnippetNodeFactory i
     			true));
     }
 
-
+    @Deprecated
     public int getNumberOfInputPorts() {
         return 1;
     }
