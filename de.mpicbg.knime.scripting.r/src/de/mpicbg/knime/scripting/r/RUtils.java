@@ -1,7 +1,5 @@
 package de.mpicbg.knime.scripting.r;
 
-import java.awt.Color;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -16,17 +14,12 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -34,32 +27,17 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.property.ShapeFactory;
-import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.FlowVariable;
 import org.rosuda.REngine.REXP;
-import org.rosuda.REngine.REXPDouble;
-import org.rosuda.REngine.REXPGenericVector;
 import org.rosuda.REngine.REXPInteger;
-import org.rosuda.REngine.REXPList;
 import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
@@ -70,17 +48,9 @@ import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import de.mpicbg.knime.knutils.Utils;
-import de.mpicbg.knime.knutils.data.property.ColorModelUtils;
-import de.mpicbg.knime.knutils.data.property.ShapeModelUtils;
-import de.mpicbg.knime.knutils.data.property.SizeModel;
-import de.mpicbg.knime.knutils.data.property.SizeModel.Mapping;
-import de.mpicbg.knime.knutils.data.property.SizeModelUtils;
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
-import de.mpicbg.knime.scripting.r.port.RPortObject;
 //import de.mpicbg.knime.scripting.r.generic.RPortObject;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -92,19 +62,15 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
  */
 public class RUtils {
 
-	
-
     public static int MAX_FACTOR_LEVELS = 500;
-    
 
-    
-    
-    
-
-
-
-
-    // TODO: replace it
+    /**
+     * @deprecated
+     * @param exec
+     * @param rexp
+     * @param typeMapping
+     * @return
+     */
     public static BufferedDataTable convert2DataTable(ExecutionContext exec, REXP rexp, Map<String, DataType> typeMapping) {
         try {
             RList rList = rexp.asList();
@@ -250,34 +216,22 @@ public class RUtils {
 
     }
 
-
+    /**
+     * @deprecated
+     * @param domain
+     * @param stringCell
+     */
     private static void updateDomain(LinkedHashSet<DataCell> domain, StringCell stringCell) {
         if (!stringCell.isMissing() && domain.size() < MAX_FACTOR_LEVELS) {
             domain.add(stringCell);
         }
     }
 
-
-    public static String chop(String str) {
-        if (str == null) {
-            return null;
-        }
-        int strLen = str.length();
-        if (strLen < 2) {
-            return "";
-        }
-        int lastIdx = strLen - 1;
-        String ret = str.substring(0, lastIdx);
-        char last = str.charAt(lastIdx);
-        if (last == '\n') {
-            if (ret.charAt(lastIdx - 1) == '\r') {
-                return ret.substring(0, lastIdx - 1);
-            }
-        }
-        return ret;
-    }
-
-
+    /**
+     * create new connection to R server
+     * @return
+     * @throws KnimeScriptingException
+     */
     public static RConnection createConnection() throws KnimeScriptingException {
 
         String host = getHost();
@@ -291,19 +245,28 @@ public class RUtils {
         }
     }
 
-
+    /**
+     * @return host setting from R-scripting preferences
+     */
     public static String getHost() {
         return R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_HOST);
     }
 
-
+    /**
+     * @return port setting from R-scripting preferences
+     */
     public static int getPort() {
         return R4KnimeBundleActivator.getDefault().getPreferenceStore().getInt(RPreferenceInitializer.R_PORT);
     }
 
-
-
-
+    /**
+     * @deprecated
+     * @param varFileMapping
+     * @param connection
+     * @throws RserveException
+     * @throws REXPMismatchException
+     * @throws IOException
+     */
     public static void loadGenericInputs(Map<String, File> varFileMapping, RConnection connection) throws RserveException, REXPMismatchException, IOException {
 
         for (String varName : varFileMapping.keySet()) {
@@ -468,16 +431,6 @@ public class RUtils {
 
         return script;
     }
-
-
-	public static BufferedDataTable convert2DataTable(ExecutionContext exec,
-			REXP out, String[] rowNames, Map<String, DataType> typeMapping) {
-		// TODO use row names for output table
-		return convert2DataTable(exec, out, typeMapping);
-	}
-
-
-
 
 	/**
 	 * assumes in R workspace an objects resulting from 'evaluate'-function call
