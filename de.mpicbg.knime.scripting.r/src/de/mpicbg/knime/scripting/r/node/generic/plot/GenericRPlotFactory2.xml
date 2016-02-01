@@ -25,5 +25,9 @@
         <inPort index="0" name="existing R workspace">An R workspace.</inPort>
         <outPort index="0" name="R plot">The generated R-figure</outPort>
     </ports>
+    
+    <views>
+    	<view name="R plot" index="0">The generated R-figure</view>
+    </views>
 
 </knimeNode>
