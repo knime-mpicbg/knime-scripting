@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.core;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -373,5 +374,14 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return encodedString.replace("\r","");
     }
 
+	/** load hardwired RGG template */
+	public static ScriptTemplate loadTemplate(ScriptFileProvider scriptFileProvider) {
+        String templateFileName = scriptFileProvider.getTemplateFileName();
+        InputStream scriptStream = scriptFileProvider.getClass().getResourceAsStream(templateFileName);
+        String unparsedTemplate = TemplateUtils.convertStreamToString(scriptStream);
 
+        ScriptTemplate scriptTemplate = new ScriptTemplate();
+        scriptTemplate.setTemplate(unparsedTemplate);
+        return scriptTemplate;
+    }
 }

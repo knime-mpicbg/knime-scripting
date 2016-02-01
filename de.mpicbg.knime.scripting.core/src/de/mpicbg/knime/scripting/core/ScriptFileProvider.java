@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.r.rgg;
+package de.mpicbg.knime.scripting.core;
 
 /**
  * Document me!

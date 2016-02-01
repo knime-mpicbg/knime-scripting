@@ -1,8 +1,6 @@
 package de.mpicbg.knime.scripting.r;
 
 import java.awt.Color;
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,7 +43,6 @@ import org.rosuda.REngine.REXPInteger;
 import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.REXPString;
-import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -1037,7 +1034,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 
 		con.close();
-		closeRConnection();
 		return con.getTable();
 	}
 
@@ -1124,4 +1120,6 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
         	throw new KnimeScriptingException("Failed to evaluate the script:\n" + e.getMessage());
         }
 	}
+	
+
 }
