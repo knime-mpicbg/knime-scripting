@@ -1,18 +1,22 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.util.Collections;
 
-import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
-import org.knime.core.data.image.png.PNGImageContent;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.image.ImagePortObject;
-import org.knime.core.node.port.image.ImagePortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.ScriptProvider;
@@ -20,6 +24,7 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
 
 
@@ -32,7 +37,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	
 	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
 			createPorts(1, RPortObject.TYPE, RPortObject.class), 	// 1 generic input
-			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// 1 image output
+			new PortType[0], 		// no output
 			new RColumnSupport(), 	
 			true, 					// no script
 			false, 					// open in functionality
@@ -57,7 +62,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
     	super.configure(inSpecs);
-    	return new PortObjectSpec[]{new ImagePortObjectSpec(PNGImageContent.TYPE)};
+    	return new PortObjectSpec[0];
     }
 
 
@@ -69,7 +74,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
      */
     protected PortObject[] prepareOutput(ExecutionContext exec, RConnection connection) 
     		throws KnimeScriptingException {
-    	PortObject[] outPorts = new PortObject[1];
+    	/*PortObject[] outPorts = new PortObject[1];
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			ImageIO.write(m_image, "png", baos);
@@ -78,8 +83,8 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 		}
 		PNGImageContent content = new PNGImageContent(baos.toByteArray());
         
-        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
-        return outPorts;
+        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);*/
+        return new PortObject[0];
     }
 
     /**
@@ -92,7 +97,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
-	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
+        	RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
@@ -118,12 +123,38 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
         return nodeOutput;
 	}
 
-    /**
+	/**
+	 * overwrite this method to support old internal image format (ImageIcon)
+	 */
+    @Override
+	protected void saveInternals(File nodeDir, ExecutionMonitor executionMonitor)
+			throws IOException, CanceledExecutionException {
+    	if (m_rWorkspaceFile != null) {
+            File f = new File(nodeDir, "pushtable.R");
+
+            Files.copy(m_rWorkspaceFile.toPath(), f.toPath());
+        }
+
+        if (m_image != null) {
+        	File imageFile = new File(nodeDir, "image.bin");
+
+            FileOutputStream f_out = new FileOutputStream(imageFile);
+
+            // Write object with ObjectOutputStream
+            ObjectOutputStream obj_out = new ObjectOutputStream(new BufferedOutputStream(f_out));
+
+            // Write object out to disk
+
+            obj_out.writeObject(new ImageIcon(m_image));
+            obj_out.close();
+        }
+	}
+
+	/**
      * {@inheritDoc}
      */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-
 	}
 }

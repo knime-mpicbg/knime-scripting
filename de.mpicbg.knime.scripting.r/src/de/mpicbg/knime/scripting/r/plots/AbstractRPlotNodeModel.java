@@ -1,17 +1,22 @@
 package de.mpicbg.knime.scripting.r.plots;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
@@ -53,8 +58,8 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 
     public BufferedImage m_image;						// image created by R
     public File m_nodeImageFile;				// image file (internals)
-    private File m_rWorkspaceFile;			// workspace file (internals)
-    
+    protected File m_rWorkspaceFile;			// workspace file (internals)
+    private boolean isImageIcon = false;
     
     /**
      * MODEL - SETTINGS
@@ -369,7 +374,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
      * @return file handle for temporary workspace file
      * @throws IOException
      */
-    private File getTempWSFile() throws IOException {
+    protected File getTempWSFile() throws IOException {
 
         if (m_rWorkspaceFile == null) {
             // note: this 'R' is not a workspace variable name but a file suffix
@@ -472,7 +477,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         }
 
         if (m_image != null) {
-            File imageFile = new File(nodeDir, "image.bin");
+            File imageFile = new File(nodeDir, "image.png");
             
             ImageIO.write(m_image, "png", imageFile);
         }
@@ -487,7 +492,17 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
         	m_rWorkspaceFile = getTempWSFile();
             Files.copy(internalWS.toPath(), m_rWorkspaceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             
-            m_nodeImageFile = new File(nodeDir, "image.bin");
+            // support for old internal representation of plot images
+            File imgBin = new File(nodeDir, "image.bin");
+            File imgPng = new File(nodeDir, "image.png");
+            if(imgBin.exists()) {
+            	m_nodeImageFile = imgBin;
+            	isImageIcon = true;
+            }
+            if(imgPng.exists()) {
+            	m_nodeImageFile = imgPng;
+            	isImageIcon = false;
+            }
 
         } catch(IOException e) {
         	throw new CanceledExecutionException("Failed to load internal representation of R workspace:\n" + e.getMessage());
@@ -516,10 +531,44 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 	 * read image from file
 	 * @throws IOException
 	 */
-	private void deserializeImage() throws IOException {
+	protected void deserializeImage() throws IOException {
         if (m_nodeImageFile.isFile()) {
-            m_image = ImageIO.read(m_nodeImageFile);
+        	// support for old internal representation of plot images
+        	if(isImageIcon) {
+        		FileInputStream f_in = new FileInputStream(m_nodeImageFile);
+
+                // Read object using ObjectInputStream
+                ObjectInputStream obj_in = new ObjectInputStream(new BufferedInputStream(f_in));
+
+                // Read an object
+                try {
+    				m_image = createBufferedImage(((ImageIcon) obj_in.readObject()));
+    			} catch (ClassNotFoundException e) {
+    				e.printStackTrace();
+    			} finally {
+    				obj_in.close();
+				}
+                
+        	} else {
+        		m_image = ImageIO.read(m_nodeImageFile);
+        	}
         }
     }
     
+	/**
+	 * create BufferedImage from ImageIcon
+	 * @param icon
+	 * @return newly created buffered image
+	 */
+    public static BufferedImage createBufferedImage(ImageIcon icon) {
+    	BufferedImage bi = new BufferedImage(
+    			icon.getIconWidth(),
+    			icon.getIconHeight(),
+    			BufferedImage.TYPE_INT_RGB);
+    	Graphics g = bi.createGraphics();
+    	icon.paintIcon(null, g, 0,0);
+    	g.dispose();
+
+    	return bi;
+    }
 }
