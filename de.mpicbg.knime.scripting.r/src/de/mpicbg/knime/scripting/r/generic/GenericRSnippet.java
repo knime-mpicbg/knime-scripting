@@ -1,6 +1,16 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.rosuda.REngine.REXPGenericVector;
+
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
@@ -8,21 +18,6 @@ import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
-
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REngineException;
-import org.rosuda.REngine.Rserve.RConnection;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
 
 
 /**
@@ -68,32 +63,31 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
     	boolean useEvaluate = R4KnimeBundleActivator.getDefault().getPreferenceStore().getBoolean(RPreferenceInitializer.USE_EVALUATE_PACKAGE);
-    	
-        RConnection connection = RUtils.createConnection();
 
         try {
 	        // 1) restore the workspace in a different server session
 	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
-	
+        	m_con = RUtils.createConnection();
+        	RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
 	        String script = prepareScript();
 	        String fixedScript = fixEncoding(script);
 	        
-	        parseScript(connection, fixedScript);
+	        parseScript(m_con, fixedScript);
 	        
 	        if(useEvaluate) {
 	        	// parse and run script
 	        	// evaluation list, can be used to create a console view, throws first R-error-message
-	        	REXPGenericVector knimeEvalObj = evaluateScript(fixedScript, connection);
+	        	REXPGenericVector knimeEvalObj = evaluateScript(fixedScript, m_con);
 	        	// check for warnings
-	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(connection);
+	        	ArrayList<String> warningMessages = RUtils.checkForWarnings(m_con);
 	        	if(warningMessages.size() > 0) setWarningMessage("R-script produced " + warningMessages.size() + " warnings. See R-console view for further details");
 	        	
 	
 	        } else {
 	        	// parse and run script
-	        	evalScript(connection, fixedScript);     	
+	        	evalScript(m_con, fixedScript);     	
 	        }
 	
 	
@@ -102,13 +96,13 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 	            rWorkspaceFile = File.createTempFile("genericR", RSnippetNodeModel.R_OUTVAR_BASE_NAME);
 	        }
 	
-	        RUtils.saveToLocalFile(rWorkspaceFile, connection, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
+	        RUtils.saveToLocalFile(rWorkspaceFile, m_con, RUtils.getHost(), RSnippetNodeModel.R_OUTVAR_BASE_NAME);
         } catch(Exception e) {
-        	connection.close();
+        	closeRConnection();
         	throw e;
         }
 
-        connection.close();
+        closeRConnection();
 
         return new PortObject[]{new RPortObject(rWorkspaceFile)};
 	}
