@@ -139,7 +139,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 	 * method writes image to file
 	 * @throws KnimeScriptingException
 	 */
-	private void saveFigureAsFile() throws KnimeScriptingException {
+	protected void saveFigureAsFile() throws KnimeScriptingException {
 		boolean enableFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
         // no need to save image to file ?
         if(!enableFileOutput) return;

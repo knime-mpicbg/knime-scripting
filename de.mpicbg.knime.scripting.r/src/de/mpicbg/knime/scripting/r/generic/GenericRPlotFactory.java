@@ -2,7 +2,6 @@ package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeFactory;
 
-
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
  *

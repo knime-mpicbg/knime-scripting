@@ -1,11 +1,18 @@
 package de.mpicbg.knime.scripting.r.generic;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.image.ImagePortObject;
+import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.ScriptProvider;
@@ -28,7 +35,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// 1 image output
 			new RColumnSupport(), 	
 			true, 					// no script
-			true, 					// open in functionality
+			false, 					// open in functionality
 			false);					// use chunk settings
 
 
@@ -50,7 +57,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
     	super.configure(inSpecs);
-        return new PortObjectSpec[0];
+    	return new PortObjectSpec[]{new ImagePortObjectSpec(PNGImageContent.TYPE)};
     }
 
 
@@ -58,9 +65,21 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
      * Prepares the ouput tables of this nodes. As most plot-nodes won't have any data output, this method won't be
      * overridden in most cases. Just in case a node should have both (an review and a data table output), you may
      * override it.
+     * @throws KnimeScriptingException 
      */
-    protected PortObject[] prepareOutput(ExecutionContext exec, RConnection connection) {
-        return new BufferedDataTable[0];
+    protected PortObject[] prepareOutput(ExecutionContext exec, RConnection connection) 
+    		throws KnimeScriptingException {
+    	PortObject[] outPorts = new PortObject[1];
+    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			ImageIO.write(m_image, "png", baos);
+		} catch (IOException e) {
+			throw new KnimeScriptingException(e.getMessage());
+		}
+		PNGImageContent content = new PNGImageContent(baos.toByteArray());
+        
+        outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
+        return outPorts;
     }
 
     /**
@@ -69,7 +88,7 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		RConnection connection = RUtils.createConnection();
+		m_con = RUtils.createConnection();
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
@@ -77,16 +96,22 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
-	        createInternals(connection);
-	
-	
+	        
+			try {
+				createInternals(m_con);
+				saveFigureAsFile();
+			} catch (KnimeScriptingException e) {
+				closeRConnection();
+				throw e;
+			}
+
 	        // 3) prepare the output tables (which will do nothing in most cases, as most plot nodes don't have output)
-	        nodeOutput = prepareOutput(exec, connection);
+	        nodeOutput = prepareOutput(exec, m_con);
 	
 	        // 3) close the connection to R (which will also delete the temporary workspace on the server)
-	        connection.close();
+	        closeRConnection();
         } catch(Exception e) {
-        	connection.close();
+        	closeRConnection();
         	throw e;
         }
 
@@ -99,12 +124,6 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		/*try {
-			String rawScript = prepareScript();
-			openInR(inData, exec, rawScript, logger);   
-			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
-		} catch (REXPMismatchException | IOException | REngineException e) {
-			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}*/
+
 	}
 }
