@@ -30,13 +30,17 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 
     private File rWorkspaceFile;
 
-
+    /**
+     * @deprecated
+     */
     public GenericRSnippet() {
         // the input port is optional just to allow generative R nodes
         this(createPorts(1, RPortObject.TYPE, RPortObject.class), createPorts(1, RPortObject.TYPE, RPortObject.class));
     }
 
-
+    /**
+     * @deprecated
+     */
     protected GenericRSnippet(PortType[] inPortTypes, PortType[] outPortTypes) {
         super(inPortTypes, outPortTypes, new RColumnSupport());
     }
@@ -113,13 +117,5 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
-		/*try {
-			String rawScript = prepareScript();
-			openInR(inData, exec, rawScript, logger);   
-			setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
-		} catch (REXPMismatchException | IOException | REngineException e) {
-			throw new KnimeScriptingException("Failed to open in R\n" + e);
-		}*/
-		
 	}
 }
