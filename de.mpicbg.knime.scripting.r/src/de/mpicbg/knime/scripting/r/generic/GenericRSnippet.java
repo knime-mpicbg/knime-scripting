@@ -72,7 +72,9 @@ public class GenericRSnippet extends AbstractRScriptingNodeModel {
 	        // 1) restore the workspace in a different server session
 	        //pushToR(inData, connection, exec, AbstractScriptingNodeModel.CHUNK_IN_DFT);
         	m_con = RUtils.createConnection();
-        	RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
+        	
+        	if(inData.length > 0)
+        		RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
 	
 	        // 2) run the script  (remove all linebreaks and other no space whitespace-characters
 	        String script = prepareScript();
