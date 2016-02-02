@@ -93,11 +93,17 @@ public class GenericRPlotNodeModel extends AbstractRPlotNodeModel {
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
-		m_con = RUtils.createConnection();
+		
         PortObject[] nodeOutput = null;
         try {
 	        // 1) restore the workspace in a different server session
-        	RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
+        	if(inData[0] instanceof RPortObject) {
+        		m_con = RUtils.createConnection();
+        		RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inData[0]).getFile()), m_con);
+        	}		
+        	// just needed for old dose response node
+        	else
+        		super.executeImpl(inData, exec);
 	
 	        // 2) create the figure
 	        adaptHardwiredTemplateToContext(ScriptProvider.unwrapPortSpecs(inData));
