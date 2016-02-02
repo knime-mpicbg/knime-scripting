@@ -269,10 +269,10 @@ public class RUtils {
      */
     public static void loadGenericInputs(Map<String, File> varFileMapping, RConnection connection) throws RserveException, REXPMismatchException, IOException {
 
-        for (String varName : varFileMapping.keySet()) {
+    	for (String varName : varFileMapping.keySet()) {
 
-            // summary of happens below: create a copy of the current workspace file in r, load it in r 
-        	
+            // summary of happens below: create a copy of the current workspace file in r, load it in r and rename the content to match the current nodes connectivity pattern
+
             // mirror the ws-file on the server side
             connection.voidEval("tmpwfile <- 'tempRws';");
             connection.voidEval("file.create(tmpwfile);");
@@ -280,11 +280,26 @@ public class RUtils {
 
             writeFile(varFileMapping.get(varName), serverWSFile, connection);
 
-            // load the workspace on the server side within a new environment and convert that to a list
-            // it helps not to overwrite R objects with the same name if multiple workspaces are loaded
-            connection.voidEval("x <- new.env()");
-            connection.voidEval("load(tmpwfile)");
-            connection.voidEval(varName + " <- as.list(x)");
+            // load the workspace on the server side
+            connection.voidEval("load(tmpwfile);");
+
+            // rename the input structure to match the current environment ones
+
+            // rename kIn if file is still using the old naming scheme
+            List<String> wsVariableNames = Arrays.asList(connection.eval("ls()").asStrings());
+
+            if (wsVariableNames.contains("R")) {
+                // rename the old R-variable to the new format
+                connection.voidEval(RSnippetNodeModel.R_OUTVAR_BASE_NAME + " <- R;");
+            }
+
+            // if its the plotting node the input is still names kIn, so just rename if there no such variable already present
+            if (!wsVariableNames.contains(varName)) {
+                connection.eval(varName + " <- " + RSnippetNodeModel.R_OUTVAR_BASE_NAME + ";");
+
+                // do some cleanup
+                connection.voidEval("rm(" + RSnippetNodeModel.R_OUTVAR_BASE_NAME + ");");
+            }
         }
     }
 
