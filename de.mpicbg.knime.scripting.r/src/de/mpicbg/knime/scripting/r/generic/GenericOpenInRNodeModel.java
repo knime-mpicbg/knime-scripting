@@ -1,20 +1,27 @@
 package de.mpicbg.knime.scripting.r.generic;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
+import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
-import de.mpicbg.knime.scripting.r.OpenInRNodeModel;
+import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.RUtils;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
 /**
@@ -79,7 +86,7 @@ public class GenericOpenInRNodeModel extends AbstractRScriptingNodeModel {
         
         // open R with workspace file
         logger.info("Spawning R-instance ...");
-        OpenInRNodeModel.openWSFileInR(rWorkspaceFile, prepareScript());
+        openWSFileInR(rWorkspaceFile, prepareScript());
 
         return new PortObject[0];
 	}
@@ -95,5 +102,28 @@ public class GenericOpenInRNodeModel extends AbstractRScriptingNodeModel {
 		} catch (Exception e) {
 			throw new KnimeScriptingException(e.getMessage());
 		}
+	}
+
+	public static void openWSFileInR(File workspaceFile, String script) throws IOException {
+	    IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
+	    String rExecutable = prefStore.getString(RPreferenceInitializer.LOCAL_R_PATH);
+	
+	    // 3) spawn a new R process
+	    if (Utils.isWindowsPlatform()) {
+	        Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+	    } else if (Utils.isMacOSPlatform()) {
+	
+	        Runtime.getRuntime().exec("open -n -a " + rExecutable + " " + workspaceFile.getAbsolutePath());
+	
+	    } else { // linux and the rest of the world
+	        Runtime.getRuntime().exec(rExecutable + " " + workspaceFile.getAbsolutePath());
+	    }
+	
+	    // copy the script in the clipboard
+	    if (!script.isEmpty()) {
+	        StringSelection data = new StringSelection(script);
+	        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+	        clipboard.setContents(data, data);
+	    }
 	}
 }
