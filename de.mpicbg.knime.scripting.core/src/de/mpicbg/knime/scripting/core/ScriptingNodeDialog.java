@@ -330,8 +330,10 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             e.printStackTrace();
         }
 
-        // if a template has been loaded: select the script tab
-       if(template != null) selectTab(SCRIPT_TAB_NAME);
+        // if a template/script has been loaded: select the script tab
+        // as the default script will be present for new nodes it only needs to be done in case
+        // the script differs from the default script
+       if(template != null || !script.equals(defaultScript)) selectTab(SCRIPT_TAB_NAME);
        
         scriptProvider.setContent(script, finalTemplate);
 	}
