@@ -1,5 +1,16 @@
 package de.mpicbg.knime.knutils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -10,10 +21,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObjectSpec;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 
 
 /**
@@ -71,16 +78,25 @@ public class BufTableUtils {
         exec.checkCanceled();
         exec.setProgress((double) done / (double) all);
     }
-
-
-	public static DataTableSpec createNewDataTableSpec(LinkedHashMap<String, DataType> newColumns) {
-		DataTableSpecCreator createSpec = new DataTableSpecCreator();
-		
-		for(String colName : newColumns.keySet()) {
-			DataColumnSpecCreator colSpecCreate = new DataColumnSpecCreator(colName, newColumns.get(colName));
-			createSpec.addColumns(colSpecCreate.createSpec());
-		}
-		
-		return createSpec.createSpec();
-	}
+    
+    /**
+     * creates a data table spec based on a hash map with column names and types
+     * @param columns
+     * @return new data table spec
+     */
+    public static DataTableSpec createNewDataTableSpec(LinkedHashMap<String, DataType> columns) {
+    	DataColumnSpecCreator colSpecCreator = null;
+    	DataColumnSpec[] cSpecList = new DataColumnSpec[columns.size()];
+    	int i = 0;
+    	for(String columnName : columns.keySet()) {
+    		colSpecCreator = new DataColumnSpecCreator(columnName, columns.get(columnName));
+    		cSpecList[i] = colSpecCreator.createSpec();
+    		i++;
+    	}
+    	
+    	DataTableSpecCreator specCreator = new DataTableSpecCreator();
+    	specCreator.addColumns(cSpecList);
+    	
+    	return specCreator.createSpec();
+    }
 }

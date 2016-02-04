@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../r_icon_snippets.png" type="Manipulator">
+    <name>R Snippet (2:1)</name>
+
+    <shortDescription>
+        Executes an R script within KNIME.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>This node executes a snippet/script using an R server (Rserve). The node provides the same functionality like the 'R Snippet' node
+        	but additionally it allows to push a second table to R. Within R the data frames will be named 'kIn1' and 'kIn2'.
+        	For further information: See node description of the 'R Snippet' node.<br/>
+        </intro>
+    </fullDescription>
+    
+
+    <ports>
+        <inPort index="0" name="Data table">First input to R ('kIn1')</inPort>
+        <inPort index="1" name="Data table">Second input to R ('kIn2')</inPort>
+        <outPort index="0" name="Result from R">Result of the R-snippet. ('rOut')</outPort>
+    </ports>
+</knimeNode>

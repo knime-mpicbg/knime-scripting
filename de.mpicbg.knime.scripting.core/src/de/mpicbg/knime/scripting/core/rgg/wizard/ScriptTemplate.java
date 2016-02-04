@@ -16,26 +16,38 @@ import java.util.Map;
  */
 public class ScriptTemplate implements Cloneable {
 
+	/** scripting language */
     private String scriptingLanguage = "";
 
+    /** template author */
     private String author;
 
+    /** list of categories */
     private List<String> categories = new ArrayList<String>();
 
+    /** description of the template */
     private String description;
 
+    /** the full template */
     private String template;
 
     private Map<String, Object> persistedConfig;
 
+    /** name of the template */
     private String name;
     
+    /** false, if the template is selected but has been unlinked for modification */
     private boolean linkedToScript = true;
 
+    /** preview image URL */
     private String previewURL;
 
+    /** URL-source */
     private String templateURL;
+    
+    
 
+    /** RGG placeholders */
     public static final String DESCRIPTION_PATTERN = "$$$TEMPLATE_DESC$$$";
     public static final String NAME_PATTERN = "$$$TEMPLATE_NAME$$$";
 

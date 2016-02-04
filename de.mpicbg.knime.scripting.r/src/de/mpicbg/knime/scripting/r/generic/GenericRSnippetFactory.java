@@ -1,7 +1,7 @@
 package de.mpicbg.knime.scripting.r.generic;
 
-import de.mpicbg.knime.scripting.r.RSnippetNodeDialog;
-import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -12,6 +12,7 @@ import org.knime.core.node.NodeView;
  * <code>NodeFactory</code> for the "RSnippet" Node. Improved R Integration for Knime
  *
  * @author Holger Brandl (MPI-CBG)
+ * {@deprecated}
  */
 public class GenericRSnippetFactory
         extends NodeFactory<GenericRSnippet> {
@@ -45,7 +46,7 @@ public class GenericRSnippetFactory
     @Override
     public NodeDialogPane createNodeDialogPane() {
         //String templateResources = R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);
-        return new RSnippetNodeDialog(RUtils.SCRIPT_PROPERTY_DEFAULT, true);
+        return new RSnippetNodeDialog(AbstractRScriptingNodeModel.CFG_SCRIPT_DFT, true);
     }
 
 }

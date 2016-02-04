@@ -1,60 +1,132 @@
 package de.mpicbg.knime.scripting.core;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.rgg.RGGDialogPanel;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.*;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
  * Document me!
  *
- * @author Holger Brandl
+ * @author Holger Brandl, Antje Janosch
  */
 public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
     /**
      * The property for the string.
      */
-    protected final SettingsModelString script;
-    protected final SettingsModelString template;
-    protected final SettingsModelBoolean openIn;
-    protected int numOutputs;
-    protected int numInputs;
+    public static final String SCRIPT_PROPERTY = "node.script";
+    public static final String SCRIPT_TEMPLATE = "node.template";
+
+    public static final String SCRIPT_TEMPLATE_DEFAULT = "";
+
+    /**
+     * node setting: functionality to open the input data externally
+     */
+	public static final String OPEN_IN = "open.in";
+	public static final boolean OPEN_IN_DFT = false;
+	
+	/**
+	 * node setting: chunk size to push input table, columns per chunk (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_IN = "chunk.in";
+	public static final int CHUNK_IN_DFT = -1;
+	
+	/**
+	 * node setting: chunk size to pull result table (-1 => not split into chunks)
+	 */
+	public static final String CHUNK_OUT = "chunk.out";
+	public static final int CHUNK_OUT_DFT = -1;
 
 
     private ScriptTemplate hardwiredTemplate = null;
     private String contextAwareHWTemplateText;
+    
+    protected ColumnSupport m_colSupport = null;
+    
+    private ScriptingModelConfig m_nodeCfg = null;
 
-
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts) {
-    	this(inPorts, outPorts, false);
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport) {
+    	this(inPorts, outPorts, colSupport, true, true, true);
     }
     
-    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, boolean useNewSettingsHashmap) {
-        super(inPorts, outPorts, useNewSettingsHashmap);
-
-        numInputs = inPorts.length;
-        numOutputs = outPorts.length;
-
-        script = createSnippetProperty(getDefaultScript());
-        template = createTemplateProperty();
-        openIn = createOpenInProperty();
+    /**
+     * constructor able to add settings to node model by flags
+     * @param inPorts
+     * @param outPorts
+     * @param useScriptSettings
+     * @param useOpenIn
+     * @param useChunkSettings
+     */
+    public AbstractScriptingNodeModel(PortType[] inPorts, PortType[] outPorts, ColumnSupport colSupport,
+    		boolean useScriptSettings,
+    		boolean useOpenIn,
+    		boolean useChunkSettings) {
+    	super(inPorts, outPorts, true);
+    	
+    	this.m_colSupport = colSupport;
+    	
+        if(useScriptSettings) {
+        	this.addModelSetting(SCRIPT_PROPERTY, createSnippetProperty(getDefaultScript("")));
+        	this.addModelSetting(SCRIPT_TEMPLATE, createTemplateProperty());
+        }
+        if(useOpenIn) {
+        	this.addModelSetting(OPEN_IN, createOpenInProperty());
+        }
+        if(useChunkSettings) {
+        	this.addModelSetting(CHUNK_IN, createChunkInProperty());
+        	this.addModelSetting(CHUNK_OUT, createChunkOutProperty());
+        }
+        
+        if(this.m_nodeCfg == null)
+        	this.m_nodeCfg = new ScriptingModelConfig(inPorts, outPorts, colSupport, useScriptSettings, useOpenIn, useChunkSettings);
     }
+
+    /**
+     * constructor with node configuration object
+     * @param cfg
+     */
+	public AbstractScriptingNodeModel(ScriptingModelConfig cfg) {
+		this(
+				cfg.getInPorts(), 
+				cfg.getOutPorts(), 
+				cfg.getColSupport(), 
+				cfg.useScriptSettings(),
+				cfg.useOpenIn(),
+				cfg.useChunkSettings());
+		this.m_nodeCfg = cfg;
+	}
+	
+	/**
+	 * @return node configuration
+	 */
+	protected ScriptingModelConfig getNodeCfg() {
+		return this.m_nodeCfg;
+	}
+
 
 	public void setHardwiredTemplate(ScriptTemplate hardwiredTemplate) {
         // note we clone it here as it might be (and will be in most cases) an instance variable in the node factory.
@@ -68,27 +140,38 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     public static SettingsModelString createSnippetProperty(String defaultScript) {
-        return new SettingsModelString(ScriptingNodeDialog.SCRIPT_PROPERTY, defaultScript);
+        return new SettingsModelString(SCRIPT_PROPERTY, defaultScript);
     }
 
 
     public static SettingsModelString createTemplateProperty() {
-        return new SettingsModelString(ScriptingNodeDialog.SCRIPT_TEMPLATE, ScriptingNodeDialog.SCRIPT_TEMPLATE_DEFAULT);
+        return new SettingsModelString(SCRIPT_TEMPLATE, SCRIPT_TEMPLATE_DEFAULT);
     }
     
     public static SettingsModelBoolean createOpenInProperty() {
-		return new SettingsModelBoolean(ScriptingNodeDialog.OPEN_IN, ScriptingNodeDialog.OPEN_IN_DFT);
+		return new SettingsModelBoolean(OPEN_IN, OPEN_IN_DFT);
+	}
+    
+    public static SettingsModelIntegerBounded createChunkInProperty() {
+		return new SettingsModelIntegerBounded(CHUNK_IN, CHUNK_IN_DFT, -1, Integer.MAX_VALUE);
+	}
+    
+    public static SettingsModelIntegerBounded createChunkOutProperty() {
+		return new SettingsModelIntegerBounded(CHUNK_OUT, CHUNK_OUT_DFT, -1, Integer.MAX_VALUE);
 	}
 
     @Override
 	protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec)
 			throws Exception {
     	// check whether the data should be opened externally
-    	if(openIn.getBooleanValue()) {
-    		openIn(inObjects, exec);
-    		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
-    	} else 
-    		return executeImpl(inObjects,exec);
+    	SettingsModelBoolean openInSM = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
+    	if(openInSM != null) {
+	    	if(openInSM.getBooleanValue()) {
+	    		openIn(inObjects, exec);
+	    		throw new KnimeScriptingException("Data has been opened externally. Uncheck that option to run the script within KNIME");
+	    	} 
+    	}
+    	return executeImpl(inObjects,exec);
 	}
     
     /**
@@ -105,8 +188,10 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * @param inData
      * @param exec
      * @throws KnimeScriptingException
+     * @throws CanceledExecutionException 
      */
-	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException;
+	protected abstract void openIn(PortObject[] inData, ExecutionContext exec) 
+			throws KnimeScriptingException, CanceledExecutionException;
 
 
     @Override
@@ -116,80 +201,55 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         // Plot-nodes need to be handled separately
         adaptHardwiredTemplateToContext(inSpecs);
         
-        if(openIn.getBooleanValue())
-        	this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
+        SettingsModelBoolean openInSetting = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
+        if(openInSetting != null)
+        	if(openInSetting.getBooleanValue())
+        		this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
 
         return null;
 	}
 
-	public String getDefaultScript() {
-        return "";
+    /**
+     * @return default script
+     */
+	public String getDefaultScript(String defaultScript) {
+		if (getHardwiredTemplate() != null) {
+			return TemplateConfigurator.generateScript(getHardwiredTemplate());
+		}
+		return defaultScript;
     }
-
-
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        super.saveSettingsTo(settings);
-
-        script.saveSettingsTo(settings);
-        template.saveSettingsTo(settings);
-        openIn.saveSettingsTo(settings);
-    }
-
-
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        super.loadValidatedSettingsFrom(settings);
-
-        // It can be safely assumed that the settings are valided by the
-        // method below.
-
-        try {
-            script.loadSettingsFrom(settings);
-            openIn.loadSettingsFrom(settings);
-        } catch (Throwable t) {
-        }
-
-        try {
-            template.loadSettingsFrom(settings);
-        } catch (Throwable t) {
-            throw new RuntimeException("Could not unpersist template");
-        }
-
-    }
-
+	
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-
-        // e.g. if the count is in a certain range (which is ensured by the
-        // SettingsModel).
-        // Do not actually set any values of any member variables.
-
-//        script.validateSettings(settings);
     }
 
-
-    protected boolean hasOutput() {
-        return numOutputs > 0;
+    /**
+     * does the node has output ports?
+     * @return
+     */
+    protected boolean hasOutput() {  	
+        return getNrOutPorts() > 0;
     }
 
-
+    /**
+     * if the node has an hardwired template, it's script needs to be adapted (RGG placeholders)
+     * @param inData
+     */
     protected void adaptHardwiredTemplateToContext(PortObjectSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData);
-            contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.getPushableInputSpec(inData, m_colSupport);
+            contextAwareHWTemplateText = TemplateUtils.replaceRGGPlaceholders(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }
 
 
     protected void adaptHardwiredTemplateToContext(DataTableSpec[] inData) {
         if (hardwiredTemplate != null && hardwiredTemplate.isLinkedToScript()) {
-            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.reshapeInputStructure(inData);
-            contextAwareHWTemplateText = TemplateUtils.prepareScript(hardwiredTemplate.getTemplate(), nodeInputModel);
+            Map<Integer, List<DataColumnSpec>> nodeInputModel = ScriptProvider.getPushableInputSpec(inData, m_colSupport);
+            contextAwareHWTemplateText = TemplateUtils.replaceRGGPlaceholders(hardwiredTemplate.getTemplate(), nodeInputModel);
         }
     }
 
@@ -209,7 +269,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     private Map<String, Object> getTemplateConfigInternal() {
-        ScriptTemplate deserializedTemplate = ScriptingNodeDialog.deserializeTemplate(template.getStringValue());
+    	String template = ((SettingsModelString) getModelSetting(SCRIPT_TEMPLATE)).getStringValue();
+        ScriptTemplate deserializedTemplate = ScriptingNodeDialog.deserializeTemplate(template);
 
         if (deserializedTemplate == null) {
 
@@ -230,21 +291,28 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
 
     /**
+     * <p>
+     * deserializes the template from the node setting 'node.template'<br>
+     * loads the script (either with RGG configuration settings or as it is)<br>
+     * replace flowvariable placeholders
+     * </p>
+     * 
      * This method is usually just called from within the different execute implementations. Occassionally it is also
      * called in the view implemntations.
      */
     public String prepareScript() {
 
+    	if(!m_nodeCfg.m_useScriptSettings) return "";
 
         String script;
+        String serializedTemplate = ((SettingsModelString) getModelSetting(SCRIPT_TEMPLATE)).getStringValue();
 
-        String serializedTemplate = template.getStringValue();
         ScriptTemplate restoredTemplate = ScriptingNodeDialog.deserializeTemplate(serializedTemplate);
 
 
         // if the node is a hard-wired one, use the default template, otherwise use the script as saved in the template definition
         if (contextAwareHWTemplateText == null || hardwiredTemplate == null || (restoredTemplate != null && !restoredTemplate.isLinkedToScript())) {
-            script = this.script.getStringValue();
+            script = ((SettingsModelString) getModelSetting(SCRIPT_PROPERTY)).getStringValue();
 
         } else {
             ScriptTemplate contextAwareHWTemplate = new ScriptTemplate();
@@ -261,25 +329,59 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 
             script = TemplateConfigurator.generateScript(contextAwareHWTemplate);
         }
+        
+        script = fixEncoding(script);
 
         // replace flow-variables
         return FlowVarUtils.replaceFlowVars(script, this);
     }
     
+
     /**
      * cast an array of PortObjects into an array of BufferedDataTables
      * @param inData
      * @return array of BufferedDataTables
      */
 	public static BufferedDataTable[] castToBDT(PortObject[] inData) {		
-		BufferedDataTable[] inTables = new BufferedDataTable[inData.length];
 		
-		int i = 0;
+		List<BufferedDataTable> inTables = new ArrayList<BufferedDataTable>();
+		
 		for(PortObject in : inData) {
 			if(in instanceof BufferedDataTable)
-				inTables[i] = (BufferedDataTable) in;
-			i++;
-		}		
-		return inTables;
+				inTables.add((BufferedDataTable) in);
+		}	
+		
+		return inTables.toArray(new BufferedDataTable[inTables.size()]);
 	}
+	
+    /**
+     * cast a PortObjects into a BufferedDataTables
+     * @param inData
+     * @return BufferedDataTable or null
+     */
+	public static BufferedDataTable castToBDT(PortObject inData) {
+		if(inData instanceof BufferedDataTable) return (BufferedDataTable) inData;
+		return null;
+	}
+
+	/**
+	 * ensure UTF-8 encoding
+	 * @param stringValue
+	 * @return
+	 */
+    public static String fixEncoding(String stringValue) {
+        String encodedString = new String(stringValue.getBytes(StandardCharsets.UTF_8));
+        return encodedString.replace("\r","");
+    }
+
+	/** load hardwired RGG template */
+	public static ScriptTemplate loadTemplate(ScriptFileProvider scriptFileProvider) {
+        String templateFileName = scriptFileProvider.getTemplateFileName();
+        InputStream scriptStream = scriptFileProvider.getClass().getResourceAsStream(templateFileName);
+        String unparsedTemplate = TemplateUtils.convertStreamToString(scriptStream);
+
+        ScriptTemplate scriptTemplate = new ScriptTemplate();
+        scriptTemplate.setTemplate(unparsedTemplate);
+        return scriptTemplate;
+    }
 }

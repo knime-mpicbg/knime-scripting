@@ -37,8 +37,8 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
 
 
     @Override
-    public String getDefaultScript() {
-        return DEFAULT_SCRIPT;
+    public String getDefaultScript(String defaultScript) {
+        return super.getDefaultScript(DEFAULT_SCRIPT);
     }
 
     /**

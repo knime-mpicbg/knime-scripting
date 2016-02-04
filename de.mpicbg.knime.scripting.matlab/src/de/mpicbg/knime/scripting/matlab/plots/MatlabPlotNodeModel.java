@@ -89,7 +89,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
      * @param outports
      */
     public MatlabPlotNodeModel(PortType[] inPorts, PortType[] outports) {
-        super(inPorts, outports, true);
+        super(inPorts, outports);
 
         addModelSetting(FIGURE_HEIGHT_SETTING_NAME, createPropFigureHeightSetting());
         addModelSetting(FIGURE_WIDTH_SETTING_NAME, createPropFigureWidthSetting());
@@ -111,12 +111,8 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public String getDefaultScript() {
-        if (getHardwiredTemplate() == null) {
-            return AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD;
-        } else {
-            return TemplateConfigurator.generateScript(getHardwiredTemplate());
-        }
+    public String getDefaultScript(String defaultScript) {
+    	return super.getDefaultScript(AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD);
     }
 
 

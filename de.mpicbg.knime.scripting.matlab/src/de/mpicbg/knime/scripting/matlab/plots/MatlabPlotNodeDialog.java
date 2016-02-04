@@ -1,7 +1,7 @@
 package de.mpicbg.knime.scripting.matlab.plots;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
-import de.mpicbg.knime.scripting.matlab.MatlabColReformatter;
+import de.mpicbg.knime.scripting.matlab.MatlabColumnSupport;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
@@ -23,7 +23,7 @@ import javax.swing.*;
 public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
 
     public MatlabPlotNodeDialog(String templateResources, String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new MatlabColReformatter(), useTemplateRepository);
+        super(defaultScript, new MatlabColumnSupport(), useTemplateRepository);
 
         createNewTab("Output Options");
         addDialogComponent(new DialogComponentNumber(MatlabPlotNodeModel.createPropFigureWidthSetting(), "Width", 10));

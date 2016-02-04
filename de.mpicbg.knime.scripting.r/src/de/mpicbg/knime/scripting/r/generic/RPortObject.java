@@ -56,11 +56,12 @@ import org.knime.core.util.FileUtil;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 
 /**
+ * {@deprecated}
  * A port object for R model port providing a file containing a R model.
  *
  * @author Kilian Thiel, University of Konstanz
