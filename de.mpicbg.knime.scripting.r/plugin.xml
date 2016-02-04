@@ -91,12 +91,12 @@
     <extension point="org.knime.workbench.repository.categories">
         <!--<category level-id="scripting" name="Scripting" path="/"/>-->
         <category
-              icon="src/de/mpicbg/knime/scripting/r/node/r_icon_snippets.png"
+              icon="resources/r_icon_snippets.png"
               level-id="r"
               name="R Scripting"
               path="/community"/>
         <category
-              icon="src/de/mpicbg/knime/scripting/r/node/generic/rgeneric_icon.png"
+              icon="resources/rgeneric_icon.png"
               level-id="genericr"
               name="Generic R"
               path="/community/r"/>
