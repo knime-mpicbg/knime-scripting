@@ -3,7 +3,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ManifestVersion: 2
 Bundle-Name: Ptyhon Scripting Integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.python; singleton:=true
-Bundle-Version: 3.0.000.qualifier
+Bundle-Version: 3.0.001.qualifier
 Bundle-ClassPath: pythonsnippet.jar
 Bundle-Activator: de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)

@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.r.feature"
       label="KNIME R Scripting extension"
-      version="3.0.000.qualifier"
+      version="3.0.001.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
@@ -15,7 +15,7 @@
    </copyright>
 
    <license url="http://opensource.org/licenses/BSD-3-Clause">
-   3-clause BSD
+      3-clause BSD
    
       Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
