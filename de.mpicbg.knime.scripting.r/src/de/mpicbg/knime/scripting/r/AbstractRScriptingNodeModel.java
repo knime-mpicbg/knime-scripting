@@ -372,6 +372,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 			pushInputToR(inData, exec);	
 		} catch(KnimeScriptingException | CanceledExecutionException e) {
 			closeRConnection();
+			throw e;
 		}
 		return null;	
 	}
