@@ -11,7 +11,7 @@ import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
-import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory;
+import de.mpicbg.knime.scripting.r.RSnippetNodeFactory;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 

@@ -1,10 +1,11 @@
-package de.mpicbg.knime.scripting.r.node.snippet;
+package de.mpicbg.knime.scripting.r;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 /**
  * <code>NodeFactory</code> for the "RSnippet" Node.
