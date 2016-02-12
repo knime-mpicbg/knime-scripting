@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.python.plots;
 
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.TemplateConfigurator;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.PythonTableConverter;
@@ -58,8 +59,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        configure(new DataTableSpec[]{(DataTableSpec) inSpecs[0]});
-
+    	super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
 
@@ -84,7 +84,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     protected void prepareScript(Writer writer) throws IOException {
         writer.write("import matplotlib\nmatplotlib.use('Agg')\nfrom pylab import *\n");
 
-        super.prepareScript(writer);
+        super.prepareScript(writer, true);
 
         float dpi = 100;
         float width = getDefWidth() / dpi;
@@ -118,10 +118,31 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         return fileName;
     }
 
-    @Override
-    protected PortObject[] execute(PortObject[] inData, ExecutionContext exec) throws Exception {
+    public int getDefHeight() {
+        return propHeight.getIntValue();
+    }
 
-        // Determine what kind of connection to instantiate (local or remote)
+    public int getDefWidth() {
+        return propWidth.getIntValue();
+    }
+
+    @Override
+    public String getDefaultScript(String defaultScript) {
+    	return super.getDefaultScript(DEFAULT_PYTHON_PLOTCMD);
+    }
+
+    public Image getImage() {
+        return image;
+    }
+    
+
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// Determine what kind of connection to instantiate (local or remote)
         IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
         boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
         String host = preferences.getString(PythonPreferenceInitializer.PYTHON_HOST);
@@ -207,26 +228,15 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         outPorts[0] = new ImagePortObject(content, IM_PORT_SPEC);
 
         return outPorts;
-    }
+	}
 
-    public int getDefHeight() {
-        return propHeight.getIntValue();
-    }
-
-    public int getDefWidth() {
-        return propWidth.getIntValue();
-    }
-
-    @Override
-    public String getDefaultScript() {
-        if (getHardwiredTemplate() == null) {
-            return DEFAULT_PYTHON_PLOTCMD;
-        } else {
-            return TemplateConfigurator.generateScript(getHardwiredTemplate());
-        }
-    }
-
-    public Image getImage() {
-        return image;
-    }
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		openInPython(inData, exec, logger);   
+		setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
+	}
 }

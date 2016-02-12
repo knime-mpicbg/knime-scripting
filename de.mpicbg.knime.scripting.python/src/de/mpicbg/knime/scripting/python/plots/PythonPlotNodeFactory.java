@@ -42,7 +42,7 @@ public class PythonPlotNodeFactory extends NodeFactory<PythonPlotNodeModel> {
     @Override
     public NodeDialogPane createNodeDialogPane() {
         String templateResources = PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES);
-        return new PythonPlotNodeDialog(templateResources, PythonPlotNodeFactory.this.createNodeModel().getDefaultScript(), enableTemplateRepository());
+        return new PythonPlotNodeDialog(templateResources, PythonPlotNodeFactory.this.createNodeModel().getDefaultScript(""), enableTemplateRepository());
     }
 
 

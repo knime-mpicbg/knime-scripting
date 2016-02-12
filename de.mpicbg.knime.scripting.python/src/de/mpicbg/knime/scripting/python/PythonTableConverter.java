@@ -135,7 +135,6 @@ public class PythonTableConverter {
             CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
             DataTableSpec tableSpec = inputTable.getDataTableSpec();
 
-            int numRows = inputTable.getRowCount();
             List<String> columnNames = getColumnNames(tableSpec);
 
             // The first line is the column names

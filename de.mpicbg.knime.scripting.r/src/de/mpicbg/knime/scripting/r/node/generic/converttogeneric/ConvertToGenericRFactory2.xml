@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../rgeneric_icon.png" type="Manipulator">
+    <name>Convert to R</name>
+
+    <shortDescription>
+        Takes a data table as input and pushes it to R
+    </shortDescription>
+
+    <fullDescription>
+        <intro>Takes a data table as input and pushes it to a new R workspace as 'kIn' data frame.
+
+            Make sure that Rserve is running somewhere, and KNIME is accordingly configured (KNIME->Preferences).
+            <br/>
+            <br/>
+            Detailed documentation about the R generic nodes:
+            <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Generic-R">
+                Wiki on GitHub: knime-scripting
+            </a>
+        </intro>
+        <option name="Chunk size to push incoming data">
+        Number of columns to push as one data chunk to R. The default (-1) leads to data transfer without splitting the data in chunks.
+        </option>
+
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="input table">A data table which should be processed using non-table based GenericR pipeline.
+        </inPort>
+        <outPort index="0" name="R workspace">R workspace containing the input table as data frame (named 'kIn')</outPort>
+    </ports>
+
+</knimeNode>

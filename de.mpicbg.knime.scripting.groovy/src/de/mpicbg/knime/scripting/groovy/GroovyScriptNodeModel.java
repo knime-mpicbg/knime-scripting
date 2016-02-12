@@ -3,16 +3,6 @@
  */
 package de.mpicbg.knime.scripting.groovy;
 
-import de.mpicbg.knime.scripting.core.AbstractTableScriptingNodeModel;
-import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.MalformedURLException;
@@ -21,13 +11,24 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
+
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+
 
 /**
  * This is the base implementation of the "JPython Script" node
  *
  * @author Tripos
  */
-public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
+public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 
 
     public static final String DEFAULT_SCRIPT_OLD = "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
@@ -78,86 +79,15 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
 
 
     protected GroovyScriptNodeModel() {
-        super(2, 1, 1, 2);
+        //super(2, 1, 1, 2);
+        super(createPorts(2, 1, 2), createPorts(1), new GroovyColumnSupport());
     }
 
 
     protected GroovyScriptNodeModel(int nrInDataPorts, int nrOutDataPorts) {
-        super(nrInDataPorts, nrOutDataPorts);
+        //super(nrInDataPorts, nrOutDataPorts);
+    	super(createPorts(nrInDataPorts), createPorts(nrOutDataPorts), new GroovyColumnSupport());
     }
-
-
-    @Override
-    public String getDefaultScript() {
-        return DEFAULT_SCRIPT;
-    }
-
-
-    @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        return new DataTableSpec[]{null};
-    }
-
-
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-
-        BufferedDataTable in1;
-        BufferedDataTable in2;
-
-        // create the groovy enviroment and execute the script
-
-        Binding binding = new Binding();
-
-
-        switch (numInputs) {
-            case 2:
-                in2 = inData[1];
-                binding.setVariable("input2", in2);
-//                binding.setVariable("attributes2", Attribute.convert(in2.getDataTableSpec()));
-
-            case 1:
-                in1 = inData[0];
-                binding.setVariable("input", in1);
-//                binding.setVariable("attributes", Attribute.convert(in1.getDataTableSpec()));
-
-            case 0:
-                break;
-        }
-
-        // register the exec (in case the script needs to create a new table
-        binding.setVariable("exec", exec);
-
-        ClassLoader loader = createClassLoader();
-
-        GroovyShell shell = new GroovyShell(loader, binding);
-        Object o;
-
-        try {
-            String script = prepareScript();
-            o = shell.evaluate(defaultImports + script);
-        } catch (Throwable t) {
-//            logger.error(t.toString()); // does not include any stacktrace
-            throw new RuntimeException(t);
-        }
-
-        if (o == null) {
-            throw new RuntimeException("No return value (of type BufferedDataTable");
-        }
-
-        if (!(o instanceof BufferedDataTable)) {
-            throw new RuntimeException("return value is not of expected type BufferedDataTable");
-        }
-
-        BufferedDataTable outTable = (BufferedDataTable) o;
-
-//        if (outContainer.isOpen()) {
-//            outContainer.close();
-//        }
-//
-//        return new BufferedDataTable[]{exec.createBufferedDataTable(outContainer.getTable(), exec)};
-        return new BufferedDataTable[]{outTable};
-    }
-
 
     private ClassLoader createClassLoader() throws MalformedURLException {
         IPreferenceStore prefStore = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();
@@ -200,4 +130,75 @@ public class GroovyScriptNodeModel extends AbstractTableScriptingNodeModel {
 //        ClassLoader loader = new PluginClassLoader(urls, this.getClass().getClassLoader());
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
+    
+
+
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+        BufferedDataTable in1;
+        BufferedDataTable in2;
+
+        // create the groovy enviroment and execute the script
+
+        Binding binding = new Binding();
+
+
+        switch (getNrInPorts()) {
+            case 2:
+                in2 = (BufferedDataTable) inData[1];
+                binding.setVariable("input2", in2);
+//                binding.setVariable("attributes2", Attribute.convert(in2.getDataTableSpec()));
+
+            case 1:
+                in1 = (BufferedDataTable) inData[0];
+                binding.setVariable("input", in1);
+//                binding.setVariable("attributes", Attribute.convert(in1.getDataTableSpec()));
+
+            case 0:
+                break;
+        }
+
+        // register the exec (in case the script needs to create a new table
+        binding.setVariable("exec", exec);
+
+        ClassLoader loader = createClassLoader();
+
+        GroovyShell shell = new GroovyShell(loader, binding);
+        Object o;
+
+        try {
+            String script = prepareScript();
+            o = shell.evaluate(defaultImports + script);
+        } catch (Throwable t) {
+//            logger.error(t.toString()); // does not include any stacktrace
+            throw new RuntimeException(t);
+        }
+
+        if (o == null) {
+            throw new RuntimeException("No return value (of type BufferedDataTable");
+        }
+
+        if (!(o instanceof BufferedDataTable)) {
+            throw new RuntimeException("return value is not of expected type BufferedDataTable");
+        }
+
+        BufferedDataTable outTable = (BufferedDataTable) o;
+
+//        if (outContainer.isOpen()) {
+//            outContainer.close();
+//        }
+//
+//        return new BufferedDataTable[]{exec.createBufferedDataTable(outContainer.getTable(), exec)};
+        return new BufferedDataTable[]{outTable};
+	}
+
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		throw new KnimeScriptingException("The functionality to open data external is not yet implemented");
+		
+	}
 }

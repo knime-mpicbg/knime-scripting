@@ -1,5 +1,6 @@
 package de.mpicbg.knime.knutils;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -87,6 +88,75 @@ public class Utils {
         } else {
             throw new RuntimeException("Could not map unknown type '" + intStrOrDouble + "'to knime-type");
         }
+    }
+    
+    /**
+     * Creates a new data cell of the given data type with the value
+     * supports, missing, double, integer, string (TODO: and date/time)
+     * @param dtype
+     * @param value
+     * @return data cell, or null if given data type is not supported or value cannot be casted to given data type
+     */
+    public static DataCell createCellByType(DataType dtype, Object value) {
+    	
+    	// MISSING
+    	if (value == null) {
+            return DataType.getMissingCell();
+        }
+
+    	// DOUBLE
+        if (dtype.equals(DoubleCell.TYPE)) {
+            if (value instanceof String) {
+                if (((String) value).trim().isEmpty()) {
+                    return DataType.getMissingCell();
+                }
+                try {
+                	value = Double.parseDouble((String) value);
+                } catch(NumberFormatException e) {
+                	return null;
+                }
+            }
+
+            if (value instanceof Integer) {
+                value = ((Integer) value).doubleValue();
+            }
+
+            return new DoubleCell((Double) value);
+        }
+        
+        // INTEGER
+        if (dtype.equals(IntCell.TYPE)) {
+            if (value instanceof String) {
+                if (((String) value).trim().isEmpty()) {
+                    return DataType.getMissingCell();
+                }
+
+                try {
+                	value = Integer.parseInt((String) value);
+                } catch(NumberFormatException e) {
+                	return null;
+                }
+            }
+
+            return new IntCell((Integer) value);
+        }
+        
+        //STRING
+        if (dtype.equals(StringCell.TYPE)) {
+
+            return new StringCell(value.toString());
+        } 
+        
+        // DATE/TIME
+        /*if (dtype.equals(DateAndTimeCell.TYPE)) {
+        	Date d = new Date()
+            Date date = (Date) value;
+            Calendar cal = GregorianCalendar.getInstance();
+            cal.setTime(date);
+
+            return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+        } */
+        return null;
     }
 
 

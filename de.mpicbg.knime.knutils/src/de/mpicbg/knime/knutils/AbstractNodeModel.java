@@ -80,10 +80,6 @@ public abstract class AbstractNodeModel extends NodeModel {
         return portTypes;
     }
 
-
-    @Override
-    protected abstract BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception;
-
     /**
      * add settings to a list
      *
@@ -160,6 +156,9 @@ public abstract class AbstractNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+    	
+    	boolean debug = true;
+    	if(debug) nodeSettingsToLog(this.getClass());
 
         if (!useNewSettingsHashmap) {
             for (SettingsModel uiProperty : allSettings) {
@@ -255,5 +254,25 @@ public abstract class AbstractNodeModel extends NodeModel {
 
         // we have not found a flow-variable for the given name
         return null;
+    }
+    
+    /**
+     * debug method to push all model settings (name+type) to the log
+     * 
+     * @param nodeClass
+     */
+    public void nodeSettingsToLog(Class<? extends AbstractNodeModel> nodeClass) {
+    	StringBuilder logString = new StringBuilder();
+    	if(this.useNewSettingsHashmap) {
+    		logString.append(nodeClass.toString() + " SETTINGS:\n");
+    		for(String setting : modelSettings.keySet()) {
+    			SettingsModel model = modelSettings.get(setting);
+    			logString.append("\t" + setting + " (" + model.getClass().getName() + ")\n");
+    		}
+    		
+    	} else
+    		logString.append(nodeClass.getName() + " does not yet use the hashmap for settings.");
+    	
+    	logger.info(logString);
     }
 }

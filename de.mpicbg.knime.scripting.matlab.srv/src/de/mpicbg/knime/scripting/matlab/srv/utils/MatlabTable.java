@@ -34,6 +34,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.util.KnimeEncryption;
 
 import de.mpicbg.knime.knutils.Attribute;
 import de.mpicbg.knime.knutils.AttributeUtils;
@@ -123,14 +124,18 @@ public class MatlabTable {
     public void knimeTable2LinkedHashMap() {
         DataTableSpec tableSpec = this.table.getDataTableSpec();
         
+        long tableSize = this.table.size();
+        if(tableSize >= Integer.MAX_VALUE)
+        	throw new RuntimeException("Cannot process tables with more than " + Integer.MAX_VALUE + " rows (Integer.MAX_VALUE)");
+        
         // Initialize the hash.
         LinkedHashMap<String, Object> hashTable = new LinkedHashMap<String, Object>();
         for (int j = 0; j < tableSpec.getNumColumns(); j++) {
             DataColumnSpec columnSpec = tableSpec.getColumnSpec(j);
             if (columnSpec.getType().isCompatible(StringValue.class)) {
-                hashTable.put(columnSpec.getName(), new String[this.table.getRowCount()]);
+                hashTable.put(columnSpec.getName(), new String[(int)tableSize]);
             } else {
-                hashTable.put(columnSpec.getName(), new Double[this.table.getRowCount()]);
+                hashTable.put(columnSpec.getName(), new Double[(int)tableSize]);
             }
         }
         

@@ -1,19 +1,20 @@
 package de.mpicbg.knime.scripting.r.plots;
 
-import org.knime.core.node.*;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeDialog;
+import de.mpicbg.knime.scripting.r.node.plot.RPlotNodeView;
 
 
 /**
  * @author Holger Brandl
  */
-public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotNodeModel> extends NodeFactory<RPlotModel> {
+public abstract class AbstractRPlotNodeFactory extends NodeFactory<AbstractRPlotNodeModel> {
 
     @Override
-    public abstract RPlotModel createNodeModel();
+    public abstract AbstractRPlotNodeModel createNodeModel();
 
 
     @Override
@@ -23,8 +24,8 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
 
     @Override
-    public NodeView<RPlotModel> createNodeView(final int viewIndex, final RPlotModel nodeModel) {
-        return new RPlotNodeView<RPlotModel>(nodeModel);
+    public NodeView<AbstractRPlotNodeModel> createNodeView(final int viewIndex, final AbstractRPlotNodeModel nodeModel) {
+        return new RPlotNodeView<AbstractRPlotNodeModel>(nodeModel);
     }
 
 
@@ -36,34 +37,7 @@ public abstract class AbstractRPlotNodeFactory<RPlotModel extends AbstractRPlotN
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(), true);
+        return new RPlotNodeDialog(AbstractRPlotNodeFactory.this.createNodeModel().getDefaultScript(""), true);
     }
 
-    public static SettingsModelInteger createPropFigureWidth() {
-        return new SettingsModelIntegerBounded("figure.width", 1000, 100, 5000);
-    }
-
-
-    public static SettingsModelInteger createPropFigureHeight() {
-        return new SettingsModelIntegerBounded("figure.height", 700, 100, 5000);
-    }
-
-
-    public static SettingsModelBoolean createOverwriteFile() {
-        return new SettingsModelBoolean("overwrite.ok", false);
-    }
-
-
-    public static SettingsModelString createPropOutputFile() {
-        return new SettingsModelString("figure.output.file", "");
-    }
-
-    public static SettingsModelString createPropOutputType() {
-        return new SettingsModelString("figure.ouput.type", "png");
-    }
-
-
-	public static SettingsModelBoolean createEnableFile() {
-		return new SettingsModelBoolean("write.output.file", true);
-	}
 }

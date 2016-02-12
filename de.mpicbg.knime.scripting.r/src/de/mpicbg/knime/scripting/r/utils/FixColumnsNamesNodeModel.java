@@ -69,30 +69,35 @@ public class FixColumnsNamesNodeModel extends AbstractNodeModel {
         if(useMakeNames.getBooleanValue())
         	connection = RUtils.createConnection();
 
-        for (Attribute attribute : inputAttributes) {
-
-            String originalName = attribute.getName();
-            String fixedName = null;
-
-            if (useMakeNames.getBooleanValue()) {
-					fixedName = fixNameWithR(originalName, connection);
-            } else {
-                fixedName = fixName(originalName);
-            }
-
-            if (!originalName.equals(fixedName)) {
-                DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(fixedName, attribute.getType());
-
-                if (attribute.getColumnSpec().getDomain() != null) {
-                    DataColumnDomain domain = attribute.getColumnSpec().getDomain();
-                    DataColumnDomain dataColumnDomain = new DataColumnDomainCreator(domain).createDomain();
-                    columnSpecCreator.setDomain(dataColumnDomain);
-                }
-
-                outputSpec.add(columnSpecCreator.createSpec());
-            } else {
-                outputSpec.add(attribute.getColumnSpec());
-            }
+        try {
+	        for (Attribute attribute : inputAttributes) {
+	
+	            String originalName = attribute.getName();
+	            String fixedName = null;
+	
+	            if (useMakeNames.getBooleanValue()) {
+						fixedName = fixNameWithR(originalName, connection);
+	            } else {
+	                fixedName = fixName(originalName);
+	            }
+	
+	            if (!originalName.equals(fixedName)) {
+	                DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(fixedName, attribute.getType());
+	
+	                if (attribute.getColumnSpec().getDomain() != null) {
+	                    DataColumnDomain domain = attribute.getColumnSpec().getDomain();
+	                    DataColumnDomain dataColumnDomain = new DataColumnDomainCreator(domain).createDomain();
+	                    columnSpecCreator.setDomain(dataColumnDomain);
+	                }
+	
+	                outputSpec.add(columnSpecCreator.createSpec());
+	            } else {
+	                outputSpec.add(attribute.getColumnSpec());
+	            }
+	        }
+        } catch(Exception e) {
+        	if(connection != null) connection.close();
+        	throw e;
         }
         
         // close connection to R

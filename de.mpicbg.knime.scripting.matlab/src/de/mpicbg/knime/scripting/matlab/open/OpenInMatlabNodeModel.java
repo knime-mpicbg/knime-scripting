@@ -4,7 +4,9 @@ import matlabcontrol.MatlabProxy;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabFileTransfer;
@@ -19,16 +21,20 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
      */
 	protected OpenInMatlabNodeModel() {
 		// Define the ports and use a hash-map for setting models 
-        super(createPorts(1), createPorts(0), true);
+        super(createPorts(1), createPorts(0));
 	}
 	
+
+	
+
 	/**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        // Get the table
-        BufferedDataTable data = inData[0];
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		// Get the table
+        BufferedDataTable data = (BufferedDataTable) inData[0];
         
         try {               	
         	// Execute the command in MATLAB
@@ -75,6 +81,14 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
         logger.info("The data is now loaded in MATLAB. Switch to the MATLAB command window.");
 
         return new BufferedDataTable[0];
-    }
-	
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		// nothing to do here
+	}
 }

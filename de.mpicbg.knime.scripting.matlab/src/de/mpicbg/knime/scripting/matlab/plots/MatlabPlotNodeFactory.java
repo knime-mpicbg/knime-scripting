@@ -44,7 +44,7 @@ public class MatlabPlotNodeFactory extends NodeFactory<MatlabPlotNodeModel> {
         String defaultScript = MatlabPlotNodeFactory
         		.this
         		.createNodeModel()
-        		.getDefaultScript();
+        		.getDefaultScript("");
         
         return new MatlabPlotNodeDialog(templateResources, defaultScript, true);
     }

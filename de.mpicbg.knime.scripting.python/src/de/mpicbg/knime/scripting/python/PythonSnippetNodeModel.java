@@ -1,15 +1,17 @@
 package de.mpicbg.knime.scripting.python;
 
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonClient;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortType;
 
 
 /**
@@ -35,24 +37,17 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
 
 
     @Override
-    public String getDefaultScript() {
-        return DEFAULT_SCRIPT;
+    public String getDefaultScript(String defaultScript) {
+        return super.getDefaultScript(DEFAULT_SCRIPT);
     }
-
-
-    @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        return new DataTableSpec[]{null};
-    }
-
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-                                          final ExecutionContext exec) throws Exception {
-        IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData,
+			ExecutionContext exec) throws Exception {
+		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
         boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
 
@@ -63,10 +58,12 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         python = local ? new LocalPythonClient() : new PythonClient(host, port);
 
         createTempFiles();
+        
+        BufferedDataTable[] inTables = AbstractScriptingNodeModel.castToBDT(inData);
 
         // Write data into csv
         logger.info("Writing table to CSV file");
-        PythonTableConverter.convertTableToCSV(exec, inData[0], kInFile.getClientFile(), logger);
+        PythonTableConverter.convertTableToCSV(exec, inTables[0], kInFile.getClientFile(), logger);
         kInFile.upload();
 
         // Execute script
@@ -107,6 +104,16 @@ public class PythonSnippetNodeModel extends AbstractPythonScriptingNodeModel {
         deleteTempFiles();
 
         return resultTable;
-    }
+	}
 
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec)
+			throws KnimeScriptingException {
+		
+		openInPython(inData, exec, logger);   
+		setWarningMessage("To push the node's input to R again, you need to reset and re-execute it.");
+	}
 }

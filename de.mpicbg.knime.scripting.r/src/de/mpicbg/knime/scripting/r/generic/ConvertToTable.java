@@ -1,8 +1,11 @@
 package de.mpicbg.knime.scripting.r.generic;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
-import de.mpicbg.knime.scripting.r.RSnippetNodeModel;
+import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.r.AbstractRScriptingNodeModel;
 import de.mpicbg.knime.scripting.r.RUtils;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -13,6 +16,7 @@ import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.Rserve.RConnection;
 
 import java.io.File;
+import java.util.Collections;
 
 
 /**
@@ -20,8 +24,9 @@ import java.io.File;
  * BufferedDatatables.
  *
  * @author Holger Brandl
+ * {@deprecated}
  */
-public class ConvertToTable extends AbstractNodeModel {
+public class ConvertToTable extends AbstractRScriptingNodeModel {
 
     private File rWorkspaceFile;
 
@@ -35,17 +40,19 @@ public class ConvertToTable extends AbstractNodeModel {
     @Override
     protected PortObject[] execute(PortObject[] inObjects, ExecutionContext exec) throws Exception {
 
-        RConnection connection = RUtils.createConnection();
+    	m_con = RUtils.createConnection();
+        BufferedDataTable dataTable = null;
 
+        try {
         // 1) restore the workspace in a different server session
-        RUtils.pushToR(inObjects, connection, exec);
+        RUtils.loadGenericInputs(Collections.singletonMap(RSnippetNodeModel.R_INVAR_BASE_NAME, ((RPortObject)inObjects[0]).getFile()), m_con);
 
         // 2) Make sure that the R-object in the persistied workspace is of type data-frame
-        boolean isDataFrame = Boolean.parseBoolean(connection.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());
+        boolean isDataFrame = Boolean.parseBoolean(m_con.eval("is.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asString());
         if (!isDataFrame) {
             logger.warn("The R object in the input is not a data-frame. Only data frames can be converted into Knime tables. Trying casting to data.frame...");
 
-            REXP xp = connection.parseAndEval("try(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " <- as.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " ))");
+            REXP xp = m_con.parseAndEval("try(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " <- as.data.frame(" + RSnippetNodeModel.R_INVAR_BASE_NAME + " ))");
 
             if (xp.inherits("try-error")) {
                 throw new RuntimeException("Casting to data-frame failed. You need to change your script to return a data-structure that is a data-frame or can be coerced into one. ");
@@ -54,13 +61,17 @@ public class ConvertToTable extends AbstractNodeModel {
 
 
         //3) convert the data frame back into a knime table
-        REXP rexp = connection.eval(RSnippetNodeModel.R_INVAR_BASE_NAME);
-        String[] rowNames = connection.eval("rownames(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asStrings();
+        REXP rexp = m_con.eval(RSnippetNodeModel.R_INVAR_BASE_NAME);
+        String[] rowNames = m_con.eval("rownames(" + RSnippetNodeModel.R_INVAR_BASE_NAME + ")").asStrings();
         
-        BufferedDataTable dataTable = RUtils.convert2DataTable(exec, rexp, null);
+        dataTable = RUtils.convert2DataTable(exec, rexp, null);
 
-        connection.voidEval("rm(list = ls(all = TRUE));");
-        connection.close();
+        m_con.voidEval("rm(list = ls(all = TRUE));");
+        } catch(Exception e) {
+        	closeRConnection();
+        	throw e;
+        }
+        closeRConnection();
 
         return new BufferedDataTable[]{dataTable};
     }
@@ -77,4 +88,18 @@ public class ConvertToTable extends AbstractNodeModel {
     protected BufferedDataTable[] execute(BufferedDataTable[] inData, ExecutionContext exec) throws Exception {
         throw new RuntimeException("fake implementation: This method should be never called");
     }
+
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	protected void openIn(PortObject[] inData, ExecutionContext exec) throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		
+	}
 }
