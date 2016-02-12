@@ -1,4 +1,43 @@
 ======================================================================================================
+2016-02-12
+VERSION		v3.1.0
+
+INTERNAL
+
+* R integration restructured and transfer from/to R improved
+
+ENHANCEMENTS / FEATURES
+
+R nodes now can
+- transfer data in chunks (for big tables)
+- transfer KNIME color/size/shape model
+- transfer rowIDs
+- directly 'open external'
+- transfer domain values
+- transfer flow variables
+- handles empty tables correctly
+- supports double, int, long, boolean and string and ommits other column types
+
+ISSUES
+
+* fixes #67: Rserve process hangs under Windows after R-Plot node failure
+* fixes #35: RGG line break bug after Edit Template
+* fix: OpenInPython does not work under Windows (no window opens after execution)
+* Use new Rserve version 1.7 #42 
+* Include Open in R funcionality into R plot node and R snippet node #4 
+* Generic plot node should get image outport #66 
+* Stop support of old R variable names #54 
+* transfer R workspace with generic nodes #47 
+* Support domain values from KNIME as levels in R #43 
+* row ids should be used as row names in R-data.frame #9 
+
+NEW NODES
+
+* Generic R nodes (new versions)
+	R port now acts as workspace transfer
+
+
+======================================================================================================
 2015-05-28
 VERSION		v2.0.4
 
