@@ -440,15 +440,17 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		int i = 0;
 		for (PortObject inport : inObjects) {
 
-			PortType pType = getInPortType(i);
-
-			if(pType.equals(BufferedDataTable.TYPE)) {
-				String RVariableName = R_INVAR_BASE_NAME + (nTableInputs > 1 ? (i + 1) : "");
-				portVarMapping.put(RVariableName, inport);
-				i++;
-			}
-			if(pType.equals(RPortObject2.TYPE) && inport != null) {
-				portVarMapping.put("generic", inport);
+			if(inport != null) {
+				PortType pType = getInPortType(i);
+	
+				if(pType.equals(BufferedDataTable.TYPE)) {
+					String RVariableName = R_INVAR_BASE_NAME + (nTableInputs > 1 ? (i + 1) : "");
+					portVarMapping.put(RVariableName, inport);
+					i++;
+				}
+				if(pType.equals(RPortObject2.TYPE) && inport != null) {
+					portVarMapping.put("generic", inport);
+				}
 			}
 		}
 
