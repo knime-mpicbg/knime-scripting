@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.r; singleton:=true
-Bundle-Version: 3.1.000.qualifier
+Bundle-Version: 3.1.100.qualifier
 Bundle-ClassPath: rsnippet.jar,
  lib/REngine.jar,
  lib/RserveEngine.jar
