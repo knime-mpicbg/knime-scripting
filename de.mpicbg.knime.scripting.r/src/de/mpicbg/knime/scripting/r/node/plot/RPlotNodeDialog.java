@@ -28,8 +28,8 @@ public class RPlotNodeDialog extends ScriptingNodeDialog {
 	public RPlotNodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
 		super(defaultScript, new RColumnSupport(), enableTemplateRepository, enableOpenExternal, true);
 		
-		SettingsModelString fileSM = AbstractRPlotNodeModel.createOutputFileSM();
-		SettingsModelBoolean overwriteSM = AbstractRPlotNodeModel.createOverwriteSM();
+		final SettingsModelString fileSM = AbstractRPlotNodeModel.createOutputFileSM();
+		final SettingsModelBoolean overwriteSM = AbstractRPlotNodeModel.createOverwriteSM();
 		SettingsModelBoolean writeImageSM = AbstractRPlotNodeModel.createWriteFileSM();
 
 		createNewTab("Output Options");
