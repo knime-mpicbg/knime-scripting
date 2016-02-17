@@ -616,6 +616,8 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		// no color model column has been found
 		if(colorIdx == -1) return;
+		
+		String columnName = tSpec.getColumnSpec(colorIdx).getName();
 
 		// data type of color model is not supported
 		RType t = getRType(tSpec.getColumnSpec(colorIdx).getType(), false);
@@ -623,7 +625,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		exec.setMessage("Push color model to R (cannot be cancelled)");
 
-		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(colorIdx).getName(), t, 0);
+		RDataColumn rC = new RDataColumn(columnName, t, 0);
 		HashMap<DataCell, Color> colorModel = null;
 
 		// parse color model
@@ -651,7 +653,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		// create color and value vectors for Rserve transfer
 		RList l = new RList();
-		l.put("value", rC.getREXPData());
+		l.put(rC.getName(), rC.getREXPData());
 		l.put("color", new REXPString(colValues));
 
 		// push color model to R
@@ -682,6 +684,8 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		// no shape model column has been found
 		if(shapeIdx == -1) return;
+		
+		String columnName = tSpec.getColumnSpec(shapeIdx).getName();
 
 		// data type of color model is not supported
 		RType t = getRType(tSpec.getColumnSpec(shapeIdx).getType(), false);
@@ -696,7 +700,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		assert shapeModel != null;
 
 		// create R data vector
-		RDataColumn rC = new RDataColumn(tSpec.getColumnSpec(shapeIdx).getName(), t, 0);
+		RDataColumn rC = new RDataColumn(columnName, t, 0);
 		rC.initDataVector(shapeModel.size());
 
 		// convert shape model (shape as String and R-data-column with the associated values)
@@ -712,7 +716,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 		// create shape and value vectors for Rserve transfer
 		RList l = new RList();
-		l.put("value", rC.getREXPData());
+		l.put(rC.getName(), rC.getREXPData());
 		l.put("shape", new REXPString(shapeValues));
 		l.put("pch", new REXPInteger(ArrayUtils.toPrimitive(shapePch)));
 
