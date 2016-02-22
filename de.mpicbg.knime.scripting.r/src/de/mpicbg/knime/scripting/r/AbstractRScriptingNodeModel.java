@@ -660,6 +660,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
+			con.voidEval("names(" + nameInR + ") <- c(\""+ rC.getName() + "\", \"color\")");
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e.getMessage());
 		}
@@ -724,6 +725,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
+			con.voidEval("names(" + nameInR + ") <- c(\""+ rC.getName() + "\", \"shape\",\"pch\")");
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push nominal shape model to R: " + e.getMessage());
 		}
