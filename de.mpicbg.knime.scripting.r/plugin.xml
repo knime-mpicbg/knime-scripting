@@ -3,7 +3,7 @@
 <plugin>
 
     <extension point="org.knime.workbench.repository.nodes">
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"
+        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"/>
 
         <node
@@ -143,6 +143,12 @@
              specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2"
              specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2$SpecSerializer">
        </portType>
+    </extension>
+    <extension
+          point="org.knime.core.NodeFactoryClassMapper">
+       <NodeFactoryClassMapper
+             classMapper="de.mpicbg.knime.scripting.r.RNodeFactoryClassMapper">
+       </NodeFactoryClassMapper>
     </extension>
 
     <!-- disabled because it looks the same as the r-extenion splash icon from the knime r-extension -->
