@@ -541,7 +541,7 @@ public class RUtils {
 
 	/**
 	 * save R workspace to file
-	 * @param rWorkspaceFile
+	 * @param rWorkspaceFile needs to have '/' as folder separator
 	 * @param connection
 	 * @param host
 	 * @throws KnimeScriptingException 
@@ -554,7 +554,7 @@ public class RUtils {
 		if(host.equals("localhost") || host.equals("127.0.0.1")) {
 			// save workspace to local file
 			try {
-				connection.voidEval("save.image(file=\"" + rWorkspaceFile.toPath() + "\")");
+				connection.voidEval("save.image(file=\"" + rWorkspaceFile.getAbsolutePath().replace("\\", "/") + "\")");
 			} catch (RserveException e) {
 				throw new KnimeScriptingException("Failed to save R workspace: " + e.getMessage());
 			}
