@@ -660,6 +660,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
+			con.voidEval("names(" + nameInR + ") <- c(\""+ rC.getName() + "\", \"color\")");
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push nominal color model to R: " + e.getMessage());
 		}
@@ -724,6 +725,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		try {
 			con.assign(nameInR, new REXPGenericVector(l));
 			con.voidEval(nameInR + " <- as.data.frame(" + nameInR + ")");
+			con.voidEval("names(" + nameInR + ") <- c(\""+ rC.getName() + "\", \"shape\",\"pch\")");
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push nominal shape model to R: " + e.getMessage());
 		}
@@ -741,16 +743,17 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	public void pushSizeModelToR(DataTableSpec tSpec,
 			RConnection con, ExecutionMonitor exec, String varName) throws KnimeScriptingException {
 		String nameInR = varName + ".size.model.fun";
+		String cNameInR = varName + ".size.model";
 
 		int sizeIdx = SizeModelUtils.getSizeColumn(tSpec);
 
 		// no shape model column has been found
-		if(sizeIdx == -1) return;
+		if(sizeIdx == -1) return;		
 
 		// data type of color model is not supported
 		RType t = getRType(tSpec.getColumnSpec(sizeIdx).getType(), false);
 		if(t == null) return;
-
+		
 		exec.setMessage("Push size model to R (cannot be cancelled)");
 
 		// get KNIME size model
@@ -773,9 +776,12 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		}
 
 		assert sizeModelFunction != null;
+		
+		REXPString sizeModelName = new REXPString(cNameInR);
 
 		// push size model function to R
 		try {
+			con.assign(cNameInR, new REXPString(tSpec.getColumnSpec(sizeIdx).getName()));
 			con.voidEval(sizeModelFunction);
 		} catch (RserveException e) {
 			throw new KnimeScriptingException("Failed to push numeric size model to R: " + e.getMessage());
