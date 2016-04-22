@@ -88,11 +88,10 @@ public class RPortObject2 implements PortObject {
 			RUtils.loadWorkspace(m_WorkspaceFile, connection);
 			rObjects = getRObjects(connection);
 		} catch (KnimeScriptingException e) {
-			if(connection != null) connection.close();
 			e.printStackTrace();
 		}
 		
-		connection.close();
+		if(connection != null) connection.close();
 		return rObjects;
 	}
 
