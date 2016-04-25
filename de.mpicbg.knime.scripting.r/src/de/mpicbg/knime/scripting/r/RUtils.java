@@ -563,6 +563,7 @@ public class RUtils {
 			String tempfile = null;
 			try {
 				tempfile = ((REXPString) connection.eval("tempfile(pattern = \"R-ws-\");")).asString();
+				tempfile = tempfile.replace("\\", "\\\\");
 				connection.voidEval("unlink(\"" + tempfile + "\")");
 				// save R workspace 
 				connection.voidEval("save.image(file=\"" + tempfile + "\")");
@@ -610,6 +611,7 @@ public class RUtils {
 		String fileName = null;
 		try {
 			fileName = ((REXPString) connection.eval("tempfile(pattern = \"R-ws-\")")).asString();
+			fileName = fileName.replace("\\", "\\\\");
 			connection.voidEval("file.create(\"" + fileName + "\")");
 			serverWSFile = new File(fileName);
 		} catch (RserveException | REXPMismatchException e) {
