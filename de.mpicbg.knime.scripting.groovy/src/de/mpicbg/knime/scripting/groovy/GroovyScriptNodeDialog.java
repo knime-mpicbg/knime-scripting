@@ -11,7 +11,7 @@ import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializ
  */
 public class GroovyScriptNodeDialog extends ScriptingNodeDialog {
     public GroovyScriptNodeDialog(String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new GroovyColumnSupport(), useTemplateRepository);
+        super(defaultScript, new GroovyColumnSupport(), useTemplateRepository, false, false);
     }
 
     @Override

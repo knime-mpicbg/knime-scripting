@@ -6,7 +6,6 @@ package de.mpicbg.knime.scripting.groovy;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 
@@ -15,12 +14,12 @@ import org.knime.core.node.NodeView;
  *
  * @author Tripos
  */
-public class GroovyScriptNodeFactory extends NodeFactory {
+public class GroovyScriptNodeFactory extends NodeFactory<GroovyScriptNodeModel> {
 
     /**
      * {@inheritDoc}
      */
-    public NodeModel createNodeModel() {
+    public GroovyScriptNodeModel createNodeModel() {
         return new GroovyScriptNodeModel();
     }
 
@@ -36,15 +35,6 @@ public class GroovyScriptNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
-    public NodeView createNodeView(final int viewIndex,
-                                   final NodeModel nodeModel) {
-        return null;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
     public boolean hasDialog() {
         return true;
     }
@@ -54,8 +44,14 @@ public class GroovyScriptNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     public NodeDialogPane createNodeDialogPane() {
-        //String templateResources = GroovyScriptingBundleActivator.getDefault().getPreferenceStore().getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES);
         return new GroovyScriptNodeDialog(GroovyScriptNodeModel.DEFAULT_SCRIPT, true);
     }
+
+
+	@Override
+	public NodeView<GroovyScriptNodeModel> createNodeView(int viewIndex, GroovyScriptNodeModel nodeModel) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

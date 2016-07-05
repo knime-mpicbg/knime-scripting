@@ -15,8 +15,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
-
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
 import groovy.lang.Binding;
@@ -31,31 +31,41 @@ import groovy.lang.GroovyShell;
 public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 
 
-    public static final String DEFAULT_SCRIPT_OLD = "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
-            "\n" +
-            "return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);";
-
-
-    public static final String DEFAULT_SCRIPT = "//initialize output table:\n" +
-            "TableUpdateCache cache = new TableUpdateCache(input.getDataTableSpec());\n" +
-            "\n" +
-            "// get an existing input attribute by name:\n" +
-            "//  Attribute attribute = new InputTableAttribute(\"$$INPUT_COLUMN\", input);\n" +
-            "\n" +
-            "// create a new attribute with a name and a type:\n" +
-            "Attribute attribute = new Attribute(\"new attribute\", StringCell.TYPE);\n" +
-            "\n" +
-            "\n" +
-            "for (DataRow dataRow : input) {\n" +
-            "    // get an attribute value:\n" +
-            "    // Double value = (Double) attribute.getValue(dataRow);\n" +
-            "\n" +
-            "    // Put stuff into table\n" +
-            "    cache.add(dataRow, attribute, new StringCell(\"hello knime\"));\n" +
-            "}\n" +
-            "\n" +
-            "\n" +
-            "return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);";
+	public static final String DEFAULT_SCRIPT = "//additional imports\n" +
+			"import org.knime.core.data.DataColumnSpecCreator;\n" +
+			"import org.knime.core.data.DataColumnSpec;\n\n" +
+			"// create new output table spec\n" +
+			"DataColumnSpecCreator c = new DataColumnSpecCreator(\"table name\", StringCell.TYPE);\n" +
+			"DataColumnSpec cSpec1 = c.createSpec();\n" +
+			"c = new DataColumnSpecCreator(\"number of columns\", IntCell.TYPE);\n" +
+			"DataColumnSpec cSpec2 = c.createSpec();\n" +
+			"c = new DataColumnSpecCreator(\"number of rows\", IntCell.TYPE);\n" +
+			"DataColumnSpec cSpec3 = c.createSpec();\n\n" +
+			"// open new output table container\n" +
+			"DataTableSpec tSpec = new DataTableSpec(\"test\", cSpec1, cSpec2, cSpec3);\n" +
+			"BufferedDataContainer con = exec.createDataContainer(tSpec);\n\n" +
+			"// fill content from \"input\"\n" +
+			"try {\n" +
+			"  DataTableSpec iSpec = input.getDataTableSpec();\n" +
+			"  String name = iSpec.getName();\n" +
+			"  int rows = input.size();\n" +
+			"  int cols = iSpec.getNumColumns();\n" +
+			"  DataRow firstRow = new DefaultRow(new RowKey(\"first\"), new StringCell(name), new IntCell(cols), new IntCell(rows));\n" +
+			"  con.addRowToTable(firstRow);\n\n" +
+			"} catch(e) {\n" +
+			"}\n" +
+			"// fill content from \"input2\"\n" +
+			"try {\n" +
+			"  DataTableSpec iSpec = input2.getDataTableSpec();\n" +
+			"  String name = iSpec.getName();\n" +
+			"  int rows = input2.size();\n" +
+			"  int cols = iSpec.getNumColumns();\n" +
+			"  DataRow firstRow = new DefaultRow(new RowKey(\"second\"), new StringCell(name), new IntCell(cols), new IntCell(rows));\n" +
+			"  con.addRowToTable(firstRow);\n\n" +
+			"} catch(e) {\n" +
+			"}\n\n" +
+			"con.close()\n" +
+			"return con.getTable();\n";
 
 
     private static final String defaultImports = "import de.mpicbg.knime.knutils.Attribute\n" +
@@ -77,19 +87,30 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
             "import org.knime.core.node.ExecutionContext\n\n" +
             "import org.knime.core.node.CanceledExecutionException\n\n";
 
+	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
+			createPorts(2, 1,2), 	// 2 inputs, both optional
+			createPorts(1), 		// 1 output table
+			new GroovyColumnSupport(), 	
+			true, 					// use script
+			false, 					// open in functionality
+			false);					// use chunk settings
 
-    protected GroovyScriptNodeModel() {
-        //super(2, 1, 1, 2);
-        super(createPorts(2, 1, 2), createPorts(1), new GroovyColumnSupport());
+	/**
+	 * {@inheritDoc}
+	 */
+    public GroovyScriptNodeModel() {
+        super(nodeModelConfig);
     }
+    
+    @Override
+    /**
+     * {@inheritDoc}
+     */
+	public String getDefaultScript(String defaultScript) {
+		return DEFAULT_SCRIPT;
+	}
 
-
-    protected GroovyScriptNodeModel(int nrInDataPorts, int nrOutDataPorts) {
-        //super(nrInDataPorts, nrOutDataPorts);
-    	super(createPorts(nrInDataPorts), createPorts(nrOutDataPorts), new GroovyColumnSupport());
-    }
-
-    private ClassLoader createClassLoader() throws MalformedURLException {
+	private ClassLoader createClassLoader() throws MalformedURLException {
         IPreferenceStore prefStore = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();
         String classpathAddons = prefStore.getString(GroovyScriptingPreferenceInitializer.GROOVY_CLASSPATH_ADDONS);
 
@@ -113,13 +134,13 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
                         }
                     };
                     for (File file : new File(classPathEntry).getParentFile().listFiles(jarFilter)) {
-                        urls.add(file.toURL());
+                        urls.add(file.toURI().toURL());
                     }
 
                 } else {
                     File file = new File(classPathEntry);
                     if (file.exists()) {
-                        urls.add(file.toURL());
+                        urls.add(file.toURI().toURL());
                     }
                 }
             } catch (Throwable t) {
@@ -127,13 +148,12 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
             }
         }
 
-//        ClassLoader loader = new PluginClassLoader(urls, this.getClass().getClassLoader());
         return new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
     }
     
-
-
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
@@ -143,7 +163,6 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
         // create the groovy enviroment and execute the script
 
         Binding binding = new Binding();
-
 
         switch (getNrInPorts()) {
             case 2:
@@ -172,7 +191,6 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
             String script = prepareScript();
             o = shell.evaluate(defaultImports + script);
         } catch (Throwable t) {
-//            logger.error(t.toString()); // does not include any stacktrace
             throw new RuntimeException(t);
         }
 
@@ -186,11 +204,6 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 
         BufferedDataTable outTable = (BufferedDataTable) o;
 
-//        if (outContainer.isOpen()) {
-//            outContainer.close();
-//        }
-//
-//        return new BufferedDataTable[]{exec.createBufferedDataTable(outContainer.getTable(), exec)};
         return new BufferedDataTable[]{outTable};
 	}
 
