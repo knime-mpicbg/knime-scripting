@@ -58,10 +58,10 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
             "return exec.createColumnRearrangeTable(input, cache.createColRearranger(), exec);";
 
 
-    private static final String defaultImports = "import de.mpicbg.knime.knutilsAttribute\n" +
-            "import de.mpicbg.knime.knutilsAttributeUtils\n" +
-            "import de.mpicbg.knime.knutilsInputTableAttribute\n" +
-            "import de.mpicbg.knime.knutilsTableUpdateCache\n" +
+    private static final String defaultImports = "import de.mpicbg.knime.knutils.Attribute\n" +
+            "import de.mpicbg.knime.knutils.AttributeUtils\n" +
+            "import de.mpicbg.knime.knutils.InputTableAttribute\n" +
+            "import de.mpicbg.knime.knutils.TableUpdateCache\n" +
             "import org.knime.core.data.DataCell\n" +
             "import org.knime.core.data.def.StringCell\n" +
             "import org.knime.core.data.def.DoubleCell\n" +
