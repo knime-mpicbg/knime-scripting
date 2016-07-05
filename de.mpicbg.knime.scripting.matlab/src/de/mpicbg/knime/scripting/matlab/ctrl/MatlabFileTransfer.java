@@ -70,7 +70,8 @@ public class MatlabFileTransfer {
 		file = new File(AbstractMatlabScriptingNodeModel.TEMP_PATH, FilenameUtils.getName(resourcePath));
 		file.deleteOnExit();
 		Bundle bundle = Platform.getBundle("de.mpicbg.knime.scripting.matlab");
-		URL resFile = bundle.getResource(resourcePath);
+		//URL resFile = bundle.getResource(resourcePath);
+		URL resFile = bundle.getEntry("/resources/hashmaputils.m");
         InputStream resstream = resFile.openStream();
         writeStreamToFile(resstream, new FileOutputStream(file));
 	}
