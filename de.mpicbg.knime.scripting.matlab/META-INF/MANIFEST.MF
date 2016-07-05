@@ -6,8 +6,8 @@ Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
 Bundle-Version: 3.1.000.qualifier
 Bundle-ClassPath: matlabsnippet.jar,
  lib/commons-math-2.0.jar,
- lib/matlabcontrol-4.1.0.jar,
- lib/commons-io-2.4.jar
+ lib/commons-io-2.4.jar,
+ lib/matconsolectl-4.5.0-20160702.113049-5.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
