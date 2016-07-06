@@ -53,6 +53,11 @@
                         the output type will be inferred from the output variable
                     </li>
                     <li>
+                    	The column names for <i>dataset</i> and <i>table</i> are taken from the object 
+                    	properties (VeriableDescriptions/VarDesription). For the other types, they will 
+                    	be the same as the input as long as the header does not change.
+                    </li>
+                    <li>
                         Templates repositories are controlled via the preferences
                         (Menu > KNIME > Preferences > KNIME > Matlab Scripting).
                     </li>

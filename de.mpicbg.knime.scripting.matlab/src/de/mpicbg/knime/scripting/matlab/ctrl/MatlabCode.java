@@ -259,7 +259,9 @@ public class MatlabCode {
 		String functionName = FilenameUtils.getBaseName(scriptPath);
 		return code + "\n" +
 				"cd " + matlabPath + ";\n" +
-				functionName + "('" + tablePath + "', " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME +");";
+				functionName + "('" + tablePath + "', " + 
+				AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "," + 
+				AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + ");";
 	}
 	
 	/**

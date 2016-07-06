@@ -1,4 +1,4 @@
-function [kIn, columnNames] = hashmaputils(filePath, data)
+function [kIn, columnNames] = hashmaputils(filePath, data, varargin)
 %
 % HASHMAPUTILS
 %
@@ -36,7 +36,8 @@ function [kIn, columnNames] = hashmaputils(filePath, data)
 parser = inputParser();
 parser.addRequired('filePath', @(x)exist(x, 'file'));
 parser.addRequired('data', @(x)validatedata(x));
-parser.parse(filePath, data);
+parser.addOptional('columnMapping', containers.Map(), @(x)isa(x, 'containers.Map'));
+parser.parse(filePath, data, varargin{:});
 input = parser.Results();
 
 
@@ -44,7 +45,7 @@ input = parser.Results();
 if ischar(input.data) % No inputdata -> see if we can load something.
     [kIn, columnNames] = loadhashmap(input.filePath, input.data);
 else                  % We have data -> save it.
-    savehashmap(input.data, input.filePath);
+    savehashmap(input.data, input.filePath, input.columnMapping);
 end
    
 
@@ -62,7 +63,7 @@ function out = validatedata(in)
     
     
     
-function savehashmap(mTable, filePath)
+function savehashmap(mTable, filePath, columnMapping)
 
     % Initialize java object.
     jTable = java.util.LinkedHashMap();
@@ -71,39 +72,38 @@ function savehashmap(mTable, filePath)
     switch class(mTable)    
         case 'dataset'
             mColNames = get(mTable, 'VarNames');
-            kColNames = get(mTable, 'VarDescription'); 
+            kColNames = get(mTable, 'VarDescription');
+            cMap = containers.Map(mColNames, kColNames);
             command = 'mTable.(mColNames{c})';
             
         case 'containers.Map'
             mColNames = mTable.keys();
             command = 'mTable(mColNames{c})';
+            if columnMapping.Count == numel(mColNames) && all(cellfun(@strcmp, mColNames, columnMapping.keys()))
+                cMap = columnMapping;
+            else
+                cMap = containers.Map(mColNames, mColNames);
+            end
             
         case 'struct'
             mColNames = fieldnames(mTable);
             command = 'mTable.(mColNames{c})';
+            if columnMapping.Count == numel(mColNames) && all(cellfun(@strcmp, mColNames, columnMapping.keys()))
+                cMap = columnMapping;
+            else
+                cMap = containers.Map(mColNames, mColNames);
+            end
             
         case 'table'
             mColNames = mTable.Properties.VariableNames;
+            kColNames = mTable.Properties.VariableDescriptions;
+            cMap = containers.Map(mColNames, kColNames);
             command = 'mTable.(mColNames{c})';
-    end
-    
-    % Try to get the original KNIME column header.
-    if ~exist('kColNames', 'var') || isempty(kColNames)
-    	% Check the workspace for the variable containing the column mapping.
-    	% CAREFUL: The structure of this variable is tightly tied to the Java code. 
-    	% See class AbstractMatlabScriptingNodeModel.
-        if exist('columnMapping', 'var') && ...
-        		isfield(columnMapping, 'knime') && ... 
-    			(numel(columnMapping.knime) == numel(mColNames))
-            kColNames = columnMapping.knime;
-        else
-            kColNames = mColNames;
-        end
     end
     
     % convert the columns.
     for c = 1:numel(mColNames)
-        jTable.put(kColNames{c}, eval(command));
+        jTable.put(cMap(mColNames{c}), eval(command));
         eval([command '=[];']); % Free the memory
     end
 
@@ -201,13 +201,19 @@ function [kIn, columnMapping] = loadhashmap(filePath, dataType)
 
     end
     
-    % Keep the mapping between unique variable names and knime column names
-    columnMapping = struct('matlab', variableNames, 'knime', columnNames);
-    
-    % Add an index to the dataset.
-    if strcmp(dataType, 'dataset')
-        index = 1:length(kIn);
-        index = cellstr(num2str(index(:)));
-        kIn = set(kIn, 'ObsNames', index);
-        kIn = set(kIn, 'VarDescription', columnNames);
+    % Where possible pack more information into the variable.
+    switch dataType
+    	case 'dataset'
+        	index = 1:length(kIn);
+        	index = cellstr(num2str(index(:)));
+        	kIn = set(kIn, 'ObsNames', index);
+        	kIn = set(kIn, 'VarDescription', columnNames);
+    	case 'table'
+    		index = 1:size(kIn, 1);
+        	index = cellstr(num2str(index(:)));
+        	kIn.Properties.VariableDescriptions = columnNames;
+        	kIn.Properties.RowNames = index;
     end
+    
+    % Keep the mapping between unique variable names and knime column names
+    columnMapping = containers.Map(variableNames, columnNames);
