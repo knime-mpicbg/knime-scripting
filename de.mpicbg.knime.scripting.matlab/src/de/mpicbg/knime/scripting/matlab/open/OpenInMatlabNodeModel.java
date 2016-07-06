@@ -24,9 +24,6 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
         super(createPorts(1), createPorts(0));
 	}
 	
-
-	
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -37,9 +34,7 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
         BufferedDataTable data = (BufferedDataTable) inData[0];
         
         try {               	
-        	// Execute the command in MATLAB
-//        	matlab.client.openTask(data, this.type, this.transfer);
-        	
+        	// Instantiate the table parser
 			table = new MatlabTable(data);
 			
 			if (tableTransferMethod.equals("file")) {
@@ -57,8 +52,7 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
 		        // Execute
 		        proxy = matlabConnector.acquireProxyFromQueue();
 		        proxy.eval(cmd);
-//		        matlabConnector.returnProxyToQueue(proxy);
-		        
+//		        matlabConnector.returnProxyToQueue(proxy);		        
 			} else if (tableTransferMethod.equals("workspace")) {
 				proxy = matlabConnector.acquireProxyFromQueue();
 				table.pushTable2MatlabWorkspace(proxy, matlabWorkspaceType);
@@ -69,7 +63,6 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
         	
         	// Housekeeping
         	cleanup();
-
         } catch (Exception e) {
         	throw e;
     	} finally {
@@ -91,4 +84,5 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
 			throws KnimeScriptingException {
 		// nothing to do here
 	}
+	
 }
