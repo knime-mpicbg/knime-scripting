@@ -4,63 +4,74 @@
     <name>Open in Matlab</name>
 
     <shortDescription>
-        Opens Matlab session with data table from Knime.
+        Opens Matlab session with data table from KNIME.
     </shortDescription>
 
     <fullDescription>
         <intro>
             <p>
-                This node opens a local Matlab session and pushes the data table from Knime into Matlab. If a
-                snippet/script is selected and the GUI configured, it is automatically available from the clipboad and
-                can be pasted into Matlab. This enables quick prototyping of a script in Matlab.
-                <br/>
-                The input data table is converted into a Matlab type variable (dataset, map or structure), and made
-                available
-                in the Matlab workspace as a variable named "kIn". There is also a variable "names", that is a structure
-                allowing to associate the actual column names with the variabele names (not needed if the dataset type
-                is
-                used). If the optional input ports are used then data frames are named "kIn1", "kIn2" and "kIn3".
-                <br/>
-                <b>This node needs a Matlab installation on the local machine!</b>
-                <br/>
-                If Matlab is not running, the node launches an instance of the Matlab desktop.
-                It is recommended to let KNIME start Matlab the first time. That way the working direcotry of Matlab
-                will
-                be changed to the location where KNIME stores the m-file to load the data in the workspace (manually
-                you'll have to change directory into the temp-dir of the JVM that runs KNIME). Also the
-                instructions to re-load the data will be indicated in the Command Window at startup.
+                This node opens a local Matlab session and pushes the data table from Knime into Matlab for rapid prototyping.
+                Starting from the Matlab variable containing the KNIME data, a script can be developed and tested, 
+                before putting it into a Matlab snippet node.
             </p>
             <p>
-                IMPORTANT :
-                <br/>
-                This node is using Matlab as backend, make sure that a Matlab server is running somewhere, and Knime is
-                accordingly
-                configured (Knime->Preferences->Knime->Matlab Scripting).
-                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Matlab-server-for-knime">Scripting
-                    integration Wiki (Matlab server)
-                </a>
+                The input data table is converted into a Matlab type variable (dataset, table, container.Map or structure), and made
+                available in the Matlab workspace as a variable named <i>kIn</i>. There is also a variable <i>columnMapping</i>, 
+                that is a structure allowing to associate the KNIME column names with the Matlab variable names 
+                (not needed if the dataset or table type is used).<br/>
+            </p>
+            <p>
+                <b>This node needs a Matlab installation on the local machine!</b><br/>
+                If Matlab is not running, the node launches an instance of the Matlab desktop.
+                It is recommended to let KNIME launch Matlab. The node can detect open Matlab instances, 
+                but this is not foolproof. The working directory of Matlab will be changed to the location 
+                where KNIME stores the m-file to load the data in the workspace (manually
+                you'll have to change directory into the temp-dir of the JVM that runs KNIME).
+            </p>
+            <p>
+                <b>Conventions:</b>
+                <ul>
+                    <li>
+                        Snippet/Plot input variable name: <i>kIn</i>
+                    </li>
+                    <li>
+                        Snippet output variable name: <i>mOut</i>
+                    </li>
+                    <li>
+                        Plot output: the node will create one figure. The snippet will create a graph on that figure.
+                        Finally an image will be saved of this figure and pushed back to KNIME. 
+                    </li>
+                    <li>
+                        Supported Matlab types: <i>dataset</i>, <i>table</i>, <i>struct</i> or <i>container.Map</i>
+                    </li>
+                    <li>
+                        While the script input type is defined by the preferences,
+                        the output type will be inferred from the output variable
+                    </li>
+                    <li>
+                        Templates repositories are controlled via the preferences
+                        (Menu > KNIME > Preferences > KNIME > Matlab Scripting).
+                    </li>
+                </ul>
+             </p>    
+             <p>
+             	<b>Further reading:</b>
+             	<ul>
+             		<li>
+             		   Further documentation can be found on the 
+					   <a href="https://github.com/knime-mpicbg/knime-scripting/wiki">wiki</a><br/>
+				   </li>
+				   <li>
+                		To understand how to use flow variables in the script, please consult 
+                		<a href="https://github.com/knime-mpicbg/knime-scripting/wiki/RGG-XML#Flow_variables">RGG XML</a>
+            		</li>
+        		</ul>
             </p>
         </intro>
-
-        <option name="Choose the Matlab type">
-            Select the Matlab type of the variable that will contain the KNIME table in the Matlab workspace
-        </option>
-        <option name="Run in a new Matlab instance">
-            If checked, each time the node is executed a new Matlab instance will be started. If unchecked a Matlab
-            instance will be started if none is running.
-            <br/>
-            To re-load the data in Matlab type re-execute the m-file in the JVM's temp-dir.
-        </option>
-
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data table">A data table pushed to Matlab
-        </inPort>
-        <inPort index="1" name="Optional data table 1">First optional data table pushed to Matlab
-        </inPort>
-        <inPort index="2" name="Optional data table 2">Second optional data table pushed to Matlab
-        </inPort>
+        <inPort index="0" name="Data table">A data table pushed to Matlab</inPort>
     </ports>
 
 </knimeNode>
