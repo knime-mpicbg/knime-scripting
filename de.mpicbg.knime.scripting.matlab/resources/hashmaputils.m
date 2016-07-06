@@ -9,7 +9,7 @@ function [kIn, columnNames] = hashmaputils(filePath, data)
 % The script has to be launched in the directory where it lies and expects
 % the data-file to lie in the same directory too.
 %
-% [data columnNames] = loadKNIMEtable(filePath, data)
+% [data columnNames] = hashmaputils(filePath, data)
 %
 %       filePath: String indicating the path to a data temp-file (for 
 %                        loading or saving data).
@@ -55,9 +55,9 @@ end
 
 function out = validatedata(in)
     if ischar(in)
-        out = ismember(in, {'dataset', 'map', 'struct'});
+        out = ismember(in, {'table', 'dataset', 'map', 'struct'});
     else
-        out = ismember(class(in), {'dataset', 'containers.Map', 'struct'});
+        out = ismember(class(in), {'table', 'dataset', 'containers.Map', 'struct'});
     end
     
     
@@ -81,12 +81,21 @@ function savehashmap(mTable, filePath)
         case 'struct'
             mColNames = fieldnames(mTable);
             command = 'mTable.(mColNames{c})';
+            
+        case 'table'
+            mColNames = mTable.Properties.VariableNames;
+            command = 'mTable.(mColNames{c})';
     end
     
-    % Try to get the original column header.
+    % Try to get the original KNIME column header.
     if ~exist('kColNames', 'var') || isempty(kColNames)
-        if exist('names', 'var') && isfield(names, 'column') && (numel(names.column) == numel(mColNames))
-            kColNames = names.column;
+    	% Check the workspace for the variable containing the column mapping.
+    	% CAREFUL: The structure of this variable is tightly tied to the Java code. 
+    	% See class AbstractMatlabScriptingNodeModel.
+        if exist('columnMapping', 'var') && ...
+        		isfield(columnMapping, 'knime') && ... 
+    			(numel(columnMapping.knime) == numel(mColNames))
+            kColNames = columnMapping.knime;
         else
             kColNames = mColNames;
         end
@@ -98,19 +107,19 @@ function savehashmap(mTable, filePath)
         eval([command '=[];']); % Free the memory
     end
 
-    % create a file.
+    % Create a file.
     file = java.io.File(filePath);
     file.deleteOnExit();
-    % create the output stream.
+    % Create the output stream.
     fileStream = java.io.FileOutputStream(file);
-    % serialze the object.
+    % Serialize the object.
     serializedObject = java.io.ObjectOutputStream(fileStream);
     serializedObject.writeObject(jTable);
     serializedObject.close();
     
     
     
-function [kIn, names] = loadhashmap(filePath, dataType)
+function [kIn, columnMapping] = loadhashmap(filePath, dataType)
 
     % Load the the object dump of the KNIME table.
     inputStream = java.io.FileInputStream(filePath);
@@ -123,18 +132,26 @@ function [kIn, names] = loadhashmap(filePath, dataType)
     switch dataType
         case 'map'
             kIn = containers.Map();
+            
         case 'struct'
             kIn = struct();
-        case 'dataset'
-            if ( license('test', 'statistics_toolbox') == 1 )
-                kIn = dataset;
+            
+        case {'dataset', 'table'}
+            if license('test', 'statistics_toolbox') == 1
+                if strcmp(dataType, 'dataset')
+                    kIn = dataset;
+                else
+                    kIn = table;
+                end
             else
-                warning('TDS:loadKNIMEtable', 'The Statistics Toolbox is not available, changed the datatype form "dataset" to "map".')
+                warning('TDS:hashmaputils', ...
+                    'The Statistics Toolbox is not available, changed the datatype to "containers.Map".')
                 kIn = containers.Map();
                 dataType = 'map';
             end
+            
         otherwise
-            error('KNIME:loadKNIMEtable', ['Unknown option: "' dataTpe '".'])
+            error('KNIME:hashmaputils', ['Unknown option: "' dataTpe '".'])
     end
 
 
@@ -178,13 +195,16 @@ function [kIn, names] = loadhashmap(filePath, dataType)
                 kIn.(variableNames{n}) = vector;
             case 'dataset'
                 kIn = cat(2, kIn, dataset({vector, variableNames{n}}));
-            otherwise
+            case 'table'
+                kIn.(variableNames{n}) = vector;
         end
 
     end
-
-    names = struct('matlab', variableNames, 'knime', columnNames);
-
+    
+    % Keep the mapping between unique variable names and knime column names
+    columnMapping = struct('matlab', variableNames, 'knime', columnNames);
+    
+    % Add an index to the dataset.
     if strcmp(dataType, 'dataset')
         index = 1:length(kIn);
         index = cellstr(num2str(index(:)));

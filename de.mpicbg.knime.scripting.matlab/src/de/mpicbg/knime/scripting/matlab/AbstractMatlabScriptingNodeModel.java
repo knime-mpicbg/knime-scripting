@@ -30,17 +30,22 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 	/** Name of the variable in the MATLAB workspace where the output data will be stored in */
 	public final static String OUTPUT_VARIABLE_NAME = "mOut";
 	
-	/** Name of the variable in the MATLAB workspace where the column names will be stored (necessary for 'struct' MATLAB type) */
-	public final static String COLUMNS_VARIABLE_NAME = "columnNames";
+	/** Name of the variable in the MATLAB workspace where the column mapping will be stored. 
+	 * This is necessary for 'struct' MATLAB type that does not allow certain characters. Therefore
+	 * we map unique MATLAB variable names to KNIME column names. */
+	public final static String COLUMNS_VARIABLE_NAME = "columnMapping";
 	
 	/** Name of the variable to store the snippet error */
 	public final static String ERROR_VARIABLE_NAME = "snippetError";
 	
 	/** Default MATLAB snippet script */
-	public final static String DEFAULT_SNIPPET = "% " + OUTPUT_VARIABLE_NAME + " contains the input data. After manipulations the output data has be be assigned " + OUTPUT_VARIABLE_NAME + "\n" + OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME + ";"; 
+	public final static String DEFAULT_SNIPPET = "% " + OUTPUT_VARIABLE_NAME + 
+			" contains the input data. After manipulations the output data has be be assigned " + 
+			OUTPUT_VARIABLE_NAME + "\n" + OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME + ";"; 
 	
 	/** Default MATLAB plot script */
-    public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)' will be run prior to these commands.\nplot(1:size(kIn,1));";
+    public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)'" +
+    		" will be run prior to these commands.\nplot(1:size(kIn,1));";
 	
 	/** Default MATLAB type to hold the KNIME table data */
 	public final static String DEFAULT_TYPE = "dataset";
@@ -48,7 +53,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 	/** Temp-path of the JVM (used to store KNIME-MATLAB transfer data) */
 	public final static String TEMP_PATH = System.getProperty("java.io.tmpdir") + "/";
 
-	/** Name of the m-file to load the hashmap object dump from KNIME */
+	/** Name of the m-file to load the hashmap object dump from KNIME (see resource folder) */
 	public final static String MATLAB_HASHMAP_SCRIPT = "hashmaputils.m";
 	
 	/** Prefix for the KNIME table temp-file */

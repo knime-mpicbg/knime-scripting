@@ -87,7 +87,7 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         
         ComboFieldEditor type = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TYPE,
         		"MATLAB data type to hold the input table.\nUsing something else than dataset might introduce template incompatilities",
-        		new String[][]{{"dataset","dataset"}, {"map", "map"}, {"struct", "struct"}},
+        		new String[][]{{"dataset","dataset"}, {"table", "table"}, {"map", "map"}, {"struct", "struct"}},
         		parent);
         
         ComboFieldEditor transfer = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD,
