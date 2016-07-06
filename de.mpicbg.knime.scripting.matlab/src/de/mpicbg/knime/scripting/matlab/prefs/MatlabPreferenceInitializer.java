@@ -39,15 +39,6 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
 	
 	/** Property name of the MATLAB session number (how many instances of the MATLAB application will run simultaneously */
 	public static final String MATLAB_SESSIONS = "matlab.sessions";
-	
-//	/** Property name of the flag to indicate weather MATLAB will be accessed locally or on a remote machine */
-//	public static final String MATLAB_LOCAL = "matlab.local";
-//	
-//	/** Property name of the host name of the remote machine running a MATLAB application (server) */
-//    public static final String MATLAB_HOST = "matlab.host";
-//    
-//    /** Property name of the port the MATLAB server is listening to on the remote machine */
-//    public static final String MATLAB_PORT = "matlab.port";
     
     /** Property name of the data transfer method between KNIME and MATLAB */
     public static final String MATLAB_TRANSFER_METHOD = "matlab.transfer.method";
@@ -66,10 +57,7 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
     public void initializeDefaultPreferences() {
         IPreferenceStore store = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
         
-//        store.setDefault(MATLAB_LOCAL, Boolean.TRUE);
         store.setDefault(MATLAB_SESSIONS, 1);
-//        store.setDefault(MATLAB_HOST, "localhost");
-//        store.setDefault(MATLAB_PORT, 1198);
 
 //        store.setDefault(MATLB_TEMPLATE_RESOURCES, "file:///Volumes/tds/software+tools/KNIME/script-templates/Matlab/script-templates.txt");
         store.setDefault(MATLAB_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/script-templates.txt");
@@ -78,5 +66,4 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(MATLAB_TYPE, AbstractMatlabScriptingNodeModel.DEFAULT_TYPE);
         store.setDefault(MATLAB_TRANSFER_METHOD, "file");
     }
-}
-    
+}   

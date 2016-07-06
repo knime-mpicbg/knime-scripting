@@ -17,12 +17,10 @@ import org.osgi.framework.BundleContext;
  */
 public class MatlabScriptingBundleActivator extends AbstractUIPlugin {
 
-    /**
-     * Make sure that this *always* matches the ID in plugin.xml.
-     */
+    /**  Make sure that this *always* matches the ID in plugin.xml */
     public static final String PLUGIN_ID = "de.mpicbg.knime.scripting.matlab";
 
-    // The shared instance.
+    /** The shared instance */
     private static MatlabScriptingBundleActivator plugin;
 
 
@@ -68,5 +66,4 @@ public class MatlabScriptingBundleActivator extends AbstractUIPlugin {
     public static MatlabScriptingBundleActivator getDefault() {
         return plugin;
     }
-
 }

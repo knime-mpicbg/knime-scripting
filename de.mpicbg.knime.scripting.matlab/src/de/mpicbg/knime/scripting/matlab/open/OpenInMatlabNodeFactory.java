@@ -20,7 +20,6 @@ public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> 
         return new OpenInMatlabNodeModel();
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -28,7 +27,6 @@ public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> 
     public int getNrNodeViews() {
         return 0;
     }
-
 
     /**
      * {@inheritDoc}
@@ -39,7 +37,6 @@ public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> 
         throw null;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -47,7 +44,6 @@ public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> 
     public boolean hasDialog() {
         return true;
     }
-
 
     /**
      * {@inheritDoc}
@@ -62,5 +58,4 @@ public class OpenInMatlabNodeFactory extends NodeFactory<OpenInMatlabNodeModel> 
             }
         };
     }
-
 }

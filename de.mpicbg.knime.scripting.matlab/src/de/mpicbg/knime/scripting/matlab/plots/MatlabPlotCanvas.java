@@ -21,22 +21,16 @@ import java.awt.image.PixelGrabber;
  * @author Holger Brandl
  */
 public class MatlabPlotCanvas extends JPanel {
-    /**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	
 	private BufferedImage baseImage;
     private BufferedImage scaledImage;
-//    private MatlabPlotNodeModel plotModel;
 
-//    private boolean isReCreatingImage = false;
 
     public MatlabPlotCanvas(MatlabPlotNodeModel plotModel) {
         setFocusable(true);
         setPreferredSize(new Dimension(plotModel.getDefWidth(), plotModel.getDefHeight()));
-
-//        this.plotModel = plotModel;
 
         baseImage = toBufferedImage(plotModel.getImage());
 

@@ -2,10 +2,8 @@ package de.mpicbg.knime.scripting.matlab.snippet;
 
 import java.io.ByteArrayInputStream;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
@@ -29,7 +27,6 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
     protected MatlabSnippetNodeModel() {
         super(createPorts(1), createPorts(1));
     }
-
     
     /** 
      * {@inheritDoc}
@@ -43,13 +40,10 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected PortObject[] executeImpl(PortObject[] inData,
-			ExecutionContext exec) throws Exception {
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
     	BufferedDataTable outData = null;
     	
     	try {
-//    		this.initializeMatlabClient();
-    		
             // Get preference pane properties
             this.matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
             this.tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
@@ -85,7 +79,6 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 		        matlabProxy.eval(cmd);
 				MatlabCode.checkForScriptErrors(matlabProxy);
 				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(false));
-//				releaseMatlabProxy(proxy);
 
 				// Get the data back
 				table.readHashMapFromTempFolder(exec);
@@ -104,19 +97,12 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 				matlabProxy.eval(cmd);
 				MatlabCode.checkForScriptErrors(matlabProxy);
 				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(true)); //TODO pack this in a function in matlabCode.
-				outData = table.pullTableFromMatlabWorkspace(exec, matlabProxy, matlabWorkspaceType);
-//				releaseMatlabProxy(proxy);
-
-				
+				outData = table.pullTableFromMatlabWorkspace(exec, matlabProxy, matlabWorkspaceType);				
 			}
 			
-//    		BufferedDataTable table = this.matlabConnector.client.snippetTask(inData[0], this.tableTransferMethod, exec, snippet, this.matlabWorkspaceType);
-//    		outData[0] = table;
-    		exec.checkCanceled();
-    		
     		// Housekeeping
+			exec.checkCanceled();
     		cleanup();
-//    		exec.checkCanceled();
 
     	} catch (Exception e) {
     		throw e;
@@ -136,5 +122,4 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 			throws KnimeScriptingException {
 		throw new KnimeScriptingException("The functionality to open data external is not yet implemented");
 	}
-
 }

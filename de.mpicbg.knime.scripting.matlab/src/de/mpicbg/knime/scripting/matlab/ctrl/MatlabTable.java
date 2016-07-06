@@ -15,7 +15,6 @@ import java.util.List;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
-import matlabcontrol.MatlabProxy;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -43,8 +42,11 @@ import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 
 
 /**
- * This Class is a wrapper for KNIME tables to provide MATLAB 
- * compatibility for the data.
+ * This Class is a parser for KNIME tables.
+ * There are two methods. One use the serial connection to push 
+ * the values directly to the Matlab workspace. The second methods parses 
+ * the KNIME table in a LinkedHashMap (since LinkedHashMap's are supported
+ * by Matlab we can dump the Java object to a file and read it from Matlab)
  * 
  * @author Holger Brandl, Felix Meyenhofer
  */
@@ -58,8 +60,7 @@ public class MatlabTable {
 	
 	/** Temp file for the data */
 	private File hashTempFile;
-	
-	
+		
 	/**
 	 * Constructor 
 	 * 
@@ -349,7 +350,13 @@ public class MatlabTable {
         return colSpec;
     }
 
-    
+    /**
+     * Use the serial connection to Matlab to push directly into the worksace
+     * 
+     * @param proxy
+     * @param matlabType
+     * @throws MatlabInvocationException
+     */
     public void pushTable2MatlabWorkspace(MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
     	// Get the column names
     	List<String> colNames = new ArrayList<String>();
@@ -377,7 +384,15 @@ public class MatlabTable {
         proxy.eval(additionalInfo);
     }
 
-    
+    /**
+     * Pull data directly form the Matlab workspace
+     * 
+     * @param exec
+     * @param proxy
+     * @param matlabType
+     * @return
+     * @throws MatlabInvocationException
+     */
 	public BufferedDataTable pullTableFromMatlabWorkspace(ExecutionContext exec, MatlabOperations proxy, String matlabType) throws MatlabInvocationException {
 		// Fetch the column names and types
 		String[] varNames = (String[]) proxy.getVariable(MatlabCode.getOutputColumnNamesCommand(matlabType));
@@ -423,8 +438,7 @@ public class MatlabTable {
 
 		container.close();
 		return container.getTable();
-	}
-    
+	}    
     
     /**
      * Cleanup the files and object to liberate disk and memory space
@@ -434,6 +448,5 @@ public class MatlabTable {
 		if (hashTempFile != null)
 			hashTempFile.delete();
 		hash = null;
-	}
-	
+	}	
 }

@@ -14,6 +14,7 @@ import de.mpicbg.knime.scripting.matlab.ctrl.MatlabTable;
 
 public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
 	
+	/** proxy to connect to the Matlab instance */
 	private MatlabProxy proxy;
 	
 	/**
@@ -51,13 +52,11 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
 		        
 		        // Execute
 		        proxy = matlabConnector.acquireProxyFromQueue();
-		        proxy.eval(cmd);
-//		        matlabConnector.returnProxyToQueue(proxy);		        
+		        proxy.eval(cmd);	        
 			} else if (tableTransferMethod.equals("workspace")) {
 				proxy = matlabConnector.acquireProxyFromQueue();
 				table.pushTable2MatlabWorkspace(proxy, matlabWorkspaceType);
 				proxy.eval(MatlabCode.getOpenMessage(matlabWorkspaceType));
-//				matlabConnector.returnProxyToQueue(proxy);
 			}
         	exec.checkCanceled();
         	
@@ -83,6 +82,5 @@ public class OpenInMatlabNodeModel extends AbstractMatlabScriptingNodeModel {
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException {
 		// nothing to do here
-	}
-	
+	}	
 }

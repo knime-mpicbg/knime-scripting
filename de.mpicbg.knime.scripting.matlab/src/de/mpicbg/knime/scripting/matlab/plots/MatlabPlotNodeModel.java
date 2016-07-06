@@ -1,14 +1,12 @@
 package de.mpicbg.knime.scripting.matlab.plots;
 
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
-import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabFileTransfer;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabTable;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -96,7 +94,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         addModelSetting(OUTPUT_FILE_SETTING_NAME, createPropOutputFileSetting());
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -105,7 +102,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	super.configure(inSpecs);
         return new PortObjectSpec[]{IM_PORT_SPEC};
     }
-
     
     /**
      * {@inheritDoc}
@@ -114,7 +110,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     public String getDefaultScript(String defaultScript) {
     	return super.getDefaultScript(AbstractMatlabScriptingNodeModel.DEFAULT_PLOTCMD);
     }
-
 
     /**
      * {@inheritDoc}
@@ -132,7 +127,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         }
     }
 
-    
     /**
      * {@inheritDoc}
      */
@@ -147,6 +141,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
             ObjectInputStream obj_in = new ObjectInputStream(new BufferedInputStream(f_in));
             // Read an object
             image = ((ImageIcon) obj_in.readObject()).getImage();
+            obj_in.close();
         } catch (Throwable ignored) {
         }
     }
@@ -256,7 +251,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
         };
     }
     
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -266,12 +260,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     	PortObject[] outPorts = new PortObject[1];
     	
     	try {
-//    		this.initializeMatlabClient();
-    		
-//            // Get preference pane properties
-//            this.matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
-//            this.tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
-            
 	    	// Get the input table
 	    	BufferedDataTable inputTable = (BufferedDataTable)inData[0];
 	    	
@@ -279,8 +267,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	        String snippet = prepareScript();
 	        exec.checkCanceled();
 	
-	        // Execute the script
-	     // Prepare snippet temp-file
+	        // Prepare snippet temp-file
  			codeFile = new MatlabFileTransfer(AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_PREFIX, 
  					AbstractMatlabScriptingNodeModel.SNIPPET_TEMP_FILE_SUFFIX);
  			// Prepare the plot temp file
@@ -332,10 +319,8 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
  				matlabProxy.eval(cmd);
  				MatlabCode.checkForScriptErrors(matlabProxy);
  				matlabProxy.eval(MatlabCode.getPlotNodeMessage(false));
-// 			    releaseMatlabProxy(proxy);
  			}
  			
-//	        File plotFile = matlabConnector.client.plotTask(inputTable, this.tableTransferMethod, snippet, getDefWidth(), getDefHeight(), this.matlabWorkspaceType);
 	        exec.checkCanceled();
 	        
 	        // Fetch the image file form the server and load it

@@ -16,24 +16,20 @@ public class MatlabPlotNodeFactory extends NodeFactory<MatlabPlotNodeModel> {
         return new MatlabPlotNodeModel();
     }
 
-
     @Override
     public int getNrNodeViews() {
         return 1;
     }
-
 
     @Override
     public NodeView<MatlabPlotNodeModel> createNodeView(final int viewIndex, final MatlabPlotNodeModel nodeModel) {
         return new MatlabPlotNodeView(nodeModel);
     }
 
-
     @Override
     public boolean hasDialog() {
         return true;
     }
-
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
@@ -48,5 +44,4 @@ public class MatlabPlotNodeFactory extends NodeFactory<MatlabPlotNodeModel> {
         
         return new MatlabPlotNodeDialog(templateResources, defaultScript, true);
     }
-
 }

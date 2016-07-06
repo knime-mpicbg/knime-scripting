@@ -49,6 +49,5 @@ public class MatlabPlotNodeDialog extends ScriptingNodeDialog {
     @Override
     public String getTemplatesFromPreferences() {
         return MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES);
-    }
-    
+    }    
 }

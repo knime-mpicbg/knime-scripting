@@ -121,7 +121,6 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
     	matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
     	tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
     	
-//    	initializeMatlabConnector(preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS));
     	try {
     		int matlabSessionCount = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
     		matlabConnector = MatlabConnector.getInstance(matlabSessionCount);//new MatlabClient(true, sessions);
@@ -137,8 +136,6 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 			logger.error("MATLAB connection establishement was interrupted");
 			e.printStackTrace();
 		}
-        
-//        updateNodePreferences();
         
         // Add a property change listener that re-initializes the MATLAB client if the local flag changes.
         preferences.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -166,88 +163,6 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 		});
     }
     
-    
-//    protected String getMatlabWorkspaceType() {
-//    	return preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
-//    }
-//    
-//    protected String getTableTransferMethod() {
-//    	return preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
-//    }
-    
-//    void updateNodePreferences() {
-//    	matlabWorkspaceType = preferences.getString(MatlabPreferenceInitializer.MATLAB_TYPE);
-//    	tableTransferMethod = preferences.getString(MatlabPreferenceInitializer.MATLAB_TRANSFER_METHOD);
-//    }
-    
-//    
-//    /**
-//     * Initialize the MATLAB client
-//     * 
-//     * @param local Flag to choose local or remote execution
-//     * @param port 
-//     * @param host 
-//     */
-//    private void initializeMatlabClient(boolean local, int sessions, String host, int port) {
-//        try {
-//        	// Create the client.
-//        	if (local) {
-//        		matlab = new MatlabClient(local, sessions, host, port);
-//        	} else {
-//        		logger.warn("Connecting to MATLAB on remote host");
-//        		// Check if we can find the host
-//        		InetAddress.getByName(host);
-//        	}
-//		} catch (MatlabConnectionException e) {
-//			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
-//					" to use KNIME's MATLAB scripting integration.");
-//			e.printStackTrace();
-//		} catch (UnknownHostException e) {
-//			logger.error("MATLAB scripting integration: can not connect to " + host);
-//			e.printStackTrace();
-//		}
-//    }
-    
-//    private void initializeMatlabConnector(int sessions){
-//    	try {
-//    		matlabConnector = MatlabConnector.getInstance(sessions);//new MatlabClient(true, sessions);
-//    	} catch (MatlabConnectionException e) {
-//			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
-//					" to use KNIME's MATLAB scripting integration.");
-//			e.printStackTrace();
-//		} catch (MatlabInvocationException e) {
-//			logger.error("MATLAB could not be started. You have to install MATLAB on you computer" +
-//					" to use KNIME's MATLAB scripting integration.");
-//			e.printStackTrace();
-//		} catch (InterruptedException e) {
-//			logger.error("MATLAB connection establishement was interrupted");
-//			e.printStackTrace();
-//		}
-//    }
-    	
-    
-    
-    
-//    /** 
-//     * This is the initialization method the can be called from the
-//     * {@link this#execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)}
-//     * method. This way the connection to MATLAB is only made once it is about to 
-//     * be used.
-//     */
-//    public void initializeMatlabClient() {
-//    	if (this.matlabConnector == null) {
-//	    	// Get the values from the KNIME preference dialog.
-////	        boolean local = preferences.getBoolean(MatlabPreferenceInitializer.MATLAB_LOCAL);
-//	        int sessions = preferences.getInt(MatlabPreferenceInitializer.MATLAB_SESSIONS);
-////	        String host = preferences.getString(MatlabPreferenceInitializer.MATLAB_HOST);
-////	        int port = preferences.getInt(MatlabPreferenceInitializer.MATLAB_PORT);
-//	        
-//	        // Initialize the MATLAB client
-//	        initializeMatlabConnector(sessions);
-////	        initializeMatlabClient(local, sessions, host, port);
-//    	}
-//    }
-    
     /**
      * Cleanup temp data
      */
@@ -260,7 +175,5 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 //			parserFile.delete();
 		if (plotFile != null)
 			plotFile.delete();
-	}
-    
+	} 
 }
-
