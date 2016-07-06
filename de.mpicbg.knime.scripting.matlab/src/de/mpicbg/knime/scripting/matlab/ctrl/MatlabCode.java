@@ -611,7 +611,7 @@ public class MatlabCode {
      * @return
      */
     public static String getPlotNodeMessage(boolean changedInputVariables){
-    	String msg = "disp('created plot";
+    	String msg = "disp('KNIME: created plot";
     	if (changedInputVariables)
     		msg += " and updated " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + ", " + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME + " ')";
     	return  msg + ".');";
@@ -625,7 +625,7 @@ public class MatlabCode {
      * @return
      */
     public static String getSnippetNodeMessage(boolean changedInputVariable) {
-    	String msg = "disp('exectuted snippet and updated " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME;
+    	String msg = "disp('KNIME: exectuted snippet and updated " + AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME;
     	if (changedInputVariable)
     		msg += ", " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + " and " + AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME;
     	return msg + ".');";
@@ -639,11 +639,13 @@ public class MatlabCode {
 	 * @return Modified code
 	 */
 	public static String getOpenMessage(String matlabType) {
-		return "disp('The data is available as the following variables in the Workspace:');" +
-				"disp('kIn :  " + matlabType + " containing the KNIME table.');" + 
-				"disp('columnNames: structure containing column header information.');" +
-				"disp('             Depending on the MATLAB data type strings used KNIME might need slight modification!');" +
-				"disp('To reload the KNIME table simply re-execute the OpenInMatlab node.');";
+		return ";disp('KNIME: the data is available as the following variables in the workspace.');" +
+				"disp('       to reload the data from KNIME, simply re-execute the OpenInMatlab node.');" +
+				"disp('       " + AbstractMatlabScriptingNodeModel.INPUT_VARIABLE_NAME + " :          " + matlabType + " containing the data from KNIME.');" + 
+				"disp('       "+ AbstractMatlabScriptingNodeModel.COLUMNS_VARIABLE_NAME +": structure containing column mapping,');" +
+				"disp('                      KNIME-column-names => MATLAB-varible-names.');" +
+				"disp('                      (depending on the MATLAB data type and respective constrains on characters,');" +
+				"disp('                      KNIME column names can not always be used directly as variable names, e.g. struct)');";
 	}
     
 }
