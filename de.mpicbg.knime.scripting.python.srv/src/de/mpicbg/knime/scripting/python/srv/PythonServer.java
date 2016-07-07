@@ -4,10 +4,8 @@ import gnu.cajo.invoke.Remote;
 import gnu.cajo.utils.ItemServer;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.List;
 
 
 /**
@@ -81,8 +79,6 @@ public class PythonServer implements Python {
         // Kick them off
         errorGobbler.start();
         outputGobbler.start();
-
-        List<String> output = new ArrayList<String>();
 
         // Wait for the command process to complete
         proc.waitFor();

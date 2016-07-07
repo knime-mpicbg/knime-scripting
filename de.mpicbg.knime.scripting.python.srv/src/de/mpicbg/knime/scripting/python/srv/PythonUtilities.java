@@ -10,6 +10,7 @@ import java.io.*;
  * To change this template use File | Settings | File Templates.
  */
 public class PythonUtilities {
+	
     /**
      * Locate an executable on the system path.
      *
@@ -32,7 +33,6 @@ public class PythonUtilities {
         return fullyQualifiedExecutable;
     }
 
-
     /**
      * Return a byte array containing the bytes from
      *
@@ -49,6 +49,7 @@ public class PythonUtilities {
         long length = file.length();
 
         if (length > Integer.MAX_VALUE) {
+        	is.close();
             throw new IOException("File exceeds the upload size limit");
         }
 
@@ -65,6 +66,7 @@ public class PythonUtilities {
 
         // Ensure all the bytes have been read in
         if (offset < bytes.length) {
+        	is.close();
             throw new IOException("Could not completely read file " + file.getName());
         }
 
@@ -75,9 +77,6 @@ public class PythonUtilities {
 
     public static void writeFileFromBytes(byte[] bytes, File file) throws IOException {
         OutputStream os = new FileOutputStream(file);
-
-        // Get the size of the file
-        long length = bytes.length;
 
         // Write the file
         os.write(bytes);

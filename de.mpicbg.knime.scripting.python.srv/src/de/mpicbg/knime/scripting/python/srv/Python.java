@@ -30,4 +30,3 @@ public interface Python {
 
     public void closeFile(int descriptor) throws IOException;
 }
-

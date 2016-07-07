@@ -15,7 +15,8 @@ import java.util.List;
  * Encapsulate the standard and error output streams
  */
 public class CommandOutput extends Hashtable {
-    private List<String> stdout;
+	private static final long serialVersionUID = -1739429152487284234L;
+	private List<String> stdout;
     private List<String> stderr;
 
     public CommandOutput(StreamGobbler stdout, StreamGobbler stderr) {

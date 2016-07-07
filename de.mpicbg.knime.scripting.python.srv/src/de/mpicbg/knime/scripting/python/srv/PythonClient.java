@@ -21,7 +21,6 @@ public class PythonClient implements Python {
         this(Python.DEFAULT_HOST, Python.DEFAULT_PORT);
     }
 
-
     /**
      * Create PythonClient that communicates with the PythonServer
      */

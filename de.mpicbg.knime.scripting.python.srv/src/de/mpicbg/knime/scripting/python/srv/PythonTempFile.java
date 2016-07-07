@@ -18,8 +18,8 @@ import java.util.Arrays;
  * Encapsulates client and server temp files to simplify create/delete/copy operations
  */
 public class PythonTempFile {
+	
     private File clientFile, serverFile;
-
     private boolean isLocal = false;
     private Python python;
 
@@ -52,7 +52,7 @@ public class PythonTempFile {
         // For local clients there is nothing to do
         if (isLocal) return;
 
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
 
         // Read bytes from the client file and pass them to the server until the entire file has ben transferred
         int descriptor = -1;
@@ -92,7 +92,7 @@ public class PythonTempFile {
         // For local clients there is nothing to do
         if (isLocal) return;
 
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
 
         // Get bytes from the server and write them to the client until the entire file has been trasferred
         int descriptor = -1;
