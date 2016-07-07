@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Parser to convert KNIME table to something the 
+ * Python interpreter can work with
  */
 public class PythonTableConverter {
     public static BufferedDataTable convertCSVToTable(ExecutionContext exec, File pyOutFile, NodeLogger logger) throws RuntimeException {
@@ -90,6 +91,7 @@ public class PythonTableConverter {
                 container.addRowToTable(row);
             }
 
+            reader.close();
             container.close();
 
             return container.getTable();

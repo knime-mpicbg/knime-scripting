@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.python;
+package de.mpicbg.knime.scripting.python.snippet;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
@@ -8,6 +8,9 @@ import org.knime.core.node.port.PortType;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.PythonTableConverter;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;

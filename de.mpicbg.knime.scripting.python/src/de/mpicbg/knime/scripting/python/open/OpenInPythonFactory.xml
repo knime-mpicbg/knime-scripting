@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="../icon/pythonicon.gif" type="Sink" deprecated="false">
+
+    <name>Open in Python</name>
+
+    <shortDescription>
+        Opens Python session with data table from KNIME.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+                This node opens a local Python session, converts the data table from KNIME into a Python dictionary and
+                imports it into the Python interpreter as a variable. The KNIME data table is made available as variable named "kIn".
+                This is to facilitate the testing of code for snippets and plots.
+            </p>
+            <p>
+                IMPORTANT:<br/>
+                This node is using Python as backend. It can use a local instance or a remote server.
+                Check the python scripting preferences: (KNIME->Preferences->KNIME->Python scripting).
+                Further documentation can be found on the 
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Python-server-for-knime">Scripting integration Wiki (Python server)</a>
+            </p>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Data table">
+        	A data table pushed to Python
+        </inPort>
+    </ports>
+
+</knimeNode>

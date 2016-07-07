@@ -1,8 +1,5 @@
-package de.mpicbg.knime.scripting.python;
+package de.mpicbg.knime.scripting.python.snippet;
 
-import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -43,10 +40,9 @@ public class PythonSnippetNodeFactory
 
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-        String templateResources = prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
+//        IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+//        String templateResources = prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
 
         return new PythonSnippetNodeDialog(PythonSnippetNodeModel.DEFAULT_SCRIPT, true);
     }
 }
-

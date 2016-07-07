@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.python;
+package de.mpicbg.knime.scripting.python.open;
 
 //import de.mpicbg.tds.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -23,7 +23,6 @@ public class OpenInPythonFactory extends NodeFactory<OpenInPythonNodeModel> {
         return new OpenInPythonNodeModel();
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -31,7 +30,6 @@ public class OpenInPythonFactory extends NodeFactory<OpenInPythonNodeModel> {
     public int getNrNodeViews() {
         return 0;
     }
-
 
     /**
      * {@inheritDoc}
@@ -42,7 +40,6 @@ public class OpenInPythonFactory extends NodeFactory<OpenInPythonNodeModel> {
         throw null;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -50,7 +47,6 @@ public class OpenInPythonFactory extends NodeFactory<OpenInPythonNodeModel> {
     public boolean hasDialog() {
         return false;
     }
-
 
     /**
      * {@inheritDoc}
@@ -69,5 +65,4 @@ public class OpenInPythonFactory extends NodeFactory<OpenInPythonNodeModel> {
     public static SettingsModelBoolean executionModeSetting() {
         return new SettingsModelBoolean("new.instance", false);
     }
-
 }

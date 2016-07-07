@@ -5,11 +5,11 @@
 
     <extension point="org.knime.workbench.repository.nodes">
         <node category-path="/community/python"
-              factory-class="de.mpicbg.knime.scripting.python.PythonSnippetNodeFactory"
+              factory-class="de.mpicbg.knime.scripting.python.snippet.PythonSnippetNodeFactory"
               id="de.mpicbg.knime.scripting.python.PythonSnippetNodeFactory"/>
 
         <node category-path="/community/python"
-              factory-class="de.mpicbg.knime.scripting.python.OpenInPythonFactory"
+              factory-class="de.mpicbg.knime.scripting.python.open.OpenInPythonFactory"
               id="de.mpicbg.knime.scripting.python.OpenInPythonFactory"/>
 
         <node category-path="/community/python"

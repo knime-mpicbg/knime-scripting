@@ -1,7 +1,6 @@
 package de.mpicbg.knime.scripting.python.plots;
 
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
-import de.mpicbg.knime.scripting.core.TemplateConfigurator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
@@ -12,7 +11,6 @@ import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -41,6 +39,7 @@ import java.util.Date;
  * @author Tom Haux
  */
 public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
+	
     private Image image;
 
     private SettingsModelInteger propWidth = PythonPlotNodeFactory.createPropFigureWidth();
@@ -48,8 +47,11 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     private SettingsModelString propOutputFile = PythonPlotNodeFactory.createPropOutputFile();
     private SettingsModelBoolean propOverwriteFile = PythonPlotNodeFactory.createOverwriteFile();
 
+    private static final String FIGURE_WIDTH_SETTING_NAME = "figure.width";
+	private static final String FIGURE_HEIGHT_SETTING_NAME = "figure.height";
+	private static final String OUTPUT_FILE_SETTING_NAME = "figure.output.file";
+	private static final String OVERWRITE_SETTING_NAME = "overwrite.ok";
     private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
-
     private final String DEFAULT_PYTHON_PLOTCMD = "plot(kIn)";
 
     protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
@@ -74,11 +76,11 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
     public PythonPlotNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports);
 
-        addSetting(propWidth);
-        addSetting(propHeight);
+        addModelSetting(FIGURE_WIDTH_SETTING_NAME, propWidth);
+        addModelSetting(FIGURE_HEIGHT_SETTING_NAME, propHeight);
 
-        addSetting(propOutputFile);
-        addSetting(propOverwriteFile);
+        addModelSetting(OUTPUT_FILE_SETTING_NAME, propOutputFile);
+        addModelSetting(OVERWRITE_SETTING_NAME, propOverwriteFile);
     }
 
     protected void prepareScript(Writer writer) throws IOException {

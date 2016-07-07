@@ -15,30 +15,19 @@ public class PythonPlotNodeView extends NodeView<PythonPlotNodeModel> {
      */
     public PythonPlotNodeView(final PythonPlotNodeModel nodeModel) {
         super(nodeModel);
-
-        //  instantiate the components of the view here.
-
-//        JPanel jPanel = new JPanel(new BorderLayout());
-//        jPanel.add(new JLabel("blabla"));
-
-
         updateView(nodeModel);
-
     }
-
 
     private void updateView(PythonPlotNodeModel nodeModel) {
         PythonPlotCanvas canvas = new PythonPlotCanvas(nodeModel);
         setComponent(canvas);
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
-
         //  retrieve the new model from your nodemodel and
         // update the view.
         PythonPlotNodeModel nodeModel = getNodeModel();
@@ -46,10 +35,8 @@ public class PythonPlotNodeView extends NodeView<PythonPlotNodeModel> {
 
         // be aware of a possibly not executed nodeModel! The data you retrieve
         // from your nodemodel could be null, emtpy, or invalid in any kind.
-
         updateView(getNodeModel());
     }
-
 
     /**
      * {@inheritDoc}
@@ -60,7 +47,6 @@ public class PythonPlotNodeView extends NodeView<PythonPlotNodeModel> {
         //  things to do when closing the view
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -69,5 +55,4 @@ public class PythonPlotNodeView extends NodeView<PythonPlotNodeModel> {
 
         //  things to do when opening the view
     }
-
 }

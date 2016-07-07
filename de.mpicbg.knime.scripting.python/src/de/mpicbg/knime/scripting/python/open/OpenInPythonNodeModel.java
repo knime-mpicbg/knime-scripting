@@ -1,7 +1,10 @@
-package de.mpicbg.knime.scripting.python;
+package de.mpicbg.knime.scripting.python.open;
 
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.PythonTableConverter;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -26,7 +29,6 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
         super(createPorts(1), new PortType[0]);
     }
 
-
     /**
      * Constructor for the node model.
      */
@@ -34,14 +36,13 @@ public class OpenInPythonNodeModel extends AbstractPythonScriptingNodeModel {
         super(inPorts, outports);
     }
   
-
-
     /**
      * {@inheritDoc}
      */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
+		
 		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
 //      boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);

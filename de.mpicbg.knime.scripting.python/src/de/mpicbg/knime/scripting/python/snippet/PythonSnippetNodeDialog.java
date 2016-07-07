@@ -1,6 +1,8 @@
-package de.mpicbg.knime.scripting.python;
+package de.mpicbg.knime.scripting.python.snippet;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
+import de.mpicbg.knime.scripting.python.PythonColumnSupport;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 /**

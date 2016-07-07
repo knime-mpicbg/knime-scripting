@@ -15,23 +15,20 @@ import java.awt.image.PixelGrabber;
 
 
 /**
- * A renderer which allows to display matlab plots. It automatically adapts to the panel size by replotting the figures on
- * resize.
+ * A renderer which allows to display Python plots. 
  *
  * @author Holger Brandl
  */
 public class PythonPlotCanvas extends JPanel {
-    private BufferedImage baseImage;
+    
+	private static final long serialVersionUID = 614755302854782313L;
+	
+	private BufferedImage baseImage;
     private BufferedImage scaledImage;
-    private PythonPlotNodeModel plotModel;
-
-    private boolean isReCreatingImage = false;
-
+    
     public PythonPlotCanvas(PythonPlotNodeModel plotModel) {
         setFocusable(true);
         setPreferredSize(new Dimension(plotModel.getDefWidth(), plotModel.getDefHeight()));
-
-        this.plotModel = plotModel;
 
         baseImage = toBufferedImage(plotModel.getImage());
 
@@ -43,7 +40,7 @@ public class PythonPlotCanvas extends JPanel {
                 }
 
                 BufferedImage bufImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-                Graphics2D g = bufImage.createGraphics();
+                bufImage.createGraphics();
                 AffineTransform at = AffineTransform.getScaleInstance((double) getWidth() / baseImage.getWidth(null),
                         (double) getHeight() / baseImage.getHeight(null));
 
@@ -64,36 +61,9 @@ public class PythonPlotCanvas extends JPanel {
 
     }
 
-
-//    public void recreateImage() {
-//        RConnection connection = null;
-//        try {
-//            connection = RUtils.createConnection();
-//
-//            RUtils.loadGenericInputs(Collections.singletonMap(R_INVAR_BASE_NAME, plotModel.getWSFile()), connection);
-//
-//            String script = plotModel.prepareScript();
-//
-//            Image image = RImageFactory.createImage(connection, script, getWidth(), getHeight(), plotModel.getDevice());
-//
-//            connection.close();
-//
-//            baseImage = toBufferedImage(image);
-//            scaledImage = null;
-//
-//        } catch (Throwable e1) {
-//            if (connection != null) {
-//                connection.close();
-//            }
-//            throw new RuntimeException(e1);
-//        }
-//    }
-
-
     public void paint(Graphics g) {
         g.drawImage(scaledImage != null ? scaledImage : baseImage, 0, 0, null);
     }
-
 
     public static BufferedImage toBufferedImage(Image image) {
 
@@ -146,7 +116,6 @@ public class PythonPlotCanvas extends JPanel {
 
         return bimage;
     }
-
 
     public static boolean hasAlpha(Image image) {
         // If buffered image, the color model is readily available
