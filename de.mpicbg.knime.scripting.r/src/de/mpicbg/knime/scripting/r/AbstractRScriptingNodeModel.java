@@ -176,7 +176,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 		int nInTables = getNumberOfUsedInputPorts(inData, true);
 		int gIdx = getGenericIndex(inPorts);
 		
-		pushFlowVariablesToR(getAvailableFlowVariables(), exec);
+		pushFlowVariablesToR(getAvailableFlowVariables(), transferToExec);
 
 		// capture all exception to close the R connection in that case
 		try {
@@ -188,6 +188,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 
 			// push all KNIME data tables
 			for(String in : inPorts.keySet()) {
+				transferToExec.setMessage("Push table");
 				PortObject pObj = inPorts.get(in);
 				if(pObj != null) {
 					if(BufferedDataTable.TYPE.acceptsPortObject(pObj)) {
@@ -900,7 +901,7 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	 * @param exec
 	 * @throws KnimeScriptingException 
 	 */
-	public void pushFlowVariablesToR(Map<String, FlowVariable> flowVariables, ExecutionContext exec) throws KnimeScriptingException {
+	public void pushFlowVariablesToR(Map<String, FlowVariable> flowVariables, ExecutionMonitor exec) throws KnimeScriptingException {
 		
 		assert m_con != null;
 
