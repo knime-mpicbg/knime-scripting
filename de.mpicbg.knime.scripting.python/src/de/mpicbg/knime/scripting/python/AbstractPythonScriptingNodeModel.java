@@ -9,6 +9,7 @@ import de.mpicbg.knime.scripting.python.scripts.PythonScripts;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -177,4 +178,9 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
     		throw new KnimeScriptingException("Failed to open in Python\n" + e);
     	}
     }
+    
+	@Override
+	protected String getTemplatePrefs() {
+		return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
+	}
 }

@@ -1,14 +1,18 @@
 package de.mpicbg.knime.scripting.core;
 
-import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
-import de.mpicbg.knime.scripting.core.prefs.TemplatePrefString;
-import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.eclipse.core.runtime.IPath;
+
+import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
+import de.mpicbg.knime.scripting.core.prefs.TemplatePrefString;
+import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 
 /**
  * Singleton
@@ -21,10 +25,26 @@ import java.util.Map;
  * Time: 8:27 AM
  */
 public class TemplateCache {
+	
+	/**
+	 * instance of that singleton
+	 */
     private static TemplateCache ourInstance = new TemplateCache();
 
+    /**
+     * hashmap which contains for each script-file (full path string key)
+     * a script template file object holding all templates from that file
+     */
     private Map<String, ScriptTemplateFile> templateCache = new HashMap<String, ScriptTemplateFile>();
-    //private Map<URL, ScriptTemplateFile> templateCache = new HashMap<URL, ScriptTemplateFile>();
+    
+    /**
+     * lock-members to ensure that the hashmap is not accessed from different nodes
+     * at the same time
+     */
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock readLock  = lock.readLock();
+    private final Lock writeLock = lock.writeLock();
+
 
     public static TemplateCache getInstance() {
         return ourInstance;
@@ -91,12 +111,6 @@ public class TemplateCache {
         for (TemplatePref pref : templateList) {
             if (pref.isActive()) {
                 urls.add(pref.getUri());
-                /*try {
-                    URL newURL = new URL(pref.getUri());
-                    urls.add(newURL);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }    */
             }
         }
         return urls;
@@ -120,4 +134,39 @@ public class TemplateCache {
     public void remove(String filePath) {
         templateCache.remove(filePath);
     }
+
+    /**
+     * adds all templates from all template files of the given preference string
+     * to the cache and caches a copy of these files to disk for offline access
+     * @param prefString
+     * @param path
+     * @throws IOException
+     */
+	public void addTemplatesFromPref(String prefString, IPath path) throws IOException {
+		List<String> templateFiles = parseConcatendatedURLs(prefString);
+		
+		for(String filePath : templateFiles) {
+			writeLock.lock();
+			try {
+				if (!templateCache.containsKey(filePath)) {
+		            // if not, add it to the cache
+		            ScriptTemplateFile newTemplateFile = new ScriptTemplateFile(filePath);
+		            if (!newTemplateFile.isEmpty()) {
+		            	// add to template cache
+		                templateCache.put(filePath, newTemplateFile);
+		                // cache file to disk if necessary
+		                cacheFileOnDisk(newTemplateFile, path);
+		                
+		            } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
+		        }
+			} finally {
+				writeLock.unlock();
+			}
+		}
+	}
+
+	private void cacheFileOnDisk(ScriptTemplateFile newTemplateFile, IPath path) {
+		// TODO Auto-generated method stub
+		
+	}
 }
