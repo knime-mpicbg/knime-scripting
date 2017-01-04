@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class ScriptTemplateFile {
 
-    private String filePath;
+	private String filePath;
     public List<ScriptTemplate> templates;
 
     /**
@@ -84,4 +84,11 @@ public class ScriptTemplateFile {
     public void setScriptingLanguage(String language) {
         for (ScriptTemplate template : templates) template.setScriptingLanguage(language);
     }
+    
+    /**
+     * @return string representation of URL
+     */
+    public String getFilePath() {
+		return filePath;
+	}
 }

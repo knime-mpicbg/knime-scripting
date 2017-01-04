@@ -1,7 +1,15 @@
 package de.mpicbg.knime.scripting.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,12 +38,17 @@ public class TemplateCache {
 	 * instance of that singleton
 	 */
     private static TemplateCache ourInstance = new TemplateCache();
+    
+    Path cacheDir = null;
+    Path indexFile = null;
 
     /**
      * hashmap which contains for each script-file (full path string key)
      * a script template file object holding all templates from that file
      */
     private Map<String, ScriptTemplateFile> templateCache = new HashMap<String, ScriptTemplateFile>();
+    
+    private HashMap<String, Path> localFileCache = new HashMap<String, Path>();
     
     /**
      * lock-members to ensure that the hashmap is not accessed from different nodes
@@ -154,8 +167,10 @@ public class TemplateCache {
 		            if (!newTemplateFile.isEmpty()) {
 		            	// add to template cache
 		                templateCache.put(filePath, newTemplateFile);
+		                // check local cache for files
+		                updateLocalFileCache(path);
 		                // cache file to disk if necessary
-		                cacheFileOnDisk(newTemplateFile, path);
+		                cacheFileOnDisk(filePath, path);
 		                
 		            } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 		        }
@@ -165,8 +180,62 @@ public class TemplateCache {
 		}
 	}
 
-	private void cacheFileOnDisk(ScriptTemplateFile newTemplateFile, IPath path) {
-		// TODO Auto-generated method stub
+	private void updateLocalFileCache(IPath path) throws IOException {
+		// set local cache directory and index-file as member
+		if(this.cacheDir == null) 
+			this.cacheDir = Paths.get(path.append("template_cache").toOSString());
+		if(this.indexFile == null)
+			this.indexFile = Paths.get(cacheDir.toString(), "tempFiles.index");
 		
+		// check for directory and index-file and create it if necessary
+		try {
+			Files.createDirectory(this.cacheDir);
+		} catch (FileAlreadyExistsException faee) {}
+		try {
+			Files.createFile(this.indexFile);	
+			return;	//nothing to fill into file cache hashmap as index was not existent yet
+		} catch (FileAlreadyExistsException faee) {}
+		
+		// read content of index-file
+		BufferedReader reader = Files.newBufferedReader(indexFile, StandardCharsets.UTF_8);
+		
+		String line = reader.readLine();
+        while (line != null) {
+        	String[] splitted = line.split(";");
+        	if(splitted.length == 2) {
+        		Path f = Paths.get(splitted[1]);
+        		if(Files.exists(f))
+        			localFileCache.put(splitted[0], f);
+        	}
+        	line = reader.readLine();
+        }
+        reader.close();
+	}
+
+	private void cacheFileOnDisk(String templateFile, IPath path) throws IOException {
+
+		URL templateURL = new URL(templateFile);
+		String protocol = templateURL.getProtocol();
+		
+		// do not cache local files
+		if(protocol.equals("file"))
+			return;
+	
+		// if the cached file exists, check for content equality
+		boolean isContentEqual = false;
+		boolean hasCachedFile = localFileCache.containsKey(templateFile);
+		if(hasCachedFile) {
+			
+			Path cachedFile = localFileCache.get(templateFile);
+			
+			byte[] remote = Files.readAllBytes(Paths.get(templateFile));
+			byte[] local = Files.readAllBytes(cachedFile);
+			
+			isContentEqual = Arrays.equals(remote, local);	
+		}
+		
+		if(!hasCachedFile || !isContentEqual) {
+			
+		}
 	}
 }
