@@ -11,6 +11,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.core.runtime.IPath;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
@@ -248,12 +248,30 @@ public class TemplateCache {
 		} else {
 			cachedFile = Files.createTempFile(cacheDir, "template_", ".txt");
 		}
-		
-		// cache file on disk
-		ReadableByteChannel rbc = Channels.newChannel(templateURL.openStream());
-		FileOutputStream fos = new FileOutputStream(cachedFile.toString());
-		fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-		fos.close();
-		rbc.close();
+				
+		ReadableByteChannel rbc = null;
+		FileOutputStream fos = null;
+		try {
+			// cache file on disk
+			rbc = Channels.newChannel(templateURL.openStream());
+			fos = new FileOutputStream(cachedFile.toString());
+			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+			fos.close();
+			rbc.close();
+			
+			// add file to index file
+			String addLine = new String(templateFile + ";" + cachedFile.toString());
+			Files.write(this.indexFile, addLine.getBytes(), StandardOpenOption.APPEND);
+			
+			// add file to hashmap
+			localFileCache.put(templateFile, cachedFile);
+			
+		} catch(IOException io) {
+			Files.delete(cachedFile);
+			throw io;
+		} finally {
+			if(rbc != null) rbc.close();
+			if(fos != null) fos.close();
+		}
 	}
 }
