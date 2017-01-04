@@ -1,8 +1,11 @@
 package de.mpicbg.knime.scripting.core;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.runtime.IPath;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
@@ -224,18 +228,32 @@ public class TemplateCache {
 		// if the cached file exists, check for content equality
 		boolean isContentEqual = false;
 		boolean hasCachedFile = localFileCache.containsKey(templateFile);
+		Path cachedFile = null;
+		
+		// compare cached version with original file
 		if(hasCachedFile) {
-			
-			Path cachedFile = localFileCache.get(templateFile);
-			
-			byte[] remote = Files.readAllBytes(Paths.get(templateFile));
+			cachedFile = localFileCache.get(templateFile);	
 			byte[] local = Files.readAllBytes(cachedFile);
+			byte[] remote = Files.readAllBytes(Paths.get(templateFile));
 			
 			isContentEqual = Arrays.equals(remote, local);	
+			
+			// no need to cache
+			if(isContentEqual) return;
+			else {
+				// delete old version and recreate an empty file
+				Files.delete(cachedFile);
+				Files.createFile(cachedFile);
+			}
+		} else {
+			cachedFile = Files.createTempFile(cacheDir, "template_", ".txt");
 		}
 		
-		if(!hasCachedFile || !isContentEqual) {
-			
-		}
+		// cache file on disk
+		ReadableByteChannel rbc = Channels.newChannel(templateURL.openStream());
+		FileOutputStream fos = new FileOutputStream(cachedFile.toString());
+		fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+		fos.close();
+		rbc.close();
 	}
 }
