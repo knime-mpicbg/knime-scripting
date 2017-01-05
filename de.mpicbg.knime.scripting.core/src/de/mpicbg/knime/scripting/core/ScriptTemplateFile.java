@@ -5,7 +5,11 @@ import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,8 +42,13 @@ public class ScriptTemplateFile {
 
 
         try {
-            URL fileUrl = new URL(filePath);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(fileUrl.openStream()));
+        	BufferedReader reader = null;
+        	try {
+        		URL fileUrl = new URL(filePath);
+        		reader = new BufferedReader(new InputStreamReader(fileUrl.openStream()));
+        	} catch(MalformedURLException mue) {
+        		reader = Files.newBufferedReader(Paths.get(this.filePath), StandardCharsets.UTF_8);
+        	}
 
             StringBuffer templateBuffer = new StringBuffer();
 

@@ -206,7 +206,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         // Plot-nodes need to be handled separately
         adaptHardwiredTemplateToContext(inSpecs);
         
-        // add templates to template-cache-singleton
+        /*// add templates to template-cache-singleton
         Bundle bundle = FrameworkUtil.getBundle(getClass());
         IPath path = Platform.getStateLocation(bundle);
         String prefString = getTemplatePrefs();
@@ -215,7 +215,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
 			cache.addTemplatesFromPref(prefString, path);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
         
         SettingsModelBoolean openInSetting = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
         if(openInSetting != null)

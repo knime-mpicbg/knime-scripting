@@ -3,6 +3,8 @@ package de.mpicbg.knime.scripting.core;
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -166,22 +168,45 @@ public class TemplateCache {
 			writeLock.lock();
 			try {
 				if (!templateCache.containsKey(filePath)) {
-		            // if not, add it to the cache
-		            ScriptTemplateFile newTemplateFile = new ScriptTemplateFile(filePath);
-		            if (!newTemplateFile.isEmpty()) {
-		            	// add to template cache
-		                templateCache.put(filePath, newTemplateFile);
-		                // check local cache for files
-		                updateLocalFileCache(path);
-		                // cache file to disk if necessary
-		                cacheFileOnDisk(filePath, path);
-		                
-		            } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
+					// check local cache for files
+	                updateLocalFileCache(path);
+	                
+	                ScriptTemplateFile newTemplateFile = null;
+					if(isFileReachable(filePath)) {
+						newTemplateFile = new ScriptTemplateFile(filePath);
+						
+						// cache file to disk if necessary
+						if (!newTemplateFile.isEmpty())
+			                cacheFileOnDisk(filePath, path);
+					} else {
+						if(localFileCache.containsKey(filePath)) {
+							newTemplateFile = new ScriptTemplateFile(localFileCache.get(filePath).toString());
+						}
+					}
+					
+					// add templates to cache
+	                if(newTemplateFile != null)
+	                	if(!newTemplateFile.isEmpty())
+	                		templateCache.put(filePath, newTemplateFile);
+	                	else
+	                		throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
+		            
 		        }
 			} finally {
 				writeLock.unlock();
 			}
 		}
+	}
+
+	private boolean isFileReachable(String filePath) throws MalformedURLException {
+		URL templateURL = new URL(filePath);
+		String protocol = templateURL.getProtocol();
+		
+		// returns true, if file is local; otherwise test connection
+		if(protocol.equals("file"))
+			return true;
+		else
+			return pingURL(filePath, 60);	
 	}
 
 	private void updateLocalFileCache(IPath path) throws IOException {
@@ -260,7 +285,7 @@ public class TemplateCache {
 			rbc.close();
 			
 			// add file to index file
-			String addLine = new String(templateFile + ";" + cachedFile.toString());
+			String addLine = new String(templateFile + ";" + cachedFile.toString() + "\n");
 			Files.write(this.indexFile, addLine.getBytes(), StandardOpenOption.APPEND);
 			
 			// add file to hashmap
@@ -273,5 +298,31 @@ public class TemplateCache {
 			if(rbc != null) rbc.close();
 			if(fos != null) fos.close();
 		}
+	}
+	
+	/**
+	 * {@link http://stackoverflow.com/questions/3584210/preferred-java-way-to-ping-an-http-url-for-availability}
+	 * <br>
+	 * Pings a HTTP URL. This effectively sends a GET (was HEAD before) request and returns <code>true</code> if the response code is in 
+	 * the 200-399 range.
+	 * @param url The HTTP URL to be pinged.
+	 * @param timeout The timeout in millis for both the connection timeout and the response read timeout. Note that
+	 * the total timeout is effectively two times the given timeout.
+	 * @return <code>true</code> if the given HTTP URL has returned response code 200-399 on a HEAD request within the
+	 * given timeout, otherwise <code>false</code>.
+	 */
+	public static boolean pingURL(String url, int timeout) {
+	    url = url.replaceFirst("^https", "http"); // Otherwise an exception may be thrown on invalid SSL certificates.
+
+	    try {
+	        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+	        connection.setConnectTimeout(timeout);
+	        connection.setReadTimeout(timeout);
+	        connection.setRequestMethod("GET");
+	        int responseCode = connection.getResponseCode();
+	        return (200 <= responseCode && responseCode <= 399);
+	    } catch (IOException exception) {
+	        return false;
+	    }
 	}
 }
