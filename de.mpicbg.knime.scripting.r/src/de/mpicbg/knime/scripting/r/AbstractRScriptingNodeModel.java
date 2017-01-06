@@ -1137,11 +1137,4 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
         	throw new KnimeScriptingException("Failed to evaluate the script:\n" + e.getMessage());
         }
 	}
-
-	@Override
-	protected String getTemplatePrefs() {
-		return R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES);
-	}
-	
-
 }

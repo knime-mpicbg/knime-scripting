@@ -160,11 +160,7 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 			}
 		});
     }
-    
-	@Override
-	protected String getTemplatePrefs() {
-		return MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES);
-	}
+
 
     
     /**

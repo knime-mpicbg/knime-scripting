@@ -178,9 +178,4 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
     		throw new KnimeScriptingException("Failed to open in Python\n" + e);
     	}
     }
-    
-	@Override
-	protected String getTemplatePrefs() {
-		return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
-	}
 }

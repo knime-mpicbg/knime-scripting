@@ -203,8 +203,4 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 	}
 
 
-	@Override
-	protected String getTemplatePrefs() {
-		return GroovyScriptingBundleActivator.getDefault().getPreferenceStore().getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES);
-	}
 }
