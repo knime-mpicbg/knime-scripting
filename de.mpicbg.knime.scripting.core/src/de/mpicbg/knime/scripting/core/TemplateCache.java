@@ -247,6 +247,15 @@ public class TemplateCache {
         reader.close();
 	}
 
+	/**
+	 * if there is already a cached version, check for content equality;
+	 * if not yet there => create a new cached version and add to index
+	 * if not equal => overwrite old version
+	 * @param templateFile
+	 * @param path
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
 	private void cacheFileOnDisk(String templateFile, IPath path) throws IOException, URISyntaxException {
 
 		URL templateURL = new URL(templateFile);
@@ -332,6 +341,12 @@ public class TemplateCache {
 	    }
 	}
 	
+	/**
+	 * retrieves content as byte array from URL
+	 * @param url
+	 * @return byte array
+	 * @throws IOException
+	 */
 	private byte[] fetchRemoteFile(URL url) throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		InputStream is = null;
