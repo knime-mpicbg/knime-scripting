@@ -52,8 +52,8 @@ public class TemplateTableEditor extends FieldEditor {
         nonValidChars = new ArrayList<String>();
         nonValidChars.add(new String(","));
         nonValidChars.add(new String(";"));
-        nonValidChars.add(new String("("));
-        nonValidChars.add(new String(")"));
+        /*nonValidChars.add(new String("("));
+        nonValidChars.add(new String(")"));*/
 
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
@@ -207,9 +207,9 @@ public class TemplateTableEditor extends FieldEditor {
     }
 
     private void addURI(String newURI) {
-
+    	
         try {
-            validateURI(newURI);
+            newURI = validateURI(newURI);
 
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
@@ -231,12 +231,22 @@ public class TemplateTableEditor extends FieldEditor {
         fillTable();
     }
 
-    private void validateURI(String newURI) throws IOException {
+    private String validateURI(String newURI) throws IOException {
+    	
+    	// validate for URL format
+        try {
+        	new URL(newURI);
+        } catch(MalformedURLException mue) {
+        	// might be a local file path; if yes convert to URL format file://
+        	File f = new File(newURI);
+        	if(f.canRead())
+        		newURI = f.toURI().toURL().toExternalForm();
+        }
 
         // check if uri is already listed
         for (TemplatePref tPref : templateList) {
             if (tPref.getUri().equals(newURI)) {
-                throw new IOException("uri is already listed");
+                throw new IOException("Template source is already listed");
             }
         }
 
@@ -246,10 +256,8 @@ public class TemplateTableEditor extends FieldEditor {
                 throw new IOException("nonvalid characters");
             }
         }
-
-        // validate for format (and availability)
-        URL tURL = new URL(newURI);
-        //new BufferedReader(new InputStreamReader(tURL.openStream()));
+        
+        return newURI;
     }
 
     private GridData getMainGridData(int numColumns) {
