@@ -1,10 +1,13 @@
 package de.mpicbg.knime.scripting.core;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -192,6 +195,9 @@ public class TemplateCache {
 	                		throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 		            
 		        }
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			} finally {
 				writeLock.unlock();
 			}
@@ -241,7 +247,7 @@ public class TemplateCache {
         reader.close();
 	}
 
-	private void cacheFileOnDisk(String templateFile, IPath path) throws IOException {
+	private void cacheFileOnDisk(String templateFile, IPath path) throws IOException, URISyntaxException {
 
 		URL templateURL = new URL(templateFile);
 		String protocol = templateURL.getProtocol();
@@ -259,7 +265,7 @@ public class TemplateCache {
 		if(hasCachedFile) {
 			cachedFile = localFileCache.get(templateFile);	
 			byte[] local = Files.readAllBytes(cachedFile);
-			byte[] remote = Files.readAllBytes(Paths.get(templateFile));
+			byte[] remote = fetchRemoteFile(templateURL);
 			
 			isContentEqual = Arrays.equals(remote, local);	
 			
@@ -324,5 +330,23 @@ public class TemplateCache {
 	    } catch (IOException exception) {
 	        return false;
 	    }
+	}
+	
+	private byte[] fetchRemoteFile(URL url) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InputStream is = null;
+		try {
+		  is = url.openStream ();
+		  byte[] byteChunk = new byte[4096];
+		  int n;
+
+		  while ( (n = is.read(byteChunk)) > 0 ) {
+		    baos.write(byteChunk, 0, n);
+		  }
+		}
+		finally {
+		  if (is != null) { is.close(); }
+		}
+		return baos.toByteArray();
 	}
 }

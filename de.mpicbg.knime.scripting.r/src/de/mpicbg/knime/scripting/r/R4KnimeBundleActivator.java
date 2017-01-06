@@ -4,20 +4,18 @@
  */
 package de.mpicbg.knime.scripting.r;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
-import de.mpicbg.knime.scripting.core.TemplateCache;
 import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
+import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
@@ -59,13 +57,18 @@ public class R4KnimeBundleActivator extends AbstractUIPlugin {
         super.start(context);
         
         // get bundle and template prefstrings and load them into template cache
-        Bundle bundle = FrameworkUtil.getBundle(getClass());
-        List<String> preferenceStrings = new ArrayList<String>();
-        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
-        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
-        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
-        
-        ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+        try {
+	        Bundle bundle = FrameworkUtil.getBundle(getClass());
+	        List<String> preferenceStrings = new ArrayList<String>();
+	        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
+	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
+	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
+	        
+	        ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+        } catch(Exception e) {
+        	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+        	logger.coding(e.getMessage());
+        }
     }
 
 
