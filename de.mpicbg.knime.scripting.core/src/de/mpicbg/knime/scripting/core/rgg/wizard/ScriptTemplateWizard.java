@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -88,17 +89,18 @@ public class ScriptTemplateWizard extends JSplitPane {
         });
     }
 
-
     public static void main(String[] args) throws MalformedURLException {
         //String templateFilePath = new String("http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/R/figure-templates.txt" + ";" + "file:///Volumes/tds/software+tools/KNIME/script-templates/Groovy/tds-groovy-templates.txt");
-        String templateFilePath = new String("http://idisk-srv1.mpi-cbg.de/knime/scripting-templates_tds/R/TDS_snippet-templates.txt");
+        String templateFilePath = new String("https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/figure-templates.txt");
 
         TemplateCache templateCache = TemplateCache.getInstance();
 
         List<URL> urlList = new ArrayList<URL>();
         urlList.add(new URL(templateFilePath));
+        
         try {
-            List<ScriptTemplate> templates = templateCache.getTemplateCache(templateFilePath);
+            templateCache.addTemplateFile(templateFilePath, Files.createTempDirectory("test_").toString());
+            List<ScriptTemplate> templates = templateCache.getTemplates(templateFilePath);
 
             ScriptTemplateWizard templateWizard = new ScriptTemplateWizard(null, templates);
 

@@ -26,6 +26,7 @@
 package de.mpicbg.knime.scripting.python.prefs;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -55,6 +56,8 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
     @Override
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
+        
+        String bundlePath = ScriptingUtils.getBundlePath(PythonScriptingBundleActivator.PLUGIN_ID).toOSString();
 
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_HOST, "The host where the Python server is running", parent));
         addField(new IntegerFieldEditor(PythonPreferenceInitializer.PYTHON_PORT, "The port on which Python server is listening", parent));
@@ -64,8 +67,8 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
 
         /*addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));*/
-        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", parent));
-        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", parent));
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", bundlePath, parent));
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", bundlePath, parent));
     }
 
 

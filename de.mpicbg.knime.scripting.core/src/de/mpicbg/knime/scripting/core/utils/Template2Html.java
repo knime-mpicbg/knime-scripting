@@ -92,7 +92,7 @@ public class Template2Html {
             ScriptTemplateFile scriptTemplateFile = new ScriptTemplateFile(url);
             if (!scriptTemplateFile.isEmpty()) {
                 scriptTemplateFile.setScriptingLanguage(urls.get(url));
-                scriptTemplates.addAll(scriptTemplateFile.templates);
+                scriptTemplates.addAll(scriptTemplateFile.getTemplates());
             }
         }
         return scriptTemplates;

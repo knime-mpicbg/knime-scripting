@@ -24,7 +24,7 @@ import java.util.List;
 public class ScriptTemplateFile {
 
 	private String filePath;
-    public List<ScriptTemplate> templates;
+    private List<ScriptTemplate> templates;
 
     /**
      * @param filePath location of template file
@@ -99,5 +99,9 @@ public class ScriptTemplateFile {
      */
     public String getFilePath() {
 		return filePath;
+	}
+
+	public List<ScriptTemplate> getTemplates() {
+		return templates;
 	}
 }

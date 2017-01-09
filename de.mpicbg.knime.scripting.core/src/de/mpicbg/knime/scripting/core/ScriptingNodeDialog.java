@@ -451,7 +451,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         for (String filePath : urlList) {
             try {
-                templates.addAll(templateCache.updateTemplateCache(filePath));
+            	templateCache.updateTemplateCache(filePath);
+                templates.addAll(templateCache.getTemplates(filePath));
             } catch (IOException e) {
                 warnings.add(e.getMessage());
             }

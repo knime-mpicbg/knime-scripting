@@ -58,13 +58,13 @@ public class R4KnimeBundleActivator extends AbstractUIPlugin {
         
         // get bundle and template prefstrings and load them into template cache
         try {
-	        Bundle bundle = FrameworkUtil.getBundle(getClass());
+	        
 	        List<String> preferenceStrings = new ArrayList<String>();
 	        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
 	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
 	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
 	        
-	        ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+	        ScriptingUtils.loadTemplateCache(preferenceStrings, PLUGIN_ID);
         } catch(Exception e) {
         	NodeLogger logger = NodeLogger.getLogger("scripting template init");
         	logger.coding(e.getMessage());

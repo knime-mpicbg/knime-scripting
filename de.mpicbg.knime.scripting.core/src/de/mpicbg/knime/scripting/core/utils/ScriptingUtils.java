@@ -19,18 +19,28 @@ public class ScriptingUtils {
 	/**
 	 * add templates to template-cache-singleton
 	 * @param templateStrings
-	 * @param bundle
+	 * @param path
 	 */
-	public static void loadTemplateCache(List<String> templateStrings, Bundle bundle) {
-        IPath path = Platform.getStateLocation(bundle);
+	public static void loadTemplateCache(List<String> templateStrings, String PLUGIN_ID) {
         TemplateCache cache = TemplateCache.getInstance();
         
         for(String prefString : templateStrings) {
 	        try {
-				cache.addTemplatesFromPref(prefString, path);
+				cache.addTemplatesFromPref(prefString, getBundlePath(PLUGIN_ID).toOSString());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
         }
 	}
+	
+	/**
+	 * retrieves the path of a bundle with the given plugin-id
+	 * @param PLUGIN_ID
+	 * @return
+	 */
+    public static IPath getBundlePath(String PLUGIN_ID) {
+    	Bundle bundle = Platform.getBundle(PLUGIN_ID);
+    	IPath path = Platform.getStateLocation(bundle);
+    	return path;
+    }
 }

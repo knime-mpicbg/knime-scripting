@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.core.prefs;
 
 import de.mpicbg.knime.scripting.core.TemplateCache;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -45,8 +46,10 @@ public class TemplateTableEditor extends FieldEditor {
 
     private static Color gray;
     private static Color black;
+    
+    private String bundlePath;
 
-    public TemplateTableEditor(String name, String labelText, Composite parent) {
+    public TemplateTableEditor(String name, String labelText, String bundlePath, Composite parent) {
         super(name, labelText, parent);
 
         nonValidChars = new ArrayList<String>();
@@ -57,6 +60,8 @@ public class TemplateTableEditor extends FieldEditor {
 
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
+        
+        this.bundlePath = bundlePath;
     }
 
     @Override
@@ -303,7 +308,7 @@ public class TemplateTableEditor extends FieldEditor {
         // add script to cache
         try {
             TemplateCache templateCache = TemplateCache.getInstance();
-            templateCache.getTemplateCache(uri);
+            templateCache.addTemplateFile(uri, this.bundlePath);
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
             messageDialog.setText("Exception");
@@ -322,7 +327,7 @@ public class TemplateTableEditor extends FieldEditor {
     private void removeFileFromCache(String uri) {
         // remove script from cache
         TemplateCache templateCache = TemplateCache.getInstance();
-        if (templateCache.contains(uri)) templateCache.remove(uri);
+        if (templateCache.contains(uri)) templateCache.removeTemplateFile(uri);
     }
 
     @Override

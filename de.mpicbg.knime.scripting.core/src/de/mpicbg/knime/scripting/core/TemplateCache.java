@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.eclipse.core.runtime.IPath;
-
 import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
 import de.mpicbg.knime.scripting.core.prefs.TemplatePrefString;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
@@ -48,6 +46,10 @@ public class TemplateCache {
 	 */
     private static TemplateCache ourInstance = new TemplateCache();
     
+    //====================================================================================
+    // members
+    //====================================================================================
+    
     Path cacheDir = null;
     Path indexFile = null;
 
@@ -66,7 +68,10 @@ public class TemplateCache {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final Lock readLock  = lock.readLock();
     private final Lock writeLock = lock.writeLock();
-
+    
+    //====================================================================================
+    // initialization
+    //====================================================================================
 
     public static TemplateCache getInstance() {
         return ourInstance;
@@ -74,28 +79,74 @@ public class TemplateCache {
 
     private TemplateCache() {
     }
+    
+    //====================================================================================
+    // methods
+    //====================================================================================
+    
+	/**
+     * adds all templates from all template files of the given preference string
+     * to the cache and caches a copy of these files to disk for offline access
+     * @param prefString
+     * @param path
+     * @throws IOException
+     */
+	public void addTemplatesFromPref(String prefString, String path) throws IOException {
+		List<String> templateFiles = parseConcatendatedURLs(prefString);
+		
+		for(String filePath : templateFiles) {
+			writeLock.lock();
+			try {
+				addTemplateFile(filePath, path);
+			} finally {
+				writeLock.unlock();
+			}
+		}
+	}
 
     /**
-     * returns all templates of a given file and add them to the cache of not yet loaded
+     * add all templates from a given template file
+     * cache locally if necessary
      *
      * @param filePath
-     * @return list of templates
      */
-    public List<ScriptTemplate> getTemplateCache(String filePath) throws IOException {
-        List<ScriptTemplate> templates = null;
-        // test if file already has been loaded
-        if (!templateCache.containsKey(filePath)) {
-            // if not, add it to the cache
-            ScriptTemplateFile newTemplateFile = new ScriptTemplateFile(filePath);
-            if (!newTemplateFile.isEmpty()) {
-                templateCache.put(filePath, newTemplateFile);
-            } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
-        }
-
-        // then load the content from the cache
-        templates = templateCache.get(filePath).templates;
-
-        return templates;
+    public void addTemplateFile(String filePath, String path) throws IOException {
+    	
+    	if (!templateCache.containsKey(filePath)) {
+			// check local cache for files
+            updateLocalFileCache(path);
+            
+            ScriptTemplateFile newTemplateFile = null;
+			if(isFileReachable(filePath)) {
+				newTemplateFile = new ScriptTemplateFile(filePath);
+				
+				// cache file to disk if necessary
+				if (!newTemplateFile.isEmpty())
+	                cacheFileOnDisk(filePath);
+			} else {
+				if(localFileCache.containsKey(filePath)) {
+					newTemplateFile = new ScriptTemplateFile(localFileCache.get(filePath).toString());
+				}
+			}
+			
+			// add templates to cache
+            if(newTemplateFile != null)
+            	if(!newTemplateFile.isEmpty())
+            		templateCache.put(filePath, newTemplateFile);
+            	else
+            		throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
+    	}
+    }
+    
+    /**
+     * remove template file from template cache and from localFileMap
+     *
+     * @param filePath
+     */
+    public void removeTemplateFile(String filePath) {
+        templateCache.remove(filePath);
+        localFileCache.remove(filePath);
+        removeFileFromLocalCache(filePath);
     }
 
     /**
@@ -103,39 +154,19 @@ public class TemplateCache {
      *
      * @param filePath
      */
-    public List<ScriptTemplate> updateTemplateCache(String filePath) throws IOException {
+    public void updateTemplateCache(String filePath) throws IOException {
 
-        List<ScriptTemplate> templates = null;
+        //List<ScriptTemplate> templates = null;
 
         templateCache.remove(filePath);
         ScriptTemplateFile reloadedTemplate = new ScriptTemplateFile(filePath);
         if (!reloadedTemplate.isEmpty()) {
             templateCache.put(filePath, reloadedTemplate);
-            templates = templateCache.get(filePath).templates;
+            cacheFileOnDisk(filePath);
+            //templates = templateCache.get(filePath).templates;
         } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 
-        return templates;
-    }
-
-    /**
-     * Template preference string will be splitted by a pattern
-     *
-     * @param templateFilePaths
-     * @return List of active URLs
-     * @see TemplatePrefString
-     */
-    public List<String> parseConcatendatedURLs(String templateFilePaths) {
-
-        TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
-        List<TemplatePref> templateList = tString.parsePrefString();
-        List<String> urls = new ArrayList<String>();
-
-        for (TemplatePref pref : templateList) {
-            if (pref.isActive()) {
-                urls.add(pref.getUri());
-            }
-        }
-        return urls;
+        //return templates;
     }
 
     /**
@@ -148,77 +179,16 @@ public class TemplateCache {
         return templateCache.containsKey(filePath);
     }
 
-    /**
-     * remove template file from cache
-     *
-     * @param filePath
-     */
-    public void remove(String filePath) {
-        templateCache.remove(filePath);
-    }
-
-    /**
-     * adds all templates from all template files of the given preference string
-     * to the cache and caches a copy of these files to disk for offline access
-     * @param prefString
-     * @param path
-     * @throws IOException
-     */
-	public void addTemplatesFromPref(String prefString, IPath path) throws IOException {
-		List<String> templateFiles = parseConcatendatedURLs(prefString);
-		
-		for(String filePath : templateFiles) {
-			writeLock.lock();
-			try {
-				if (!templateCache.containsKey(filePath)) {
-					// check local cache for files
-	                updateLocalFileCache(path);
-	                
-	                ScriptTemplateFile newTemplateFile = null;
-					if(isFileReachable(filePath)) {
-						newTemplateFile = new ScriptTemplateFile(filePath);
-						
-						// cache file to disk if necessary
-						if (!newTemplateFile.isEmpty())
-			                cacheFileOnDisk(filePath, path);
-					} else {
-						if(localFileCache.containsKey(filePath)) {
-							newTemplateFile = new ScriptTemplateFile(localFileCache.get(filePath).toString());
-						}
-					}
-					
-					// add templates to cache
-	                if(newTemplateFile != null)
-	                	if(!newTemplateFile.isEmpty())
-	                		templateCache.put(filePath, newTemplateFile);
-	                	else
-	                		throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
-		            
-		        }
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				writeLock.unlock();
-			}
-		}
+    private void removeFileFromLocalCache(String filePath) {
+		// TODO Auto-generated method stub
+		// need to remove cached file and the entry from the index
+    	
 	}
 
-	private boolean isFileReachable(String filePath) throws MalformedURLException {
-		URL templateURL = new URL(filePath);
-		String protocol = templateURL.getProtocol();
-		
-		// returns true, if file is local; otherwise test connection
-		if(protocol.equals("file"))
-			return true;
-		else
-			return pingURL(filePath, 60);	
-	}
-
-	private void updateLocalFileCache(IPath path) throws IOException {
+	private void updateLocalFileCache(String path) throws IOException {
 		// set local cache directory and index-file as member
 		if(this.cacheDir == null) 
-			this.cacheDir = Paths.get(path.append("template_cache").toOSString());
+			this.cacheDir = Paths.get(path, "template_cache");
 		if(this.indexFile == null)
 			this.indexFile = Paths.get(cacheDir.toString(), "tempFiles.index");
 		
@@ -256,7 +226,7 @@ public class TemplateCache {
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	private void cacheFileOnDisk(String templateFile, IPath path) throws IOException, URISyntaxException {
+	private void cacheFileOnDisk(String templateFile) throws IOException {
 
 		URL templateURL = new URL(templateFile);
 		String protocol = templateURL.getProtocol();
@@ -316,6 +286,23 @@ public class TemplateCache {
 	}
 	
 	/**
+	 * tries to access a remote file, returns true for local file
+	 * @param filePath
+	 * @return true, if file can be accessed
+	 * @throws MalformedURLException
+	 */
+	private boolean isFileReachable(String filePath) throws MalformedURLException {
+		URL templateURL = new URL(filePath);
+		String protocol = templateURL.getProtocol();
+		
+		// returns true, if file is local; otherwise test connection
+		if(protocol.equals("file"))
+			return true;
+		else
+			return pingURL(filePath, 60);	
+	}
+	
+	/**
 	 * {@link http://stackoverflow.com/questions/3584210/preferred-java-way-to-ping-an-http-url-for-availability}
 	 * <br>
 	 * Pings a HTTP URL. This effectively sends a GET (was HEAD before) request and returns <code>true</code> if the response code is in 
@@ -363,5 +350,30 @@ public class TemplateCache {
 		  if (is != null) { is.close(); }
 		}
 		return baos.toByteArray();
+	}
+	
+    /**
+     * Template preference string will be splitted by a pattern
+     *
+     * @param templateFilePaths
+     * @return List of active URLs
+     * @see TemplatePrefString
+     */
+    public List<String> parseConcatendatedURLs(String templateFilePaths) {
+
+        TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
+        List<TemplatePref> templateList = tString.parsePrefString();
+        List<String> urls = new ArrayList<String>();
+
+        for (TemplatePref pref : templateList) {
+            if (pref.isActive()) {
+                urls.add(pref.getUri());
+            }
+        }
+        return urls;
+    }
+
+	public List<ScriptTemplate> getTemplates(String templateFilePath) {
+		return templateCache.get(templateFilePath).getTemplates();
 	}
 }

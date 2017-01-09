@@ -26,6 +26,7 @@
 package de.mpicbg.knime.scripting.matlab.prefs;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
@@ -60,6 +61,8 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
     @Override
     protected void createFieldEditors() {
         final Composite parent = getFieldEditorParent();
+        
+        String bundlePath = ScriptingUtils.getBundlePath(MatlabScriptingBundleActivator.PLUGIN_ID).toOSString();
 
 //        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
 //        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
@@ -76,13 +79,14 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
 //        IntegerFieldEditor port = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT,
 //        		"The port on which Matlab-server is listening",
 //        		parent);
+      
         
         TemplateTableEditor snippets = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES,
-        		"Snippet template resources",
+        		"Snippet template resources", bundlePath,
         		parent);
         
         TemplateTableEditor plots = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES,
-        		"Plot template resource",
+        		"Plot template resource", bundlePath, 
         		parent);
         
         ComboFieldEditor type = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TYPE,
