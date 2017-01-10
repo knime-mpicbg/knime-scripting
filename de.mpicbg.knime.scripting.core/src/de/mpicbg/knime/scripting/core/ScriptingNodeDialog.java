@@ -12,6 +12,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,6 +76,9 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
     
     private String defaultScript;
     private List<String> urlList;
+    
+    private Path cacheFolder;
+    private Path indexFile;
 
     // the two main user interface elements: the template editor/configurator and the template repository browser
     private ScriptProvider scriptProvider;
@@ -84,6 +89,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * Will be set by templates that are deployed as actual knime nodes.
      */
     private ScriptTemplate hardwiredTemplate;
+	
 
 
     /**
@@ -138,6 +144,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             if (m_enableTemplateRepository) {
 
                 updateUrlList(getTemplatesFromPreferences());
+                this.cacheFolder = getTemplateCachePath();
+                this.indexFile = Paths.get(cacheFolder.toString(), "tempFiles.index");
                 List<ScriptTemplate> templates = updateTemplates();
 
                 //templateWizard = new ScriptTemplateWizard(templateResources);
@@ -183,8 +191,6 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         removeTab("Options");
         selectTab(selectTab);
     }
-    
-
 
 	private void populateOptionsPanel(JPanel optionsPanel) {
 		
@@ -442,8 +448,17 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * @return
      */
     public abstract String getTemplatesFromPreferences();
+    
+    /**
+     * @return path of the bundle within workspace/.metadata/plugins/
+     */
+	protected abstract Path getTemplateCachePath();
 
     public List<ScriptTemplate> updateTemplates() {
+    	
+    	assert cacheFolder != null;
+    	assert indexFile != null;
+    	
         TemplateCache templateCache = TemplateCache.getInstance();
 
         List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
@@ -451,7 +466,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
         for (String filePath : urlList) {
             try {
-            	templateCache.updateTemplateCache(filePath);
+            	templateCache.updateTemplateCache(filePath, cacheFolder, indexFile);
                 templates.addAll(templateCache.getTemplates(filePath));
             } catch (IOException e) {
                 warnings.add(e.getMessage());

@@ -30,6 +30,7 @@ import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
@@ -37,6 +38,8 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -59,7 +62,9 @@ public class RPreferencePage extends FieldEditorPreferencePage implements IWorkb
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
         
-        String bundlePath = ScriptingUtils.getBundlePath(R4KnimeBundleActivator.PLUGIN_ID).toOSString();
+        //Bundle bundle = Platform.getBundle(R4KnimeBundleActivator.PLUGIN_ID);
+        Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
         addField(new StringFieldEditor(RPreferenceInitializer.R_HOST, "The host where Rserve is running", parent));
         addField(new IntegerFieldEditor(RPreferenceInitializer.R_PORT, "The port on which Rserve is listening", parent));

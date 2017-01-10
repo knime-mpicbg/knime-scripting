@@ -36,6 +36,8 @@ import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -62,7 +64,8 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
     protected void createFieldEditors() {
         final Composite parent = getFieldEditorParent();
         
-        String bundlePath = ScriptingUtils.getBundlePath(MatlabScriptingBundleActivator.PLUGIN_ID).toOSString();
+        Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
 //        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
 //        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",

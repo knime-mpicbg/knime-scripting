@@ -34,6 +34,8 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -55,7 +57,8 @@ public class GroovyScriptingPreferencePage extends FieldEditorPreferencePage imp
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
         
-        String bundlePath = ScriptingUtils.getBundlePath(GroovyScriptingBundleActivator.PLUGIN_ID).toOSString();
+        Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
         addField(new StringFieldEditor(GroovyScriptingPreferenceInitializer.GROOVY_CLASSPATH_ADDONS, "Additional scripting classpath (;-separated)", parent));
         //addField(new StringFieldEditor(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES, "Template resources (;-separated)", parent));

@@ -1,8 +1,8 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
 import de.mpicbg.knime.scripting.core.TemplateCache;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,7 +49,8 @@ public class TemplateTableEditor extends FieldEditor {
     private static Color gray;
     private static Color black;
     
-    private String bundlePath;
+    private Path cacheFolder;
+    private Path indexFile;
 
     public TemplateTableEditor(String name, String labelText, String bundlePath, Composite parent) {
         super(name, labelText, parent);
@@ -61,7 +64,8 @@ public class TemplateTableEditor extends FieldEditor {
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
         
-        this.bundlePath = bundlePath;
+        this.cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+        this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, "tempFiles.index");
     }
 
     @Override
@@ -308,7 +312,7 @@ public class TemplateTableEditor extends FieldEditor {
         // add script to cache
         try {
             TemplateCache templateCache = TemplateCache.getInstance();
-            templateCache.addTemplateFile(uri, this.bundlePath);
+            templateCache.addTemplateFile(uri, this.cacheFolder, this.indexFile);
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
             messageDialog.setText("Exception");
@@ -327,7 +331,7 @@ public class TemplateTableEditor extends FieldEditor {
     private void removeFileFromCache(String uri) {
         // remove script from cache
         TemplateCache templateCache = TemplateCache.getInstance();
-        if (templateCache.contains(uri)) templateCache.removeTemplateFile(uri);
+        if (templateCache.contains(uri)) templateCache.removeTemplateFile(uri, this.cacheFolder, this.indexFile);
     }
 
     @Override

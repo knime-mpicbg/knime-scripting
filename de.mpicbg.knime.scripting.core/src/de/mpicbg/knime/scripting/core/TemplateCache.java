@@ -1,10 +1,12 @@
 package de.mpicbg.knime.scripting.core;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -50,8 +52,8 @@ public class TemplateCache {
     // members
     //====================================================================================
     
-    Path cacheDir = null;
-    Path indexFile = null;
+    //Path cacheDir = null;
+    //Path indexFile = null;
 
     /**
      * hashmap which contains for each script-file (full path string key)
@@ -91,13 +93,13 @@ public class TemplateCache {
      * @param path
      * @throws IOException
      */
-	public void addTemplatesFromPref(String prefString, String path) throws IOException {
+	public void addTemplatesFromPref(String prefString, Path bundlePath, Path indexFile) throws IOException {
 		List<String> templateFiles = parseConcatendatedURLs(prefString);
 		
 		for(String filePath : templateFiles) {
 			writeLock.lock();
 			try {
-				addTemplateFile(filePath, path);
+				addTemplateFile(filePath, bundlePath, indexFile);
 			} finally {
 				writeLock.unlock();
 			}
@@ -110,11 +112,11 @@ public class TemplateCache {
      *
      * @param filePath
      */
-    public void addTemplateFile(String filePath, String path) throws IOException {
+    public void addTemplateFile(String filePath, Path bundlePath, Path indexFile) throws IOException {
     	
     	if (!templateCache.containsKey(filePath)) {
 			// check local cache for files
-            updateLocalFileCache(path);
+            updateLocalFileCache(bundlePath, indexFile);
             
             ScriptTemplateFile newTemplateFile = null;
 			if(isFileReachable(filePath)) {
@@ -122,7 +124,7 @@ public class TemplateCache {
 				
 				// cache file to disk if necessary
 				if (!newTemplateFile.isEmpty())
-	                cacheFileOnDisk(filePath);
+	                cacheFileOnDisk(filePath, bundlePath, indexFile);
 			} else {
 				if(localFileCache.containsKey(filePath)) {
 					newTemplateFile = new ScriptTemplateFile(localFileCache.get(filePath).toString());
@@ -143,18 +145,73 @@ public class TemplateCache {
      *
      * @param filePath
      */
-    public void removeTemplateFile(String filePath) {
+    public void removeTemplateFile(String filePath, Path bundlePath, Path indexFile) {
         templateCache.remove(filePath);
+        
+        assert bundlePath != null;
+        assert indexFile != null;
+        
+        Path localFile = localFileCache.get(filePath);
+        try {
+			Files.delete(localFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
         localFileCache.remove(filePath);
-        removeFileFromLocalCache(filePath);
+        
+        try {
+			removeFromIndexFile(filePath, indexFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}    
     }
 
     /**
+     * read index file and rewrite it without the entry for the removed file
+     * @param indexFile
+     * @throws IOException
+     */
+    private void removeFromIndexFile(String filePath, Path indexFile) throws IOException {
+    	
+    	// read content of index-file
+    	BufferedReader reader = null;
+    	List<String> allLines = new ArrayList<String>();
+    	
+    	try {
+    		reader = Files.newBufferedReader(indexFile, StandardCharsets.UTF_8);
+    		
+    		String line = reader.readLine();
+    		while (line != null) {
+    			String[] splitted = line.split(";");
+    			if(splitted.length == 2) {
+    				if(!splitted[0].equals(filePath))
+    					allLines.add(line);
+    			}
+    			line = reader.readLine();
+    		}
+    	} finally {
+    		if(reader != null) reader.close();
+    	}
+    	
+    	PrintWriter pw = null;
+    	try {
+    	  BufferedWriter bw = Files.newBufferedWriter(indexFile, StandardCharsets.UTF_8);
+    	  pw = new PrintWriter(bw);
+    	  for(String line : allLines) {  
+    		  pw.println(line);
+    	  }
+    	} finally {
+    		if(pw != null) pw.close();
+    	}
+	}
+
+	/**
      * reloads all given templateFiles into the Cache
      *
      * @param filePath
      */
-    public void updateTemplateCache(String filePath) throws IOException {
+    public void updateTemplateCache(String filePath, Path bundlePath, Path indexFile) throws IOException {
 
         //List<ScriptTemplate> templates = null;
 
@@ -162,7 +219,7 @@ public class TemplateCache {
         ScriptTemplateFile reloadedTemplate = new ScriptTemplateFile(filePath);
         if (!reloadedTemplate.isEmpty()) {
             templateCache.put(filePath, reloadedTemplate);
-            cacheFileOnDisk(filePath);
+            cacheFileOnDisk(filePath, bundlePath, indexFile);
             //templates = templateCache.get(filePath).templates;
         } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
 
@@ -179,25 +236,16 @@ public class TemplateCache {
         return templateCache.containsKey(filePath);
     }
 
-    private void removeFileFromLocalCache(String filePath) {
-		// TODO Auto-generated method stub
-		// need to remove cached file and the entry from the index
-    	
-	}
-
-	private void updateLocalFileCache(String path) throws IOException {
-		// set local cache directory and index-file as member
-		if(this.cacheDir == null) 
-			this.cacheDir = Paths.get(path, "template_cache");
-		if(this.indexFile == null)
-			this.indexFile = Paths.get(cacheDir.toString(), "tempFiles.index");
+	private void updateLocalFileCache(Path bundlePath, Path indexFile) throws IOException {
+		assert bundlePath != null;
+		assert indexFile != null;
 		
 		// check for directory and index-file and create it if necessary
 		try {
-			Files.createDirectory(this.cacheDir);
+			Files.createDirectory(bundlePath);
 		} catch (FileAlreadyExistsException faee) {}
 		try {
-			Files.createFile(this.indexFile);	
+			Files.createFile(indexFile);	
 			return;	//nothing to fill into file cache hashmap as index was not existent yet
 		} catch (FileAlreadyExistsException faee) {}
 		
@@ -226,8 +274,11 @@ public class TemplateCache {
 	 * @throws IOException
 	 * @throws URISyntaxException
 	 */
-	private void cacheFileOnDisk(String templateFile) throws IOException {
+	private void cacheFileOnDisk(String templateFile, Path bundlePath, Path indexFile) throws IOException {
 
+		assert bundlePath != null;
+		assert indexFile != null;
+		
 		URL templateURL = new URL(templateFile);
 		String protocol = templateURL.getProtocol();
 		
@@ -256,7 +307,7 @@ public class TemplateCache {
 				Files.createFile(cachedFile);
 			}
 		} else {
-			cachedFile = Files.createTempFile(cacheDir, "template_", ".txt");
+			cachedFile = Files.createTempFile(bundlePath, "template_", ".txt");
 		}
 				
 		ReadableByteChannel rbc = null;
@@ -271,7 +322,7 @@ public class TemplateCache {
 			
 			// add file to index file
 			String addLine = new String(templateFile + ";" + cachedFile.toString() + "\n");
-			Files.write(this.indexFile, addLine.getBytes(), StandardOpenOption.APPEND);
+			Files.write(indexFile, addLine.getBytes(), StandardOpenOption.APPEND);
 			
 			// add file to hashmap
 			localFileCache.put(templateFile, cachedFile);

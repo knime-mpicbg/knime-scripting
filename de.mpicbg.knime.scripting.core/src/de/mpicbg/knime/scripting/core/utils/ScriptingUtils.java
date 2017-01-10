@@ -1,6 +1,8 @@
 package de.mpicbg.knime.scripting.core.utils;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
@@ -16,17 +18,24 @@ import de.mpicbg.knime.scripting.core.TemplateCache;
  */
 public class ScriptingUtils {
 	
+	public static final String LOCAL_CACHE_FOLDER = "template_cache";
+	
 	/**
 	 * add templates to template-cache-singleton
 	 * @param templateStrings
 	 * @param path
 	 */
-	public static void loadTemplateCache(List<String> templateStrings, String PLUGIN_ID) {
+	public static void loadTemplateCache(List<String> templateStrings, Bundle bundle) {
         TemplateCache cache = TemplateCache.getInstance();
+        
+        String bundlePath = getBundlePath(bundle).toOSString();
+        
+        Path cacheFolder = Paths.get(bundlePath, LOCAL_CACHE_FOLDER);
+        Path indexFile = Paths.get(bundlePath, LOCAL_CACHE_FOLDER, "tempFiles.index");		
         
         for(String prefString : templateStrings) {
 	        try {
-				cache.addTemplatesFromPref(prefString, getBundlePath(PLUGIN_ID).toOSString());
+				cache.addTemplatesFromPref(prefString, cacheFolder, indexFile);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -35,11 +44,10 @@ public class ScriptingUtils {
 	
 	/**
 	 * retrieves the path of a bundle with the given plugin-id
-	 * @param PLUGIN_ID
+	 * @param bundle
 	 * @return
 	 */
-    public static IPath getBundlePath(String PLUGIN_ID) {
-    	Bundle bundle = Platform.getBundle(PLUGIN_ID);
+    public static IPath getBundlePath(Bundle bundle) {
     	IPath path = Platform.getStateLocation(bundle);
     	return path;
     }

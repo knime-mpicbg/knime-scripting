@@ -1,6 +1,13 @@
 package de.mpicbg.knime.scripting.python;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 /**
@@ -22,4 +29,11 @@ public class PythonSnippetNodeDialog extends ScriptingNodeDialog {
     public String getTemplatesFromPreferences() {
         return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
     }
+    
+	@Override
+	protected Path getTemplateCachePath() {
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
+        return Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+	}
 }

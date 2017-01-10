@@ -36,6 +36,8 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -57,7 +59,8 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
         
-        String bundlePath = ScriptingUtils.getBundlePath(PythonScriptingBundleActivator.PLUGIN_ID).toOSString();
+        Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_HOST, "The host where the Python server is running", parent));
         addField(new IntegerFieldEditor(PythonPreferenceInitializer.PYTHON_PORT, "The port on which Python server is listening", parent));

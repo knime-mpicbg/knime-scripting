@@ -15,7 +15,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
 import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
-import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
@@ -58,13 +57,15 @@ public class R4KnimeBundleActivator extends AbstractUIPlugin {
         
         // get bundle and template prefstrings and load them into template cache
         try {
+        	
+        	Bundle bundle = FrameworkUtil.getBundle(getClass());
 	        
 	        List<String> preferenceStrings = new ArrayList<String>();
 	        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
 	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
 	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
 	        
-	        ScriptingUtils.loadTemplateCache(preferenceStrings, PLUGIN_ID);
+	        ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
         } catch(Exception e) {
         	NodeLogger logger = NodeLogger.getLogger("scripting template init");
         	logger.coding(e.getMessage());
