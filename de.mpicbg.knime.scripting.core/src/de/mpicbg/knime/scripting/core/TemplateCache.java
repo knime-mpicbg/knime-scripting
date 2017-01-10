@@ -350,7 +350,7 @@ public class TemplateCache {
 		if(protocol.equals("file"))
 			return true;
 		else
-			return pingURL(filePath, 60);	
+			return pingURL(filePath, 2000);	
 	}
 	
 	/**
