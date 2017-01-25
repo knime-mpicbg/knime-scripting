@@ -32,40 +32,35 @@
                 <b>Conventions:</b>
                 <ul>
                     <li>
-                        Snippet/Plot input variable name: <i>kIn</i>
+                        Snippet input variable name: kIn
                     </li>
                     <li>
-                        Snippet output variable name: <i>mOut</i>
+                        Snippet output variable name: mOut
                     </li>
                     <li>
-                        Plot output: the node will create one figure. The snippet will create a graph on that figure.
-                        Finally an image will be saved of this figure and pushed back to KNIME. 
-                    </li>
-                    <li>
-                        Supported Matlab types: <i>dataset</i>, <i>table</i>, <i>struct</i> or <i>container.Map</i>
+                        Supported Matlab types: dataset, table, struct or container.Map
                     </li>
                     <li>
                         While the script input type is defined by the preferences,
                         the output type will be inferred from the output variable
                     </li>
                     <li>
+                        The column names for dataset and table matlab data types are taken from the object
+                        properties (VeriableDescriptions/VarDesription). For the other types, they will
+                        be the same as the input as long as the header does not change.
+                    </li>
+                    <li>
                         Templates repositories are controlled via the preferences
                         (Menu > KNIME > Preferences > KNIME > Matlab Scripting).
                     </li>
                 </ul>
-             </p>    
-             <p>
-             	<b>Further reading:</b>
-             	<ul>
-             		<li>
-             		   Further documentation can be found on the 
-					   <a href="https://github.com/knime-mpicbg/knime-scripting/wiki">wiki</a><br/>
-				   </li>
-				   <li>
-                		To understand how to use flow variables in the script, please consult 
-                		<a href="https://github.com/knime-mpicbg/knime-scripting/wiki/RGG-XML#Flow_variables">RGG XML</a>
-            		</li>
-        		</ul>
+            </p>
+            <p>
+                <b>Further reading:</b><br/>
+                Further documentation can be found on the
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki">wiki</a><br/>
+                To understand how to use flow variables in the script, please consult
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/RGG-XML#Flow_variables">RGG XML</a>
             </p>
         </intro>
     </fullDescription>
