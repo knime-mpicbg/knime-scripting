@@ -3,23 +3,22 @@
 <plugin>
 
     <extension point="org.knime.workbench.repository.nodes">
-        <node category-path="/community/r" factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"
+        <node
+              category-path="/community/r"
+              factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"/>
 
         <node
-              after="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"
               category-path="/community/r"
               factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"
               id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory2"/>
 
         <node
-              after="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"
               category-path="/community/r"
               factory-class="de.mpicbg.knime.scripting.r.node.plot.RPlotNodeFactory"
               id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
 
         <node
-              after="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"
               category-path="/community/r"
               factory-class="de.mpicbg.knime.scripting.r.node.snippet21.RSnippetNodeFactory21"
               id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>
