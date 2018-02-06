@@ -167,9 +167,10 @@ public class TemplateTableEditor extends FieldEditor {
             TemplatePref tPref = iterator.next();
             if (tPref.getUri().equals(templateTable.getItem(tIdx).getText(0))) {
                 tPref.setActive(isChecked);
-                if (isChecked) 
+                if (isChecked) {
                 	if(!addFileToCache(tPref.getUri())) tPref.setActive(false);
-                else removeFileFromCache(tPref.getUri());
+                }
+                else removeFileFromCache(tPref.getUri()); 
             }
         }
         

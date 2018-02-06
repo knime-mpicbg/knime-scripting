@@ -146,7 +146,8 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
                 updateUrlList(getTemplatesFromPreferences());
                 this.cacheFolder = getTemplateCachePath();
                 this.indexFile = Paths.get(cacheFolder.toString(), "tempFiles.index");
-                List<ScriptTemplate> templates = updateTemplates();
+                //List<ScriptTemplate> templates = updateTemplates();
+                List<ScriptTemplate> templates = retrieveTemplates();
 
                 //templateWizard = new ScriptTemplateWizard(templateResources);
                 templateWizard = new ScriptTemplateWizard(this, templates);
@@ -191,6 +192,39 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         removeTab("Options");
         selectTab(selectTab);
     }
+
+	private List<ScriptTemplate> retrieveTemplates() {
+    	assert cacheFolder != null;
+    	assert indexFile != null;
+    	
+        TemplateCache templateCache = TemplateCache.getInstance();
+
+        List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
+        List<String> warnings = new ArrayList<String>();
+
+        for (String filePath : urlList) {
+        	if(templateCache.contains(filePath))
+        		templates.addAll(templateCache.getTemplates(filePath));
+        	else
+        		warnings.add("No templates for " + filePath + " have been loaded");
+/*        	else {
+        		templateCache.addTemplateFile(filePath, bundlePath, indexFile);
+        	}*/
+            /*try {
+            	templateCache.updateTemplateCache(filePath, cacheFolder, indexFile);
+                templates.addAll(templateCache.getTemplates(filePath));
+            } catch (IOException e) {
+                warnings.add(e.getMessage());
+            }*/
+        }
+
+        // show warning if files are empty or could not be read
+        if (!warnings.isEmpty()) {
+            logger.warn(warnings);
+        }
+
+        return templates;
+	}
 
 	private void populateOptionsPanel(JPanel optionsPanel) {
 		
