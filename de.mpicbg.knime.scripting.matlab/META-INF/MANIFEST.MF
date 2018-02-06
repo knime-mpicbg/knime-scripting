@@ -5,7 +5,6 @@ Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
 Bundle-Version: 3.1.001.qualifier
 Bundle-ClassPath: matlabsnippet.jar,
- lib/commons-math-2.0.jar,
  lib/commons-io-2.4.jar,
  lib/matconsolectl-4.5.0-20160702.113049-5.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
@@ -17,7 +16,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[3.1.0,4.0.0)",
- de.mpicbg.knime.scripting.core;bundle-version="[3.1.0,4.0.0)"
+ de.mpicbg.knime.scripting.core;bundle-version="[3.1.0,4.0.0)",
+ org.apache.commons.math;bundle-version="2.1.0"
 Export-Package: de.mpicbg.knime.scripting.matlab;
   uses:="de.mpicbg.knime.scripting.core,
    de.mpicbg.knime.scripting.matlab.ctrl,

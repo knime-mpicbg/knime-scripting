@@ -10,7 +10,6 @@ Bundle-ClassPath: groovyscripting.jar,
  lib/asm-commons-3.2.jar,
  lib/asm-tree-3.2.jar,
  lib/asm-util-3.2.jar,
- lib/commons-logging-1.1.1.jar,
  lib/groovy-1.7.1.jar
 Bundle-Activator: de.mpicbg.knime.scripting.groovy.GroovyScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
@@ -20,7 +19,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[3.1.0,4.0.0)",
- de.mpicbg.knime.scripting.core;bundle-version="[3.1.0,4.0.0)"
+ de.mpicbg.knime.scripting.core;bundle-version="[3.1.0,4.0.0)",
+ org.apache.commons.logging;bundle-version="1.1.1"
 Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.groovy
 Import-Package: de.mpicbg.knime.scripting.core
