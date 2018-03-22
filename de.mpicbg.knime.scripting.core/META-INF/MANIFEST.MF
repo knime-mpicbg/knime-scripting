@@ -11,7 +11,6 @@ Bundle-ClassPath: scriptingcore.jar,
  lib/jakarta-oro-2.0.8.jar,
  lib/jakarta-regexp.jar,
  lib/log4j-1.2.15.jar,
- lib/RGG.jar,
  lib/swing-layout-1.0.3.jar,
  lib/swing-worker-1.1.jar,
  lib/swingx-0.9.2.jar,
@@ -26,7 +25,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[3.1.0,4.0.0)",
  org.apache.commons.lang3;bundle-version="3.2.1",
- org.apache.commons.logging;bundle-version="1.1.1"
+ org.apache.commons.logging;bundle-version="1.1.1",
+ de.mpicbg.knime.scripting.libs;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  de.mpicbg.knime.scripting.core,
@@ -35,6 +35,6 @@ Export-Package:
  de.mpicbg.knime.scripting.core.rgg,
  de.mpicbg.knime.scripting.core.rgg.wizard,
  de.mpicbg.knime.scripting.core.utils
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 
 
