@@ -6,7 +6,7 @@ import de.mpicbg.knime.knutils.AttributeUtils;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.RUtils;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.knime.core.data.*;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;

@@ -5,7 +5,9 @@ Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: .,
- lib/RGG.jar
+ lib/RGG.jar,
+ lib/REngine.jar,
+ lib/RserveEngine.jar
 Require-Bundle: org.eclipse.ui;bundle-version="3.108.0"
 Export-Package: at.ac.arcs.rgg,
  at.ac.arcs.rgg.builder,
@@ -51,4 +53,7 @@ Export-Package: at.ac.arcs.rgg,
  at.ac.arcs.rgg.layout,
  at.ac.arcs.rgg.runner,
  at.ac.arcs.rgg.util,
- at.ac.arcs.rgg.util.tablerowheader
+ at.ac.arcs.rgg.util.tablerowheader,
+ org.rosuda.REngine,
+ org.rosuda.REngine.Rserve,
+ org.rosuda.REngine.Rserve.protocol
