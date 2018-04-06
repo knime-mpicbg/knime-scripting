@@ -2,6 +2,9 @@ package de.mpicbg.knime.scripting.core.rgg.wizard;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -131,6 +134,27 @@ public class ScriptTemplate implements Cloneable {
 
     public void setScriptingLanguage(String scriptingLanguage) {
         this.scriptingLanguage = scriptingLanguage;
+    }
+    
+    /** create Template from XML-String
+     * 
+     * @param serializedTemplate
+     * @return template
+     */
+    public static ScriptTemplate fromXML(String serializedTemplate) {
+    	XStream xStream = new XStream(new DomDriver());
+        xStream.setClassLoader(ScriptTemplate.class.getClassLoader());
+        return (ScriptTemplate) xStream.fromXML(serializedTemplate);
+    }
+    
+    /**
+     * convert Template to XML-String
+     * @return XML-string
+     */
+    public String toXML() {
+    	XStream xStream = new XStream(new DomDriver());
+        xStream.setClassLoader(ScriptTemplate.class.getClassLoader());
+        return xStream.toXML(this);
     }
 
     public static ScriptTemplate parse(String rawTemplateText, String templateFile) {

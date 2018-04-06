@@ -39,9 +39,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplateWizard;
 import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
@@ -368,7 +365,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
             }
         }
 
-        return (ScriptTemplate) new XStream(new DomDriver()).fromXML(serializedTemplate);
+        return ScriptTemplate.fromXML(serializedTemplate);
     }
 
     /**
@@ -396,7 +393,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 	            }
 
 	            // save the template as xml (with is kinda hacky) but makes live much easier here
-	            templateProperty.setStringValue(new XStream().toXML(scriptProvider.getTemplate()));
+	            templateProperty.setStringValue(scriptProvider.getTemplate().toXML());
 
 	        } else {
 	            templateProperty.setStringValue("");
