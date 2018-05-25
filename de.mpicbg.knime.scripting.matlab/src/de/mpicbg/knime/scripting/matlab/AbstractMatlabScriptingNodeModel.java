@@ -39,8 +39,8 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 	public final static String ERROR_VARIABLE_NAME = "snippetError";
 	
 	/** Default MATLAB snippet script */
-	public final static String DEFAULT_SNIPPET = "% " + OUTPUT_VARIABLE_NAME + 
-			" contains the input data. After manipulations the output data has be be assigned " + 
+	public final static String DEFAULT_SNIPPET = "% " + INPUT_VARIABLE_NAME + 
+			" contains the input data. After manipulations the output data has to be assigned " + 
 			OUTPUT_VARIABLE_NAME + "\n" + OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME + ";"; 
 	
 	/** Default MATLAB plot script */
