@@ -4,7 +4,6 @@
 # Eclipse production
 /*/bin
 /.metadata
-.classpath
 .settings
 target
 
