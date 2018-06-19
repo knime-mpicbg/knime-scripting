@@ -15,4 +15,5 @@ Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.groovy
 Import-Package: de.mpicbg.knime.scripting.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ClassPath: groovyscripting.jar
 
