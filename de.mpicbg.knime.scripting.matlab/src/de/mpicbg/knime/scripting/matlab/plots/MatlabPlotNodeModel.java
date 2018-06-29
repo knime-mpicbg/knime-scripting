@@ -295,7 +295,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
  				
  				// Execute
  				matlabProxy = matlabConnector.acquireProxyFromQueue();
- 				matlabProxy.eval(cmd);
+ 				MatlabCode.safeEvaluation(matlabProxy, cmd);
  				MatlabCode.checkForScriptErrors(matlabProxy);
  				matlabProxy.eval(MatlabCode.getPlotNodeMessage(false));
 // 			    releaseMatlabProxy(proxy);
@@ -316,7 +316,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
  				String cmd = code.getScriptExecutionCommand(codeFile.getPath(), true, false);
  				
  				// Execute 
- 				matlabProxy.eval(cmd);
+ 				MatlabCode.safeEvaluation(matlabProxy, cmd);
  				MatlabCode.checkForScriptErrors(matlabProxy);
  				matlabProxy.eval(MatlabCode.getPlotNodeMessage(false));
  			}

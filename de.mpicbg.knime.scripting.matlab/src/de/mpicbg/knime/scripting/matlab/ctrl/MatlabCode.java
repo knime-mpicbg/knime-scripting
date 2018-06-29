@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.matlab.ctrl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,6 +144,25 @@ public class MatlabCode {
 	}
 	
 	/**
+	 * Wrap the command for evaluation and inform about execution errors
+	 * 
+	 * @param controller
+	 * @param cmd
+	 * @throws MatlabInvocationException
+	 */
+	public static void safeEvaluation(MatlabOperations controller, String cmd) throws MatlabInvocationException {
+		cmd = "executionError=struct('identifier', '', 'message', '');try;" + cmd + "catch executionError;end";
+		controller.eval(cmd);
+		String[] error = (String[])controller.getVariable("{executionError.identifier executionError.message}");
+		if (error[0].length() > 0 || error[1].length() > 0) {
+			controller.eval("disp('KNIME: execution error:')");
+			controller.eval("try;disp(executionError.getReport());catch;end");
+			throw new RuntimeException("The MATLAB snippet execution did not succeed."+
+								       " Check the snippet for grave syntax errors and the MATLAB console for more information.");
+		}
+	}
+	
+	/**
      * This method checks if the MATLAB snippet produced any errors
      * and throws a runtime exception that shows in the KNIME console.
      * This is ensures that the user has more specific error information
@@ -152,9 +172,18 @@ public class MatlabCode {
      * to be called during the preparation of the snippet.
      */
     public static void checkForScriptErrors(MatlabOperations controller) throws MatlabInvocationException {
-    	String[] error = (String[]) controller.getVariable(MatlabCode.getRetrieveErrorCommand());
-		if (error[0].length() > 0)
-			throw new RuntimeException(error[0] + ", " + error[1] + " Check your MATLAB code!");
+    	String cmd = MatlabCode.getRetrieveErrorCommand();
+    	Object obj = controller.getVariable(cmd);    			
+    	String[] error = (String[]) obj;
+		if (error[0].length() > 0 || error[1].length() > 0) {
+			
+			int line = Integer.parseInt(error[3]) - 7;
+			controller.eval("try;disp(' ');disp(' ');disp('KNIME snippet error:');disp(" 
+							+ AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".getReport());catch;end");
+			throw new RuntimeException(error[0] + ", " + error[1] + 
+					"\n\t\t\t\t      Check your snippet at line " + line +
+					"\n\t\t\t\t      Under the hood: " + error[2]);
+		}
     }
 	
 	/**
@@ -164,11 +193,16 @@ public class MatlabCode {
 	 * @return
 	 */
 	private String addErrorHandlingCode(String code) {
-		return "\ntry\n" + code + "\ncatch " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ";\nend\n";
+		return "\ntry\n" + code + "\ncatch " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "\nend\n";
 	}
 	
 	/**
-	 * Add the code to make a function definition out of a MATLAB script
+	 * Add the code to make a function definition out of a MATLAB script.
+	 * The {@link AbstractMatlabScriptingNodeModel#ERROR_VARIABLE_NAME} and 
+	 * {@link AbstractMatlabScriptingNodeModel#OUTPUT_VARIABLE_NAME} have to 
+	 * be initialized so that the function wrapped around the snippet code 
+	 * may return its output arguments despite a scripting error (that will 
+	 * be exposed to the user via error variable)
 	 * 
 	 * @param code
 	 * @param functionName
@@ -178,7 +212,8 @@ public class MatlabCode {
 	 */
 	private String addFunctionSignature(String code, String functionName, boolean hasInput, boolean hasOutput) {
 		return "function " + createFunctionSignature(functionName, hasInput, hasOutput) + "\n" + 
-				AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '');\n" + 
+				AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + "=struct('identifier', '', 'message', '', 'stack', struct('file', '', 'line', 0));\n" + 
+				AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "='';\n" + 
 				code;
 	}
 	
@@ -217,8 +252,8 @@ public class MatlabCode {
 	 * @return
 	 */
 	private String addPlotCode(String code, Integer plotWidth, Integer plotHeight, String plotPath) {
-    	return "figureHandle = figure('visible', 'off', 'units', 'pixels', 'position', [0, 0, " + plotWidth + ", " + plotHeight + "]);\n" +
-        		"set(gcf,'PaperPositionMode','auto');\n" +
+    	return "figureHandle = figure('visible', 'off', 'units', 'pixels', 'position', [0, 0, " + plotWidth + ", " + plotHeight + "]);" +
+        		"set(gcf,'PaperPositionMode','auto');" +
         		code + "\n" +
         		"print(figureHandle, '-dpng', '" + plotPath + "');\n" + 
         		AbstractMatlabScriptingNodeModel.OUTPUT_VARIABLE_NAME + "=[];";							// so it conforms with the function signature
@@ -562,7 +597,10 @@ public class MatlabCode {
      * @return
      */
     public static String getRetrieveErrorCommand() {
-    	return "{" + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".identifier " + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".message}"; 
+    	return "{" + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".identifier " + 
+    				 AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".message " +
+    				 AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".stack.file " + 
+    				 "num2str(" + AbstractMatlabScriptingNodeModel.ERROR_VARIABLE_NAME + ".stack.line)}"; 
     }
     
     /**

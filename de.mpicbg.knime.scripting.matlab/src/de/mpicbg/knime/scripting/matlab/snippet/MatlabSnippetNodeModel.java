@@ -76,7 +76,7 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 
 				// Run it in MATLAB
 		        matlabProxy = matlabConnector.acquireProxyFromQueue();
-		        matlabProxy.eval(cmd);
+		        MatlabCode.safeEvaluation(matlabProxy, cmd);
 				MatlabCode.checkForScriptErrors(matlabProxy);
 				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(false));
 
@@ -94,7 +94,7 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 				// Get a proxy (block it) push the data execute the snippet and pull back the modified data
 				matlabProxy = matlabConnector.acquireProxyFromQueue();
 				table.pushTable2MatlabWorkspace(matlabProxy, matlabWorkspaceType);
-				matlabProxy.eval(cmd);
+				MatlabCode.safeEvaluation(matlabProxy, cmd);
 				MatlabCode.checkForScriptErrors(matlabProxy);
 				matlabProxy.eval(MatlabCode.getSnippetNodeMessage(true)); //TODO pack this in a function in matlabCode.
 				outData = table.pullTableFromMatlabWorkspace(exec, matlabProxy, matlabWorkspaceType);				
