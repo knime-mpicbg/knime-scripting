@@ -73,34 +73,33 @@ function savehashmap(mTable, filePath, columnMapping)
         case 'dataset'
             mColNames = get(mTable, 'VarNames');
             kColNames = get(mTable, 'VarDescription');
-            cMap = containers.Map(mColNames, kColNames);
             command = 'mTable.(mColNames{c})';
             
         case 'containers.Map'
             mColNames = mTable.keys();
             command = 'mTable(mColNames{c})';
-            if columnMapping.Count == numel(mColNames) && all(cellfun(@strcmp, mColNames, columnMapping.keys()))
-                cMap = columnMapping;
-            else
-                cMap = containers.Map(mColNames, mColNames);
-            end
             
         case 'struct'
             mColNames = fieldnames(mTable);
             command = 'mTable.(mColNames{c})';
-            if columnMapping.Count == numel(mColNames) && all(cellfun(@strcmp, mColNames, columnMapping.keys()))
-                cMap = columnMapping;
-            else
-                cMap = containers.Map(mColNames, mColNames);
-            end
             
         case 'table'
             mColNames = mTable.Properties.VariableNames;
             kColNames = mTable.Properties.VariableDescriptions;
-            cMap = containers.Map(mColNames, kColNames);
             command = 'mTable.(mColNames{c})';
     end
     
+    % Take the user defined output column names, the existing column
+    % mapping or the variable names as ouput column names
+    if exist('kColNames', 'var') && ~isempty(kColNames)
+        cMap = containers.Map(mColNames, kColNames);
+    elseif columnMapping.Count == numel(mColNames) && ...
+            all(cellfun(@strcmp, mColNames, columnMapping.keys()))
+        cMap = columnMapping;
+    else
+        cMap = containers.Map(mColNames, mColNames);
+    end
+
     % convert the columns.
     for c = 1:numel(mColNames)
         jTable.put(cMap(mColNames{c}), eval(command));
