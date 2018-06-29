@@ -53,8 +53,8 @@
                         the output type will be inferred from the output variable
                     </li>
                     <li>
-                    	The column names for dataset and table matlab data types are taken from the object
-                    	properties (VeriableDescriptions/VarDesription). For the other types, they will 
+                    	The column names for dataset and table Matlab data types are taken from the object
+                    	properties (VariableDescriptions/VarDesription). For the other types, they will 
                     	be the same as the input as long as the header does not change.
                     </li>
                     <li>
@@ -66,9 +66,9 @@
             <p>
              	<b>Further reading:</b><br/>
                 Further documentation can be found on the
-                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki">wiki</a><br/>
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki">wiki</a>.<br/>
                 To understand how to use flow variables in the script, please consult
-                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/RGG-XML#Flow_variables">RGG XML</a>
+                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/RGG-XML#Flow_variables">RGG XML</a>.
             </p>
         </intro>
 
