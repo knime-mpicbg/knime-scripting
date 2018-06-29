@@ -1,6 +1,5 @@
 package de.mpicbg.knime.scripting.matlab.ctrl;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +12,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.def.StringCell;
 
 import de.mpicbg.knime.scripting.matlab.AbstractMatlabScriptingNodeModel;
-
-
 
 
 /**
