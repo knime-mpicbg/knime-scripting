@@ -40,15 +40,17 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 	
 	/** Default MATLAB snippet script */
 	public final static String DEFAULT_SNIPPET = "% " + INPUT_VARIABLE_NAME + 
-			" contains the input data. After manipulations the output data has be be assigned " + 
+			" contains the input data. After manipulations the output data has to be assigned " + 
 			OUTPUT_VARIABLE_NAME + "\n" + OUTPUT_VARIABLE_NAME + " = " + INPUT_VARIABLE_NAME + ";"; 
 	
 	/** Default MATLAB plot script */
     public final static String DEFAULT_PLOTCMD = "% The command 'figureHandle = figure(...)'" +
-    		" will be run prior to these commands.\nplot(1:size(kIn,1));";
+    		" will be run prior to these commands to intercept the plot " +
+    		"(i.e. do not put the figure command in your snippet).\n" + 
+    		"plot(1:size(kIn,1));";
 	
 	/** Default MATLAB type to hold the KNIME table data */
-	public final static String DEFAULT_TYPE = "dataset";
+	public final static String DEFAULT_TYPE = "table";
 	
 	/** Temp-path of the JVM (used to store KNIME-MATLAB transfer data) */
 	public final static String TEMP_PATH = System.getProperty("java.io.tmpdir") + "/";
