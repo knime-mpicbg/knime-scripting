@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -182,15 +183,19 @@ public class MatlabTable {
     	
         // Get the number of samples (rows)
         int numSamples = -1;
-        Attribute firstAttribute = colAttributes.get(0);
-        Object colData = this.hash.get(firstAttribute.getName());
-        if (firstAttribute.getType().isCompatible(DoubleValue.class)) {
-            numSamples = ((double[]) colData).length;
-        } else if ((firstAttribute.getType().isCompatible(IntValue.class))) {
-            numSamples = ((int[]) colData).length;
-        } else if (firstAttribute.getType().isCompatible(StringValue.class)) {
-            numSamples = ((String[]) colData).length;
+        Object colData = this.hash.get(colAttributes.get(0).getName());
+        if (colData.getClass().isArray()) {        	
+        	numSamples = Array.getLength(colData);
+        } else if (colData != null){
+        	numSamples = 1;
         }
+//        else if (firstAttribute.getType().isCompatible(DoubleValue.class)) {
+//            numSamples = ((double[]) colData).length;
+//        } else if ((firstAttribute.getType().isCompatible(IntValue.class))) {
+//            numSamples = ((int[]) colData).length;
+//        } else if (firstAttribute.getType().isCompatible(StringValue.class)) {
+//            numSamples = ((String[]) colData).length;
+//        } colData.getClass().
 
         // create the cell matrix
         assert numSamples > 0;
@@ -202,31 +207,46 @@ public class MatlabTable {
             Object curColumn = this.hash.get(columnAttribute.getName());
 
             if (columnAttribute.getType().isCompatible(DoubleValue.class)) {
-                double[] doubleColumn = (double[]) curColumn;
-                columnLength = doubleColumn.length;
-                for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
-                    cells[rowIndex][colIndex] = new DoubleCell(doubleColumn[rowIndex]);
-                }
-            } else if (columnAttribute.getType().isCompatible(IntValue.class)) {
-                int[] intColumn = (int[]) curColumn;
-                columnLength = intColumn.length;
-                for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
-                    cells[rowIndex][colIndex] = new IntCell(intColumn[rowIndex]);
-                }
-            } else if (columnAttribute.getType().isCompatible(StringValue.class)) {
-                String[] stringColumn = (String[]) curColumn;
-                columnLength = stringColumn.length;
-                for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
-                    if (stringColumn[rowIndex] == null) {
-                        cells[rowIndex][colIndex] = DataType.getMissingCell();
-                    } else {
-                        if (stringColumn[rowIndex].isEmpty()) {
-                            cells[rowIndex][colIndex] = DataType.getMissingCell();
-                        } else {
-                            cells[rowIndex][colIndex] = new StringCell(stringColumn[rowIndex]);
-                        }
+            	if (curColumn.getClass().isArray()) {
+            		double[] doubleColumn = (double[]) curColumn;
+                    for (int rowIndex = 0; rowIndex < doubleColumn.length; rowIndex++) {
+                        cells[rowIndex][colIndex] = new DoubleCell(doubleColumn[rowIndex]);
                     }
-                }
+            	} else {
+            		cells[0][colIndex] = new DoubleCell((double)curColumn); 
+            	}
+            } else if (columnAttribute.getType().isCompatible(IntValue.class)) {
+            	if (curColumn.getClass().isArray()) {
+	                int[] intColumn = (int[]) curColumn;
+	                for (int rowIndex = 0; rowIndex < intColumn.length; rowIndex++) {
+	                    cells[rowIndex][colIndex] = new IntCell(intColumn[rowIndex]);
+	                }
+            	} else {
+            		cells[0][colIndex] = new IntCell((int)curColumn);
+            	}
+            } else if (columnAttribute.getType().isCompatible(StringValue.class)) {
+            	if (curColumn.getClass().isArray()) {
+	                String[] stringColumn = (String[]) curColumn;
+	                columnLength = stringColumn.length;
+	                for (int rowIndex = 0; rowIndex < numSamples; rowIndex++) {
+	                    if (stringColumn[rowIndex] == null) {
+	                        cells[rowIndex][colIndex] = DataType.getMissingCell();
+	                    } else {
+	                        if (stringColumn[rowIndex].isEmpty()) {
+	                            cells[rowIndex][colIndex] = DataType.getMissingCell();
+	                        } else {
+	                            cells[rowIndex][colIndex] = new StringCell(stringColumn[rowIndex]);
+	                        }
+	                    }
+	                }
+            	} else {
+            		String value = (String) curColumn;            		
+            		if (value == null || value.isEmpty()) {
+            			cells[0][colIndex] = DataType.getMissingCell();
+            		} else {
+            			cells[0][colIndex] = new StringCell(value);
+            		}
+            	}
             }
             if (columnLength != numSamples) {
                 throw new RuntimeException("The Columns do not have the same lenght!");
@@ -281,6 +301,7 @@ public class MatlabTable {
     	ObjectInputStream objectStream = new ObjectInputStream(fileStream);
         this.hash = (LinkedHashMap<String, Object>) objectStream.readObject();;
         linkedHashMap2KnimeTable(exec);
+        objectStream.close();
         this.hashTempFile.delete();
     }
     
@@ -317,13 +338,13 @@ public class MatlabTable {
         Attribute attribute;
         for (Object attributeKey : hash.keySet()) {
             Object colData = hash.get(attributeKey);
-            if (colData instanceof int[]) {
+            if ((colData instanceof int[]) || (colData instanceof Integer)) {
                 attribute = new Attribute(attributeKey.toString(), IntCell.TYPE);
-            } else if (colData instanceof double[]) {
+            } else if ((colData instanceof double[]) || (colData instanceof Double)) {
                 attribute = new Attribute(attributeKey.toString(), DoubleCell.TYPE);
-            } else if ((colData instanceof List) || (colData instanceof String[])) {
+            } else if ((colData instanceof List) || (colData instanceof String[]) || (colData instanceof String)) {
                 attribute = new Attribute(attributeKey.toString(), StringCell.TYPE);
-            } else if (colData instanceof boolean[]) {
+            } else if ((colData instanceof boolean[]) || (colData instanceof Boolean)) {
                 throw new RuntimeException("logical columns are not yet supported");
             } else {
                 // If the proper way does not work, try it dirty.
@@ -351,7 +372,7 @@ public class MatlabTable {
     }
 
     /**
-     * Use the serial connection to Matlab to push directly into the worksace
+     * Use the serial connection to Matlab to push directly into the workspace
      * 
      * @param proxy
      * @param matlabType
