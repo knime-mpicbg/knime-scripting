@@ -27,6 +27,8 @@ package de.mpicbg.knime.scripting.groovy.prefs;
 
 import de.mpicbg.knime.scripting.groovy.GroovyScriptingBundleActivator;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -40,8 +42,25 @@ public class GroovyScriptingPreferenceInitializer extends AbstractPreferenceInit
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();
+        
+        // find the default class path libs
+        File hcstools = null;
+        File hcslibs = null;
+        for (File f : new File(System.getProperty("osgi.syspath")).listFiles()) {
+        	if (f.getName().startsWith("de.mpicbg.knime.hcs.base")) {
+						hcstools = new File(f,"hcstools.jar");
+        	}
+        	if (f.getName().startsWith("de.mpicbg.knime.hcs.libs")) {
+						hcslibs = new File(f, "lib"); 
+        	}
+        }
+        
+        String defaultClasspath = "";
+        if (hcstools != null && hcslibs != null) {
+					defaultClasspath = hcstools.getAbsolutePath() + ";" + hcslibs.getAbsolutePath() +  "/*";
+        } 
 
-        store.setDefault(GROOVY_CLASSPATH_ADDONS, "{KNIME.HOME}/de.mpicbg.tds.knime.hcstools_1.0.0/hcstools.jar;{KNIME.HOME}/de.mpicbg.tds.knime.hcstools_1.0.0/lib/*");
+        store.setDefault(GROOVY_CLASSPATH_ADDONS, defaultClasspath);
 //        store.setDefault(GROOVY_TEMPLATE_RESOURCES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/Groovy/Groovy-templates.txt");
         store.setDefault(GROOVY_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Groovy/Groovy-templates.txt");
     }
