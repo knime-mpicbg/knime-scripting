@@ -25,14 +25,14 @@
  */
 package de.mpicbg.knime.scripting.groovy.prefs;
 
-import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
-import de.mpicbg.knime.scripting.groovy.GroovyScriptingBundleActivator;
-
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+
+import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
+import de.mpicbg.knime.scripting.groovy.GroovyScriptingBundleActivator;
 
 
 /**
