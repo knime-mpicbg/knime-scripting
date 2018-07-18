@@ -1,4 +1,19 @@
 ======================================================================================================
+2018-07-18
+VERSION		v3.1.1
+
+ISSUES
+
+* externalize libraries to avoid conflicts
+* #95: Matlab Snippet: Output argument not assigned during call to ...
+* #91: Cannot import data to matlab
+* #84: Adding templates in the preferences fails silently when rgg syntax error
+* #82: update to java 8 
+* #81: Support the Matlab type table in snippets 
+* #63: Matlab jmi ClassLoader problem 
+* #64: Groovy scripts wont compile due to broken import statements 
+
+======================================================================================================
 2016-02-12
 VERSION		v3.1.0
 
