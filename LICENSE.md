@@ -3,7 +3,7 @@ All rights reserved.
 
 ***
 
-##BSD 3-Clause License
+# BSD 3-Clause License
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
@@ -29,12 +29,12 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-###IMPORTANT NOTICE:
-***        
-...applying to source code contained in the directories: matlab-server and
-matlab4knime
 ***
+
+# IMPORTANT NOTICE
+
+This applies to the source code contained in the ` de.mpicbg.knime.scripting.matlab` directory 
+
 It is the obligation of every user to abide terms and conditions of The
 MathWorks, Inc. Software License Agreement. In particular Article 8 “Web
 Applications”: it is permissible for an Application created by a Licensee of the
