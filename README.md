@@ -12,21 +12,19 @@ KNIME provides powerful and flexible means to mine data. However, as many method
 
 
 ## Development
-Since KNIME is an Eclipse application it is easiest to use that IDE.
+Since KNIME is an Eclipse application it is easiest to use that IDE. Follow the instruction on [KNIME SDK](https://github.com/knime/knime-sdk-setup) repository to install and confige Eclipse for KNIME development.
 
-1. Clone this repository
-2. In Eclipse Import>General>Existing Project into Workspace
+
+To work on this project use `File → Import → Git → Projects from Git File → Clone URI` and enter this repositorie's URL.
 
 
 ### Debug Configuration:
 
-Main Tab:
+In the main menu of Eclipse go to `Run → Debug Configurations... → Eclipas Application → KNIME Analytics Platform` and hit `Debug`.
 
-	Run a Product: org.knime.product.KNIME_PRODUCT
+You might want to change the memory settings in the `Arguments` tab of the debug configuration by adding:
 
-Arguments Tab:
-
-	Add “-XX:MaxPermSize=256m “ to the VM Arguments
+    -XX:MaxPermSize=256m
 
 
 ## Installation
