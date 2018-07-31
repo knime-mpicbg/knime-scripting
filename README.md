@@ -6,7 +6,7 @@ KNIME provides powerful and flexible means to mine data. However, as many method
 
 ## Useful Links
 * [The KNIME framework](www.knime.org)
-* [KNIME community contributions]
+* [KNIME community contributions](https://www.knime.com/community)
 * [RGG fork](https://github.com/knime-mpicbg/rgg)
 * [Scripting Templates](https://github.com/knime-mpicbg/scripting-templates)
 
@@ -30,7 +30,7 @@ You might want to change the memory settings in the `Arguments` tab of the debug
 ## Installation
 Once KNIME is installed you have the following possibilities:
 
-1. The easiest is to use the p2 update mechanism of KNIME (Help > Install new Software). Find the detailed instructions on the [KNIME Community Contributions](https://www.knime.com/community/scripting) website.
+1. The easiest is to use the p2 update mechanism of KNIME (Help > Install new Software). Find the detailed instructions on the [Scripting Integration](https://www.knime.com/community/scripting) page of the KNIME Community Contributions website.
 2. Use eclipse to build the plugins yourself and add them to the plugin directory of the KNIME installation.
 
 
