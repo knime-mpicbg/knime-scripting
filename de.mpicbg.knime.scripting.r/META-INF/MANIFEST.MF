@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.r; singleton:=true
-Bundle-Version: 3.2.000.qualifier
+Bundle-Version: 3.2.001.qualifier
 Bundle-ClassPath: rsnippet.jar
 Bundle-Activator: de.mpicbg.knime.scripting.r.R4KnimeBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
