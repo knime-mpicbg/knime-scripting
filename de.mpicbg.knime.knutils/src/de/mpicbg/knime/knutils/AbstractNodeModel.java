@@ -1,6 +1,8 @@
 package de.mpicbg.knime.knutils;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObject;
@@ -275,4 +277,38 @@ public abstract class AbstractNodeModel extends NodeModel {
     	
     	logger.info(logString);
     }
+    
+	/**
+	 * checks if columns of given list are available; throws warning or error if columns are missing
+	 * 
+	 * @param inSpec		table specs
+	 * @param onlyWarn		true = no error, just a warning
+	 * @param columns		list of columns to test for
+	 * 
+	 * @throws InvalidSettingsException
+	 */
+	protected void checkColumnsForAvailability(DataTableSpec inSpec, String[] columns, final Class<? extends DataValue> valueClass, boolean onlyWarn, boolean atLeastOneRequired)
+			throws InvalidSettingsException {
+		// collect columns which are not available in input spec and need to be double-compatible
+		List<String> missingColumns = new ArrayList<String>();
+		for(String col : columns) {
+			if(!inSpec.containsName(col))
+				missingColumns.add(col);
+			else 
+				if(!inSpec.getColumnSpec(col).getType().isCompatible(valueClass))
+					missingColumns.add(col);
+		}	
+
+		if(atLeastOneRequired) {
+			if(missingColumns.size() == columns.length)
+				throw new InvalidSettingsException("Input table does not contain any of the required columns or columns are not numeric: " + String.join(",", missingColumns));
+		}
+		
+		if(!missingColumns.isEmpty()) {
+			if(onlyWarn)
+				setWarningMessage("The following columns are either missing or not numeric (will be ignored for processing): " + String.join(",", missingColumns));
+			else 
+				throw new InvalidSettingsException("The following columns are either missing or not numeric: " + String.join(",", missingColumns));
+		}
+	}
 }
