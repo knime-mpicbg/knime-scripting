@@ -107,6 +107,28 @@ public abstract class AbstractNodeModel extends NodeModel {
     protected SettingsModel getModelSetting(String settingName) {
         return modelSettings.get(settingName);
     }
+    
+    /**
+     * if autoguessing is used in configure, setting model needs to be updates (=> replaced)
+     * 
+     * @param settingName		key of the setting to be replaced
+     * @param settingsModel		new settings model
+     * 
+     * @throws InvalidSettingsException		thrown if key is not present or model class does not fit
+     */
+    protected void updateModelSetting(String settingName, SettingsModel settingsModel) 
+    		throws InvalidSettingsException {
+    	if(!modelSettings.containsKey(settingName))
+    		throw new InvalidSettingsException("Setting \"" + settingName + "\" does not belong to the settings of this node. Implementation error.");
+    	SettingsModel sm = modelSettings.get(settingName);
+    	
+    	String modelClass = sm.getClass().getSimpleName();
+    	if(!sm.getClass().equals( settingsModel.getClass())) {
+    		throw new InvalidSettingsException("Setting \"" + settingName + "\" is not of class \"" + modelClass + "\". Implementation error.");   		
+    	}
+    	
+    	modelSettings.replace(settingName, settingsModel);
+    }
 
     /**
      * ================================================================================
