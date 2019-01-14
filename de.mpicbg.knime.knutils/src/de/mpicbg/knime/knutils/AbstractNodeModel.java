@@ -323,7 +323,10 @@ public abstract class AbstractNodeModel extends NodeModel {
 
 		if(atLeastOneRequired) {
 			if(missingColumns.size() == columns.length)
-				throw new InvalidSettingsException("Input table does not contain any of the required columns or columns are not numeric: " + String.join(",", missingColumns));
+				if(columns.length == 1)
+					throw new InvalidSettingsException("Input table does not contain the expected columns: " + String.join(",", missingColumns) + " or column is not of type: " + valueClass.getSimpleName());
+				else
+					throw new InvalidSettingsException("Input table does not contain any of the expected columns: " + String.join(",", missingColumns) + " or columns are not of type: " + valueClass.getSimpleName());
 		}
 		
 		if(!missingColumns.isEmpty()) {
