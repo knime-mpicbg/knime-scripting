@@ -336,4 +336,19 @@ public abstract class AbstractNodeModel extends NodeModel {
 				throw new InvalidSettingsException("The following columns are either missing or not numeric: " + String.join(",", missingColumns));
 		}
 	}
+	
+	/**
+	 * the given is column is checked for presence and correct data class in input table
+	 * 
+	 * @param inSpec					table specs of input table
+	 * @param column					column to be checked
+	 * @param valueClass				data class the column is supposed to be of
+	 * @param onlyWarn					if true, a warning will appear if the column is missing
+	 * @param atLeastOneRequired		if true, the column needs to be present
+	 * @throws InvalidSettingsException	if the column is missing and no onlyWarn flag
+	 */
+	protected void checkColumnsForAvailability(DataTableSpec inSpec, String column, final Class<? extends DataValue> valueClass, boolean onlyWarn, boolean atLeastOneRequired)
+			throws InvalidSettingsException {
+		checkColumnsForAvailability(inSpec, new String[] {column}, valueClass, onlyWarn, atLeastOneRequired);;
+	}
 }
