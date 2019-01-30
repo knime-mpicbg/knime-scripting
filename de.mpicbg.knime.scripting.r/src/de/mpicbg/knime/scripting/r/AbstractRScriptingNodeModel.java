@@ -54,9 +54,11 @@ import de.mpicbg.knime.knutils.data.property.SizeModel.Mapping;
 import de.mpicbg.knime.knutils.data.property.SizeModelUtils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
+import de.mpicbg.knime.scripting.core.TemplateCache;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
+import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
 import de.mpicbg.knime.scripting.r.port.RPortObject2;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
@@ -1134,6 +1136,4 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
         	throw new KnimeScriptingException("Failed to evaluate the script:\n" + e.getMessage());
         }
 	}
-	
-
 }

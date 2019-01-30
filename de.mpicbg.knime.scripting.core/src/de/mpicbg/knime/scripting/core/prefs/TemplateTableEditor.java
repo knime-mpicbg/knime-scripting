@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
 import de.mpicbg.knime.scripting.core.TemplateCache;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
@@ -15,6 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,18 +48,24 @@ public class TemplateTableEditor extends FieldEditor {
 
     private static Color gray;
     private static Color black;
+    
+    private Path cacheFolder;
+    private Path indexFile;
 
-    public TemplateTableEditor(String name, String labelText, Composite parent) {
+    public TemplateTableEditor(String name, String labelText, String bundlePath, Composite parent) {
         super(name, labelText, parent);
 
         nonValidChars = new ArrayList<String>();
         nonValidChars.add(new String(","));
         nonValidChars.add(new String(";"));
-        nonValidChars.add(new String("("));
-        nonValidChars.add(new String(")"));
+        /*nonValidChars.add(new String("("));
+        nonValidChars.add(new String(")"));*/
 
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
+        
+        this.cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+        this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, "tempFiles.index");
     }
 
     @Override
@@ -158,9 +167,10 @@ public class TemplateTableEditor extends FieldEditor {
             TemplatePref tPref = iterator.next();
             if (tPref.getUri().equals(templateTable.getItem(tIdx).getText(0))) {
                 tPref.setActive(isChecked);
-                if (isChecked) 
+                if (isChecked) {
                 	if(!addFileToCache(tPref.getUri())) tPref.setActive(false);
-                else removeFileFromCache(tPref.getUri());
+                }
+                else removeFileFromCache(tPref.getUri()); 
             }
         }
         
@@ -207,9 +217,9 @@ public class TemplateTableEditor extends FieldEditor {
     }
 
     private void addURI(String newURI) {
-
+    	
         try {
-            validateURI(newURI);
+            newURI = validateURI(newURI);
 
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
@@ -231,12 +241,22 @@ public class TemplateTableEditor extends FieldEditor {
         fillTable();
     }
 
-    private void validateURI(String newURI) throws IOException {
+    private String validateURI(String newURI) throws IOException {
+    	
+    	// validate for URL format
+        try {
+        	new URL(newURI);
+        } catch(MalformedURLException mue) {
+        	// might be a local file path; if yes convert to URL format file://
+        	File f = new File(newURI);
+        	if(f.canRead())
+        		newURI = f.toURI().toURL().toExternalForm();
+        }
 
         // check if uri is already listed
         for (TemplatePref tPref : templateList) {
             if (tPref.getUri().equals(newURI)) {
-                throw new IOException("uri is already listed");
+                throw new IOException("Template source is already listed");
             }
         }
 
@@ -246,10 +266,8 @@ public class TemplateTableEditor extends FieldEditor {
                 throw new IOException("nonvalid characters");
             }
         }
-
-        // validate for format (and availability)
-        URL tURL = new URL(newURI);
-        //new BufferedReader(new InputStreamReader(tURL.openStream()));
+        
+        return newURI;
     }
 
     private GridData getMainGridData(int numColumns) {
@@ -295,7 +313,7 @@ public class TemplateTableEditor extends FieldEditor {
         // add script to cache
         try {
             TemplateCache templateCache = TemplateCache.getInstance();
-            templateCache.getTemplateCache(uri);
+            templateCache.addTemplateFile(uri, this.cacheFolder, this.indexFile);
         } catch (IOException e) {
             MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
             messageDialog.setText("Exception");
@@ -314,7 +332,7 @@ public class TemplateTableEditor extends FieldEditor {
     private void removeFileFromCache(String uri) {
         // remove script from cache
         TemplateCache templateCache = TemplateCache.getInstance();
-        if (templateCache.contains(uri)) templateCache.remove(uri);
+        if (templateCache.contains(uri)) templateCache.removeTemplateFile(uri, this.cacheFolder, this.indexFile);
     }
 
     @Override

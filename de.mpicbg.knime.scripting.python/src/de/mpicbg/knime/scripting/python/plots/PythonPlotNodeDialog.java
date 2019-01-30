@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.python.plots;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
@@ -10,6 +11,11 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.swing.*;
 
@@ -50,4 +56,10 @@ public class PythonPlotNodeDialog extends ScriptingNodeDialog {
     public String getTemplatesFromPreferences() {
         return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES);
     }
-}
+    
+	@Override
+	protected Path getTemplateCachePath() {
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
+        return Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+	}

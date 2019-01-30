@@ -26,6 +26,7 @@
 package de.mpicbg.knime.scripting.python.prefs;
 
 import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -35,6 +36,8 @@ import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -55,6 +58,9 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
     @Override
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
+        
+        Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_HOST, "The host where the Python server is running", parent));
         addField(new IntegerFieldEditor(PythonPreferenceInitializer.PYTHON_PORT, "The port on which Python server is listening", parent));
@@ -64,8 +70,8 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
 
         /*addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Script template resources (;-separated URLs)", parent));
         addField(new StringFieldEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Figure template resources (;-separated URLs)", parent));*/
-        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", parent));
-        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", parent));
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", bundlePath, parent));
+        addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", bundlePath, parent));
     }
 
 
