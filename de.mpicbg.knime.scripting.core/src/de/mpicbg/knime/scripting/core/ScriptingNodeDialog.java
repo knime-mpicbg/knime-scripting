@@ -44,6 +44,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplateWizard;
 import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
 
 /**
@@ -142,7 +143,7 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
 
                 updateUrlList(getTemplatesFromPreferences());
                 this.cacheFolder = getTemplateCachePath();
-                this.indexFile = Paths.get(cacheFolder.toString(), "tempFiles.index");
+                this.indexFile = Paths.get(cacheFolder.toString(), ScriptingUtils.LOCAL_CACHE_INDEX);
                 //List<ScriptTemplate> templates = updateTemplates();
                 List<ScriptTemplate> templates = retrieveTemplates();
 
@@ -495,12 +496,15 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
         List<ScriptTemplate> templates = new ArrayList<ScriptTemplate>();
         List<String> warnings = new ArrayList<String>();
 
+        // for each URL try to reload the file
+        // if reloading fails due to missing access, leave the template cache untouched
         for (String filePath : urlList) {
             try {
             	templateCache.updateTemplateCache(filePath, cacheFolder, indexFile);
-                templates.addAll(templateCache.getTemplates(filePath));
             } catch (IOException e) {
                 warnings.add(e.getMessage());
+            } finally {
+            	templates.addAll(templateCache.getTemplates(filePath));
             }
         }
 

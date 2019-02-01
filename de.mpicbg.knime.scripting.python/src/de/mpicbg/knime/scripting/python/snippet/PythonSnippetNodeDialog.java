@@ -8,6 +8,8 @@ import org.osgi.framework.FrameworkUtil;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
+import de.mpicbg.knime.scripting.python.PythonColumnSupport;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 /**

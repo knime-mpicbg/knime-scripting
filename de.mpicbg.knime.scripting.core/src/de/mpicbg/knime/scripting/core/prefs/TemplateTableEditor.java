@@ -1,17 +1,5 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
-import de.mpicbg.knime.scripting.core.TemplateCache;
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
-
-import org.eclipse.jface.preference.FieldEditor;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -22,6 +10,29 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+
+import org.eclipse.jface.preference.FieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
+
+import de.mpicbg.knime.scripting.core.TemplateCache;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
 
 /**
@@ -65,7 +76,7 @@ public class TemplateTableEditor extends FieldEditor {
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
         
         this.cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
-        this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, "tempFiles.index");
+        this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, ScriptingUtils.LOCAL_CACHE_INDEX);
     }
 
     @Override

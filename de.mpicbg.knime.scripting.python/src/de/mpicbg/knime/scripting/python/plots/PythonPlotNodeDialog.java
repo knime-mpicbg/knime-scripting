@@ -63,3 +63,4 @@ public class PythonPlotNodeDialog extends ScriptingNodeDialog {
         String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
         return Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
 	}
+}

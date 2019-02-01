@@ -19,6 +19,7 @@ import de.mpicbg.knime.scripting.core.TemplateCache;
 public class ScriptingUtils {
 	
 	public static final String LOCAL_CACHE_FOLDER = "template_cache";
+	public static final String LOCAL_CACHE_INDEX = "tempFiles.index";
 	
 	/**
 	 * add templates to template-cache-singleton
@@ -31,7 +32,7 @@ public class ScriptingUtils {
         String bundlePath = getBundlePath(bundle).toOSString();
         
         Path cacheFolder = Paths.get(bundlePath, LOCAL_CACHE_FOLDER);
-        Path indexFile = Paths.get(bundlePath, LOCAL_CACHE_FOLDER, "tempFiles.index");		
+        Path indexFile = Paths.get(bundlePath, LOCAL_CACHE_FOLDER, LOCAL_CACHE_INDEX);		
         
         for(String prefString : templateStrings) {
 	        try {

@@ -213,15 +213,16 @@ public class TemplateCache {
      */
     public void updateTemplateCache(String filePath, Path bundlePath, Path indexFile) throws IOException {
 
-        //List<ScriptTemplate> templates = null;
-
-        templateCache.remove(filePath);
+        if(!isFileReachable(filePath))
+        	throw new IOException(filePath + " cannot be accessed. Refresh failed.");
+    	
         ScriptTemplateFile reloadedTemplate = new ScriptTemplateFile(filePath);
         if (!reloadedTemplate.isEmpty()) {
+        	templateCache.remove(filePath);
             templateCache.put(filePath, reloadedTemplate);
             cacheFileOnDisk(filePath, bundlePath, indexFile);
             //templates = templateCache.get(filePath).templates;
-        } else throw new IOException(filePath + " does not contain any valid template or cannot be accessed.");
+        } else throw new IOException(filePath + " does not contain any valid template");
 
         //return templates;
     }
