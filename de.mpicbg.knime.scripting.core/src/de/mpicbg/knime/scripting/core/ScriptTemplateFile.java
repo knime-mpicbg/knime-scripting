@@ -27,53 +27,57 @@ public class ScriptTemplateFile {
     private List<ScriptTemplate> templates;
 
     /**
+     * new script template file <br/>
+     * init process tries to load templates from file
+     * 
      * @param filePath location of template file
+     * @throws IOException 		if file reading failed
      */
-    public ScriptTemplateFile(String filePath) {
+    public ScriptTemplateFile(String filePath) throws IOException {
         this.filePath = filePath;
+        templates = new ArrayList<ScriptTemplate>();
+        
         parseTemplateFile();
     }
 
     /**
      * parse file and fill template list with templates
+     * @throws IOException 
      */
-    private void parseTemplateFile() {
-        templates = new ArrayList<ScriptTemplate>();
+    private void parseTemplateFile() throws IOException {
 
+    	/*TODO: does not make sense to me!*/
+    	BufferedReader reader = null;
+    	try {
+    		URL fileUrl = new URL(filePath);
+    		reader = new BufferedReader(new InputStreamReader(fileUrl.openStream()));
+    	} catch(MalformedURLException mue) {
+    		reader = Files.newBufferedReader(Paths.get(this.filePath), StandardCharsets.UTF_8);
+    	}
 
-        try {
-        	BufferedReader reader = null;
-        	try {
-        		URL fileUrl = new URL(filePath);
-        		reader = new BufferedReader(new InputStreamReader(fileUrl.openStream()));
-        	} catch(MalformedURLException mue) {
-        		reader = Files.newBufferedReader(Paths.get(this.filePath), StandardCharsets.UTF_8);
-        	}
+    	StringBuffer templateBuffer = new StringBuffer();
 
-            StringBuffer templateBuffer = new StringBuffer();
+    	String line = reader.readLine();
+    	while (line != null) {
+    		// at least 10 times '#' mark the beginning of a new template
+    		if (line.startsWith("##########")) {
+    			if (!templateBuffer.toString().trim().isEmpty()) {
+    				ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
+    				// template text might not contain a valid template structure
+    				if(newTemplate != null) templates.add(newTemplate);
+    				templateBuffer = new StringBuffer();
+    			}
+    		} else templateBuffer.append(line + "\n");
 
-            String line = reader.readLine();
-            while (line != null) {
-            	// at least 10 times '#' mark the beginning of a new template
-                if (line.startsWith("##########")) {
-                    if (!templateBuffer.toString().trim().isEmpty()) {
-                    	ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
-                    	// template text might not contain a valid template structure
-                        if(newTemplate != null) templates.add(newTemplate);
-                        templateBuffer = new StringBuffer();
-                    }
-                } else templateBuffer.append(line + "\n");
+    		line = reader.readLine();
+    	}
+    	// don't forget the last template
+    	if (templateBuffer.length() > 0) {
+    		ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
+    		// template text might not contain a valid template structure
+    		if(newTemplate != null) templates.add(newTemplate);
+    	}
 
-                line = reader.readLine();
-            }
-            // don't forget the last template
-            if (templateBuffer.length() > 0) {
-            	ScriptTemplate newTemplate = ScriptTemplate.parse(templateBuffer.toString(), filePath);
-            	// template text might not contain a valid template structure
-                if(newTemplate != null) templates.add(newTemplate);
-            }
-        } catch (IOException e) {
-        }
     }
 
     /**
