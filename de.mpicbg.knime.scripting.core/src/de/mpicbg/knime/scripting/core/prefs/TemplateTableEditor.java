@@ -360,6 +360,8 @@ public class TemplateTableEditor extends FieldEditor {
     protected void doLoadDefault() {
         String items = getPreferenceStore().getDefaultString(getPreferenceName());
         loadPreferencesFromString(items);
+        // needs to be set to false, otherwise doStore is not called ?
+        setPresentsDefaultValue(false);
     }
 
     /**
