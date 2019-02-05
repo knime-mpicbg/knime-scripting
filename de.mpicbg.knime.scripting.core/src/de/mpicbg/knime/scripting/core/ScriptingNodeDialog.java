@@ -41,6 +41,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
+import de.mpicbg.knime.scripting.core.prefs.TemplatePref;
+import de.mpicbg.knime.scripting.core.prefs.TemplatePrefString;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate;
 import de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplateWizard;
 import de.mpicbg.knime.scripting.core.rgg.wizard.UseTemplateListenerImpl;
@@ -282,8 +284,14 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      * @param templatesFromPreferences
      */
     public void updateUrlList(String templatesFromPreferences) {
-        TemplateCache templateCache = TemplateCache.getInstance();
-        urlList = templateCache.parseConcatendatedURLs(templatesFromPreferences);
+        
+        TemplatePrefString tString = new TemplatePrefString(templatesFromPreferences);
+        List<TemplatePref> templateList = tString.parsePrefString();
+        urlList = new ArrayList<String>();
+        
+        for(TemplatePref tPref : templateList)
+        	if(tPref.isActive())
+        		urlList.add(tPref.getUri());
     }
 
 

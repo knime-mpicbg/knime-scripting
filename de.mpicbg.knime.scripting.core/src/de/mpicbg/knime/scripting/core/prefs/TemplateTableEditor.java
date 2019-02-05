@@ -55,7 +55,8 @@ public class TemplateTableEditor extends FieldEditor {
 
     private List<String> nonValidChars;
 
-    private List<TemplatePref> templateList;
+    private List<TemplatePref> m_templateList;
+    private List<TemplatePref> m_initialTemplateList = new ArrayList<TemplatePref>();
 
     private static Color gray;
     private static Color black;
@@ -63,14 +64,20 @@ public class TemplateTableEditor extends FieldEditor {
     private Path cacheFolder;
     private Path indexFile;
 
+    /**
+     * constructor of preference field holding template files
+     * 
+     * @param name
+     * @param labelText
+     * @param bundlePath
+     * @param parent
+     */
     public TemplateTableEditor(String name, String labelText, String bundlePath, Composite parent) {
         super(name, labelText, parent);
 
         nonValidChars = new ArrayList<String>();
         nonValidChars.add(new String(","));
         nonValidChars.add(new String(";"));
-        /*nonValidChars.add(new String("("));
-        nonValidChars.add(new String(")"));*/
 
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
@@ -79,11 +86,17 @@ public class TemplateTableEditor extends FieldEditor {
         this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, ScriptingUtils.LOCAL_CACHE_INDEX);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void adjustForNumColumns(int numColumns) {
         ((GridData) top.getLayoutData()).horizontalSpan = numColumns;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void doFillIntoGrid(Composite parent, int numColumns) {
         top = parent;
@@ -174,20 +187,20 @@ public class TemplateTableEditor extends FieldEditor {
         templateTable.deselect(tIdx);
 
         // update template list
-        for (Iterator<TemplatePref> iterator = templateList.iterator(); iterator.hasNext(); ) {
+        for (Iterator<TemplatePref> iterator = m_templateList.iterator(); iterator.hasNext(); ) {
             TemplatePref tPref = iterator.next();
             if (tPref.getUri().equals(templateTable.getItem(tIdx).getText(0))) {
                 tPref.setActive(isChecked);
-                if (isChecked) {
-                	if(!addFileToCache(tPref.getUri())) tPref.setActive(false);
-                }
-                else removeFileFromCache(tPref.getUri()); 
             }
         }
         
         fillTable();
     }
 
+    /**
+     * action event if "browse..." button has been clicked <br/>
+     * file dialog shows up and allows to select a file
+     */
     private void browseForFile() {
         FileDialog dialog = new FileDialog(group.getShell(), SWT.OPEN);
         String newURI = dialog.open();
@@ -204,6 +217,9 @@ public class TemplateTableEditor extends FieldEditor {
         }
     }
 
+    /**
+     * remove uri(s) from template list
+     */
     private void removeURI() {
         int[] tIdx = templateTable.getSelectionIndices();
 
@@ -212,21 +228,27 @@ public class TemplateTableEditor extends FieldEditor {
         HashSet<TemplatePref> toRemove = new HashSet<TemplatePref>();
 
         for (int i = 0; i < tIdx.length; i++) {
-            for (Iterator<TemplatePref> iterator = templateList.iterator(); iterator.hasNext(); ) {
-                TemplatePref tPref = iterator.next();
+        	for(TemplatePref tPref : m_templateList) {
+            //for (Iterator<TemplatePref> iterator = templateList.iterator(); iterator.hasNext(); ) {
+                //TemplatePref tPref = iterator.next();
                 if (tPref.getUri().equals(templateTable.getItem(tIdx[i]).getText(0))) {
                     toRemove.add(tPref);
-
-                    removeFileFromCache(tPref.getUri());
+                    //removeFileFromCache(tPref.getUri());
                 }
             }
         }
 
-        templateList.removeAll(toRemove);
-
+        m_templateList.removeAll(toRemove);
         fillTable();
     }
 
+    /**
+     * after "add" or "browse" the new file needs to be added to the template list <br/>
+     * some checks performed before <br/>
+     * file table will be updated
+     * 
+     * @param newURI
+     */
     private void addURI(String newURI) {
     	
         try {
@@ -240,18 +262,26 @@ public class TemplateTableEditor extends FieldEditor {
             return;
         }
 
-        if(addFileToCache(newURI)) {
-        	TemplatePref newTemplate = new TemplatePref();
+        TemplatePref newTemplate = new TemplatePref();
 
-            newTemplate.setUri(newURI);
-            newTemplate.setActive(true);
+        newTemplate.setUri(newURI);
+        newTemplate.setActive(true);
 
-            templateList.add(newTemplate);
-        }
+        m_templateList.add(newTemplate);
 
         fillTable();
     }
 
+    /**
+     * checks if the given string is a valid URL <br/>
+     * correct the format for local files<br/>
+     * checks for duplicates<br/>
+     * checks for nonvalid characters
+     *
+     * @param newURI		uri string to be checked
+     * @return				uri string (adapted to file:/ for local files)
+     * @throws IOException	if checks fail
+     */
     private String validateURI(String newURI) throws IOException {
     	
     	// validate for URL format
@@ -265,7 +295,7 @@ public class TemplateTableEditor extends FieldEditor {
         }
 
         // check if uri is already listed
-        for (TemplatePref tPref : templateList) {
+        for (TemplatePref tPref : m_templateList) {
             if (tPref.getUri().equals(newURI)) {
                 throw new IOException("Template source is already listed");
             }
@@ -288,23 +318,15 @@ public class TemplateTableEditor extends FieldEditor {
         return gd;
     }
 
-    @Override
-    protected void doLoad() {
-        String items = getPreferenceStore().getString(getPreferenceName());
-        TemplatePrefString tString = new TemplatePrefString(items);
-        templateList = tString.parsePrefString();
-        fillTable();
-    }
-
     /**
      * update graphical representation
      */
     private void fillTable() {
         templateTable.removeAll();
 
-        if (templateList.isEmpty()) return;
+        if (m_templateList.isEmpty()) return;
 
-        for (TemplatePref tPref : templateList) {
+        for (TemplatePref tPref : m_templateList) {
             TableItem tItem = new TableItem(templateTable, SWT.NONE);
             tItem.setText(tPref.getUri());
             tItem.setChecked(tPref.isActive());
@@ -314,54 +336,103 @@ public class TemplateTableEditor extends FieldEditor {
         }
     }
 
-    /**
-     * adds the given file to the template cache
-     *
-     * @param uri
-     * @return true, if file was added successfully; otherwise false
-     */
-    private boolean addFileToCache(String uri) {
-        // add script to cache
-        try {
-            TemplateCache templateCache = TemplateCache.getInstance();
-            templateCache.addTemplateFile(uri, this.cacheFolder, this.indexFile);
-        } catch (IOException e) {
-            MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
-            messageDialog.setText("Exception");
-            messageDialog.setMessage("Failed to add file to template cache\n\n" + e.getMessage());
-            messageDialog.open();
-            return false;
-        }
-        return true;
-    }
 
-    /**
-     * removes a given file from the template cache
-     *
-     * @param uri
+    
+    private void loadPreferencesFromString(String prefString) {
+    	TemplatePrefString tString = new TemplatePrefString(prefString);
+        m_templateList = tString.parsePrefString();
+        fillTable();       
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.jface.preference.FieldEditor#doLoad()
      */
-    private void removeFileFromCache(String uri) {
-        // remove script from cache
-        TemplateCache templateCache = TemplateCache.getInstance();
-        if (templateCache.contains(uri)) templateCache.removeTemplateFile(uri, this.cacheFolder, this.indexFile);
+    @Override
+    protected void doLoad() {
+        String items = getPreferenceStore().getString(getPreferenceName());       
+        loadPreferencesFromString(items);   
+        // create a copy of settings after load
+        m_initialTemplateList.addAll(m_templateList);
     }
 
     @Override
     protected void doLoadDefault() {
         String items = getPreferenceStore().getDefaultString(getPreferenceName());
-        TemplatePrefString tString = new TemplatePrefString(items);
-        templateList = tString.parsePrefString();
-        fillTable();
+        loadPreferencesFromString(items);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void doStore() {
+    	
+    	/*
+    	 * what could have happened:
+    	 * 1) file has been added => store to cache
+    	 * 2) file has been deactivated => remove from cache (but not local version)
+    	 * 3) file has been activated => add to cache (save local if not yet there)
+    	 * 4) file has been removed => remove from cache and local version
+    	 */
+    	
+    	TemplateCache templateCache = TemplateCache.getInstance();
+    	
+    	// check for new templates in template list (compare with initial prefs)
+    	for(TemplatePref tPref : m_templateList) {
+    		if(!m_initialTemplateList.contains(tPref)) {
+    			// only add to cache if active
+    			if(tPref.isActive()) {
+    				try {
+    					templateCache.addTemplateFile(tPref.getUri(), this.cacheFolder, this.indexFile);
+    				} catch (IOException e) {
+    					// if given file failed to be added to the cache remove from prefs and 
+    					// notify user
+    					m_templateList.remove(tPref);
 
-        TemplatePrefString tString = new TemplatePrefString(templateList);
+    					MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
+    					messageDialog.setText("Exception");
+    					messageDialog.setMessage("Failed to add file to template cache\n\n" + e.getMessage());
+    					messageDialog.open();
+    				}
+    			}
+    		} else {
+    			// if files has been already in cache but is now deactived, remove from cache but do not delete
+    			// local version
+    			if(tPref.isActive()) {
+    				try {
+						templateCache.addTemplateFile(tPref.getUri(), this.cacheFolder, this.indexFile);
+					} catch (IOException e) {
+						// if given file failed to be added to the cache deactivate again 
+						// in prefs and notify user
+    					int i = m_templateList.indexOf(tPref);
+    					tPref.setActive(false);
+    					m_templateList.set(i, tPref);
+
+    					MessageBox messageDialog = new MessageBox(group.getShell(), SWT.ERROR);
+    					messageDialog.setText("Exception");
+    					messageDialog.setMessage("Failed to add activated file to template cache\n\n" + e.getMessage());
+    					messageDialog.open();
+					}
+    			} else 
+    				templateCache.removeTemplateFile(tPref.getUri());
+    		}
+    	}
+    	
+    	// check for removed templates in template list (compare initial prefs with current)
+    	for(TemplatePref tPref : m_initialTemplateList) {
+    		if(!m_templateList.contains(tPref)) {
+    			templateCache.removeTemplateFile(tPref.getUri(), this.cacheFolder, this.indexFile);
+    		}
+    	}
+
+    	// save everything to preference string
+        TemplatePrefString tString = new TemplatePrefString(m_templateList);
         String s = tString.getPrefString();
         if (s != null)
             getPreferenceStore().setValue(getPreferenceName(), s);
     }
+
 
     @Override
     public int getNumberOfControls() {

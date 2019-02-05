@@ -94,14 +94,18 @@ public class TemplateCache {
      * @throws IOException
      */
 	public void addTemplatesFromPref(String prefString, Path bundlePath, Path indexFile) throws IOException {
-		List<String> templateFiles = parseConcatendatedURLs(prefString);
-		
-		for(String filePath : templateFiles) {
-			writeLock.lock();
-			try {
-				addTemplateFile(filePath, bundlePath, indexFile);
-			} finally {
-				writeLock.unlock();
+		//List<String> templateFiles = parseConcatendatedURLs(prefString);
+		TemplatePrefString tString = new TemplatePrefString(prefString);
+        List<TemplatePref> templateList = tString.parsePrefString();
+			
+		for(TemplatePref tPref : templateList) {
+			if(tPref.isActive()) {
+				writeLock.lock();
+				try {
+					addTemplateFile(tPref.getUri(), bundlePath, indexFile);
+				} finally {
+					writeLock.unlock();
+				}
 			}
 		}
 	}
@@ -165,6 +169,16 @@ public class TemplateCache {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}    
+    }
+    
+    /**
+     * remove template file only from template cache <br/>
+     * do not delete locally cached file
+     * 
+     * @param filePath
+     */
+    public void removeTemplateFile(String filePath) {
+    	templateCache.remove(filePath);
     }
 
     /**
@@ -404,26 +418,7 @@ public class TemplateCache {
 		return baos.toByteArray();
 	}
 	
-    /**
-     * Template preference string will be splitted by a pattern
-     *
-     * @param templateFilePaths
-     * @return List of active URLs
-     * @see TemplatePrefString
-     */
-    public List<String> parseConcatendatedURLs(String templateFilePaths) {
 
-        TemplatePrefString tString = new TemplatePrefString(templateFilePaths);
-        List<TemplatePref> templateList = tString.parsePrefString();
-        List<String> urls = new ArrayList<String>();
-
-        for (TemplatePref pref : templateList) {
-            if (pref.isActive()) {
-                urls.add(pref.getUri());
-            }
-        }
-        return urls;
-    }
 
 	public List<ScriptTemplate> getTemplates(String templateFilePath) {
 		return templateCache.get(templateFilePath).getTemplates();
