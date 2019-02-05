@@ -10,7 +10,7 @@ package de.mpicbg.knime.scripting.core.prefs;
  */
 public class TemplatePref extends Object {
 
-    private String uri;
+	private String uri;
     private boolean active;
 
     public TemplatePref() {
@@ -38,4 +38,25 @@ public class TemplatePref extends Object {
     public void setActive(boolean active) {
         this.active = active;
     }
+    
+    @Override
+	public int hashCode() {
+    	int result = uri != null ? uri.hashCode() : 0;
+        result = 31 * result + Boolean.hashCode(active);
+        return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof TemplatePref){
+	        TemplatePref toCompare = (TemplatePref) obj;
+	        return uri.equals(toCompare.getUri()) && active == toCompare.isActive();
+	    }
+	    return false;
+	}
+
+	@Override
+	public String toString() {
+		return uri;
+	}
 }
