@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.internal.preferences.legacy.InitLegacyPreferences;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -372,17 +373,30 @@ public class TemplateTableEditor extends FieldEditor {
     	
     	/*
     	 * what could have happened:
-    	 * 1) file has been added => store to cache
-    	 * 2) file has been deactivated => remove from cache (but not local version)
-    	 * 3) file has been activated => add to cache (save local if not yet there)
-    	 * 4) file has been removed => remove from cache and local version
+    	 * (1) file has been added => store to cache
+    	 * (2) file has been deactivated => remove from cache (but not local version)
+    	 * (3) file has been activated => add to cache (save local if not yet there)
+    	 * (4) file has been removed => remove from cache and local version
+    	 * (5) nothing changed to a file
     	 */
     	
     	TemplateCache templateCache = TemplateCache.getInstance();
     	
     	// check for new templates in template list (compare with initial prefs)
     	for(TemplatePref tPref : m_templateList) {
-    		if(!m_initialTemplateList.contains(tPref)) {
+    		
+    		// if nothing has changed (5)
+    		if(m_initialTemplateList.contains(tPref))
+    			continue;
+    		
+    		//is this Uri new?
+    		boolean newPref = false;
+    		for(TemplatePref initPref : m_initialTemplateList)
+    			if(tPref.getUri().equals(initPref.getUri()))
+    				newPref = true;
+    		
+    		if(newPref) {
+    			// (1)
     			// only add to cache if active
     			if(tPref.isActive()) {
     				try {
@@ -399,9 +413,8 @@ public class TemplateTableEditor extends FieldEditor {
     				}
     			}
     		} else {
-    			// if files has been already in cache but is now deactived, remove from cache but do not delete
-    			// local version
     			if(tPref.isActive()) {
+    				// (3)
     				try {
 						templateCache.addTemplateFile(tPref.getUri(), this.cacheFolder, this.indexFile);
 					} catch (IOException e) {
@@ -417,14 +430,23 @@ public class TemplateTableEditor extends FieldEditor {
     					messageDialog.open();
 					}
     			} else 
+    				// (2)
     				templateCache.removeTemplateFile(tPref.getUri());
     		}
     	}
     	
     	// check for removed templates in template list (compare initial prefs with current)
-    	for(TemplatePref tPref : m_initialTemplateList) {
-    		if(!m_templateList.contains(tPref)) {
-    			templateCache.removeTemplateFile(tPref.getUri(), this.cacheFolder, this.indexFile);
+    	for(TemplatePref initPref : m_initialTemplateList) {
+    		
+    		//was the Uri removed?
+    		boolean removed = true;
+    		for(TemplatePref tPref : m_templateList)
+    			if(tPref.getUri().equals(initPref.getUri()))
+    				removed = false;
+    		
+    		// (4)
+    		if(removed) {
+    			templateCache.removeTemplateFile(initPref.getUri(), this.cacheFolder, this.indexFile);
     		}
     	}
 
