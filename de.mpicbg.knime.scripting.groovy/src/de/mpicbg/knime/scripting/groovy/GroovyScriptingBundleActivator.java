@@ -4,7 +4,18 @@
  */
 package de.mpicbg.knime.scripting.groovy;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.NodeLogger;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
+import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
 
 
 /**
@@ -41,5 +52,26 @@ public class GroovyScriptingBundleActivator extends AbstractUIPlugin {
     public static GroovyScriptingBundleActivator getDefault() {
         return plugin;
     }
+
+
+	@Override
+	public void start(BundleContext context) throws Exception {
+		super.start(context);
+		
+        // get bundle and template prefstrings and load them into template cache
+        try {
+
+        	Bundle bundle = FrameworkUtil.getBundle(getClass());
+
+        	List<String> preferenceStrings = new ArrayList<String>();
+        	IPreferenceStore prefStore = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();
+        	preferenceStrings.add(prefStore.getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES));
+
+        	ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+        } catch(Exception e) {
+        	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+        	logger.coding(e.getMessage());
+        }
+	}
 
 }

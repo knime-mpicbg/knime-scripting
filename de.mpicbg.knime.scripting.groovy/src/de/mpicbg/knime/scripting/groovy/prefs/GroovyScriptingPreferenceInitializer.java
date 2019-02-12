@@ -61,7 +61,6 @@ public class GroovyScriptingPreferenceInitializer extends AbstractPreferenceInit
         } 
 
         store.setDefault(GROOVY_CLASSPATH_ADDONS, defaultClasspath);
-//        store.setDefault(GROOVY_TEMPLATE_RESOURCES, "http://idisk.mpi-cbg.de/~brandl/scripttemplates/screenmining/Groovy/Groovy-templates.txt");
-        store.setDefault(GROOVY_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Groovy/Groovy-templates.txt");
+        store.setDefault(GROOVY_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Groovy/Groovy-templates.txt\",true)");
     }
 }

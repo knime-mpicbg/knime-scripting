@@ -69,8 +69,8 @@ public class RPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(R_PORT, 6311);
 
 
-        store.setDefault(R_PLOT_TEMPLATES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/figure-templates.txt");
-        store.setDefault(R_SNIPPET_TEMPLATES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/snippet-templates.txt");
+        store.setDefault(R_PLOT_TEMPLATES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/figure-templates.txt\",true)");
+        store.setDefault(R_SNIPPET_TEMPLATES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/R/snippet-templates.txt\",true)");
 
         String defaultRPath = "R";
 

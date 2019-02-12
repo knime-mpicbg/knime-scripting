@@ -9,6 +9,7 @@ import de.mpicbg.knime.scripting.python.scripts.PythonScripts;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
