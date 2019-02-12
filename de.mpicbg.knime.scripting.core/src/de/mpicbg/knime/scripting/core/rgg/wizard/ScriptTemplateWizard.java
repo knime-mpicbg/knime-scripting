@@ -153,11 +153,15 @@ public class ScriptTemplateWizard extends JSplitPane {
         categoryTree.invalidate();
     }
 
-// If expand is true, expands all nodes in the tree.
-// Otherwise, collapses all nodes in the tree.
 
-
-    public void expandAll(JTree tree, boolean expand) {
+    /**
+     * If expand is true, expands all nodes in the tree. <br/>
+     * Otherwise, collapses all nodes in the tree.
+     * 
+     * @param tree
+     * @param expand
+     */
+	public void expandAll(JTree tree, boolean expand) {
         TreeNode root = (TreeNode) tree.getModel().getRoot();
 
         // Traverse tree from root
