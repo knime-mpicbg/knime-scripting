@@ -29,6 +29,9 @@ import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
 import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -65,6 +68,9 @@ public class RPreferencePage extends FieldEditorPreferencePage implements IWorkb
         //Bundle bundle = Platform.getBundle(R4KnimeBundleActivator.PLUGIN_ID);
         Bundle bundle = FrameworkUtil.getBundle(getClass());
         String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
+        
+        Path cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+        Path indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, ScriptingUtils.LOCAL_CACHE_INDEX);
 
         addField(new StringFieldEditor(RPreferenceInitializer.R_HOST, "The host where Rserve is running", parent));
         addField(new IntegerFieldEditor(RPreferenceInitializer.R_PORT, "The port on which Rserve is listening", parent));
@@ -72,8 +78,8 @@ public class RPreferencePage extends FieldEditorPreferencePage implements IWorkb
         
         addField(new BooleanFieldEditor(RPreferenceInitializer.USE_EVALUATE_PACKAGE, "Enable R-console view (requires 'evaluate' package)", parent));
 
-        addField(new TemplateTableEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Snippet template resource", bundlePath, parent));
-        addField(new TemplateTableEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Plot template resource", bundlePath, parent));
+        addField(new TemplateTableEditor(RPreferenceInitializer.R_SNIPPET_TEMPLATES, "Snippet template resource", cacheFolder, indexFile, parent));
+        addField(new TemplateTableEditor(RPreferenceInitializer.R_PLOT_TEMPLATES, "Plot template resource", cacheFolder, indexFile, parent));
 
         addField(new StringFieldEditor(RPreferenceInitializer.LOCAL_R_PATH, "Location of R on your computer", parent));
 

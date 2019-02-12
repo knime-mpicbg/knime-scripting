@@ -30,6 +30,9 @@ import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
@@ -67,29 +70,19 @@ public class MatlabPreferencePage extends FieldEditorPreferencePage implements I
         Bundle bundle = FrameworkUtil.getBundle(getClass());
         String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
 
-//        BooleanFieldEditor local = new BooleanFieldEditor(MatlabPreferenceInitializer.MATLAB_LOCAL,
-//        		"Run scripts on local MATLAB installation. this overrides the host/port settings bellow",
-//        		parent);
+        Path cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+        Path indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, ScriptingUtils.LOCAL_CACHE_INDEX);
         
         IntegerFieldEditor threads = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_SESSIONS,
         		"Number of (local) Matlab application instances", 
         		parent);
-        
-//        StringFieldEditor host = new StringFieldEditor(MatlabPreferenceInitializer.MATLAB_HOST,
-//        		"The host where the Matlab-server is running",
-//        		parent);
-//        
-//        IntegerFieldEditor port = new IntegerFieldEditor(MatlabPreferenceInitializer.MATLAB_PORT,
-//        		"The port on which Matlab-server is listening",
-//        		parent);
-      
-        
+                  
         TemplateTableEditor snippets = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES,
-        		"Snippet template resources", bundlePath,
+        		"Snippet template resources", cacheFolder, indexFile,
         		parent);
         
         TemplateTableEditor plots = new TemplateTableEditor(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES,
-        		"Plot template resource", bundlePath, 
+        		"Plot template resource", cacheFolder, indexFile,
         		parent);
         
         ComboFieldEditor type = new ComboFieldEditor(MatlabPreferenceInitializer.MATLAB_TYPE,

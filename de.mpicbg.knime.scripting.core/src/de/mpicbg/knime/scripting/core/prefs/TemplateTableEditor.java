@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.internal.preferences.legacy.InitLegacyPreferences;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -46,6 +45,7 @@ import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
  */
 public class TemplateTableEditor extends FieldEditor {
 
+	/* GUI-components */
     private Composite top;
     private Composite group;
     private Table templateTable;
@@ -56,24 +56,29 @@ public class TemplateTableEditor extends FieldEditor {
 
     private List<String> nonValidChars;
 
+    /* list of template preferences, reflecting changes */
     private List<TemplatePref> m_templateList;
+    /* list of template preferences after load method */
     private List<TemplatePref> m_initialTemplateList = new ArrayList<TemplatePref>();
 
     private static Color gray;
     private static Color black;
     
+    /* path to folder for local caching of template files (per plugin)*/
     private Path cacheFolder;
+    /* file contains the link between URI and locally cached file (per plugin)*/
     private Path indexFile;
 
     /**
      * constructor of preference field holding template files
      * 
-     * @param name
-     * @param labelText
-     * @param bundlePath
+     * @param name			preference key
+     * @param labelText		label of the component
+     * @param indexFile 	
+     * @param cacheFolder 
      * @param parent
      */
-    public TemplateTableEditor(String name, String labelText, String bundlePath, Composite parent) {
+    public TemplateTableEditor(String name, String labelText, Path cacheFolder, Path indexFile, Composite parent) {
         super(name, labelText, parent);
 
         nonValidChars = new ArrayList<String>();
@@ -83,8 +88,8 @@ public class TemplateTableEditor extends FieldEditor {
         gray = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
         black = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
         
-        this.cacheFolder = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
-        this.indexFile = Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER, ScriptingUtils.LOCAL_CACHE_INDEX);
+        this.cacheFolder = cacheFolder;
+        this.indexFile = indexFile;
     }
 
     /**
@@ -100,14 +105,18 @@ public class TemplateTableEditor extends FieldEditor {
      */
     @Override
     protected void doFillIntoGrid(Composite parent, int numColumns) {
+    	
+    	GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+        gd.horizontalSpan = numColumns;
+    	
         top = parent;
-        top.setLayoutData(getMainGridData(numColumns));
+        top.setLayoutData(gd);
 
         group = new Composite(top, SWT.BORDER);
 
         GridLayout newgd = new GridLayout(3, false);
         group.setLayout(newgd);
-        group.setLayoutData(getMainGridData(numColumns));
+        group.setLayoutData(gd);
 
         // set label
         Label label = getLabelControl(group);
@@ -118,8 +127,8 @@ public class TemplateTableEditor extends FieldEditor {
         // url table
         templateTable = new Table(group, SWT.BORDER | SWT.CHECK | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
         templateTable.setHeaderVisible(true);
-        //int desiredHeight = templateTable.getItemHeight() * 4 + templateTable.getHeaderHeight();
-        GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+        
+        gd = new GridData(SWT.FILL, SWT.FILL, true, true);
         gd.horizontalSpan = 2;
         templateTable.setLayoutData(gd);
         templateTable.addListener(SWT.Selection, new Listener() {
@@ -229,12 +238,9 @@ public class TemplateTableEditor extends FieldEditor {
         HashSet<TemplatePref> toRemove = new HashSet<TemplatePref>();
 
         for (int i = 0; i < tIdx.length; i++) {
-        	for(TemplatePref tPref : m_templateList) {
-            //for (Iterator<TemplatePref> iterator = templateList.iterator(); iterator.hasNext(); ) {
-                //TemplatePref tPref = iterator.next();
+        	for(TemplatePref tPref : m_templateList) {     
                 if (tPref.getUri().equals(templateTable.getItem(tIdx[i]).getText(0))) {
-                    toRemove.add(tPref);
-                    //removeFileFromCache(tPref.getUri());
+                    toRemove.add(tPref);                 
                 }
             }
         }
@@ -312,13 +318,6 @@ public class TemplateTableEditor extends FieldEditor {
         return newURI;
     }
 
-    private GridData getMainGridData(int numColumns) {
-        GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
-        gd.horizontalSpan = numColumns;
-
-        return gd;
-    }
-
     /**
      * update graphical representation
      */
@@ -338,7 +337,9 @@ public class TemplateTableEditor extends FieldEditor {
     }
 
 
-    
+    /*
+     * analyses the preference string and refreshs the table
+     */
     private void loadPreferencesFromString(String prefString) {
     	TemplatePrefString tString = new TemplatePrefString(prefString);
         m_templateList = tString.parsePrefString();
@@ -357,6 +358,10 @@ public class TemplateTableEditor extends FieldEditor {
         m_initialTemplateList.addAll(m_templateList);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.jface.preference.FieldEditor#doLoadDefault()
+     */
     @Override
     protected void doLoadDefault() {
         String items = getPreferenceStore().getDefaultString(getPreferenceName());
@@ -366,6 +371,9 @@ public class TemplateTableEditor extends FieldEditor {
     }
 
     /**
+     * finally changes in the preferences have to be applied <br/>
+     * (update template cache, cache new files locally, ...)
+     * 
      * {@inheritDoc}
      */
     @Override
@@ -457,7 +465,10 @@ public class TemplateTableEditor extends FieldEditor {
             getPreferenceStore().setValue(getPreferenceName(), s);
     }
 
-
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.jface.preference.FieldEditor#getNumberOfControls()
+     */
     @Override
     public int getNumberOfControls() {
         return 2;

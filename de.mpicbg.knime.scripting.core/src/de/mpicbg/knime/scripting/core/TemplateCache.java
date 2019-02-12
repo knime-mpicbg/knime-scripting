@@ -221,7 +221,8 @@ public class TemplateCache {
 	}
 
 	/**
-     * reloads all given templateFiles into the Cache
+     * reloads all given templateFiles into the Cache <br/>
+     * if access fails, nothing happens to the template cache
      *
      * @param filePath
      */
@@ -234,11 +235,10 @@ public class TemplateCache {
         if (!reloadedTemplate.isEmpty()) {
         	templateCache.remove(filePath);
             templateCache.put(filePath, reloadedTemplate);
-            cacheFileOnDisk(filePath, bundlePath, indexFile);
-            //templates = templateCache.get(filePath).templates;
-        } else throw new IOException(filePath + " does not contain any valid template");
-
-        //return templates;
+            cacheFileOnDisk(filePath, bundlePath, indexFile);   
+        } else {
+        	throw new IOException(filePath + " does not contain any valid template");
+        }
     }
 
     /**
@@ -251,6 +251,13 @@ public class TemplateCache {
         return templateCache.containsKey(filePath);
     }
 
+    /**
+     * reloads the content of the index file into the 'localFileCache'-map
+     * 
+     * @param bundlePath
+     * @param indexFile
+     * @throws IOException
+     */
 	private void updateLocalFileCache(Path bundlePath, Path indexFile) throws IOException {
 		assert bundlePath != null;
 		assert indexFile != null;
@@ -273,7 +280,7 @@ public class TemplateCache {
         	if(splitted.length == 2) {
         		Path f = Paths.get(splitted[1]);
         		if(Files.exists(f))
-        			localFileCache.put(splitted[0], f);
+        			localFileCache.put(splitted[0], f);		// replaced, if already present; added otherwise
         	}
         	line = reader.readLine();
         }
@@ -419,7 +426,10 @@ public class TemplateCache {
 	}
 	
 
-
+	/**
+	 * @param templateFilePath
+	 * @return a list of templates from the given template file
+	 */
 	public List<ScriptTemplate> getTemplates(String templateFilePath) {
 		return templateCache.get(templateFilePath).getTemplates();
 	}
