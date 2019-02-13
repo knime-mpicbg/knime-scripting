@@ -34,16 +34,6 @@ Once KNIME is installed you have the following possibilities:
 2. Use eclipse to build the plugins yourself and add them to the plugin directory of the KNIME installation.
 
 
-
-# License
-Copyright (c) 2010, Max Planck Institute of Molecular Cell Biology and Genetics, Dresden
-All rights reserved.
-
-Source code contained in the directories groovy4knime, python-server, pyhton4knime and r4knime is distributed under GPL3 license.
-
-Source code contained in the directories matlab-server and the "matlab4knime" nodes are distributed under the BSD license.
-
-
  
 <br/><br/>
 <sup>1: [RGG: A general GUI Framework for R scripts; Ilhami Visne, Bioinformatics, 2009, 10:74]</sup>
