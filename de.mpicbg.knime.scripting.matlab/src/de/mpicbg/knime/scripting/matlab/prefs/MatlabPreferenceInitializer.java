@@ -59,9 +59,8 @@ public class MatlabPreferenceInitializer extends AbstractPreferenceInitializer {
         
         store.setDefault(MATLAB_SESSIONS, 1);
 
-//        store.setDefault(MATLB_TEMPLATE_RESOURCES, "file:///Volumes/tds/software+tools/KNIME/script-templates/Matlab/script-templates.txt");
-        store.setDefault(MATLAB_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/script-templates.txt");
-        store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/figure-templates.txt");
+        store.setDefault(MATLAB_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/script-templates.txt\",true)");
+        store.setDefault(MATLAB_PLOT_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Matlab/figure-templates.txt\",true)");
         
         store.setDefault(MATLAB_TYPE, AbstractMatlabScriptingNodeModel.DEFAULT_TYPE);
         store.setDefault(MATLAB_TRANSFER_METHOD, "file");

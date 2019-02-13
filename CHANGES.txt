@@ -1,5 +1,16 @@
 ======================================================================================================
-2018-11-27
+TO BE RELEASED
+
+2019-xx-xx
+VERSION		v3.2.1
+
+ENHANCEMENTS / FEATURES
+
+* Template files will be cached locally to allow offline usage
+
+
+======================================================================================================
+2018-11-27 (develop only)
 VERSION		v3.2.0
 
 ISSUES

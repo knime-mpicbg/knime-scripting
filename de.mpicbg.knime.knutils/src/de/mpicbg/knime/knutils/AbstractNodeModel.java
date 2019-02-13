@@ -1,6 +1,8 @@
 package de.mpicbg.knime.knutils;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.*;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObject;
@@ -104,6 +106,28 @@ public abstract class AbstractNodeModel extends NodeModel {
 
     protected SettingsModel getModelSetting(String settingName) {
         return modelSettings.get(settingName);
+    }
+    
+    /**
+     * if autoguessing is used in configure, setting model needs to be updates (=> replaced)
+     * 
+     * @param settingName		key of the setting to be replaced
+     * @param settingsModel		new settings model
+     * 
+     * @throws InvalidSettingsException		thrown if key is not present or model class does not fit
+     */
+    protected void updateModelSetting(String settingName, SettingsModel settingsModel) 
+    		throws InvalidSettingsException {
+    	if(!modelSettings.containsKey(settingName))
+    		throw new InvalidSettingsException("Setting \"" + settingName + "\" does not belong to the settings of this node. Implementation error.");
+    	SettingsModel sm = modelSettings.get(settingName);
+    	
+    	String modelClass = sm.getClass().getSimpleName();
+    	if(!sm.getClass().equals( settingsModel.getClass())) {
+    		throw new InvalidSettingsException("Setting \"" + settingName + "\" is not of class \"" + modelClass + "\". Implementation error.");   		
+    	}
+    	
+    	modelSettings.replace(settingName, settingsModel);
     }
 
     /**
@@ -275,4 +299,56 @@ public abstract class AbstractNodeModel extends NodeModel {
     	
     	logger.info(logString);
     }
+    
+	/**
+	 * checks if columns of given list are available; throws warning or error if columns are missing
+	 * 
+	 * @param inSpec		table specs
+	 * @param onlyWarn		true = no error, just a warning
+	 * @param columns		list of columns to test for
+	 * 
+	 * @throws InvalidSettingsException
+	 */
+	protected void checkColumnsForAvailability(DataTableSpec inSpec, String[] columns, final Class<? extends DataValue> valueClass, boolean onlyWarn, boolean atLeastOneRequired)
+			throws InvalidSettingsException {
+		// collect columns which are not available in input spec and need to be double-compatible
+		List<String> missingColumns = new ArrayList<String>();
+		for(String col : columns) {
+			if(!inSpec.containsName(col))
+				missingColumns.add(col);
+			else 
+				if(!inSpec.getColumnSpec(col).getType().isCompatible(valueClass))
+					missingColumns.add(col);
+		}	
+
+		if(atLeastOneRequired) {
+			if(missingColumns.size() == columns.length)
+				if(columns.length == 1)
+					throw new InvalidSettingsException("Input table does not contain the expected columns: " + String.join(",", missingColumns) + " or column is not of type: " + valueClass.getSimpleName());
+				else
+					throw new InvalidSettingsException("Input table does not contain any of the expected columns: " + String.join(",", missingColumns) + " or columns are not of type: " + valueClass.getSimpleName());
+		}
+		
+		if(!missingColumns.isEmpty()) {
+			if(onlyWarn)
+				setWarningMessage("The following columns are either missing or not numeric (will be ignored for processing): " + String.join(",", missingColumns));
+			else 
+				throw new InvalidSettingsException("The following columns are either missing or not numeric: " + String.join(",", missingColumns));
+		}
+	}
+	
+	/**
+	 * the given is column is checked for presence and correct data class in input table
+	 * 
+	 * @param inSpec					table specs of input table
+	 * @param column					column to be checked
+	 * @param valueClass				data class the column is supposed to be of
+	 * @param onlyWarn					if true, a warning will appear if the column is missing
+	 * @param atLeastOneRequired		if true, the column needs to be present
+	 * @throws InvalidSettingsException	if the column is missing and no onlyWarn flag
+	 */
+	protected void checkColumnsForAvailability(DataTableSpec inSpec, String column, final Class<? extends DataValue> valueClass, boolean onlyWarn, boolean atLeastOneRequired)
+			throws InvalidSettingsException {
+		checkColumnsForAvailability(inSpec, new String[] {column}, valueClass, onlyWarn, atLeastOneRequired);;
+	}
 }

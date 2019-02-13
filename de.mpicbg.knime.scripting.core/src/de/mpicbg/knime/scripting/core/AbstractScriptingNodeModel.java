@@ -1,5 +1,6 @@
 package de.mpicbg.knime.scripting.core;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -7,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -20,6 +23,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
@@ -209,7 +214,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         return null;
 	}
 
-    /**
+	/**
      * @return default script
      */
 	public String getDefaultScript(String defaultScript) {

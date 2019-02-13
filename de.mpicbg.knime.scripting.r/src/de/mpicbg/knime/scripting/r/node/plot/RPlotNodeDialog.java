@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.r.node.plot;
 
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.r.R4KnimeBundleActivator;
 import de.mpicbg.knime.scripting.r.RColumnSupport;
 import de.mpicbg.knime.scripting.r.plots.AbstractRPlotNodeModel;
@@ -8,11 +9,15 @@ import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.*;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 
@@ -75,6 +80,13 @@ public class RPlotNodeDialog extends ScriptingNodeDialog {
 	@Override
 	public String getTemplatesFromPreferences() {
 		return R4KnimeBundleActivator.getDefault().getPreferenceStore().getString(RPreferenceInitializer.R_PLOT_TEMPLATES);
+	}
+
+	@Override
+	protected Path getTemplateCachePath() {
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
+        return Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
 	}
 
 }

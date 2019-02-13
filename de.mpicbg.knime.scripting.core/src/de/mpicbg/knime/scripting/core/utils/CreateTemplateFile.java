@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * not used 
+ * 
  * Created by IntelliJ IDEA.
  * User: Antje Niederlein
  * Date: 12/14/11
@@ -109,11 +111,16 @@ public class CreateTemplateFile {
     private void readSubdirectories() {
         System.out.println("find templates in " + selectedFile.getAbsoluteFile());
 
-        fillTemplateList(selectedFile);
+        try {
+			fillTemplateList(selectedFile);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         System.out.println("Found " + templateFiles.size() + " files");
     }
 
-    private void fillTemplateList(File selectedFile) {
+    private void fillTemplateList(File selectedFile) throws IOException {
         File[] fileList = selectedFile.listFiles();
 
         if (fileList == null) return;

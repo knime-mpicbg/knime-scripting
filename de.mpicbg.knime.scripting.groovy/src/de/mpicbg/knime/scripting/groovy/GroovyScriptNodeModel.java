@@ -214,4 +214,6 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
 		throw new KnimeScriptingException("The functionality to open data external is not yet implemented");
 		
 	}
+
+
 }

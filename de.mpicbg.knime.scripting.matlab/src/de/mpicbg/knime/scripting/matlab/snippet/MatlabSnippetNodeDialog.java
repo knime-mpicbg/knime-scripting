@@ -1,6 +1,13 @@
 package de.mpicbg.knime.scripting.matlab.snippet;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.matlab.MatlabColumnSupport;
 import de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
@@ -20,4 +27,11 @@ public class MatlabSnippetNodeDialog extends ScriptingNodeDialog {
     public String getTemplatesFromPreferences() {
         return MatlabScriptingBundleActivator.getDefault().getPreferenceStore().getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES);
     }
+    
+	@Override
+	protected Path getTemplateCachePath() {
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+        String bundlePath = ScriptingUtils.getBundlePath(bundle).toOSString();
+        return Paths.get(bundlePath, ScriptingUtils.LOCAL_CACHE_FOLDER);
+	}
 }
