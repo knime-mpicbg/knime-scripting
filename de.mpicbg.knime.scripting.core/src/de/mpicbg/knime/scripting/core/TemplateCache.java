@@ -155,20 +155,27 @@ public class TemplateCache {
         assert bundlePath != null;
         assert indexFile != null;
         
+        // file may not have been chached locally
+        // or it is a local file and had no need of caching
+        if(!localFileCache.containsKey(filePath))
+        	return;
+
         Path localFile = localFileCache.get(filePath);
+
         try {
-			Files.delete(localFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        
+        	Files.delete(localFile);
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }
+
         localFileCache.remove(filePath);
-        
+
         try {
-			removeFromIndexFile(filePath, indexFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}    
+        	removeFromIndexFile(filePath, indexFile);
+        } catch (IOException e) {
+        	e.printStackTrace();
+        }  
+
     }
     
     /**
