@@ -1,12 +1,14 @@
 ======================================================================================================
-TO BE RELEASED
-
-2019-xx-xx
-VERSION		v3.2.1
+2019-02-13
+VERSION		v3.3.0
 
 ENHANCEMENTS / FEATURES
 
 * Template files will be cached locally to allow offline usage
+
+ISSUES
+
+* Nodes using R will use Rserve library 1.8-6 to avoid communication problems with R 3.5+
 
 
 ======================================================================================================
