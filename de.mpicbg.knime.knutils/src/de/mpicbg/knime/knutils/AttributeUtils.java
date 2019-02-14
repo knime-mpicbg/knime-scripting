@@ -42,7 +42,7 @@ public class AttributeUtils {
 
         Map<String, List<DataRow>> groupedRowsStringKeys = new LinkedHashMap<String, List<DataRow>>();
         for (Object o : groupedRows.keySet()) {
-            groupedRowsStringKeys.put(o.toString(), groupedRows.get(o));
+            groupedRowsStringKeys.put(o == null ? null : o.toString(), groupedRows.get(o));
         }
 
         return groupedRowsStringKeys;
