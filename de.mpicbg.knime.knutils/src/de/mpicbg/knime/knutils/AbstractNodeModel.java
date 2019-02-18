@@ -1,6 +1,7 @@
 package de.mpicbg.knime.knutils;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.*;
@@ -306,6 +307,8 @@ public abstract class AbstractNodeModel extends NodeModel {
 	 * @param inSpec		table specs
 	 * @param onlyWarn		true = no error, just a warning
 	 * @param columns		list of columns to test for
+	 * @param onlyWarn		throws a warning only
+     * @param atLeastOneRequired	if true, an exception is thrown if none column fits the requirements (ignores 'onlyWarn')
 	 * 
 	 * @throws InvalidSettingsException
 	 */
@@ -331,9 +334,9 @@ public abstract class AbstractNodeModel extends NodeModel {
 		
 		if(!missingColumns.isEmpty()) {
 			if(onlyWarn)
-				setWarningMessage("The following columns are either missing or not numeric (will be ignored for processing): " + String.join(",", missingColumns));
+				setWarningMessage("The following columns are either missing or not of expected type (will be ignored for processing): " + String.join(",", missingColumns));
 			else 
-				throw new InvalidSettingsException("The following columns are either missing or not numeric: " + String.join(",", missingColumns));
+				throw new InvalidSettingsException("The following columns are either missing or not of expected type: " + String.join(",", missingColumns));
 		}
 	}
 	
@@ -344,11 +347,11 @@ public abstract class AbstractNodeModel extends NodeModel {
 	 * @param column					column to be checked
 	 * @param valueClass				data class the column is supposed to be of
 	 * @param onlyWarn					if true, a warning will appear if the column is missing
-	 * @param atLeastOneRequired		if true, the column needs to be present
+
 	 * @throws InvalidSettingsException	if the column is missing and no onlyWarn flag
 	 */
-	protected void checkColumnsForAvailability(DataTableSpec inSpec, String column, final Class<? extends DataValue> valueClass, boolean onlyWarn, boolean atLeastOneRequired)
+	protected void checkColumnsForAvailability(DataTableSpec inSpec, String column, final Class<? extends DataValue> valueClass, boolean onlyWarn)
 			throws InvalidSettingsException {
-		checkColumnsForAvailability(inSpec, new String[] {column}, valueClass, onlyWarn, atLeastOneRequired);;
+		checkColumnsForAvailability(inSpec, new String[] {column}, valueClass, onlyWarn, !onlyWarn);
 	}
 }
