@@ -10,10 +10,13 @@ import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonClient;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -26,6 +29,7 @@ import org.knime.core.node.port.image.ImagePortObjectSpec;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -52,7 +56,19 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 	private static final String OUTPUT_FILE_SETTING_NAME = "figure.output.file";
 	private static final String OVERWRITE_SETTING_NAME = "overwrite.ok";
     private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
-    private final String DEFAULT_PYTHON_PLOTCMD = "plot(kIn)";
+
+    private final String DEFAULT_PYTHON_PLOTCMD =""     
+		+"if have_pandas:\n" 
+		+"	df = pd.DataFrame.from_dict(kIn)\n"
+		+"	df.plot()\n"
+		+"else:\n"
+		+"	# find numeric columns\n"
+		+"	numericColumns = [k for k in columnTypes if columnTypes[k] in [IntType, FloatType]]\n"
+		+"	index = range(len(kIn[numericColumns[0]]))\n"
+		+"	# plot each column\n"
+		+"	for col in numericColumns:\n"
+		+"		plot(index, kIn[col], label=col)\n"
+		+"	legend()\n";
 
     protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 

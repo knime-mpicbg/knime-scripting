@@ -41,7 +41,7 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
         // CSV read/write functions
         InputStream utilsStream = PythonScripts.class.getResourceAsStream("PythonCSVUtils.py");
 
-        String readCSVCmd = kInFile != null ? "kIn = read_csv(r\"" + kInFile.getServerPath() + "\", True)" : "";
+        String readCSVCmd = kInFile != null ? "kIn, columnTypes = read_csv(r\"" + kInFile.getServerPath() + "\", True)" : "";
         String writeCSVCmd = pyOutFile != null ? "write_csv(r\"" + pyOutFile.getServerPath() + "\", pyOut, True)" : "";
 
         // Write the script file
