@@ -11,33 +11,50 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
-import de.mpicbg.knime.scripting.r.RColumnSupport;
+
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.Rserve.RserveException;
+
+import com.opencsv.CSVWriter;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
+
+import antlr.StringUtils;
+import antlr.collections.List;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScriptingNodeModel {
 	
-	public static final String R_INVAR_BASE_NAME = "kIn";
-	public static final String R_OUTVAR_BASE_NAME = "pyOut";
+	public static final String PY_INVAR_BASE_NAME = "kIn";
+	public static final String PY_OUTVAR_BASE_NAME = "pyOut";
+	public static final String PY_SCRIPTVAR_BASE_NAME = "pyScript";
 	
 	public static final String CFG_SCRIPT_DFT = "pyOut = kIn";
 	
     // Temp files for reading/writing the table and the script
-    protected PythonTempFile kInFile;
-    protected PythonTempFile pyOutFile;
-    protected PythonTempFile scriptFile;
+    //protected PythonTempFile kInFile;
+    //protected PythonTempFile pyOutFile;
+    //protected PythonTempFile scriptFile;
 
     protected Python python;
 
@@ -78,11 +95,143 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @throws KnimeScriptingException
 	 * @throws CanceledExecutionException
 	 */
-	protected void pushInputToPython(PortObject[] inData, ExecutionContext exec) 
+	protected void pushInputToPython(BufferedDataTable[] inData, ExecutionContext exec) 
 			throws KnimeScriptingException, CanceledExecutionException {
 		
 		ScriptingModelConfig cfg = getNodeCfg();
+		
+		exec.setMessage("Transfer to Python");
+		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
+		
+		// assign ports to Python variable names
+		Map<String, BufferedDataTable> inPorts = createPortMapping(inData);
+		Map<String, File> tempFiles = createTempFiles(inPorts);
+		
+		//int nInTables = inPorts.size();
+		
+		// push all KNIME data tables
+		for(String in : inPorts.keySet()) {
+			transferToExec.setMessage("Push table");
+			BufferedDataTable inTable = inPorts.get(in);
+			pushTableToPython((BufferedDataTable) inTable, in, tempFiles.get(in), transferToExec.createSubProgress(1/nInTables));
+		}
 	}
+	
+	/**
+	 * push one KNIME table and its properties to R
+	 * @param inTable
+	 * @param varName
+	 * @param tempFile 
+	 * @param exec
+	 * @param chunkInSize 
+	 * @throws CanceledExecutionException 
+	 * @throws REXPMismatchException 
+	 * @throws RserveException 
+	 * @throws KnimeScriptingException 
+	 */
+	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, ExecutionMonitor exec) 
+			throws CanceledExecutionException, KnimeScriptingException {
+
+		DataTableSpec inSpec = inTable.getSpec();
+		
+		python = new LocalPythonClient();
+		
+		Writer writer = Files.newBufferedWriter(Paths.get(tempFile));
+
+        CSVWriter csvWriter = new CSVWriter(writer,
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+		
+		// push color/size/shape model to R
+		//pushColorModelToR(inSpec, m_con, exec, varName);
+		//pushShapeModelToR(inSpec, m_con, exec, varName);
+		//pushSizeModelToR(inSpec, m_con, exec, varName);
+
+		try {
+			transferRDataContainer(exec, inTable, chunkInSize, m_con, varName);
+		} catch(REXPMismatchException | RserveException e) {
+			throw new KnimeScriptingException("Failed to transfer data to R:\n" + e.getMessage());
+		}
+	}
+	
+	/**
+	 * The map stores the R-names as key and the BDT as value; in case of RPorts, the name is 'generic'
+	 * @param inObjects
+	 * @return
+	 * @throws KnimeScriptingException thrown if more than one generic input ports or unsupported port type
+	 */
+	public Map<String, BufferedDataTable> createPortMapping(BufferedDataTable[] inObjects) throws KnimeScriptingException {
+
+		Map<String, BufferedDataTable> portVarMapping = new TreeMap<String, BufferedDataTable>();
+
+		// number of non-null input port objects; (optional) input ports might be null if not connected
+		int nTableInputs = 0;
+		for (PortObject inport : inObjects) {
+			if (inport != null) {
+				if(inport instanceof BufferedDataTable) nTableInputs++;
+					throw new KnimeScriptingException("Implementation error: PortType " 
+							+ inport.getClass().getSimpleName() + "is not yet supported");
+			}
+		}
+
+		// create naming of input variables for Python; e.g. kIn, or kIn1
+		// map port objects to variable name
+		int i = 0;
+		for (PortObject inport : inObjects) {
+
+			if(inport != null) {
+				PortType pType = getInPortType(i);
+	
+				if(pType.equals(BufferedDataTable.TYPE)) {
+					String variableName = PY_INVAR_BASE_NAME + (nTableInputs > 1 ? (i + 1) : "");
+					portVarMapping.put(variableName, (BufferedDataTable) inport);
+					i++;
+				}
+			}
+		}
+
+		return portVarMapping;
+	}
+	
+    /**
+     * Create necessary temp files
+     * @param inPorts 
+     * @return 
+     * @throws KnimeScriptingException 
+     */
+    protected Map<String, File> createTempFiles(Map<String, BufferedDataTable> inPorts) throws KnimeScriptingException {
+        
+    	Map<String, File> tempFileMapping = new LinkedHashMap<String, File>();
+    	
+    	try {
+	    	// Create a new set
+	    	for(String label : inPorts.keySet()) {
+	    		File tempFile = File.createTempFile(label + "_knime2python", ".csv");
+	    		tempFileMapping.put(label, tempFile);
+	    	}
+	
+	    	File pyOutFile = File.createTempFile("_python2knime", ".csv");
+	    	File scriptFile = File.createTempFile("_analyze", ".py");
+	
+	    	tempFileMapping.put(PY_OUTVAR_BASE_NAME, pyOutFile);
+	    	tempFileMapping.put(PY_SCRIPTVAR_BASE_NAME, scriptFile);
+    	} catch (IOException ioe) {
+    		throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
+    	} finally {
+    		for(File f : tempFileMapping.values()) {
+    			if(f != null)
+					try {
+						Files.deleteIfExists(f.toPath());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+    		}
+    	}
+
+    	return tempFileMapping;
+    }
 
 	/** ============================================================================================= */
 
@@ -125,22 +274,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         return scriptFile.getServerPath();
     }
 
-    /**
-     * Create necessary temp files
-     */
-    protected void createTempFiles() throws RuntimeException {
-        try {
-            // Delete the previous set if they're still around
-            deleteTempFiles();
 
-            // Create a new set
-            kInFile = new PythonTempFile(python, "knime2python", ".csv");
-            pyOutFile = new PythonTempFile(python, "python2knime", ".csv");
-            scriptFile = new PythonTempFile(python, "analyze", ".py");
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Delete all temp files if they exist and the node is so configured
