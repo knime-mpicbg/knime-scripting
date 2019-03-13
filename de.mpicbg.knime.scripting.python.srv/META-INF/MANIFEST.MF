@@ -4,11 +4,9 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Server for the Python scripting integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.python.srv; singleton:=true
 Bundle-Version: 2.0.0.qualifier
-Export-Package: au.com.bytecode.opencsv,
- de.mpicbg.knime.scripting.python.srv
+Export-Package: de.mpicbg.knime.scripting.python.srv
 Bundle-ClassPath: python-srv4knime.jar,
- lib/cajo-1.134.jar,
- lib/opencsv-2.1.jar
+ lib/cajo-1.134.jar
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-ActivationPolicy: lazy
 

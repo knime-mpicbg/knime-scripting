@@ -5,7 +5,6 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-import de.mpicbg.knime.scripting.python.scripts.PythonScripts;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
 import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
@@ -39,7 +38,9 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
 
     protected void prepareScript(Writer writer, boolean useScript) throws IOException {
         // CSV read/write functions
-        InputStream utilsStream = PythonScripts.class.getResourceAsStream("PythonCSVUtils.py");
+        //InputStream utilsStream = PythonScripts.class.getResourceAsStream("PythonCSVUtils.py");
+    	InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils.py");
+
 
         String readCSVCmd = kInFile != null ? "kIn, columnTypes = read_csv(r\"" + kInFile.getServerPath() + "\", True)" : "";
         String writeCSVCmd = pyOutFile != null ? "write_csv(r\"" + pyOutFile.getServerPath() + "\", pyOut, True)" : "";

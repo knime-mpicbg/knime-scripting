@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/opencsv-4.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/Rserve_1.8-6.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/REngine_1.8-6.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/antlr-2.7.7.jar"/>
@@ -15,7 +16,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/beansbinding-1.2.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-collections-3.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-configuration-1.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/commons-lang-2.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/forms-1.2.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/groovy-1.7.1.jar"/>

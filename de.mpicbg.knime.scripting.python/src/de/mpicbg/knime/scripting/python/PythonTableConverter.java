@@ -1,7 +1,6 @@
 package de.mpicbg.knime.scripting.python;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
+
 import de.mpicbg.knime.knutils.InputTableAttribute;
 
 import org.knime.core.data.*;
@@ -13,6 +12,9 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 import java.io.*;
 import java.util.ArrayList;
