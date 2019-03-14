@@ -14,7 +14,19 @@ import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -30,7 +42,6 @@ import com.opencsv.CSVWriterBuilder;
 import com.opencsv.ICSVWriter;
 
 import antlr.StringUtils;
-import antlr.collections.List;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -39,6 +50,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -135,14 +148,66 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		DataTableSpec inSpec = inTable.getSpec();
 		
 		python = new LocalPythonClient();
-		
-		Writer writer = Files.newBufferedWriter(Paths.get(tempFile));
+        
+        List<String> supportedColumns = new LinkedList<String>();
+        supportedColumns.add("Row ID");
+        List<String> supportedColumnsTypes = new LinkedList<String>();
+        supportedColumnsTypes.add("INDEX");
+        
+        /*
+         * go through columns, if supported type, add their name and python type to the lists
+         */
+        for(int i = 0; i < inSpec.getNumColumns(); i++) {
+        	DataColumnSpec cSpec = inSpec.getColumnSpec(i);
+        	DataType dType = cSpec.getType();
+        	String cName = cSpec.getName();
+        	boolean add = false;
+        	if(dType.equals(DoubleValue.class)) {
+        		supportedColumns.add(cName);
+        		supportedColumnsTypes.add("FLOAT");    		
+        		continue;
+        	}
+        	if(dType.equals(IntValue.class) || dType.equals(LongValue.class)) {
+        		supportedColumns.add(cName);
+        		supportedColumnsTypes.add("INT");    		
+        		continue;
+        	}
+        	if(dType.equals(BooleanValue.class)) {
+        		supportedColumns.add(cName);
+        		supportedColumnsTypes.add("BOOL");    		
+        		continue;
+        	}
+        	if(dType.equals(LocalTimeValue.class) ||
+        		dType.equals(LocalDateValue.class) ||
+        		dType.equals(LocalDateTimeValue.class) ||
+        		dType.equals(ZonedDateTimeValue.class)) 
+        	{
+        		supportedColumns.add(cName);
+        		supportedColumnsTypes.add("DATETIME");    		
+        		continue;
+        	}
+        	if(dType.isCompatible(StringValue.class)) {
+        		supportedColumns.add(cName);
+        		supportedColumnsTypes.add("STRING");    	
+        	}	
+        }
+        
+		Writer writer = Files.newBufferedWriter(tempFile.toPath());
 
         CSVWriter csvWriter = new CSVWriter(writer,
                 CSVWriter.DEFAULT_SEPARATOR,
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
+        
+        String[] columnNames = supportedColumns.toArray(new String[supportedColumns.size()]);
+        String[] columnTypes = supportedColumnsTypes.toArray(new String[supportedColumnsTypes.size()]);
+        
+        // write column names (at least 'Row ID')
+        csvWriter.writeNext(columnNames);
+        csvWriter.writeNext(columnTypes);
+        
+        
 		
 		// push color/size/shape model to R
 		//pushColorModelToR(inSpec, m_con, exec, varName);
