@@ -15,14 +15,15 @@ import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.time.localdate.LocalDateValue;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
 import org.knime.core.data.time.localtime.LocalTimeValue;
@@ -126,7 +127,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		for(String in : inPorts.keySet()) {
 			transferToExec.setMessage("Push table");
 			BufferedDataTable inTable = inPorts.get(in);
-			pushTableToPython((BufferedDataTable) inTable, in, tempFiles.get(in), transferToExec.createSubProgress(1/nInTables));
+			pushTableToPython((BufferedDataTable) inTable, in, tempFiles.get(in), transferToExec.createSubProgress(1.0/inPorts.size()));
 		}
 	}
 	
@@ -148,11 +149,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		DataTableSpec inSpec = inTable.getSpec();
 		
 		python = new LocalPythonClient();
-        
-        List<String> supportedColumns = new LinkedList<String>();
-        supportedColumns.add("Row ID");
-        List<String> supportedColumnsTypes = new LinkedList<String>();
-        supportedColumnsTypes.add("INDEX");
+		
+		Map<String, String> supportedColumns = new LinkedHashMap<String, String>();
+		supportedColumns.put("Row ID", "INDEX");
+		
+		Map<String, Integer> columnsIndicees = new LinkedHashMap<String, Integer>();
+		columnsIndicees.put("Row ID", -1);
         
         /*
          * go through columns, if supported type, add their name and python type to the lists
@@ -161,20 +163,20 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         	DataColumnSpec cSpec = inSpec.getColumnSpec(i);
         	DataType dType = cSpec.getType();
         	String cName = cSpec.getName();
-        	boolean add = false;
+        	
         	if(dType.equals(DoubleValue.class)) {
-        		supportedColumns.add(cName);
-        		supportedColumnsTypes.add("FLOAT");    		
+        		supportedColumns.put(cName, "FLOAT"); 
+        		columnsIndicees.put(cName, i);
         		continue;
         	}
         	if(dType.equals(IntValue.class) || dType.equals(LongValue.class)) {
-        		supportedColumns.add(cName);
-        		supportedColumnsTypes.add("INT");    		
+        		supportedColumns.put(cName, "INT");  
+        		columnsIndicees.put(cName, i);
         		continue;
         	}
         	if(dType.equals(BooleanValue.class)) {
-        		supportedColumns.add(cName);
-        		supportedColumnsTypes.add("BOOL");    		
+        		supportedColumns.put(cName, "BOOL");   
+        		columnsIndicees.put(cName, i);
         		continue;
         	}
         	if(dType.equals(LocalTimeValue.class) ||
@@ -182,13 +184,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         		dType.equals(LocalDateTimeValue.class) ||
         		dType.equals(ZonedDateTimeValue.class)) 
         	{
-        		supportedColumns.add(cName);
-        		supportedColumnsTypes.add("DATETIME");    		
+        		supportedColumns.put(cName, "DATETIME");  
+        		columnsIndicees.put(cName, i);
         		continue;
         	}
         	if(dType.isCompatible(StringValue.class)) {
-        		supportedColumns.add(cName);
-        		supportedColumnsTypes.add("STRING");    	
+        		supportedColumns.put(cName, "STRING");  
+        		columnsIndicees.put(cName, i);
         	}	
         }
         
@@ -200,14 +202,31 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
                 CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
         
-        String[] columnNames = supportedColumns.toArray(new String[supportedColumns.size()]);
-        String[] columnTypes = supportedColumnsTypes.toArray(new String[supportedColumnsTypes.size()]);
+        String[] columnNames = supportedColumns.keySet().toArray(new String[supportedColumns.size()]);
+        String[] columnTypes = supportedColumns.values().toArray(new String[supportedColumns.size()]);
         
         // write column names (at least 'Row ID')
         csvWriter.writeNext(columnNames);
         csvWriter.writeNext(columnTypes);
         
-        
+        for(DataRow row : inTable) {
+        	List<String> columnValues = new LinkedList<String>();
+        	      	
+        	for(String col : columnsIndicees.keySet()) {
+        		int idx = (Integer)columnsIndicees.get(col);
+        		if( idx == -1)
+        			columnValues.add(row.getKey().getString());
+        		else {
+        			DataCell cell = row.getCell(idx);
+        			
+        			if(cell.isMissing()) {
+        				columnValues.add(null);
+        			} else {
+        				
+        			}
+        		}
+        	}
+        }
 		
 		// push color/size/shape model to R
 		//pushColorModelToR(inSpec, m_con, exec, varName);
