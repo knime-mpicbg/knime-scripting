@@ -1,6 +1,7 @@
 import platform
 import csv
 import array
+import math
 from functools import partial
     
 # Check for the correct version
@@ -36,6 +37,7 @@ try:
 except:
     have_pandas = False
 
+have_pandas = False
 
 # For some large CSV files one may get the exception
 # Error: field larger than field limit (131072)
@@ -44,8 +46,7 @@ except:
 # Taken from:
 # http://stackoverflow.com/questions/15063936/csv-error-field-larger-than-field-limit-131072
 import sys
-version = sys.version_info
-maxInt = sys.maxsize if version >= (3, 0) else sys.maxint
+maxInt = sys.maxsize if float(version[:3]) > 3.0 else sys.maxint
 decrement = True
 
 while decrement:
@@ -160,8 +161,7 @@ def create_data_table(csv_filename, types, header_lines):
     
     # if pandas is available, use it!
     if have_pandas:
-        skip = range(1, header_lines)
-        d = pd.read_csv(csv_filename, skiprows=skip, dtype=types, sep=',', keep_default_na=False, na_values=['']).to_dict()
+        d = pd.read_csv(csv_filename, skiprows=header_lines, dtype=types, sep=',', keep_default_na=False, na_values=['']).to_dict()
         d = OrderedDict(dict((k, list(d[k].values())) for k in d)) # convert to dict of lists (as used by the python snippet)
         return d
     else:
@@ -212,6 +212,7 @@ def line_count(csv_filename):
 #  to infer the types.
 #
 def read_csv(csv_filename, read_types):
+	#raise Exception('I know Python!')
     if read_types:
         types = get_column_types(csv_filename)
         table = create_data_table(csv_filename, types, 2)
@@ -222,7 +223,7 @@ def read_csv(csv_filename, read_types):
             types = infer_column_types(csv_filename, 0)
 
         table = create_data_table(csv_filename, types, 1)
-
+	
     return table, types
 
 #

@@ -15,6 +15,11 @@
         <node category-path="/community/python"
               factory-class="de.mpicbg.knime.scripting.python.plots.PythonPlotNodeFactory"
               id="de.mpicbg.knime.scripting.python.plots.PythonPlotNodeFactory"/>
+        <node
+              category-path="/community/python"
+              deprecated="false"
+              factory-class="de.mpicbg.knime.scripting.python.v2.node.snippet.PythonSnippetV2NodeFactory">
+        </node>
     </extension>
 
     <extension point="org.knime.workbench.repository.categories">
