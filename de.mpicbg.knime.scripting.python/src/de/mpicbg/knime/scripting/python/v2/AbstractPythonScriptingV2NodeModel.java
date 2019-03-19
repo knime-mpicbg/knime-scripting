@@ -19,12 +19,16 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.time.localdate.LocalDateValue;
-import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
-import org.knime.core.data.time.localtime.LocalTimeValue;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
+import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -169,32 +173,28 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         	DataType dType = cSpec.getType();
         	String cName = cSpec.getName();
         	
-        	if(dType.isCompatible(BooleanValue.class)) {
-        		supportedColumns.put(cName, "BOOL");   
+        	if(dType.getCellClass().equals(BooleanCell.class)) {
+        		supportedColumns.put(cName, "bool");   
         		columnsIndicees.put(cName, i);
-        		continue;
         	}
-        	if(dType.isCompatible(IntValue.class) || dType.isCompatible(LongValue.class)) {
-        		supportedColumns.put(cName, "INT");  
+        	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+        		supportedColumns.put(cName, "int");  
         		columnsIndicees.put(cName, i);
-        		continue;
         	}
-        	if(dType.isCompatible(DoubleValue.class)) {
-        		supportedColumns.put(cName, "FLOAT"); 
+        	if(dType.getCellClass().equals(DoubleCell.class)) {
+        		supportedColumns.put(cName, "float"); 
         		columnsIndicees.put(cName, i);
-        		continue;
         	}
-        	if(dType.isCompatible(LocalTimeValue.class) ||
-        		dType.isCompatible(LocalDateValue.class) ||
-        		dType.isCompatible(LocalDateTimeValue.class) ||
-        		dType.isCompatible(ZonedDateTimeValue.class)) 
+        	if(dType.getCellClass().equals(LocalTimeCell.class) ||
+        		dType.getCellClass().equals(LocalDateCell.class) ||
+        		dType.getCellClass().equals(LocalDateTimeCell.class) ||
+        		dType.getCellClass().equals(ZonedDateTimeCell.class)) 
         	{
-        		supportedColumns.put(cName, "DATETIME");  
+        		supportedColumns.put(cName, "datetime64[ns]");  
         		columnsIndicees.put(cName, i);
-        		continue;
         	}
-        	if(dType.isCompatible(StringValue.class)) {
-        		supportedColumns.put(cName, "STRING");  
+        	if(dType.getCellClass().equals(StringCell.class)) {
+        		supportedColumns.put(cName, "object");  
         		columnsIndicees.put(cName, i);
         	}	
         }
@@ -234,22 +234,19 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         			if(cell.isMissing()) {
         				columnValues.add(null);
         			} else {
-        				if(dType.isCompatible(BooleanValue.class)) {
+        				if(dType.getCellClass().equals(BooleanCell.class)) {
         					boolean val = ((BooleanValue) cell).getBooleanValue();
-        					columnValues.add(Boolean.toString(val));
-        					continue;
+        					columnValues.add(val ? "1" : "0");
         				}
-        				if(dType.isCompatible(IntValue.class)) {
+        				if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
         					int val = ((IntValue) cell).getIntValue();
         					columnValues.add(Integer.toString(val));
-        					continue;
         				}
-        				if(dType.isCompatible(DoubleValue.class)) {
+        				if(dType.getCellClass().equals(DoubleCell.class)) {
         					double val = ((DoubleValue) cell).getDoubleValue();
         					columnValues.add(Double.toString(val));
-        					continue;
         				}
-        				if(dType.isCompatible(StringValue.class)) {
+        				if(dType.getCellClass().equals(StringCell.class)) {
         					String val = ((StringValue) cell).getStringValue();
         					columnValues.add(val);
         				}
