@@ -1,9 +1,17 @@
 import pandas as pd
+import platform
 
+# Check for the correct version
+version = platform.python_version()
 
-# Read a CSV file into an OrderedDict.  The first line of the file is assumed to be the column names.
+# open() function for py2/3
+def openf(filename, mode, **kwargs):
+    return open(filename, mode, **kwargs) if float(version[:3]) < 3 else open(filename, mode[0], newline='', **kwargs)
+
+# Read a CSV file into a pandas dataframe.  
+# The first line of the file is assumed to be the column names.
 # The second line must contain the column types, column types will be inferred first then
-# the attempt to convert them follows
+# the attempt to convert them follows (column type stays unchanged if conversion failed)
 #
 def read_csv(csv_filename):
 	# read data with column headers, row ids and infer data types
@@ -15,11 +23,38 @@ def read_csv(csv_filename):
 	for k in typesdf:
     	types[k] = typesdf.iloc[0][k]
     	
-    pdf_final = pdf.copy()
-	
+    #pdf_final = pdf.copy()
+	# try to apply column types, pass if it fails
 	for col in typesdf:
     subtypes = {k:v for k,v in types.items() if k in [col]}
     try:
-        pdf_final = pdf_final.astype(subtypes)
+        pdf = pdf.astype(subtypes)
     except:
         pass
+        
+# Write CSV file from pandas dataframe        
+def write_csv(csv_filename, pdf):
+
+	# need to filter dataframe for supported types
+	pyOut = pdf.select_dtypes(include=['object','bool','float','int','datetime64[ns]'])
+	
+	header = pyOut.columns 
+	header = header.insert(0, "Row ID") 
+	
+	types = []
+	types.append("INDEX")
+	for col in pyOut:
+    	types.append(pyOut[col].dtype.name)
+
+	csv_file = openf(csv_filename, 'wb')
+	csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+
+	# First write the column headers and data types
+	csv_writer.writerow(header)
+	csv_writer.writerow(types)
+
+	csv_file.close()
+	
+	# append data
+	with openf(csv_filename, 'ab') as f:
+    pdf_final.to_csv(f, header=False)
