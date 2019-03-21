@@ -1,5 +1,6 @@
 import pandas as pd
 import platform
+import csv
 
 # Check for the correct version
 version = platform.python_version()
@@ -17,21 +18,22 @@ def read_csv(csv_filename):
 	# read data with column headers, row ids and infer data types
 	pdf = pd.read_csv(csv_filename, skiprows = [1], sep = ',', header = 0, index_col = 0)
 	# extract expected data types
-	typesdf = pd.read_csv(testfile, sep=',', nrows = 1)
+	typesdf = pd.read_csv(csv_filename, sep=',', nrows = 1)
 	typesdf = typesdf.drop('Row ID', axis = 1)
 	types = dict()	
 	for k in typesdf:
-    	types[k] = typesdf.iloc[0][k]
-    	
-    #pdf_final = pdf.copy()
+		types[k] = typesdf.iloc[0][k]
+		
+	#pdf_final = pdf.copy()
 	# try to apply column types, pass if it fails
 	for col in typesdf:
-    subtypes = {k:v for k,v in types.items() if k in [col]}
-    try:
-        pdf = pdf.astype(subtypes)
-    except:
-        pass
-        
+		subtypes = {k:v for k,v in types.items() if k in [col]}
+	try:
+		pdf = pdf.astype(subtypes)
+	except:
+		pass
+	return pdf
+
 # Write CSV file from pandas dataframe        
 def write_csv(csv_filename, pdf):
 
@@ -44,7 +46,7 @@ def write_csv(csv_filename, pdf):
 	types = []
 	types.append("INDEX")
 	for col in pyOut:
-    	types.append(pyOut[col].dtype.name)
+		types.append(pyOut[col].dtype.name)
 
 	csv_file = openf(csv_filename, 'wb')
 	csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
@@ -57,4 +59,4 @@ def write_csv(csv_filename, pdf):
 	
 	# append data
 	with openf(csv_filename, 'ab') as f:
-    pdf_final.to_csv(f, header=False)
+		pyOut.to_csv(f, header=False)
