@@ -46,12 +46,12 @@ public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		
-		super.executeImpl(inData, exec);
+		//super.executeImpl(inData, exec);
+		super.pushInputToPython(inData, exec);
 		super.runScript(exec);
-		//PortObject[] outData = super.pullOutputFromR(exec);
+		PortObject[] outData = super.pullOutputFromPython(exec);
    
-        //return outData;
-		return null;
+        return outData;
     }
 	
 }

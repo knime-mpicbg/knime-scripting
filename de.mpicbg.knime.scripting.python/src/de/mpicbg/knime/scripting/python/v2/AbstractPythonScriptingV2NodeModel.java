@@ -1,10 +1,14 @@
 package de.mpicbg.knime.scripting.python.v2;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -44,6 +48,10 @@ import org.knime.core.node.port.PortType;
 import org.rosuda.REngine.REXPMismatchException;
 import org.rosuda.REngine.Rserve.RserveException;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
 import de.mpicbg.knime.knutils.Utils;
@@ -66,13 +74,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	public static final String CFG_SCRIPT_DFT = "pyOut = kIn";
 	
-	Map<String, File> m_tempFiles = new HashMap<String, File>();
-	List<String> m_inPortLabels = new LinkedList<String>();
-	
-    // Temp files for reading/writing the table and the script
-    //protected PythonTempFile kInFile;
-    //protected PythonTempFile pyOutFile;
-    //protected PythonTempFile scriptFile;
+	Map<String, File> m_tempFiles;
+	Map<String, PortObject> m_inPorts;
+	Map<String, PortObject> m_outPorts;
 
     protected Python python;
 
@@ -124,25 +128,36 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
 		
 		// assign ports to Python variable names
-		Map<String, BufferedDataTable> inPorts = createPortMapping(inData);
-		m_inPortLabels.addAll(inPorts.keySet());
-		createTempFiles(inPorts);
-		
-		//int nInTables = inPorts.size();
+		createInPortMapping(inData);
+		createOutPortMapping();	
+		createTempFiles();
 		
 		// push all KNIME data tables
-		for(String in : m_inPortLabels) {
+		for(String in : m_inPorts.keySet()) {
 			transferToExec.setMessage("Push table");
-			BufferedDataTable inTable = inPorts.get(in);
+			BufferedDataTable inTable = (BufferedDataTable) m_inPorts.get(in);
 			try {
-				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferToExec.createSubProgress(1.0/inPorts.size()));
+				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferToExec.createSubProgress(1.0/m_inPorts.size()));
+				m_inPorts.replace(in, null);	// delete reference to input table after successful transfer
 			} catch (KnimeScriptingException kse) {
 				deleteTempFiles();
 				throw kse;
 			}
 		}
+		
 	}
 	
+	private void createOutPortMapping() {
+		int nOut = this.getNrOutPorts();
+		
+		m_outPorts = new LinkedHashMap<String, PortObject>();
+		
+		for(int i = 0; i < nOut; i++) {
+			String variableName = PY_OUTVAR_BASE_NAME + (nOut > 1 ? (i + 1) : "");
+			m_outPorts.put(variableName, null);
+		}	
+	}
+
 	private void deleteTempFiles() {
 		
 		for(File tempFile : m_tempFiles.values()) {
@@ -289,9 +304,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @return
 	 * @throws KnimeScriptingException thrown if more than one generic input ports or unsupported port type
 	 */
-	public Map<String, BufferedDataTable> createPortMapping(PortObject[] inObjects) throws KnimeScriptingException {
+	public void createInPortMapping(PortObject[] inObjects) throws KnimeScriptingException {
 
-		Map<String, BufferedDataTable> portVarMapping = new TreeMap<String, BufferedDataTable>();
+		m_inPorts = new LinkedHashMap<String, PortObject>();
 
 		// number of non-null input port objects; (optional) input ports might be null if not connected
 		int nTableInputs = 0;
@@ -314,13 +329,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 				if(pType.equals(BufferedDataTable.TYPE)) {
 					String variableName = PY_INVAR_BASE_NAME + (nTableInputs > 1 ? (i + 1) : "");
-					portVarMapping.put(variableName, (BufferedDataTable) inport);
+					m_inPorts.put(variableName, inport);
 					i++;
 				}
 			}
 		}
-
-		return portVarMapping;
 	}
 	
     /**
@@ -329,7 +342,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
      * @return 
      * @throws KnimeScriptingException 
      */
-    protected void createTempFiles(Map<String, BufferedDataTable> inPorts) throws KnimeScriptingException {
+    protected void createTempFiles() throws KnimeScriptingException {
         
     	m_tempFiles = new HashMap<String, File>();
     	
@@ -337,16 +350,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     	
     	try {
 	    	// Create a new set
-	    	for(String label : inPorts.keySet()) {
+	    	for(String label : m_inPorts.keySet()) {
 	    		File tempFile = File.createTempFile(randomPart + "_" + label + "_knime2python_", ".csv");
 	    		m_tempFiles.put(label, tempFile);
 	    	}
+	    	for(String label : m_outPorts.keySet()) {
+	    		File tempFile = File.createTempFile(randomPart + "_" + label + "_python2knime_", ".csv");
+	    		m_tempFiles.put(label, tempFile);
+	    	}
 	
-	    	File pyOutFile = File.createTempFile(randomPart + "_python2knime_", ".csv");
 	    	File scriptFile = File.createTempFile(randomPart + "_analyze_", ".py");
-	
-	    	m_tempFiles.put(PY_OUTVAR_BASE_NAME, pyOutFile);
 	    	m_tempFiles.put(PY_SCRIPTVAR_BASE_NAME, scriptFile);
+	    	
     	} catch (IOException ioe) {
     		throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
     	} finally {
@@ -447,7 +462,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 
-		for(String inLabel : m_inPortLabels) {
+		for(String inLabel : m_inPorts.keySet()) {
 			File f = m_tempFiles.get(inLabel);
 			String errorMessage = null;
 			if(f != null) {
@@ -485,6 +500,71 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
 		if(errorMessage != null)
 			throw new KnimeScriptingException(errorMessage);
+	}
+	
+	
+	/**
+	 * main method to retrieve data from R to provide the output ports
+	 * NOTE: this method closes the connection in case of Exceptions
+	 * @param exec
+	 * @return	array of port objects
+	 * @throws KnimeScriptingException
+	 */
+	protected PortObject[] pullOutputFromPython(ExecutionContext exec) 
+			throws KnimeScriptingException {
+		
+		exec.setMessage("Transfer to Python");
+		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
+		
+		// pull all python data tables
+		for(String out : m_outPorts.keySet()) {
+			transferToExec.setMessage("Pull table");
+			try {
+				PortObject outTable = pullTableFromPython(out, transferToExec.createSubProgress(1.0/m_outPorts.size()));
+				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
+			} catch (KnimeScriptingException kse) {
+				deleteTempFiles();
+				throw kse;
+			}
+		}
+		
+		PortObject[] ports = new PortObject[m_outPorts.size()];
+		return m_outPorts.values().toArray(ports);
+	}
+
+	private PortObject pullTableFromPython(String out, ExecutionMonitor createSubProgress) throws KnimeScriptingException {
+		
+		File tempFile = m_tempFiles.get(out);
+		
+		assert tempFile != null;
+		
+		BufferedReader br;
+		try {
+		      InputStream inputFS = new FileInputStream(tempFile);
+		      br = new BufferedReader(new InputStreamReader(inputFS));
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new KnimeScriptingException("Failed to read table: " + e.getMessage());
+		}
+		
+		//if(!tempFile.)
+		//	throw new KnimeScriptingException("Failed to pull results from Python: Temp file is either missingor not readable. - " + tempFile.toPath());
+		
+		CSVParser parser = new CSVParserBuilder()
+				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
+				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
+				.withQuoteChar(CSVParser.DEFAULT_QUOTE_CHARACTER)
+				.withStrictQuotes(false)
+				.build();
+		CSVReaderBuilder csvReaderBuilder = new CSVReaderBuilder(br);
+		csvReaderBuilder.withCSVParser(parser);
+		
+		int lineCount = 0;
+		for(String[] line : csvReaderBuilder.build()) {
+			lineCount++;
+		}
+		
+		return null;
 	}
 
 }
