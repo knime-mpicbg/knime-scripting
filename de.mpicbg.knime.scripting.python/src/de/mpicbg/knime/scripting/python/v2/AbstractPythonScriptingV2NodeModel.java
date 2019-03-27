@@ -8,37 +8,44 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCell;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -50,7 +57,6 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
@@ -63,7 +69,7 @@ import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.Python;
+import de.mpicbg.knime.scripting.python.srv.Python;;
 
 
 public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScriptingNodeModel {
@@ -82,7 +88,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
     protected IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
-    
+    //'object','bool','float','int','datetime64[ns]'
+    public static final String PY_TYPE_OBJECT = "object";
+    public static final String PY_TYPE_BOOL= "bool";
+    public static final String PY_TYPE_FLOAT = "float";
+    public static final String PY_TYPE_INT = "int";
+    public static final String PY_TYPE_DATETIME = "datetime64[ns]";
+    public static final String PY_TYPE_INDEX = "INDEX";
     
     /**
 	 * @param inPorts
@@ -190,7 +202,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		python = new LocalPythonClient();
 		
 		Map<String, String> supportedColumns = new LinkedHashMap<String, String>();
-		supportedColumns.put("Row ID", "INDEX");
+		supportedColumns.put("Row ID", PY_TYPE_INDEX);
 		
 		Map<String, Integer> columnsIndicees = new LinkedHashMap<String, Integer>();
 		columnsIndicees.put("Row ID", -1);
@@ -204,27 +216,26 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         	String cName = cSpec.getName();
         	
         	if(dType.getCellClass().equals(BooleanCell.class)) {
-        		supportedColumns.put(cName, "bool");   
+        		supportedColumns.put(cName, PY_TYPE_BOOL);   
         		columnsIndicees.put(cName, i);
         	}
         	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
-        		supportedColumns.put(cName, "int");  
+        		supportedColumns.put(cName, PY_TYPE_INT);  
         		columnsIndicees.put(cName, i);
         	}
         	if(dType.getCellClass().equals(DoubleCell.class)) {
-        		supportedColumns.put(cName, "float"); 
+        		supportedColumns.put(cName, PY_TYPE_FLOAT); 
         		columnsIndicees.put(cName, i);
         	}
         	if(dType.getCellClass().equals(LocalTimeCell.class) ||
         		dType.getCellClass().equals(LocalDateCell.class) ||
-        		dType.getCellClass().equals(LocalDateTimeCell.class) ||
-        		dType.getCellClass().equals(ZonedDateTimeCell.class)) 
+        		dType.getCellClass().equals(LocalDateTimeCell.class)) 
         	{
-        		supportedColumns.put(cName, "datetime64[ns]");  
+        		supportedColumns.put(cName, PY_TYPE_DATETIME);  
         		columnsIndicees.put(cName, i);
         	}
         	if(dType.getCellClass().equals(StringCell.class)) {
-        		supportedColumns.put(cName, "object");  
+        		supportedColumns.put(cName, PY_TYPE_OBJECT);  
         		columnsIndicees.put(cName, i);
         	}	
         }
@@ -520,7 +531,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		for(String out : m_outPorts.keySet()) {
 			transferToExec.setMessage("Pull table");
 			try {
-				PortObject outTable = pullTableFromPython(out, transferToExec.createSubProgress(1.0/m_outPorts.size()));
+				double subProgress = 1.0/m_outPorts.size();
+				PortObject outTable = pullTableFromPython(out, exec, subProgress);
 				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
 			} catch (KnimeScriptingException kse) {
 				deleteTempFiles();
@@ -532,7 +544,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return m_outPorts.values().toArray(ports);
 	}
 
-	private PortObject pullTableFromPython(String out, ExecutionMonitor createSubProgress) throws KnimeScriptingException {
+	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws KnimeScriptingException {
+		
+		ExecutionMonitor execM = exec.createSubProgress(subProgress);
 		
 		File tempFile = m_tempFiles.get(out);
 		
@@ -546,10 +560,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			e.printStackTrace();
 			throw new KnimeScriptingException("Failed to read table: " + e.getMessage());
 		}
-		
-		//if(!tempFile.)
-		//	throw new KnimeScriptingException("Failed to pull results from Python: Temp file is either missingor not readable. - " + tempFile.toPath());
-		
+
 		CSVParser parser = new CSVParserBuilder()
 				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
 				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
@@ -559,12 +570,128 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		CSVReaderBuilder csvReaderBuilder = new CSVReaderBuilder(br);
 		csvReaderBuilder.withCSVParser(parser);
 		
+		// create DataTableSpec from rDFC
+		BufferedDataContainer bdc = null;
+		
+		String[] columnNames = null;
+		Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
+		
 		int lineCount = 0;
 		for(String[] line : csvReaderBuilder.build()) {
+			if(lineCount == 0) {
+				columnNames = line;
+				lineCount ++;
+				continue;
+			}
+			if(lineCount == 1) {
+				int i = 0;
+				for(String cType : line) {
+					if(i == 0) { i++; continue; }
+					columns.put(columnNames[i], getKnimeDataType(cType));
+					i++;
+				}
+				DataTableSpec tSpec = createDataTableSpec(columns);
+				bdc = exec.createDataContainer(tSpec);
+				lineCount ++;
+				continue;
+			}
+
+			String rowID = line[0];
+			List<DataCell> dataCells = new LinkedList<DataCell>();
+			
+			int i= 1;
+			for(String col : columns.keySet()) {
+				String value = line[i];
+				if(value.isEmpty())
+					dataCells.add(DataType.getMissingCell());
+				else {
+					DataType dType = columns.get(col);
+					DataCell  addCell = createCell(value, dType);
+					dataCells.add(addCell);
+				}
+				i++;
+			}
+			DataCell[] cellArray = new DataCell[dataCells.size()];
+			DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
+			
+			bdc.addRowToTable(row);
+			
 			lineCount++;
 		}
 		
-		return null;
+		bdc.close();
+		
+		return bdc.getTable();
+	}
+	
+	private DataCell createCell(String value, DataType dType) throws KnimeScriptingException {
+		DataCell addCell = new StringCell("dummy");
+		
+		if(dType.equals(StringCellFactory.TYPE)) {
+			return new StringCell(value);
+		}
+		if(dType.equals(DoubleCellFactory.TYPE)) {
+			try {
+				double d = Double.parseDouble(value);
+				return new DoubleCell(d);
+			} catch (NumberFormatException nfe) {
+				throw new KnimeScriptingException(nfe.getMessage());
+			}
+		}
+		if(dType.equals(IntCellFactory.TYPE)) {
+			try {
+				int i = Integer.parseInt(value);
+				return new IntCell(i);
+			} catch (NumberFormatException nfe) {
+				throw new KnimeScriptingException(nfe.getMessage());
+			}
+		}
+		if(dType.equals(BooleanCellFactory.TYPE)) {
+			boolean b = Boolean.parseBoolean(value);
+			return BooleanCellFactory.create(b);
+		}
+		if(dType.equals(LocalDateTimeCellFactory.TYPE)) {
+			DateTimeFormatterBuilder dateBuilder = new DateTimeFormatterBuilder();
+			// TODO: fill formatting
+			LocalDateTimeCellFactory.create(value, dateBuilder.toFormatter());
+		}
+ 		
+		return addCell;
+	}
+
+	private DataType getKnimeDataType(String cType) {
+		
+		// need to get data type from the factory as there
+		// is LocalDateTimeCell has no public type available
+		
+		switch(cType) {
+		case PY_TYPE_OBJECT: return StringCellFactory.TYPE;
+		case PY_TYPE_BOOL: return BooleanCellFactory.TYPE;
+		case PY_TYPE_FLOAT: return DoubleCellFactory.TYPE;
+		case PY_TYPE_INT: return IntCellFactory.TYPE;
+		case PY_TYPE_DATETIME: return LocalDateTimeCellFactory.TYPE;
+		default: return null;
+		}
+	}
+
+	/**
+	 * @return KNIME table spec
+	 */
+	private DataTableSpec createDataTableSpec(Map<String, DataType> columns) {
+		
+		List<DataColumnSpec> cSpecList = new LinkedList<DataColumnSpec>();
+
+		for(String col : columns.keySet()) {
+			DataColumnSpecCreator newColumn = new DataColumnSpecCreator(col, columns.get(col));
+			cSpecList.add(newColumn.createSpec());
+		}
+		
+		DataColumnSpec[] cSpecArray = new DataColumnSpec[cSpecList.size()];
+		cSpecArray = cSpecList.toArray(cSpecArray);
+		
+		DataTableSpec tSpec = new DataTableSpec("Result from R", cSpecArray);
+		
+		return tSpec;
 	}
 
 }
