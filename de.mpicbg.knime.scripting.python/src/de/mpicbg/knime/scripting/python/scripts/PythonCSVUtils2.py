@@ -31,6 +31,7 @@ def read_csv(csv_filename):
 		try:
 			pdf = pdf.astype(subtypes)
 		except:
+			print "Read KNIME data as pandas data frame: failed to convert %s" % (col,subtypes)
 			pass
 	return pdf
 
@@ -38,7 +39,13 @@ def read_csv(csv_filename):
 def write_csv(csv_filename, pdf):
 
 	# need to filter dataframe for supported types
-	pyOut = pdf.select_dtypes(include=['object','bool','float','int','datetime64[ns]'])
+	include=['object','bool','float','int','datetime64[ns]']
+	exclude = pdf.select_dtypes(exclude=include).columns.tolist()
+	pyOut = pdf.select_dtypes(include)
+	
+	
+	if len(exclude) > 0:
+		print "Column(s) with unsupported data type(s) will not be returned to KNIME: %s" % ', '.join(exclude)
 	
 	header = pyOut.columns 
 	header = header.insert(0, "Row ID") 
@@ -47,6 +54,7 @@ def write_csv(csv_filename, pdf):
 	types.append("INDEX")
 	for col in pyOut:
 		types.append(pyOut[col].dtype.name)
+		
 
 	csv_file = openf(csv_filename, 'wb')
 	csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
