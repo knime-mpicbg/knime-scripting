@@ -12,7 +12,9 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -91,10 +93,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     //'object','bool','float','int','datetime64[ns]'
     public static final String PY_TYPE_OBJECT = "object";
     public static final String PY_TYPE_BOOL= "bool";
-    public static final String PY_TYPE_FLOAT = "float";
-    public static final String PY_TYPE_INT = "int";
+    public static final String PY_TYPE_FLOAT = "float64";
+    public static final String PY_TYPE_INT = "int64";
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
+    
+    public static final DateTimeFormatter PY_dateFormatter = initDateTime();
     
     /**
 	 * @param inPorts
@@ -104,6 +108,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	public AbstractPythonScriptingV2NodeModel(PortType[] inPorts, PortType[] outPorts, PythonColumnSupport rColumnSupport) {
 		super(inPorts, outPorts, rColumnSupport);
 	}
+
 
 	/**
 	 * 
@@ -121,6 +126,26 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	public AbstractPythonScriptingV2NodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
 	}
+	
+	
+	private static DateTimeFormatter initDateTime() {
+		DateTimeFormatterBuilder dateBuilder = new DateTimeFormatterBuilder();
+		
+		dateBuilder.appendValue(ChronoField.YEAR);
+		dateBuilder.appendLiteral('-');
+		dateBuilder.appendValue(ChronoField.MONTH_OF_YEAR);
+		dateBuilder.appendLiteral('-');
+		dateBuilder.appendValue(ChronoField.DAY_OF_MONTH);
+		dateBuilder.appendLiteral('_');
+		dateBuilder.appendValue(ChronoField.HOUR_OF_DAY);
+		dateBuilder.appendLiteral(':');
+		dateBuilder.appendValue(ChronoField.MINUTE_OF_HOUR);
+		dateBuilder.appendLiteral(':');
+		dateBuilder.appendValue(ChronoField.SECOND_OF_MINUTE);
+		
+		return dateBuilder.toFormatter();
+	}
+
 	
 	/**
 	 * main method to push available input to R
@@ -288,6 +313,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         					columnValues.add(Double.toString(val));
         				}
         				if(dType.getCellClass().equals(StringCell.class)) {
+        					String val = ((StringValue) cell).getStringValue();
+        					columnValues.add(val);
+        					continue;
+        				}
+        				if(dType.isCompatible(StringValue.class)) {
         					String val = ((StringValue) cell).getStringValue();
         					columnValues.add(val);
         				}
@@ -625,7 +655,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 	
 	private DataCell createCell(String value, DataType dType) throws KnimeScriptingException {
-		DataCell addCell = new StringCell("dummy");
 		
 		if(dType.equals(StringCellFactory.TYPE)) {
 			return new StringCell(value);
@@ -650,13 +679,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			boolean b = Boolean.parseBoolean(value);
 			return BooleanCellFactory.create(b);
 		}
-		if(dType.equals(LocalDateTimeCellFactory.TYPE)) {
-			DateTimeFormatterBuilder dateBuilder = new DateTimeFormatterBuilder();
-			// TODO: fill formatting
-			LocalDateTimeCellFactory.create(value, dateBuilder.toFormatter());
+		if(dType.equals(LocalDateTimeCellFactory.TYPE)) {		
+			return LocalDateTimeCellFactory.create(value, PY_dateFormatter);
 		}
- 		
-		return addCell;
+		
+		return null;
 	}
 
 	private DataType getKnimeDataType(String cType) {
