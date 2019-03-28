@@ -28,10 +28,10 @@ def read_csv(csv_filename):
 	# try to apply column types, pass if it fails
 	for col in typesdf:
 		subtypes = {k:v for k,v in types.items() if k in [col]}
-	try:
-		pdf = pdf.astype(subtypes)
-	except:
-		pass
+		try:
+			pdf = pdf.astype(subtypes)
+		except:
+			pass
 	return pdf
 
 # Write CSV file from pandas dataframe        
@@ -59,4 +59,4 @@ def write_csv(csv_filename, pdf):
 	
 	# append data
 	with openf(csv_filename, 'ab') as f:
-		pyOut.to_csv(f, header=False)
+		pyOut.to_csv(f, header=False, date_format='%Y-%m-%d_%H:%M:%S')
