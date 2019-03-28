@@ -54,8 +54,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.Rserve.RserveException;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -99,6 +97,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_INDEX = "INDEX";
     
     public static final DateTimeFormatter PY_dateFormatter = initDateTime();
+    
+    private List<String> m_stdOut = null;
     
     /**
 	 * @param inPorts
@@ -206,18 +206,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				}
 		}
 	}
-
+	
 	/**
-	 * push one KNIME table and its properties to R
+	 * write one KNIME table to temporary CSV file
 	 * @param inTable
 	 * @param varName
-	 * @param tempFile 
+	 * @param tempFile
 	 * @param exec
-	 * @param chunkInSize 
-	 * @throws CanceledExecutionException 
-	 * @throws REXPMismatchException 
-	 * @throws RserveException 
-	 * @throws KnimeScriptingException 
+	 * @throws CanceledExecutionException
+	 * @throws KnimeScriptingException
 	 */
 	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, ExecutionMonitor exec) 
 			throws CanceledExecutionException, KnimeScriptingException {
@@ -430,61 +427,67 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 	}
 	
+	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
+		try {
+			runScriptImpl(exec);
+		} catch (KnimeScriptingException kse) {
+			deleteTempFiles();
+			throw kse;
+		}
+	}
+	
 	/**
 	 * main method to run the script (after pushing data and before pulling result data)
 	 * @param exec
 	 * @throws KnimeScriptingException
 	 */
-	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
-		
+	private void runScriptImpl(ExecutionMonitor exec) throws KnimeScriptingException {
+
 		exec.setMessage("Evaluate R-script (cannot be cancelled)");
-		
+
 		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
-        // prepare script
+		// prepare script
 		Writer writer = null;
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-    	try {
-    		writer = new BufferedWriter(new FileWriter(scriptFile));
-    		prepareScript(scriptFile, true);
-    	} catch(IOException ioe) {
-    		throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-    	} finally {
-    		if(writer != null)
+		try {
+			writer = new BufferedWriter(new FileWriter(scriptFile));
+			prepareScript(scriptFile, true);
+		} catch(IOException ioe) {
+			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
+		} finally {
+			if(writer != null)
 				try {
 					writer.close();
 				} catch (IOException ioe) {
 					throw new KnimeScriptingException("Failed to close script file: " + ioe.getMessage() + "\n" + scriptFile.getAbsolutePath());
 				}
-    	}
-    	
-    	
-    	// run script
+		}
 
-    		boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-    		if(!local) {
-    			this.setWarningMessage("Remote python processing is not supported anymore. The local python will be used.");
-    		}
-            String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
 
-            CommandOutput output;
-			try {
-				output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
-			} catch (IOException ioe) {
-				throw new KnimeScriptingException("Failed to load script file: " + ioe);
-			} catch (RuntimeException re) {
-				throw new KnimeScriptingException("Failed to execute Python: " + re);
-			}
-            /*for (String o : output.getStandardOutput()) {
-                logger.info(o);
-            }
+		// run script
 
-            for (String o : output.getErrorOutput()) {
-                logger.error(o);
-            }*/
-			if(output.hasErrorOutput())
-				throw new KnimeScriptingException("Error in processing: " + output.getErrorOutput());
-        
+		boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
+		if(!local) {
+			this.setWarningMessage("Remote python processing is not supported anymore. The local python will be used.");
+		}
+		String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+
+		CommandOutput output;
+		try {
+			output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to load script file: " + ioe);
+		} catch (RuntimeException re) {
+			throw new KnimeScriptingException("Failed to execute Python: " + re);
+		}
+
+		if(output.hasStandardOutput()) {
+			m_stdOut = output.getStandardOutput();
+		}
+		if(output.hasErrorOutput())
+			throw new KnimeScriptingException("Error in processing: " + output.getErrorOutput());
+
 	}
     
 	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
