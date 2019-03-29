@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -566,7 +567,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			transferToExec.setMessage("Pull table");
 			try {
 				double subProgress = 1.0/m_outPorts.size();
-				PortObject outTable = pullTableFromPython(out, exec, subProgress);
+				PortObject outTable = null;
+				try {
+					outTable = pullTableFromPython(out, exec, subProgress);
+				} catch(IOException ioe) {
+					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
+				}				
 				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
 			} finally {
 				deleteTempFiles();
@@ -577,7 +583,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return m_outPorts.values().toArray(ports);
 	}
 
-	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws KnimeScriptingException, CanceledExecutionException {
+	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws CanceledExecutionException, IOException, KnimeScriptingException {
 		
 		ExecutionMonitor execM = exec.createSubProgress(subProgress);
 		execM.setMessage("retrieve " + out);
@@ -586,9 +592,76 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		assert tempFile != null;
 		
+		// read number of lines
 		int nLines = -1;
+
+		try (FileInputStream fis = new FileInputStream(tempFile)) {
+			nLines = FileUtils.countLines(fis);
+		}
+
 		
-		BufferedReader br =null;;
+		CSVParser parser = new CSVParserBuilder()
+				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
+				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
+				.withQuoteChar(CSVParser.DEFAULT_QUOTE_CHARACTER)
+				.withStrictQuotes(false)
+				.build();
+		BufferedDataContainer bdc = null;
+		
+		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
+				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
+						.build()) {
+			
+			String[] columnNames = null;
+			Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
+
+			int lineCount = 0;
+			for(String[] line : reader) {
+				if(lineCount == 0) {
+					columnNames = line;
+					lineCount ++;
+					continue;
+				}
+				if(lineCount == 1) {
+					int i = 0;
+					for(String cType : line) {
+						if(i == 0) { i++; continue; }
+						columns.put(columnNames[i], getKnimeDataType(cType));
+						i++;
+					}
+					DataTableSpec tSpec = createDataTableSpec(columns);
+					bdc = exec.createDataContainer(tSpec);
+					lineCount ++;
+					continue;
+				}
+
+				String rowID = line[0];
+				List<DataCell> dataCells = new LinkedList<DataCell>();
+
+				int i= 1;
+				for(String col : columns.keySet()) {
+					String value = line[i];
+					if(value.isEmpty())
+						dataCells.add(DataType.getMissingCell());
+					else {
+						DataType dType = columns.get(col);
+						DataCell  addCell = createCell(value, dType);
+						dataCells.add(addCell);
+					}
+					i++;
+				}
+				DataCell[] cellArray = new DataCell[dataCells.size()];
+				DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
+
+				bdc.addRowToTable(row);
+
+				lineCount++;
+				execM.checkCanceled();
+				//execM.
+			}
+		}
+		
+/*		BufferedReader br =null;;
 		FileInputStream inputFS = null;
 		try {
 		      inputFS = new FileInputStream(tempFile);
@@ -613,23 +686,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					e.printStackTrace();
 				}
 			
-		}
+		}*/
 
-		CSVParser parser = new CSVParserBuilder()
-				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
-				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
-				.withQuoteChar(CSVParser.DEFAULT_QUOTE_CHARACTER)
-				.withStrictQuotes(false)
-				.build();
-		CSVReaderBuilder csvReaderBuilder = new CSVReaderBuilder(br);
-		csvReaderBuilder.withCSVParser(parser);
+
+		//CSVReaderBuilder csvReaderBuilder = new CSVReaderBuilder(br);
+		//csvReaderBuilder.withCSVParser(parser);
 		
 		// create DataTableSpec from rDFC
-		BufferedDataContainer bdc = null;
 		
-		String[] columnNames = null;
+		
+/*		String[] columnNames = null;
 		Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
-		
+
 		CSVReader reader = csvReaderBuilder.build();
 		int lineCount = 0;
 		for(String[] line : reader) {
@@ -653,7 +721,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 			String rowID = line[0];
 			List<DataCell> dataCells = new LinkedList<DataCell>();
-			
+
 			int i= 1;
 			for(String col : columns.keySet()) {
 				String value = line[i];
@@ -668,9 +736,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 			DataCell[] cellArray = new DataCell[dataCells.size()];
 			DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
-			
+
 			bdc.addRowToTable(row);
-			
+
 			lineCount++;
 			execM.checkCanceled();
 			//execM.
@@ -679,7 +747,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			reader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		bdc.close();
 		

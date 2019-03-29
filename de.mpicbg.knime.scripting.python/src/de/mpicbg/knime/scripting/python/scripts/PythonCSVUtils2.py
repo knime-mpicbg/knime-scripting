@@ -31,7 +31,7 @@ def read_csv(csv_filename):
 		try:
 			pdf = pdf.astype(subtypes)
 		except:
-			print "Read KNIME data as pandas data frame: failed to convert %s" % (col,subtypes)
+			print "Read KNIME data as pandas data frame: failed to convert %s" % (subtypes)
 			pass
 	return pdf
 
