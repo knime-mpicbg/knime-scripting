@@ -54,12 +54,13 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
-
 import com.opencsv.CSVParser;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
+import de.mpicbg.knime.knutils.FileUtils;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
@@ -555,9 +556,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @throws KnimeScriptingException
 	 */
 	protected PortObject[] pullOutputFromPython(ExecutionContext exec) 
-			throws KnimeScriptingException {
+			throws KnimeScriptingException, CanceledExecutionException {
 		
-		exec.setMessage("Transfer to Python");
+		exec.setMessage("Python snippet finished - pull data from Python");
 		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
 		
 		// pull all python data tables
@@ -567,9 +568,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				double subProgress = 1.0/m_outPorts.size();
 				PortObject outTable = pullTableFromPython(out, exec, subProgress);
 				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
-			} catch (KnimeScriptingException kse) {
+			} finally {
 				deleteTempFiles();
-				throw kse;
 			}
 		}
 		
@@ -577,21 +577,42 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return m_outPorts.values().toArray(ports);
 	}
 
-	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws KnimeScriptingException {
+	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws KnimeScriptingException, CanceledExecutionException {
 		
 		ExecutionMonitor execM = exec.createSubProgress(subProgress);
+		execM.setMessage("retrieve " + out);
 		
 		File tempFile = m_tempFiles.get(out);
 		
 		assert tempFile != null;
 		
-		BufferedReader br;
+		int nLines = -1;
+		
+		BufferedReader br =null;;
+		FileInputStream inputFS = null;
 		try {
-		      InputStream inputFS = new FileInputStream(tempFile);
+		      inputFS = new FileInputStream(tempFile);
+		      nLines = FileUtils.countLines(inputFS);
+		      inputFS = new FileInputStream(tempFile);
 		      br = new BufferedReader(new InputStreamReader(inputFS));
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new KnimeScriptingException("Failed to read table: " + e.getMessage());
+		} finally {
+			// close streams
+			if(br != null)
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			if(inputFS != null)
+				try {
+					inputFS.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			
 		}
 
 		CSVParser parser = new CSVParserBuilder()
@@ -609,8 +630,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		String[] columnNames = null;
 		Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
 		
+		CSVReader reader = csvReaderBuilder.build();
 		int lineCount = 0;
-		for(String[] line : csvReaderBuilder.build()) {
+		for(String[] line : reader) {
 			if(lineCount == 0) {
 				columnNames = line;
 				lineCount ++;
@@ -650,6 +672,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			bdc.addRowToTable(row);
 			
 			lineCount++;
+			execM.checkCanceled();
+			//execM.
+		}
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
 		bdc.close();
