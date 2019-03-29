@@ -1,6 +1,10 @@
 package de.mpicbg.knime.knutils;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,5 +52,53 @@ public class FileUtils {
         Collections.sort(allFiles);
 
         return allFiles;
+    }
+    
+    /**
+     * counts the number of lines of a text-file
+     * should be a fast solution according to stackoverflow
+     * https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
+     * 
+     * @param filename
+     * @return
+     * @throws IOException
+     */
+    public static int countLines(FileInputStream fis) throws IOException {
+        InputStream is = new BufferedInputStream(fis);
+        try {
+            byte[] c = new byte[1024];
+
+            int readChars = is.read(c);
+            if (readChars == -1) {
+                // bail out if nothing to read
+                return 0;
+            }
+
+            // make it easy for the optimizer to tune this loop
+            int count = 0;
+            while (readChars == 1024) {
+                for (int i=0; i<1024;) {
+                    if (c[i++] == '\n') {
+                        ++count;
+                    }
+                }
+                readChars = is.read(c);
+            }
+
+            // count remaining characters
+            while (readChars != -1) {
+                System.out.println(readChars);
+                for (int i=0; i<readChars; ++i) {
+                    if (c[i] == '\n') {
+                        ++count;
+                    }
+                }
+                readChars = is.read(c);
+            }
+
+            return count == 0 ? 1 : count;
+        } finally {
+            is.close();
+        }
     }
 }
