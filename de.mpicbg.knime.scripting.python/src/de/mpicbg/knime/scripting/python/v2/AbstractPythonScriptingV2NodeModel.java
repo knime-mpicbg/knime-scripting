@@ -164,19 +164,24 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		//ScriptingModelConfig cfg = getNodeCfg();
 		
 		exec.setMessage("Transfer to Python");
-		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
+		ExecutionMonitor subExec = exec.createSubProgress(1.0 / 2);
 		
 		// assign ports to Python variable names
 		createInPortMapping(inData);
 		createOutPortMapping();	
 		createTempFiles();
 		
+		int nIn = m_inPorts.size();
+		
 		// push all KNIME data tables
 		for(String in : m_inPorts.keySet()) {
-			transferToExec.setMessage("Push table");
+			
+			ExecutionMonitor transferExec = subExec.createSubProgress(1.0 / nIn);
+			
+			transferExec.setMessage("Push table " + in);
 			BufferedDataTable inTable = (BufferedDataTable) m_inPorts.get(in);
 			try {
-				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferToExec.createSubProgress(1.0/m_inPorts.size()));
+				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferExec);
 				m_inPorts.replace(in, null);	// delete reference to input table after successful transfer
 			} catch (KnimeScriptingException kse) {
 				deleteTempFiles();
@@ -186,6 +191,331 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 	}
 	
+	/**
+	 * write one KNIME table to temporary CSV file
+	 * @param inTable
+	 * @param varName
+	 * @param tempFile
+	 * @param exec
+	 * @throws CanceledExecutionException
+	 * @throws KnimeScriptingException
+	 */
+	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, ExecutionMonitor exec) 
+			throws CanceledExecutionException, KnimeScriptingException {
+	
+		DataTableSpec inSpec = inTable.getSpec();
+		
+		python = new LocalPythonClient();
+		
+		Map<String, String> supportedColumns = new LinkedHashMap<String, String>();
+		supportedColumns.put("Row ID", PY_TYPE_INDEX);
+		
+		Map<String, Integer> columnsIndicees = new LinkedHashMap<String, Integer>();
+		columnsIndicees.put("Row ID", -1);
+	    
+	    /*
+	     * go through columns, if supported type, add their name and python type to the lists
+	     */
+	    for(int i = 0; i < inSpec.getNumColumns(); i++) {
+	    	DataColumnSpec cSpec = inSpec.getColumnSpec(i);
+	    	DataType dType = cSpec.getType();
+	    	String cName = cSpec.getName();
+	    	
+	    	if(dType.getCellClass().equals(BooleanCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_BOOL);   
+	    		columnsIndicees.put(cName, i);
+	    	}
+	    	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_INT);  
+	    		columnsIndicees.put(cName, i);
+	    	}
+	    	if(dType.getCellClass().equals(DoubleCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_FLOAT); 
+	    		columnsIndicees.put(cName, i);
+	    	}
+	    	if(dType.getCellClass().equals(LocalTimeCell.class) ||
+	    		dType.getCellClass().equals(LocalDateCell.class) ||
+	    		dType.getCellClass().equals(LocalDateTimeCell.class)) 
+	    	{
+	    		supportedColumns.put(cName, PY_TYPE_DATETIME);  
+	    		columnsIndicees.put(cName, i);
+	    	}
+	    	if(dType.getCellClass().equals(StringCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_OBJECT);  
+	    		columnsIndicees.put(cName, i);
+	    	}	
+	    }
+	    
+		Writer writer;
+		try {
+			writer = Files.newBufferedWriter(tempFile.toPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new KnimeScriptingException("Failed to write table to CSV: " + e.getMessage());
+		}
+	
+	    CSVWriter csvWriter = new CSVWriter(writer,
+	            CSVWriter.DEFAULT_SEPARATOR,
+	            CSVWriter.DEFAULT_QUOTE_CHARACTER,
+	            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+	            CSVWriter.DEFAULT_LINE_END);
+	    
+	    String[] columnNames = supportedColumns.keySet().toArray(new String[supportedColumns.size()]);
+	    String[] columnTypes = supportedColumns.values().toArray(new String[supportedColumns.size()]);
+	    
+	    // write column names (at least 'Row ID')
+	    csvWriter.writeNext(columnNames, false);
+	    csvWriter.writeNext(columnTypes, false);
+	    
+	    long nRows = inTable.size();
+	    
+	    int currentRowIdx = 1;
+	    for(DataRow row : inTable) {
+	    	List<String> columnValues = new LinkedList<String>();
+	    	      	
+	    	for(String col : columnsIndicees.keySet()) {
+	    		int idx = (Integer)columnsIndicees.get(col);
+	    		if( idx == -1)
+	    			columnValues.add(row.getKey().getString());
+	    		else {
+	    			DataCell cell = row.getCell(idx);
+	    			DataType dType = cell.getType();
+	
+	    			if(cell.isMissing()) {
+	    				columnValues.add(null);
+	    			} else {
+	    				if(dType.getCellClass().equals(BooleanCell.class)) {
+	    					boolean val = ((BooleanValue) cell).getBooleanValue();
+	    					columnValues.add(val ? "1" : "0");
+	    				}
+	    				if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+	    					int val = ((IntValue) cell).getIntValue();
+	    					columnValues.add(Integer.toString(val));
+	    				}
+	    				if(dType.getCellClass().equals(DoubleCell.class)) {
+	    					double val = ((DoubleValue) cell).getDoubleValue();
+	    					columnValues.add(Double.toString(val));
+	    				}
+	    				if(dType.getCellClass().equals(StringCell.class)) {
+	    					String val = ((StringValue) cell).getStringValue();
+	    					columnValues.add(val);
+	    					continue;
+	    				}
+	    				if(dType.isCompatible(StringValue.class)) {
+	    					String val = ((StringValue) cell).getStringValue();
+	    					columnValues.add(val);
+	    				}
+	    			}
+	    		}
+	    	}
+	    	
+	    	String[] values = columnValues.toArray(new String[columnValues.size()]);
+	    	csvWriter.writeNext(values, false);
+	    	
+	    	exec.setProgress((double)currentRowIdx / (double)nRows, "(Row " + currentRowIdx +  "/ " + nRows + ")");
+	    	exec.checkCanceled();
+	    	
+	    	currentRowIdx++;
+	    }
+	    
+	    try {
+			csvWriter.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new KnimeScriptingException("Failed to write table to CSV: " + e.getMessage());
+		}
+	}
+
+
+	/**
+	 * main method to retrieve data from R to provide the output ports
+	 * NOTE: this method closes the connection in case of Exceptions
+	 * @param exec
+	 * @return	array of port objects
+	 * @throws KnimeScriptingException
+	 */
+	protected PortObject[] pullOutputFromPython(ExecutionContext exec) 
+			throws KnimeScriptingException, CanceledExecutionException {
+		
+		exec.setMessage("Python snippet finished - pull data from Python");
+		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
+		
+		int nOut = m_outPorts.size();
+		
+		// pull all python data tables
+		for(String out : m_outPorts.keySet()) {
+			transferToExec.setMessage("Pull table");
+			try {
+				double subProgress = 1.0/nOut;
+				PortObject outTable = null;
+				try {
+					outTable = pullTableFromPython(out, exec, subProgress);
+				} catch(IOException ioe) {
+					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
+				}				
+				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
+			} finally {
+				deleteTempFiles();
+			}
+		}
+		
+		PortObject[] ports = new PortObject[m_outPorts.size()];
+		return m_outPorts.values().toArray(ports);
+	}
+
+
+	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws CanceledExecutionException, IOException, KnimeScriptingException {
+		
+		ExecutionMonitor execM = exec.createSubProgress(subProgress);
+		execM.setMessage("retrieve " + out);
+		
+		File tempFile = m_tempFiles.get(out);
+		
+		assert tempFile != null;
+		
+		// read number of lines (approximate, as line breaks may occur within quotes
+		int nLines = -1;
+	
+		try (FileInputStream fis = new FileInputStream(tempFile)) {
+			nLines = FileUtils.countLines(fis);
+		}
+	
+		
+		CSVParser parser = new CSVParserBuilder()
+				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
+				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
+				.withQuoteChar(CSVParser.DEFAULT_QUOTE_CHARACTER)
+				.withStrictQuotes(false)
+				.build();
+		BufferedDataContainer bdc = null;
+		
+		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
+				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
+						.build()) {
+			
+			String[] columnNames = null;
+			Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
+	
+			int lineCount = 0;
+			for(String[] line : reader) {
+				if(lineCount == 0) {
+					columnNames = line;
+					lineCount ++;
+					continue;
+				}
+				if(lineCount == 1) {
+					int i = 0;
+					for(String cType : line) {
+						if(i == 0) { i++; continue; }
+						columns.put(columnNames[i], getKnimeDataType(cType));
+						i++;
+					}
+					DataTableSpec tSpec = createDataTableSpec(columns);
+					bdc = exec.createDataContainer(tSpec);
+					lineCount ++;
+					continue;
+				}
+	
+				String rowID = line[0];
+				List<DataCell> dataCells = new LinkedList<DataCell>();
+	
+				int i= 1;
+				for(String col : columns.keySet()) {
+					String value = line[i];
+					if(value.isEmpty())
+						dataCells.add(DataType.getMissingCell());
+					else {
+						DataType dType = columns.get(col);
+						DataCell  addCell = createCell(value, dType);
+						dataCells.add(addCell);
+					}
+					i++;
+				}
+				DataCell[] cellArray = new DataCell[dataCells.size()];
+				DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
+	
+				bdc.addRowToTable(row);
+	
+				lineCount++;
+				
+				execM.checkCanceled();
+				execM.setMessage(lineCount + " line(s) read");
+				execM.setProgress((double)lineCount / (double)nLines);
+			}
+		}
+		
+		bdc.close();
+		
+		return bdc.getTable();
+	}
+
+
+	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
+			
+		try {
+			runScriptImpl(exec);
+		} catch (KnimeScriptingException kse) {
+			deleteTempFiles();
+			throw kse;
+		}
+	}
+
+
+	/**
+	 * main method to run the script (after pushing data and before pulling result data)
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
+	private void runScriptImpl(ExecutionMonitor exec) throws KnimeScriptingException {
+	
+		exec.setMessage("Evaluate Python-script (cannot be cancelled)");
+	
+		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+	
+		// prepare script
+		Writer writer = null;
+		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
+		try {
+			writer = new BufferedWriter(new FileWriter(scriptFile));
+			prepareScript(scriptFile, true);
+		} catch(IOException ioe) {
+			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
+		} finally {
+			if(writer != null)
+				try {
+					writer.close();
+				} catch (IOException ioe) {
+					throw new KnimeScriptingException("Failed to close script file: " + ioe.getMessage() + "\n" + scriptFile.getAbsolutePath());
+				}
+		}
+	
+	
+		// run script
+	
+		boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
+		if(!local) {
+			this.setWarningMessage("Remote python processing is not supported anymore. The local python will be used.");
+		}
+		String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+	
+		CommandOutput output;
+		try {
+			output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to load script file: " + ioe);
+		} catch (RuntimeException re) {
+			throw new KnimeScriptingException("Failed to execute Python: " + re);
+		}
+	
+		if(output.hasStandardOutput()) {
+			m_stdOut = output.getStandardOutput();
+		}
+		if(output.hasErrorOutput())
+			throw new KnimeScriptingException("Error in processing: " + output.getErrorOutput());
+	
+	}
+
+
 	private void createOutPortMapping() {
 		int nOut = this.getNrOutPorts();
 		
@@ -206,135 +536,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-		}
-	}
-	
-	/**
-	 * write one KNIME table to temporary CSV file
-	 * @param inTable
-	 * @param varName
-	 * @param tempFile
-	 * @param exec
-	 * @throws CanceledExecutionException
-	 * @throws KnimeScriptingException
-	 */
-	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, ExecutionMonitor exec) 
-			throws CanceledExecutionException, KnimeScriptingException {
-
-		DataTableSpec inSpec = inTable.getSpec();
-		
-		python = new LocalPythonClient();
-		
-		Map<String, String> supportedColumns = new LinkedHashMap<String, String>();
-		supportedColumns.put("Row ID", PY_TYPE_INDEX);
-		
-		Map<String, Integer> columnsIndicees = new LinkedHashMap<String, Integer>();
-		columnsIndicees.put("Row ID", -1);
-        
-        /*
-         * go through columns, if supported type, add their name and python type to the lists
-         */
-        for(int i = 0; i < inSpec.getNumColumns(); i++) {
-        	DataColumnSpec cSpec = inSpec.getColumnSpec(i);
-        	DataType dType = cSpec.getType();
-        	String cName = cSpec.getName();
-        	
-        	if(dType.getCellClass().equals(BooleanCell.class)) {
-        		supportedColumns.put(cName, PY_TYPE_BOOL);   
-        		columnsIndicees.put(cName, i);
-        	}
-        	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
-        		supportedColumns.put(cName, PY_TYPE_INT);  
-        		columnsIndicees.put(cName, i);
-        	}
-        	if(dType.getCellClass().equals(DoubleCell.class)) {
-        		supportedColumns.put(cName, PY_TYPE_FLOAT); 
-        		columnsIndicees.put(cName, i);
-        	}
-        	if(dType.getCellClass().equals(LocalTimeCell.class) ||
-        		dType.getCellClass().equals(LocalDateCell.class) ||
-        		dType.getCellClass().equals(LocalDateTimeCell.class)) 
-        	{
-        		supportedColumns.put(cName, PY_TYPE_DATETIME);  
-        		columnsIndicees.put(cName, i);
-        	}
-        	if(dType.getCellClass().equals(StringCell.class)) {
-        		supportedColumns.put(cName, PY_TYPE_OBJECT);  
-        		columnsIndicees.put(cName, i);
-        	}	
-        }
-        
-		Writer writer;
-		try {
-			writer = Files.newBufferedWriter(tempFile.toPath());
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new KnimeScriptingException("Failed to write table to CSV: " + e.getMessage());
-		}
-
-        CSVWriter csvWriter = new CSVWriter(writer,
-                CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.DEFAULT_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END);
-        
-        String[] columnNames = supportedColumns.keySet().toArray(new String[supportedColumns.size()]);
-        String[] columnTypes = supportedColumns.values().toArray(new String[supportedColumns.size()]);
-        
-        // write column names (at least 'Row ID')
-        csvWriter.writeNext(columnNames, false);
-        csvWriter.writeNext(columnTypes, false);
-        
-        for(DataRow row : inTable) {
-        	List<String> columnValues = new LinkedList<String>();
-        	      	
-        	for(String col : columnsIndicees.keySet()) {
-        		int idx = (Integer)columnsIndicees.get(col);
-        		if( idx == -1)
-        			columnValues.add(row.getKey().getString());
-        		else {
-        			DataCell cell = row.getCell(idx);
-        			DataType dType = cell.getType();
-
-        			if(cell.isMissing()) {
-        				columnValues.add(null);
-        			} else {
-        				if(dType.getCellClass().equals(BooleanCell.class)) {
-        					boolean val = ((BooleanValue) cell).getBooleanValue();
-        					columnValues.add(val ? "1" : "0");
-        				}
-        				if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
-        					int val = ((IntValue) cell).getIntValue();
-        					columnValues.add(Integer.toString(val));
-        				}
-        				if(dType.getCellClass().equals(DoubleCell.class)) {
-        					double val = ((DoubleValue) cell).getDoubleValue();
-        					columnValues.add(Double.toString(val));
-        				}
-        				if(dType.getCellClass().equals(StringCell.class)) {
-        					String val = ((StringValue) cell).getStringValue();
-        					columnValues.add(val);
-        					continue;
-        				}
-        				if(dType.isCompatible(StringValue.class)) {
-        					String val = ((StringValue) cell).getStringValue();
-        					columnValues.add(val);
-        				}
-        			}
-        		}
-        	}
-        	
-        	String[] values = columnValues.toArray(new String[columnValues.size()]);
-        	csvWriter.writeNext(values, false);
-        	
-        	exec.checkCanceled();
-        }
-        
-        try {
-			csvWriter.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new KnimeScriptingException("Failed to write table to CSV: " + e.getMessage());
 		}
 	}
 	
@@ -429,69 +630,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 	}
 	
-	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
-		try {
-			runScriptImpl(exec);
-		} catch (KnimeScriptingException kse) {
-			deleteTempFiles();
-			throw kse;
-		}
-	}
-	
-	/**
-	 * main method to run the script (after pushing data and before pulling result data)
-	 * @param exec
-	 * @throws KnimeScriptingException
-	 */
-	private void runScriptImpl(ExecutionMonitor exec) throws KnimeScriptingException {
-
-		exec.setMessage("Evaluate R-script (cannot be cancelled)");
-
-		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-
-		// prepare script
-		Writer writer = null;
-		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-		try {
-			writer = new BufferedWriter(new FileWriter(scriptFile));
-			prepareScript(scriptFile, true);
-		} catch(IOException ioe) {
-			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-		} finally {
-			if(writer != null)
-				try {
-					writer.close();
-				} catch (IOException ioe) {
-					throw new KnimeScriptingException("Failed to close script file: " + ioe.getMessage() + "\n" + scriptFile.getAbsolutePath());
-				}
-		}
-
-
-		// run script
-
-		boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-		if(!local) {
-			this.setWarningMessage("Remote python processing is not supported anymore. The local python will be used.");
-		}
-		String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
-
-		CommandOutput output;
-		try {
-			output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
-		} catch (IOException ioe) {
-			throw new KnimeScriptingException("Failed to load script file: " + ioe);
-		} catch (RuntimeException re) {
-			throw new KnimeScriptingException("Failed to execute Python: " + re);
-		}
-
-		if(output.hasStandardOutput()) {
-			m_stdOut = output.getStandardOutput();
-		}
-		if(output.hasErrorOutput())
-			throw new KnimeScriptingException("Error in processing: " + output.getErrorOutput());
-
-	}
-    
 	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
 		// CSV read/write functions
 		InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py");
@@ -548,211 +686,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			throw new KnimeScriptingException(errorMessage);
 	}
 	
-	
-	/**
-	 * main method to retrieve data from R to provide the output ports
-	 * NOTE: this method closes the connection in case of Exceptions
-	 * @param exec
-	 * @return	array of port objects
-	 * @throws KnimeScriptingException
-	 */
-	protected PortObject[] pullOutputFromPython(ExecutionContext exec) 
-			throws KnimeScriptingException, CanceledExecutionException {
-		
-		exec.setMessage("Python snippet finished - pull data from Python");
-		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
-		
-		// pull all python data tables
-		for(String out : m_outPorts.keySet()) {
-			transferToExec.setMessage("Pull table");
-			try {
-				double subProgress = 1.0/m_outPorts.size();
-				PortObject outTable = null;
-				try {
-					outTable = pullTableFromPython(out, exec, subProgress);
-				} catch(IOException ioe) {
-					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
-				}				
-				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
-			} finally {
-				deleteTempFiles();
-			}
-		}
-		
-		PortObject[] ports = new PortObject[m_outPorts.size()];
-		return m_outPorts.values().toArray(ports);
-	}
-
-	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws CanceledExecutionException, IOException, KnimeScriptingException {
-		
-		ExecutionMonitor execM = exec.createSubProgress(subProgress);
-		execM.setMessage("retrieve " + out);
-		
-		File tempFile = m_tempFiles.get(out);
-		
-		assert tempFile != null;
-		
-		// read number of lines
-		int nLines = -1;
-
-		try (FileInputStream fis = new FileInputStream(tempFile)) {
-			nLines = FileUtils.countLines(fis);
-		}
-
-		
-		CSVParser parser = new CSVParserBuilder()
-				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
-				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
-				.withQuoteChar(CSVParser.DEFAULT_QUOTE_CHARACTER)
-				.withStrictQuotes(false)
-				.build();
-		BufferedDataContainer bdc = null;
-		
-		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
-				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
-						.build()) {
-			
-			String[] columnNames = null;
-			Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
-
-			int lineCount = 0;
-			for(String[] line : reader) {
-				if(lineCount == 0) {
-					columnNames = line;
-					lineCount ++;
-					continue;
-				}
-				if(lineCount == 1) {
-					int i = 0;
-					for(String cType : line) {
-						if(i == 0) { i++; continue; }
-						columns.put(columnNames[i], getKnimeDataType(cType));
-						i++;
-					}
-					DataTableSpec tSpec = createDataTableSpec(columns);
-					bdc = exec.createDataContainer(tSpec);
-					lineCount ++;
-					continue;
-				}
-
-				String rowID = line[0];
-				List<DataCell> dataCells = new LinkedList<DataCell>();
-
-				int i= 1;
-				for(String col : columns.keySet()) {
-					String value = line[i];
-					if(value.isEmpty())
-						dataCells.add(DataType.getMissingCell());
-					else {
-						DataType dType = columns.get(col);
-						DataCell  addCell = createCell(value, dType);
-						dataCells.add(addCell);
-					}
-					i++;
-				}
-				DataCell[] cellArray = new DataCell[dataCells.size()];
-				DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
-
-				bdc.addRowToTable(row);
-
-				lineCount++;
-				execM.checkCanceled();
-				//execM.
-			}
-		}
-		
-/*		BufferedReader br =null;;
-		FileInputStream inputFS = null;
-		try {
-		      inputFS = new FileInputStream(tempFile);
-		      nLines = FileUtils.countLines(inputFS);
-		      inputFS = new FileInputStream(tempFile);
-		      br = new BufferedReader(new InputStreamReader(inputFS));
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new KnimeScriptingException("Failed to read table: " + e.getMessage());
-		} finally {
-			// close streams
-			if(br != null)
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			if(inputFS != null)
-				try {
-					inputFS.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			
-		}*/
-
-
-		//CSVReaderBuilder csvReaderBuilder = new CSVReaderBuilder(br);
-		//csvReaderBuilder.withCSVParser(parser);
-		
-		// create DataTableSpec from rDFC
-		
-		
-/*		String[] columnNames = null;
-		Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
-
-		CSVReader reader = csvReaderBuilder.build();
-		int lineCount = 0;
-		for(String[] line : reader) {
-			if(lineCount == 0) {
-				columnNames = line;
-				lineCount ++;
-				continue;
-			}
-			if(lineCount == 1) {
-				int i = 0;
-				for(String cType : line) {
-					if(i == 0) { i++; continue; }
-					columns.put(columnNames[i], getKnimeDataType(cType));
-					i++;
-				}
-				DataTableSpec tSpec = createDataTableSpec(columns);
-				bdc = exec.createDataContainer(tSpec);
-				lineCount ++;
-				continue;
-			}
-
-			String rowID = line[0];
-			List<DataCell> dataCells = new LinkedList<DataCell>();
-
-			int i= 1;
-			for(String col : columns.keySet()) {
-				String value = line[i];
-				if(value.isEmpty())
-					dataCells.add(DataType.getMissingCell());
-				else {
-					DataType dType = columns.get(col);
-					DataCell  addCell = createCell(value, dType);
-					dataCells.add(addCell);
-				}
-				i++;
-			}
-			DataCell[] cellArray = new DataCell[dataCells.size()];
-			DefaultRow row = new DefaultRow(new RowKey(rowID), dataCells.toArray(cellArray));
-
-			bdc.addRowToTable(row);
-
-			lineCount++;
-			execM.checkCanceled();
-			//execM.
-		}
-		try {
-			reader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		
-		bdc.close();
-		
-		return bdc.getTable();
-	}
 	
 	private DataCell createCell(String value, DataType dType) throws KnimeScriptingException {
 		
