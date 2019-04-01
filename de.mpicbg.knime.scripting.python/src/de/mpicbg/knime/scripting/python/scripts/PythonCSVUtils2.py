@@ -31,7 +31,7 @@ def read_csv(csv_filename):
 		try:
 			pdf = pdf.astype(subtypes)
 		except:
-			print "Read KNIME data as pandas data frame: failed to convert %s" % (subtypes)
+			print("Read KNIME data as pandas data frame: failed to convert {}".format(subtypes))
 			pass
 	return pdf
 
@@ -45,7 +45,7 @@ def write_csv(csv_filename, pdf):
 	
 	
 	if len(exclude) > 0:
-		print "Column(s) with unsupported data type(s) will not be returned to KNIME: %s" % ', '.join(exclude)
+		print("Column(s) with unsupported data type(s) will not be returned to KNIME: {}".format(', '.join(exclude)))
 	
 	header = pyOut.columns 
 	header = header.insert(0, "Row ID") 
