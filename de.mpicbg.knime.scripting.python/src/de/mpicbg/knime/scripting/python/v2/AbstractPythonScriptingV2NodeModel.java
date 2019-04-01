@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -55,9 +54,10 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+
 import com.opencsv.CSVParser;
-import com.opencsv.CSVReader;
 import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
@@ -73,8 +73,18 @@ import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;;
 
-
+/**
+ * abstract model class for all python scripting nodes
+ * take care of data transfer methods from/to python
+ * 
+ * @author Antje Janosch
+ *
+ */
 public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScriptingNodeModel {
+	
+	/**
+	 * constants
+	 */
 	
 	public static final String PY_INVAR_BASE_NAME = "kIn";
 	public static final String PY_OUTVAR_BASE_NAME = "pyOut";
@@ -82,15 +92,22 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	public static final String CFG_SCRIPT_DFT = "pyOut = kIn";
 	
+	/**
+	 * temp files and input/output ports
+	 */
+	
 	Map<String, File> m_tempFiles;
 	Map<String, PortObject> m_inPorts;
 	Map<String, PortObject> m_outPorts;
 
+	// python executor
     protected Python python;
 
+    // python preferences
     protected IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
-    //'object','bool','float','int','datetime64[ns]'
+    // supported pandas column types
+    // 'object','bool','float','int','datetime64[ns]'
     public static final String PY_TYPE_OBJECT = "object";
     public static final String PY_TYPE_BOOL= "bool";
     public static final String PY_TYPE_FLOAT = "float64";
@@ -98,17 +115,19 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
     
+    // date-time format exported by python
     public static final DateTimeFormatter PY_dateFormatter = initDateTime();
     
-    private List<String> m_stdOut = null;
+    // store sdtout messages from pythin script execution
+    private List<String> m_stdOut = new LinkedList<String>();
     
     /**
 	 * @param inPorts
 	 * @param outPorts
-	 * @param rColumnSupport
+	 * @param columnSupport
 	 */
-	public AbstractPythonScriptingV2NodeModel(PortType[] inPorts, PortType[] outPorts, PythonColumnSupport rColumnSupport) {
-		super(inPorts, outPorts, rColumnSupport);
+	public AbstractPythonScriptingV2NodeModel(PortType[] inPorts, PortType[] outPorts, PythonColumnSupport columnSupport) {
+		super(inPorts, outPorts, columnSupport);
 	}
 
 
@@ -129,7 +148,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		super(nodeModelConfig);
 	}
 	
-	
+	/**
+	 * init date/time formatter
+	 * 
+	 * @return {@link DateTimeFormatter}
+	 */
 	private static DateTimeFormatter initDateTime() {
 		DateTimeFormatterBuilder dateBuilder = new DateTimeFormatterBuilder();
 		
@@ -150,8 +173,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	
 	/**
-	 * main method to push available input to R
-	 * NOTE: method does not close the connection in case of exceptions
+	 * main method to push available input to Python
 	 * 
 	 * @param inData
 	 * @param exec
@@ -161,12 +183,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	protected void pushInputToPython(PortObject[] inData, ExecutionContext exec) 
 			throws KnimeScriptingException, CanceledExecutionException {
 		
-		//ScriptingModelConfig cfg = getNodeCfg();
-		
 		exec.setMessage("Transfer to Python");
 		ExecutionMonitor subExec = exec.createSubProgress(1.0 / 2);
 		
-		// assign ports to Python variable names
+		// assign ports to Python variable names and create temporary files
 		createInPortMapping(inData);
 		createOutPortMapping();	
 		createTempFiles();
@@ -176,9 +196,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		// push all KNIME data tables
 		for(String in : m_inPorts.keySet()) {
 			
-			ExecutionMonitor transferExec = subExec.createSubProgress(1.0 / nIn);
-			
+			ExecutionMonitor transferExec = subExec.createSubProgress(1.0 / nIn);			
 			transferExec.setMessage("Push table " + in);
+			
 			BufferedDataTable inTable = (BufferedDataTable) m_inPorts.get(in);
 			try {
 				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferExec);
@@ -457,6 +477,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		} catch (KnimeScriptingException kse) {
 			deleteTempFiles();
 			throw kse;
+		}
+		
+		if(!m_stdOut.isEmpty()) {
+			String warningString = String.join(",", m_stdOut);
+			this.setWarningMessage(warningString);
 		}
 	}
 
@@ -756,11 +781,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 }
 
-
-
-    /**
-     * Delete all temp files if they exist and the node is so configured
-     */
  /*   
 
 
