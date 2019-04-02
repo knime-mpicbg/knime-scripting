@@ -220,7 +220,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @throws CanceledExecutionException
 	 * @throws KnimeScriptingException
 	 */
-	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, ExecutionMonitor exec) 
+	private void pushTableToPython(BufferedDataTable inTable, String varName, File tempFile, 
+			ExecutionMonitor exec) 
 			throws CanceledExecutionException, KnimeScriptingException {
 	
 		DataTableSpec inSpec = inTable.getSpec();
@@ -480,7 +481,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
 		
 		if(!m_stdOut.isEmpty()) {
-			String warningString = String.join(",", m_stdOut);
+			String warningString = String.join("\n", m_stdOut);
 			this.setWarningMessage(warningString);
 		}
 	}
@@ -536,7 +537,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			m_stdOut = output.getStandardOutput();
 		}
 		if(output.hasErrorOutput())
-			throw new KnimeScriptingException("Error in processing: " + output.getErrorOutput());
+			throw new KnimeScriptingException("Error in processing: " + String.join("\n", output.getErrorOutput()));
 	
 	}
 

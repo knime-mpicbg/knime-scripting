@@ -10,13 +10,13 @@ import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
 public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel {
     
-    private static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
+    public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
     			createPorts(1), 		// 1 input table
     			createPorts(1), 		// 1 output table
     			new PythonColumnSupport(), 	
     			true, 					// script
     			true,					// provide openIn
-    			true);					// use chunks
+    			false);					// use chunks
 
     /**
      * constructor
@@ -46,7 +46,6 @@ public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel
 	protected PortObject[] executeImpl(PortObject[] inData,
 			ExecutionContext exec) throws Exception {
 		
-		//super.executeImpl(inData, exec);
 		super.pushInputToPython(inData, exec);
 		super.runScript(exec);
 		PortObject[] outData = super.pullOutputFromPython(exec);

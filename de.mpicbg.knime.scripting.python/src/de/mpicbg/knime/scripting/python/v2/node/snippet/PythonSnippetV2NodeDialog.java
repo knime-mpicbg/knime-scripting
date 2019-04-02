@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
+import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.ScriptingNodeDialog;
 import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
@@ -26,9 +27,13 @@ public class PythonSnippetV2NodeDialog extends ScriptingNodeDialog {
      * @param defaultScript
      * @param useTemplateRepository
      */
-    public PythonSnippetV2NodeDialog(String defaultScript, boolean useTemplateRepository) {
+    /*public PythonSnippetV2NodeDialog(String defaultScript, boolean useTemplateRepository) {
         super(defaultScript, new PythonColumnSupport(), useTemplateRepository);
-    }
+    }*/
+	
+	public PythonSnippetV2NodeDialog(String defaultScript, ScriptingModelConfig smc) {
+		super(defaultScript, smc);
+	}
     
     /**
      * configuration dialog for generic nodes
