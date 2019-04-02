@@ -4,13 +4,13 @@ Bundle-Name: Libraries used by de.mpicbg.knime.scripting.xxx
 Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
 Bundle-Version: 3.2.000.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Require-Bundle: org.eclipse.ui;bundle-version="3.1.0",
- org.apache.commons.lang3;bundle-version="3.3.1"
+Require-Bundle: org.eclipse.ui;bundle-version="3.1.0"
 Bundle-ClassPath: .,
  lib/beansbinding-1.2.1.jar,
  lib/commons-collections-3.2.jar,
  lib/commons-configuration-1.2.jar,
  lib/commons-logging-1.1.jar,
+ lib/commons-lang-2.2.jar,
  lib/forms-1.2.0.jar,
  lib/groovy-1.7.1.jar,
  lib/jakarta-oro-2.0.8.jar,

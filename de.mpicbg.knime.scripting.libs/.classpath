@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/commons-lang-2.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/opencsv-4.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/Rserve_1.8-6.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/REngine_1.8-6.jar"/>
