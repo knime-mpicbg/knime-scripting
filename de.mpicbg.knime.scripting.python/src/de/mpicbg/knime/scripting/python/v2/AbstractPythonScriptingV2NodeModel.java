@@ -8,8 +8,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
@@ -652,10 +654,107 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException, CanceledExecutionException {
-		// TODO Auto-generated method stub
-		
+		pushInputToPython(inData, exec);
+		openInPython(exec);
 	}
 	
+	private void openInPython(ExecutionContext exec) {
+		
+		exec.setMessage("Try to open as noteboook (cannot be cancelled");
+		try {
+			openAsNotebook();
+		} catch(KnimeScriptingException kse) {
+			return;
+		}
+		
+		
+		
+/*		try {
+    		Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
+    		try {
+    			// Write a shebang to invoke the python interpreter 
+    			writer.write("#! " + pythonExecPathFull + " -i\n");
+    			prepareScript(writer, false);
+    		} finally {
+    			writer.close();
+    		}
+
+    		scriptFile.getClientFile().setExecutable(true);
+
+    		// Run the script
+    		if (Utils.isMacOSPlatform()) {
+    			Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
+    		} else if (Utils.isWindowsPlatform()) {
+    			Runtime.getRuntime().exec(new String[] {
+    					"cmd",
+    					"/k",
+    					"start",
+    					pythonExecPath,
+    					"-i",
+    					"\"" + scriptFile.getClientPath() + "\""
+    			});
+    		} else logger.error("Unsupported platform");
+    		
+    		// copy the script in the clipboard
+    		String actualScript = super.prepareScript();
+            if (!actualScript.isEmpty()) {
+                StringSelection data = new StringSelection(actualScript);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(data, data);
+            }
+    		
+    	} catch (Exception e) {
+    		throw new KnimeScriptingException("Failed to open in Python\n" + e);
+    	}*/
+	}
+
+
+	private void openAsNotebook() throws KnimeScriptingException {
+		
+		// 1) load notebook template and copy as tempfile for modification
+		Path nbFile = null;
+		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/template_notebook.nbf")) {
+			nbFile = Files.createTempFile("notebookformat_", ".nbf");
+			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
+		}
+		
+		final String INPUT_PLACEHOLDER = "\"kIn = read_csv(r\\\"/path/to/input.csv\\\")\"";
+		final String OUTPUT_PLACEHOLDER = " \"write_csv(pyOut, r\\\"/path/to/output.csv\\\")\"";
+		final String SCRIPT_PLACEHOLDER = "\"source\": [\n" + 
+				"    \"pyOut = kIn\"\n" + 
+				"   ]";
+		
+		Charset charset = StandardCharsets.UTF_8;
+		String content;
+		try {
+			content = new String(Files.readAllBytes(nbFile), charset);
+			content = content.replace(INPUT_PLACEHOLDER, "here comes my input");
+			content = content.replace(OUTPUT_PLACEHOLDER, "here comes my output");
+			content = content.replace(SCRIPT_PLACEHOLDER, "here comes my script");			
+			Files.write(nbFile, content.getBytes(charset));
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to modify notebook format file: " + ioe.getMessage());
+		}
+		
+			
+		// 1) create a copy at a temporary location to replace placeholders		
+		/*try {
+			Path nbFile = Files.createTempFile("notebookformat_", ".nbf");
+			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
+		} finally {
+			try {
+				utilsStream.close();
+			} catch (IOException ioe) {
+				throw new KnimeScriptingException("Failed to close source script file: " + ioe.getMessage());
+			}
+		}	*/	
+	}
+
+
 	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
 		// CSV read/write functions
 		InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py");

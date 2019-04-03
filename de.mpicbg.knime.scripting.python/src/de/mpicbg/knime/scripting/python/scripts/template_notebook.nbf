@@ -1,0 +1,170 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# From KNIME to Python - OpenIn\n",
+    "This is an auto-generated notebook."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 1) Imports and Routines (KNIME side)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import platform\n",
+    "import csv"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Check for the correct version\n",
+    "version = platform.python_version()\n",
+    "\n",
+    "# open() function for py2/3\n",
+    "def openf(filename, mode, **kwargs):\n",
+    "    return open(filename, mode, **kwargs) if float(version[:3]) < 3 else open(filename, mode[0], newline='', **kwargs)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Read a CSV file into a pandas dataframe.  \n",
+    "# The first line of the file is assumed to be the column names.\n",
+    "# The second line must contain the column types, column types will be inferred first then\n",
+    "# the attempt to convert them follows (column type stays unchanged if conversion failed)\n",
+    "#\n",
+    "def read_csv(csv_filename):\n",
+    "    # read data with column headers, row ids and infer data types\n",
+    "\n",
+    "    pdf = pd.read_csv(csv_filename, skiprows = [1], sep = ',', header = 0, index_col = 0)\n",
+    "    # extract expected data types\n",
+    "    typesdf = pd.read_csv(csv_filename, sep=',', nrows = 1)\n",
+    "    typesdf = typesdf.drop('Row ID', axis = 1)\n",
+    "    types = dict()\t\n",
+    "    for k in typesdf:\n",
+    "        types[k] = typesdf.iloc[0][k]\n",
+    "        \n",
+    "    #pdf_final = pdf.copy()\n",
+    "    # try to apply column types, pass if it fails\n",
+    "    for col in typesdf:\n",
+    "        subtypes = {k:v for k,v in types.items() if k in [col]}\n",
+    "        try:\n",
+    "            pdf = pdf.astype(subtypes)\n",
+    "        except:\n",
+    "            print(\"Read KNIME data as pandas data frame: failed to convert {}\".format(subtypes))\n",
+    "            pass\n",
+    "    return pdf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Write CSV file from pandas dataframe        \n",
+    "def write_csv(csv_filename, pdf):\n",
+    "\n",
+    "    # need to filter dataframe for supported types\n",
+    "    include=['object','bool','float','int','datetime64[ns]']\n",
+    "    exclude = pdf.select_dtypes(exclude=include).columns.tolist()\n",
+    "    pyOut = pdf.select_dtypes(include)\n",
+    "    \n",
+    "    \n",
+    "    if len(exclude) > 0:\n",
+    "        print(\"Column(s) with unsupported data type(s) will not be returned to KNIME: {}\".format(', '.join(exclude)))\n",
+    "    \n",
+    "    header = pyOut.columns \n",
+    "    header = header.insert(0, \"Row ID\") \n",
+    "    \n",
+    "    types = []\n",
+    "    types.append(\"INDEX\")\n",
+    "    for col in pyOut:\n",
+    "        types.append(pyOut[col].dtype.name)\n",
+    "        \n",
+    "\n",
+    "    csv_file = openf(csv_filename, 'wb')\n",
+    "    csv_writer = csv.writer(csv_file, delimiter=',', quotechar='\"')\n",
+    "\n",
+    "    # First write the column headers and data types\n",
+    "    csv_writer.writerow(header)\n",
+    "    csv_writer.writerow(types)\n",
+    "\n",
+    "    csv_file.close()\n",
+    "    \n",
+    "    # append data\n",
+    "    with openf(csv_filename, 'ab') as f:\n",
+    "        pyOut.to_csv(f, header=False, date_format='%Y-%m-%d_%H:%M:%S')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2) Read data from KNIME (KNIME side)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "kIn = read_csv(r\"/path/to/input.csv\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3) Your script comes here"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pyOut = kIn"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 4) Write data back to KNIME (KNIME side)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "write_csv(pyOut, r\"/path/to/output.csv\")"
+   ]
+  }
+ ],
+ "metadata": {},
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
