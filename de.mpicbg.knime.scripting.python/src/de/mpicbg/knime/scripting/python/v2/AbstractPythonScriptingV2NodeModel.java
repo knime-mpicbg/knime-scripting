@@ -667,45 +667,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			return;
 		}
 		
-		
-		
-/*		try {
-    		Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
-    		try {
-    			// Write a shebang to invoke the python interpreter 
-    			writer.write("#! " + pythonExecPathFull + " -i\n");
-    			prepareScript(writer, false);
-    		} finally {
-    			writer.close();
-    		}
-
-    		scriptFile.getClientFile().setExecutable(true);
-
-    		// Run the script
-    		if (Utils.isMacOSPlatform()) {
-    			Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
-    		} else if (Utils.isWindowsPlatform()) {
-    			Runtime.getRuntime().exec(new String[] {
-    					"cmd",
-    					"/k",
-    					"start",
-    					pythonExecPath,
-    					"-i",
-    					"\"" + scriptFile.getClientPath() + "\""
-    			});
-    		} else logger.error("Unsupported platform");
-    		
-    		// copy the script in the clipboard
-    		String actualScript = super.prepareScript();
-            if (!actualScript.isEmpty()) {
-                StringSelection data = new StringSelection(actualScript);
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(data, data);
-            }
-    		
-    	} catch (Exception e) {
-    		throw new KnimeScriptingException("Failed to open in Python\n" + e);
-    	}*/
 	}
 
 
