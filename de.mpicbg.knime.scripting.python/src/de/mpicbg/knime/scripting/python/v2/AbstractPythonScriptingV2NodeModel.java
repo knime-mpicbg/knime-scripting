@@ -711,47 +711,140 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	private void openAsNotebook() throws KnimeScriptingException {
 		
+		// TODO: replace jupyter location by preferences
+		String jupyterLocation = "/Users/niederle/anaconda3/bin/jupyter";
+		
+		String version = isJupyterInstalled(jupyterLocation);
+		
+		// TODO: replace jupyter launch directory by preferences
+		Path jupyterDir = null;
+		try {
+			jupyterDir = Files.createTempDirectory("jupyter_temp_");
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
+		}
+		
 		// 1) load notebook template and copy as tempfile for modification
 		Path nbFile = null;
-		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/template_notebook.nbf")) {
-			nbFile = Files.createTempFile("notebookformat_", ".nbf");
+		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/template_notebook.ipynb")) {
+			nbFile = Files.createTempFile(jupyterDir, "notebookformat_", ".ipynb");
 			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
 		}
 		
+		// 2) replace the following parts with the appropriate file names and the current script
 		final String INPUT_PLACEHOLDER = "\"kIn = read_csv(r\\\"/path/to/input.csv\\\")\"";
 		final String OUTPUT_PLACEHOLDER = " \"write_csv(pyOut, r\\\"/path/to/output.csv\\\")\"";
 		final String SCRIPT_PLACEHOLDER = "\"source\": [\n" + 
 				"    \"pyOut = kIn\"\n" + 
 				"   ]";
 		
+		/*
+		 * supposed to look like this
+		 * "kIn = read_csv(r\"***filename***\")",
+		 * "kIn2 = read_csv(r\"***anotherfilename***\")"
+		 */
+		
+		List<String> loadInputList = new LinkedList<String>();
+		for(String inLabel : m_inPorts.keySet()) {
+			File f = m_tempFiles.get(inLabel);
+			if(f != null) {	
+				String current = "\"" + inLabel + " = read_csv(r\\\"" + f.getPath() +"\\\")\\n\"";
+				loadInputList.add(current);
+			} else {
+				throw new KnimeScriptingException("Failed to write script file");				
+			}
+		}
+		String loadInput = String.join(",\n", loadInputList);
+		
+		/*
+		 * supposed to look like this
+		 * "write_csv(r\"***filename***\",pyOut)",
+		 * "write_csv(r\"***otherfilename***\",pyOut2)"
+		 */
+		
+		List<String> saveOutputList = new LinkedList<String>();
+		for(String outLabel : m_outPorts.keySet()) {
+			File f = m_tempFiles.get(outLabel);
+			if(f != null) {	
+				String current = "\"write_csv(r\\\"" + f.getPath() +"\\\"," + outLabel+ ")\\n\"";
+				saveOutputList.add(current);
+			} else {
+				throw new KnimeScriptingException("Failed to write script file");				
+			}
+		}
+		String saveOutput = String.join(",\n", saveOutputList);
+		
+		// prepare script
+		/*
+		 * supposed to look like this
+		 * 	"pyOut = kIn\n",
+		 * 	"for i in [1,2,3,10]:\n",
+		 * 	"    print(i)"
+		 */
+		
+		final String tabReplace = "    ";
+		String wholeScript = super.prepareScript();
+		String[] splittedByNewline = wholeScript.split("\\R", -1);
+		String script = "\"source\": [\n";
+		List<String> lineList = new LinkedList<String>();
+		for(String line : splittedByNewline) {
+			line = line.replace("\t", tabReplace);
+			String current = tabReplace + "\"" + line + "\\n\"";
+			lineList.add(current);
+		}		
+		script = script + String.join(",\n", lineList) + "\n   ]";
+		
 		Charset charset = StandardCharsets.UTF_8;
 		String content;
 		try {
 			content = new String(Files.readAllBytes(nbFile), charset);
-			content = content.replace(INPUT_PLACEHOLDER, "here comes my input");
-			content = content.replace(OUTPUT_PLACEHOLDER, "here comes my output");
-			content = content.replace(SCRIPT_PLACEHOLDER, "here comes my script");			
+			content = content.replace(INPUT_PLACEHOLDER, loadInput);
+			content = content.replace(OUTPUT_PLACEHOLDER, saveOutput);
+			content = content.replace(SCRIPT_PLACEHOLDER, script);			
 			Files.write(nbFile, content.getBytes(charset));
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to modify notebook format file: " + ioe.getMessage());
 		}
 		
-			
-		// 1) create a copy at a temporary location to replace placeholders		
-		/*try {
-			Path nbFile = Files.createTempFile("notebookformat_", ".nbf");
-			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException ioe) {
-			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
-		} finally {
-			try {
-				utilsStream.close();
-			} catch (IOException ioe) {
-				throw new KnimeScriptingException("Failed to close source script file: " + ioe.getMessage());
-			}
-		}	*/	
+		// 3) 
+		launchNotebook(jupyterLocation, nbFile);
+	}
+
+
+	private void launchNotebook(String jupyterLocation, Path nbFile) throws KnimeScriptingException {
+		
+		assert python != null;
+		
+		try {
+			python.executeCommand(new String[]{jupyterLocation, "notebook", nbFile.toString()}, false);
+		} catch (Exception re) {
+			throw new KnimeScriptingException("Failed while launching Jupyter: " + re.getMessage());
+		}
+
+	}
+
+
+	private String isJupyterInstalled(String jupyterLocation) throws KnimeScriptingException {
+		
+		assert python != null;
+		String outString = ""; 
+		
+		CommandOutput output;
+		try {
+			output = python.executeCommand(new String[]{jupyterLocation, "notebook", "--version"});
+		} catch (Exception re) {
+			throw new KnimeScriptingException("Failed while checking for Jupyter Version: " + re.getMessage());
+		}
+	
+		if(output.hasStandardOutput()) {			
+			outString= String.join("\n", output.getStandardOutput());
+		}
+		if(output.hasErrorOutput())
+			throw new KnimeScriptingException("Jupyter check failed: " + String.join("\n", output.getErrorOutput()));
+		
+		return outString;
 	}
 
 

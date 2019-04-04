@@ -52,9 +52,14 @@ public class PythonServer implements Python {
         return file != null ? file.delete() : true;
     }
 
-    public CommandOutput executeCommand(String[] command) {
+    @Override
+	public CommandOutput executeCommand(String[] command) {
+    	return executeCommand(command, true);
+	}
+
+	public CommandOutput executeCommand(String[] command, boolean waitFor) {
         try {
-            return exec(command);
+            return exec(command, waitFor);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -64,10 +69,11 @@ public class PythonServer implements Python {
      * Run an external command and return any output it generates.
      *
      * @param cmd
+     * @param waitFor 
      * @return
      * @throws InterruptedException
      */
-    private CommandOutput exec(String[] cmd) throws Exception {
+    private CommandOutput exec(String[] cmd, boolean waitFor) throws Exception {
         Process proc = null;
         proc = Runtime.getRuntime().exec(cmd);
 
@@ -81,7 +87,7 @@ public class PythonServer implements Python {
         outputGobbler.start();
 
         // Wait for the command process to complete
-        proc.waitFor();
+        if(waitFor) proc.waitFor();
 
         return new CommandOutput(outputGobbler, errorGobbler);
     }

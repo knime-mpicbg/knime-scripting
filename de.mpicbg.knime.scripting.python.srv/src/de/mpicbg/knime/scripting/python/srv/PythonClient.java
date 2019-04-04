@@ -48,8 +48,13 @@ public class PythonClient implements Python {
         return python.deleteFile(file);
     }
 
-    public CommandOutput executeCommand(String[] command) {
-        return python.executeCommand(command);
+    @Override
+	public CommandOutput executeCommand(String[] command) {
+		return executeCommand(command, true);
+	}
+
+	public CommandOutput executeCommand(String[] command, boolean waitFor) {
+        return python.executeCommand(command, waitFor);
     }
 
     public int openFile(File file) throws IOException {

@@ -20,8 +20,7 @@ public class LocalPythonClient implements Python {
     }
 
     public File createTempFile(String prefix, String suffix) {
-        return
-        server.createTempFile(prefix, suffix);
+        return server.createTempFile(prefix, suffix);
     }
 
     public String getFilePath(File file) {
@@ -29,13 +28,16 @@ public class LocalPythonClient implements Python {
     }
 
     public boolean deleteFile(File file) {
-        return
-        server.deleteFile(file);
+        return server.deleteFile(file);
     }
 
-    public CommandOutput executeCommand(String[] command) {
-        return
-        server.executeCommand(command);
+    @Override
+	public CommandOutput executeCommand(String[] command) {
+		return server.executeCommand(command, true);
+	}
+
+	public CommandOutput executeCommand(String[] command, boolean waitFor) {
+        return server.executeCommand(command, waitFor);
     }
 
     public int openFile(File file) throws IOException {

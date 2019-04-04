@@ -20,6 +20,8 @@ public interface Python {
 
     public boolean deleteFile(File file);
 
+    public CommandOutput executeCommand(String[] command, boolean waitFor);
+    
     public CommandOutput executeCommand(String[] command);
 
     public int openFile(File file) throws IOException;

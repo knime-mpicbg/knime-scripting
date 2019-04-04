@@ -15,22 +15,18 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 
 /**
- * <code>NodeDialog</code> for the "RSnippet" Node.
+ * <code>NodeDialog</code> for the "Python nippet" Node.
  *
- * @author Holger Brandl, Antje Janosch (MPI-CBG)
+ * Antje Janosch (MPI-CBG)
  */
 public class PythonSnippetV2NodeDialog extends ScriptingNodeDialog {
 
-    /**
-     * New pane for configuring ScriptedNode node dialog
-     *
-     * @param defaultScript
-     * @param useTemplateRepository
-     */
-    /*public PythonSnippetV2NodeDialog(String defaultScript, boolean useTemplateRepository) {
-        super(defaultScript, new PythonColumnSupport(), useTemplateRepository);
-    }*/
-	
+
+	/**
+	 * constructor for python snippet node dialog
+	 * @param defaultScript
+	 * @param smc	{@link ScriptingModelConfig}
+	 */
 	public PythonSnippetV2NodeDialog(String defaultScript, ScriptingModelConfig smc) {
 		super(defaultScript, smc);
 	}
