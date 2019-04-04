@@ -25,7 +25,11 @@
  */
 package de.mpicbg.knime.scripting.python.prefs;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.srv.CommandOutput;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.Python;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -33,12 +37,28 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
 
+	@Deprecated
     public static final String PYTHON_LOCAL = "python.local";
+    private static boolean PYTHON_LOCAL_DFT = Boolean.TRUE;
 
+    @Deprecated
     public static final String PYTHON_HOST = "python.host";
+    private static final String PYTHON_HOST_DFT = "localhost";
+    
+    @Deprecated
     public static final String PYTHON_PORT = "python.port";
+    private static final int PYTHON_PORT_DFT = 1198;
 
     public static final String PYTHON_EXECUTABLE = "python.exec";
+    
+    public static final String PYTHON_2_EXECUTABLE = "python.2.exec";
+    public static final String PYTHON_3_EXECUTABLE = "python.3.exec";
+    
+    public static final String PYTHON_USE_2 = "python.use.2";
+    private static boolean PYTHON_USE_2_DFT = Boolean.TRUE;
+    
+    public static final String JUPYTER_EXECUTABLE = "jupyter.exec";
+    
 
     public static final String PYTHON_TEMPLATE_RESOURCES = "python.template.resources";
     public static final String PYTHON_PLOT_TEMPLATE_RESOURCES = "python.plot.template.resources";
@@ -48,10 +68,12 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
     public void initializeDefaultPreferences() {
         IPreferenceStore store = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
-        store.setDefault(PYTHON_LOCAL, Boolean.TRUE);
+        store.setDefault(PYTHON_LOCAL, PYTHON_LOCAL_DFT);
 
-        store.setDefault(PYTHON_HOST, "localhost");
-        store.setDefault(PYTHON_PORT, 1198);
+        store.setDefault(PYTHON_HOST, PYTHON_HOST_DFT);
+        store.setDefault(PYTHON_PORT, PYTHON_PORT_DFT);
+        
+        store.setDefault(PYTHON_2_EXECUTABLE, "");
 
         store.setDefault(PYTHON_EXECUTABLE, "python");
 
@@ -59,4 +81,7 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PYTHON_PLOT_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Python/figure-templates.txt\",true)");
 
     }
+
+
+
 }

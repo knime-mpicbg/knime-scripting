@@ -38,6 +38,12 @@
               id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
               name="Python Scripting">
         </page>
+        <page
+              category="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
+              class="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePageOpenAs"
+              id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePageOpenAs"
+              name="Opan as Notebook">
+        </page>
     </extension>
 
 
