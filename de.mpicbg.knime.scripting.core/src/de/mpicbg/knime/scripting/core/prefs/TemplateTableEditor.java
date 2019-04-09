@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +31,6 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import de.mpicbg.knime.scripting.core.TemplateCache;
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
 
 /**
@@ -106,12 +104,25 @@ public class TemplateTableEditor extends FieldEditor {
     @Override
     protected void doFillIntoGrid(Composite parent, int numColumns) {
     	
+    	/* Layout comments:
+    	 * 
+    	 * component are sequentially filled into numColumns
+    	 * by default each component will use 1 column
+    	 * GridData can be set to use more that one columns
+    	 * 
+    	 * this composite is build like this
+    	 * 1. row: label stretched over all available columns
+    	 * 2. row: table stretche over (available columns - 1) + button "remove"
+    	 * 3. row: text field stretched over (available columns - 2) + buttons "browse" and "add"
+    	 * 
+    	 */
+    	
     	GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
         gd.horizontalSpan = numColumns;
     	
         top = parent;
         top.setLayoutData(gd);
-
+        
         group = new Composite(top, SWT.BORDER);
 
         GridLayout newgd = new GridLayout(3, false);
@@ -129,7 +140,7 @@ public class TemplateTableEditor extends FieldEditor {
         templateTable.setHeaderVisible(true);
         
         gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-        gd.horizontalSpan = 2;
+        gd.horizontalSpan = numColumns-1;
         templateTable.setLayoutData(gd);
         templateTable.addListener(SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
@@ -153,8 +164,11 @@ public class TemplateTableEditor extends FieldEditor {
             }
         });
 
+        gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+        gd.horizontalSpan = numColumns-2;
         templateField = new Text(group, SWT.BORDER);
-        templateField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        //templateField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        templateField.setLayoutData(gd);
 
         browseUrl = new Button(group, SWT.PUSH);
         browseUrl.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
@@ -176,11 +190,20 @@ public class TemplateTableEditor extends FieldEditor {
             }
         });
 
-        Label emptyLabel = new Label(top, SWT.NONE);
-        emptyLabel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1));
+        //Label emptyLabel = new Label(top, SWT.NONE);
+        //emptyLabel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 3, 1));
     }
 
-    /**
+    /*
+	 * (non-Javadoc)
+	 * @see org.eclipse.jface.preference.FieldEditor#getNumberOfControls()
+	 */
+	@Override
+	public int getNumberOfControls() {
+	    return 3;
+	}
+
+	/**
      * Event handling method to make template active or inactive
      *
      * @param event
@@ -463,14 +486,5 @@ public class TemplateTableEditor extends FieldEditor {
         String s = tString.getPrefString();
         if (s != null)
             getPreferenceStore().setValue(getPreferenceName(), s);
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.jface.preference.FieldEditor#getNumberOfControls()
-     */
-    @Override
-    public int getNumberOfControls() {
-        return 2;
     }
 }

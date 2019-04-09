@@ -44,6 +44,12 @@
               id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePageOpenAs"
               name="Opan as Notebook">
         </page>
+        <page
+              category="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
+              class="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePageDeprecated"
+              id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePageDeprecated"
+              name="Python Scripting (deprecated)">
+        </page>
     </extension>
 
 
