@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.format.DateTimeFormatter;
@@ -501,30 +502,20 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 	
 		// prepare script
-		Writer writer = null;
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-		try {
-			writer = new BufferedWriter(new FileWriter(scriptFile));
+		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
 			prepareScript(scriptFile, true);
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-		} finally {
-			if(writer != null)
-				try {
-					writer.close();
-				} catch (IOException ioe) {
-					throw new KnimeScriptingException("Failed to close script file: " + ioe.getMessage() + "\n" + scriptFile.getAbsolutePath());
-				}
-		}
+		} 
 	
 	
 		// run script
 	
-		boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-		if(!local) {
-			this.setWarningMessage("Remote python processing is not supported anymore. The local python will be used.");
-		}
-		String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
+		// get executable
+		String pythonExecPath = getPythonExecutable(preferences);
+		if(pythonExecPath.isEmpty())
+			throw new KnimeScriptingException("Path to python executable is not set. Please configure under Preferences > KNIME > Python Scripting.");
 	
 		CommandOutput output;
 		try {
@@ -541,6 +532,81 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(output.hasErrorOutput())
 			throw new KnimeScriptingException("Error in processing: " + String.join("\n", output.getErrorOutput()));
 	
+	}
+	
+	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
+		// CSV read/write functions
+		
+		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py")) {
+			String pyScriptString = FileUtils.readFromRessource(utilsStream);
+			Files.write(scriptFile.toPath(), pyScriptString.getBytes(), StandardOpenOption.APPEND);
+		}catch(IOException ioe) {
+			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
+		}
+	
+		for(String inLabel : m_inPorts.keySet()) {
+			File f = m_tempFiles.get(inLabel);
+			String errorMessage = null;
+			if(f != null) {
+				try {
+					String readCSVCmd = "\n\n" + inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")\n\n";
+					Files.write(scriptFile.toPath(), readCSVCmd.getBytes(), StandardOpenOption.APPEND);
+				} catch(IOException ioe) {
+					errorMessage = ioe.getMessage();
+				}
+			} else {
+				errorMessage = "Failed to write script file";				
+			}
+			if(errorMessage != null)
+				throw new KnimeScriptingException(errorMessage);
+		}
+	
+		if(useScript)
+			try {
+				Files.write(scriptFile.toPath(), super.prepareScript().getBytes(), StandardOpenOption.APPEND);
+			} catch (IOException ioe) {
+				throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
+			}
+	
+		File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
+		String errorMessage = null;
+		if(f != null) {
+			try {
+				String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + PY_OUTVAR_BASE_NAME + ")\n";
+				Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
+			} catch(IOException ioe) {
+				errorMessage = ioe.getMessage();
+			}
+		} else {
+			errorMessage = "Failed to write script file";				
+		}
+		if(errorMessage != null)
+			throw new KnimeScriptingException(errorMessage);
+	}
+
+
+	protected String getPythonExecutable(IPreferenceStore preferences) {
+		String whichPy = preferences.getString(PythonPreferenceInitializer.PYTHON_USE_2);
+		String pythonExecPath = "";
+		if(whichPy.equals(PythonPreferenceInitializer.PY2))
+			pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_2_EXECUTABLE);
+		if(whichPy.equals(PythonPreferenceInitializer.PY3))
+			pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_3_EXECUTABLE);
+		
+		return pythonExecPath;
+	}
+	
+	protected String getJupyterExecutable(IPreferenceStore preferences) {
+		boolean useJupyter = preferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
+		String jupyterExecPath = "";
+		if(useJupyter)
+			jupyterExecPath = preferences.getString(PythonPreferenceInitializer.JUPYTER_EXECUTABLE);
+		
+		return jupyterExecPath;
+	}
+	
+	protected String getJupyterFolder(IPreferenceStore preferences) {	
+		return preferences.getString(PythonPreferenceInitializer.JUPYTER_FOLDER);
 	}
 
 
@@ -658,37 +724,64 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		openInPython(exec);
 	}
 	
-	private void openInPython(ExecutionContext exec) {
+	private void openInPython(ExecutionContext exec) throws KnimeScriptingException {
 		
-		exec.setMessage("Try to open as noteboook (cannot be cancelled");
-		try {
-			openAsNotebook();
-		} catch(KnimeScriptingException kse) {
-			return;
+		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+		boolean useJupyter = preferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
+		if(useJupyter) {
+			exec.setMessage("Try to open as noteboook (cannot be cancelled");
+			openAsNotebook(preferences);
+		} else {
+			openViaCommandline(preferences);
 		}
 		
 	}
 
 
-	private void openAsNotebook() throws KnimeScriptingException {
+	private void openViaCommandline(IPreferenceStore preferences) throws KnimeScriptingException {
+		// get executable
+		String pythonExecPath = getPythonExecutable(preferences);
+		if(pythonExecPath.isEmpty())
+			throw new KnimeScriptingException("Path to python executable is not set. Please configure under Preferences > KNIME > Python Scripting.");
+
+		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
+		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
+			writer.write("#! " + pythonExecPath + " -i\n");
+		} catch(IOException ioe) {
+			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
+		} 
+		prepareScript(scriptFile, true);
+		scriptFile.setExecutable(true);
 		
-		// TODO: replace jupyter location by preferences
-		String jupyterLocation = "/Users/niederle/anaconda3/bin/jupyter";
+		
+		// echo "/Users/niederle/anaconda3/bin/python -i /var/folders/r9/8yfyqn9n3dn2pzct7lz5p0rc0000gr/T/kDydri_analyze_3258817648932960189.py" > /tmp/tmp.sh ; chmod +x /tmp/tmp.sh ; open -a Terminal /tmp/tmp.sh
+		if (Utils.isMacOSPlatform()) {
+			String[] commandLine = new String[]{"open", "-a", "Terminal", scriptFile.getPath()};
+			python.executeCommand(commandLine, false);
+		}
+		if (Utils.isWindowsPlatform())
+			throw new KnimeScriptingException("Windows not yet supported");
+	}
+
+
+	private void openAsNotebook(IPreferenceStore preferences) throws KnimeScriptingException {
+		
+		String jupyterLocation = getJupyterExecutable(preferences);
+		
+		if(jupyterLocation.isEmpty())
+			throw new KnimeScriptingException("Path to jupyter executable is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
 		
 		String version = isJupyterInstalled(jupyterLocation);
 		
 		// TODO: replace jupyter launch directory by preferences
-		Path jupyterDir = null;
-		try {
-			jupyterDir = Files.createTempDirectory("jupyter_temp_");
-		} catch (IOException ioe) {
-			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
-		}
+		String jupyterDirString = getJupyterFolder(preferences);
+		if(jupyterDirString.isEmpty())
+			throw new KnimeScriptingException("Path to jupyter folder is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
 		
 		// 1) load notebook template and copy as tempfile for modification
 		Path nbFile = null;
 		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/template_notebook.ipynb")) {
-			nbFile = Files.createTempFile(jupyterDir, "notebookformat_", ".ipynb");
+			nbFile = Files.createTempFile(Paths.get(jupyterDirString), "notebookformat_", ".ipynb");
 			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
@@ -809,63 +902,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 
 
-	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
-		// CSV read/write functions
-		InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py");
-
-		try {
-			Files.copy(utilsStream, scriptFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException ioe) {
-			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
-		} finally {
-			try {
-				utilsStream.close();
-			} catch (IOException ioe) {
-				throw new KnimeScriptingException("Failed to close source script file: " + ioe.getMessage());
-			}
-		}
-
-		for(String inLabel : m_inPorts.keySet()) {
-			File f = m_tempFiles.get(inLabel);
-			String errorMessage = null;
-			if(f != null) {
-				try {
-					String readCSVCmd = "\n\n" + inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")\n\n";
-					Files.write(scriptFile.toPath(), readCSVCmd.getBytes(), StandardOpenOption.APPEND);
-				} catch(IOException ioe) {
-					errorMessage = ioe.getMessage();
-				}
-			} else {
-				errorMessage = "Failed to write script file";				
-			}
-			if(errorMessage != null)
-				throw new KnimeScriptingException(errorMessage);
-		}
-
-		if(useScript)
-			try {
-				Files.write(scriptFile.toPath(), super.prepareScript().getBytes(), StandardOpenOption.APPEND);
-			} catch (IOException ioe) {
-				throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
-			}
-
-		File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
-		String errorMessage = null;
-		if(f != null) {
-			try {
-				String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + PY_OUTVAR_BASE_NAME + ")\n";
-				Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
-			} catch(IOException ioe) {
-				errorMessage = ioe.getMessage();
-			}
-		} else {
-			errorMessage = "Failed to write script file";				
-		}
-		if(errorMessage != null)
-			throw new KnimeScriptingException(errorMessage);
-	}
-	
-	
 	private DataCell createCell(String value, DataType dType) throws KnimeScriptingException {
 		
 		if(dType.equals(StringCellFactory.TYPE)) {

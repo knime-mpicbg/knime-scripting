@@ -56,7 +56,9 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
     public static final String PYTHON_3_EXECUTABLE = "python.3.exec";
     
     public static final String PYTHON_USE_2 = "use.python.2";
-    public static final boolean PYTHON_USE_2_DFT = Boolean.TRUE;
+    //public static final boolean PYTHON_USE_2_DFT = Boolean.TRUE;
+    public static final String PY2 = "py2";
+    public static final String PY3 = "py3";
     
     public static final String JUPYTER_EXECUTABLE = "jupyter.exec";
     public static final String JUPYTER_USE = "use.jupyter";
@@ -82,7 +84,7 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PYTHON_2_EXECUTABLE, "");
         store.setDefault(PYTHON_3_EXECUTABLE, "");
 
-        store.setDefault(PYTHON_USE_2, PYTHON_USE_2_DFT);
+        store.setDefault(PYTHON_USE_2, PY3);
         
         store.setDefault(JUPYTER_EXECUTABLE, "");
         store.setDefault(JUPYTER_FOLDER, "");

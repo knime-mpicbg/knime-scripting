@@ -1,10 +1,12 @@
 package de.mpicbg.knime.knutils;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -99,5 +101,28 @@ public class FileUtils {
     	} finally {
     		is.close();
     	}
+    }
+    
+    /**
+     * retrieve text file content from resource input stream
+     * 
+     * @param stream		{@link ClassLoader#getResourceAsStream(String)}
+     * @return				String with file content
+     * 
+     * @throws IOException
+     */
+    public static String readFromRessource(InputStream stream) throws IOException {
+    	StringBuilder sb = new StringBuilder();
+        String line;
+     
+        // try-with-resources
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+        	while ((line = reader.readLine()) != null) {
+        		sb.append(line);
+        		sb.append(System.getProperty("line.separator", "\r\n"));
+        	}
+        }
+       
+        return sb.toString();
     }
 }
