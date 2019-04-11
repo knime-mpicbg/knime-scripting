@@ -1,5 +1,8 @@
 package de.mpicbg.knime.scripting.python.v2;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -352,8 +355,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 
 	/**
-	 * main method to retrieve data from R to provide the output ports
-	 * NOTE: this method closes the connection in case of Exceptions
+	 * main method to retrieve data from Python to provide the output ports
+	 * 
 	 * @param exec
 	 * @return	array of port objects
 	 * @throws KnimeScriptingException
@@ -388,6 +391,17 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 
 
+	/**
+	 * retrieve single result table from Python 
+	 * 
+	 * @param out				label of python output (e.g. pyOut)
+	 * @param exec			
+	 * @param subProgress
+	 * @return
+	 * @throws CanceledExecutionException
+	 * @throws IOException
+	 * @throws KnimeScriptingException
+	 */
 	private PortObject pullTableFromPython(String out, ExecutionContext exec, double subProgress) throws CanceledExecutionException, IOException, KnimeScriptingException {
 		
 		ExecutionMonitor execM = exec.createSubProgress(subProgress);
@@ -397,14 +411,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		assert tempFile != null;
 		
-		// read number of lines (approximate, as line breaks may occur within quotes
+		// read number of lines (approximate, as line breaks may occur within quotes)
+		// just used to provide progress estimate
 		int nLines = -1;
 	
 		try (FileInputStream fis = new FileInputStream(tempFile)) {
 			nLines = FileUtils.countLines(fis);
 		}
 	
-		
+		// parse CSV
 		CSVParser parser = new CSVParserBuilder()
 				.withEscapeChar(CSVParser.DEFAULT_ESCAPE_CHARACTER)
 				.withSeparator(CSVParser.DEFAULT_SEPARATOR)
@@ -420,6 +435,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			String[] columnNames = null;
 			Map<String, DataType> columns = new LinkedHashMap<String, DataType>();
 	
+			// go line by line
+			// 1. line = column names
+			// 2. line = column types
 			int lineCount = 0;
 			for(String[] line : reader) {
 				if(lineCount == 0) {
@@ -473,7 +491,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return bdc.getTable();
 	}
 
-
+	/**
+	 * execute python script and make sure that temp files are deleted if something goes wrong
+	 * 
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
 			
 		try {
@@ -534,9 +557,20 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	}
 	
+	/**
+	 * load template with methods to read data from KNIME and write result back as CSV <br/>
+	 * extend by call these methods with the temporary files
+	 * 
+	 * @param scriptFile
+	 * @param useScript		if false, final script only allows to read data from knime, <br/>
+	 * no user script append or result CSV written
+	 * 
+	 * @throws KnimeScriptingException
+	 */
 	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
 		// CSV read/write functions
 		
+		// (1) write template script to script file
 		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py")) {
 			String pyScriptString = FileUtils.readFromRessource(utilsStream);
 			Files.write(scriptFile.toPath(), pyScriptString.getBytes(), StandardOpenOption.APPEND);
@@ -544,6 +578,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
 		}
 	
+		// (2) add read-calls to script file
 		for(String inLabel : m_inPorts.keySet()) {
 			File f = m_tempFiles.get(inLabel);
 			String errorMessage = null;
@@ -561,30 +596,39 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				throw new KnimeScriptingException(errorMessage);
 		}
 	
-		if(useScript)
+		
+		if(useScript) {
+			// (3) add user script to script file
 			try {
 				Files.write(scriptFile.toPath(), super.prepareScript().getBytes(), StandardOpenOption.APPEND);
 			} catch (IOException ioe) {
 				throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
 			}
-	
-		File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
-		String errorMessage = null;
-		if(f != null) {
-			try {
-				String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + PY_OUTVAR_BASE_NAME + ")\n";
-				Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
-			} catch(IOException ioe) {
-				errorMessage = ioe.getMessage();
+
+			// (4) add write-calls to script file
+			File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
+			String errorMessage = null;
+			if(f != null) {
+				try {
+					String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + PY_OUTVAR_BASE_NAME + ")\n";
+					Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
+				} catch(IOException ioe) {
+					errorMessage = ioe.getMessage();
+				}
+			} else {
+				errorMessage = "Failed to write script file";				
 			}
-		} else {
-			errorMessage = "Failed to write script file";				
+			if(errorMessage != null)
+				throw new KnimeScriptingException(errorMessage);
 		}
-		if(errorMessage != null)
-			throw new KnimeScriptingException(errorMessage);
 	}
 
-
+	/**
+	 * retrieve path to python executable from preferences
+	 * 
+	 * @param preferences
+	 * @return	python-exec-path
+	 */
 	protected String getPythonExecutable(IPreferenceStore preferences) {
 		String whichPy = preferences.getString(PythonPreferenceInitializer.PYTHON_USE_2);
 		String pythonExecPath = "";
@@ -596,6 +640,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return pythonExecPath;
 	}
 	
+	/**
+	 * retrieve path to jupyter executable from preferences
+	 * 
+	 * @param preferences
+	 * @return jupyter-exec-path
+	 */
 	protected String getJupyterExecutable(IPreferenceStore preferences) {
 		boolean useJupyter = preferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
 		String jupyterExecPath = "";
@@ -605,11 +655,21 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return jupyterExecPath;
 	}
 	
+	/**
+	 * retrieve path to folder for temporary notebooks from preferences
+	 * 
+	 * @param preferences
+	 * @return
+	 */
 	protected String getJupyterFolder(IPreferenceStore preferences) {	
 		return preferences.getString(PythonPreferenceInitializer.JUPYTER_FOLDER);
 	}
 
 
+	/**
+	 * fill outport-map with ouput names based on number of outputs <br/>
+	 * map-values will be null
+	 */
 	private void createOutPortMapping() {
 		int nOut = this.getNrOutPorts();
 		
@@ -621,6 +681,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}	
 	}
 
+	/**
+	 * deletees all temporary files
+	 */
 	private void deleteTempFiles() {
 		
 		for(File tempFile : m_tempFiles.values()) {
@@ -634,9 +697,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 	
 	/**
-	 * The map stores the R-names as key and the BDT as value; in case of RPorts, the name is 'generic'
+	 * The map stores the Python-names as key and the BDT as value
 	 * @param inObjects
-	 * @return
+	 * 
 	 * @throws KnimeScriptingException thrown if more than one generic input ports or unsupported port type
 	 */
 	public void createInPortMapping(PortObject[] inObjects) throws KnimeScriptingException {
@@ -673,14 +736,14 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
     /**
      * Create necessary temp files
-     * @param inPorts 
-     * @return 
+     * 
      * @throws KnimeScriptingException 
      */
     protected void createTempFiles() throws KnimeScriptingException {
         
     	m_tempFiles = new HashMap<String, File>();
     	
+    	// prepend a random string to each new file to make it easier to find corresponding temporary files
     	String randomPart = Utils.generateRandomString(6);
     	
     	try {
@@ -737,33 +800,54 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 	}
 
-
+	/**
+	 * implementation to 'Open external' via commandline
+	 * 
+	 * @param preferences
+	 * @throws KnimeScriptingException
+	 */
 	private void openViaCommandline(IPreferenceStore preferences) throws KnimeScriptingException {
 		// get executable
 		String pythonExecPath = getPythonExecutable(preferences);
 		if(pythonExecPath.isEmpty())
 			throw new KnimeScriptingException("Path to python executable is not set. Please configure under Preferences > KNIME > Python Scripting.");
 
+		// add shebang to enable execution of py-script
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
 		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
 			writer.write("#! " + pythonExecPath + " -i\n");
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		} 
-		prepareScript(scriptFile, true);
+		prepareScript(scriptFile, false);
 		scriptFile.setExecutable(true);
 		
 		
-		// echo "/Users/niederle/anaconda3/bin/python -i /var/folders/r9/8yfyqn9n3dn2pzct7lz5p0rc0000gr/T/kDydri_analyze_3258817648932960189.py" > /tmp/tmp.sh ; chmod +x /tmp/tmp.sh ; open -a Terminal /tmp/tmp.sh
+		// on Mac open new Terminal and execute python-script
 		if (Utils.isMacOSPlatform()) {
 			String[] commandLine = new String[]{"open", "-a", "Terminal", scriptFile.getPath()};
 			python.executeCommand(commandLine, false);
 		}
+		// TODO: implement for Windows 
 		if (Utils.isWindowsPlatform())
 			throw new KnimeScriptingException("Windows not yet supported");
+		
+		// copy the script in the clipboard
+		String actualScript = super.prepareScript();
+        if (!actualScript.isEmpty()) {
+            StringSelection data = new StringSelection(actualScript);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(data, data);
+        }
 	}
 
-
+	/**
+	 * implementation 'Open external' as jupyter notebook <br/>
+	 * load template notebook and replace placeholders with pathes and script
+	 * 
+	 * @param preferences
+	 * @throws KnimeScriptingException
+	 */
 	private void openAsNotebook(IPreferenceStore preferences) throws KnimeScriptingException {
 		
 		String jupyterLocation = getJupyterExecutable(preferences);
@@ -773,7 +857,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		String version = isJupyterInstalled(jupyterLocation);
 		
-		// TODO: replace jupyter launch directory by preferences
+		// get jupyter path
 		String jupyterDirString = getJupyterFolder(preferences);
 		if(jupyterDirString.isEmpty())
 			throw new KnimeScriptingException("Path to jupyter folder is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
@@ -866,7 +950,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		launchNotebook(jupyterLocation, nbFile);
 	}
 
-
+	/**
+	 * launch jupyter notebook with notebookfile
+	 * 
+	 * @param jupyterLocation
+	 * @param nbFile
+	 * @throws KnimeScriptingException
+	 */
 	private void launchNotebook(String jupyterLocation, Path nbFile) throws KnimeScriptingException {
 		
 		assert python != null;
@@ -879,7 +969,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	}
 
-
+	/**
+	 * check whether jupyter version can be obtained
+	 * 
+	 * @param jupyterLocation
+	 * @return
+	 * @throws KnimeScriptingException
+	 */
 	private String isJupyterInstalled(String jupyterLocation) throws KnimeScriptingException {
 		
 		assert python != null;
@@ -901,7 +997,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return outString;
 	}
 
-
+	/**
+	 * create DataCell based on value in string format and a given datatype
+	 * 
+	 * @param value		value as string representation
+	 * @param dType		required data type
+	 * 
+	 * @return			{@link DataCell}
+	 * @throws KnimeScriptingException
+	 */
 	private DataCell createCell(String value, DataType dType) throws KnimeScriptingException {
 		
 		if(dType.equals(StringCellFactory.TYPE)) {
@@ -934,6 +1038,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return null;
 	}
 
+	/**
+	 * map Python-type definition to KNIME type definition
+	 * 
+	 * @param cType
+	 * @return	{@link DataType}
+	 */
 	private DataType getKnimeDataType(String cType) {
 		
 		// need to get data type from the factory as there
@@ -971,78 +1081,4 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 }
 
- /*   
-
-
-    protected void openInPython(PortObject[] inData, ExecutionContext exec, NodeLogger logger) throws KnimeScriptingException {
-    	IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-
-    	//      boolean local = preferences.getBoolean(PythonPreferenceInitializer.PYTHON_LOCAL);
-    	//      if (!local) throw new RuntimeException("This node can only be used with a local python executable");
-
-    	python = new LocalPythonClient();
-
-    	createTempFiles();
-    	pyOutFile = null;
-
-    	// Write data into csv
-    	BufferedDataTable[] inTables = castToBDT(inData);
-    	logger.info("Writing table to CSV file");
-    	PythonTableConverter.convertTableToCSV(exec, inTables[0], kInFile.getClientFile(), logger);
-
-    	// Create and execute script
-    	String pythonExecPath = preferences.getString(PythonPreferenceInitializer.PYTHON_EXECUTABLE);
-
-    	// get the full path of the python executable for MacOS
-    	String pythonExecPathFull = pythonExecPath;
-    	try {
-    		if (Utils.isMacOSPlatform()) {
-    			Runtime r = Runtime.getRuntime();
-    			Process p = r.exec("which " + pythonExecPath);
-    			p.waitFor();
-    			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-    			pythonExecPathFull = reader.readLine();
-    		}
-    	} catch (Exception e) {
-    		logger.error(e);
-    	}
-
-    	try {
-    		Writer writer = new BufferedWriter(new FileWriter(scriptFile.getClientFile()));
-    		try {
-    			// Write a shebang to invoke the python interpreter 
-    			writer.write("#! " + pythonExecPathFull + " -i\n");
-    			prepareScript(writer, false);
-    		} finally {
-    			writer.close();
-    		}
-
-    		scriptFile.getClientFile().setExecutable(true);
-
-    		// Run the script
-    		if (Utils.isMacOSPlatform()) {
-    			Runtime.getRuntime().exec("open -a Terminal " + " " + scriptFile.getClientPath());
-    		} else if (Utils.isWindowsPlatform()) {
-    			Runtime.getRuntime().exec(new String[] {
-    					"cmd",
-    					"/k",
-    					"start",
-    					pythonExecPath,
-    					"-i",
-    					"\"" + scriptFile.getClientPath() + "\""
-    			});
-    		} else logger.error("Unsupported platform");
-    		
-    		// copy the script in the clipboard
-    		String actualScript = super.prepareScript();
-            if (!actualScript.isEmpty()) {
-                StringSelection data = new StringSelection(actualScript);
-                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                clipboard.setContents(data, data);
-            }
-    		
-    	} catch (Exception e) {
-    		throw new KnimeScriptingException("Failed to open in Python\n" + e);
-    	}
-    }*/
 
