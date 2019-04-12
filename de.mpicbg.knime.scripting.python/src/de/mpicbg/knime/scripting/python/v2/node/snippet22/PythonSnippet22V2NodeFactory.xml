@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="../icon/pythonicon.gif" type="Manipulator">
 
-    <name>Python Snippet (V2)</name>
+    <name>Python Snippet 2:2 (V2)</name>
 
     <shortDescription>
         Executes Python code.
@@ -43,7 +43,7 @@
             </p>
 
             <p>
-	            [1] RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)         
+				[1] RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
             </p>
         </intro>
 
@@ -67,10 +67,16 @@
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data table">
+        <inPort index="0" name="Data table (kIn1)">
         	A data table
         </inPort>
-        <outPort index="0" name="Data table returned from the snippet">
+        <inPort index="1" name="Data table (kIn2)">
+        	A data table
+        </inPort>
+        <outPort index="0" name="Data table (pyOut1) returned from the snippet">
+        	The data table that the snippet returns
+        </outPort>
+        <outPort index="1" name="Data table (pyOut2) returned from the snippet">
         	The data table that the snippet returns
         </outPort>
     </ports>

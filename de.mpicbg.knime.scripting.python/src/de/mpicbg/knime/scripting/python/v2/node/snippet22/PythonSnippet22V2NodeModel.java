@@ -1,4 +1,4 @@
-package de.mpicbg.knime.scripting.python.v2.node.snippet;
+package de.mpicbg.knime.scripting.python.v2.node.snippet22;
 
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
@@ -13,31 +13,31 @@ import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
  * @author Antje Janosch
  *
  */
-public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel {
+public class PythonSnippet22V2NodeModel extends AbstractPythonScriptingV2NodeModel {
     
 	// node architecture
     public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
-    			createPorts(1), 		// 1 input table
-    			createPorts(1), 		// 1 output table
+    			createPorts(2), 		// 1 input table
+    			createPorts(2), 		// 1 output table
     			new PythonColumnSupport(), 	
     			true, 					// script
     			true,					// provide openIn
     			false);					// use chunks
     
-    private static final String DFT_SCRIPT = "pyOut = kIn.copy()";
+    private static final String DFT_SCRIPT = "pyOut1 = kIn1.copy()\npyOut2 = kIn2.copy";
 
     /**
      * constructor with node architecture configurations
      * @param cfg	{@link ScriptingModelConfig}
      */
-    public PythonSnippetV2NodeModel(ScriptingModelConfig cfg) {
+    public PythonSnippet22V2NodeModel(ScriptingModelConfig cfg) {
         super(cfg);
     }
 
     /**
      * constructor
      */
-	public PythonSnippetV2NodeModel() {
+	public PythonSnippet22V2NodeModel() {
 		super(nodeModelCfg);
 	}
 

@@ -96,8 +96,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	public static final String PY_OUTVAR_BASE_NAME = "pyOut";
 	public static final String PY_SCRIPTVAR_BASE_NAME = "pyScript";
 	
-	public static final String CFG_SCRIPT_DFT = "pyOut = kIn";
-	
 	/**
 	 * temp files and input/output ports
 	 */
@@ -132,7 +130,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @param outPorts
 	 * @param columnSupport
 	 */
-	public AbstractPythonScriptingV2NodeModel(PortType[] inPorts, PortType[] outPorts, PythonColumnSupport columnSupport) {
+	public AbstractPythonScriptingV2NodeModel(PortType[] inPorts, PortType[] outPorts, PythonColumnSupport columnSupport, String defaultScript) {
 		super(inPorts, outPorts, columnSupport);
 	}
 

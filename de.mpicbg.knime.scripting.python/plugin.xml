@@ -20,6 +20,11 @@
               deprecated="false"
               factory-class="de.mpicbg.knime.scripting.python.v2.node.snippet.PythonSnippetV2NodeFactory">
         </node>
+        <node
+              category-path="/community/python"
+              deprecated="false"
+              factory-class="de.mpicbg.knime.scripting.python.v2.node.snippet22.PythonSnippet22V2NodeFactory">
+        </node>
     </extension>
 
     <extension point="org.knime.workbench.repository.categories">
