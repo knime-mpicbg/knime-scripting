@@ -15,7 +15,7 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 
 /**
- * <code>NodeDialog</code> for the "Python nippet" Node.
+ * <code>NodeDialog</code> for the "Python Snippet" Node.
  *
  * Antje Janosch (MPI-CBG)
  */

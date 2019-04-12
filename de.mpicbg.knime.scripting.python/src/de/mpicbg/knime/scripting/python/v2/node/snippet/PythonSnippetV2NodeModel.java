@@ -7,9 +7,15 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
-
+/**
+ * Node Model for Python Snippet node
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel {
     
+	// node architecture
     public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
     			createPorts(1), 		// 1 input table
     			createPorts(1), 		// 1 output table
@@ -19,14 +25,16 @@ public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel
     			false);					// use chunks
 
     /**
-     * constructor
-     * @param numInputs
-     * @param numOutputs
+     * constructor with node architecture configurations
+     * @param cfg	{@link ScriptingModelConfig}
      */
     public PythonSnippetV2NodeModel(ScriptingModelConfig cfg) {
         super(cfg);
     }
 
+    /**
+     * constructor
+     */
 	public PythonSnippetV2NodeModel() {
 		super(nodeModelCfg);
 	}

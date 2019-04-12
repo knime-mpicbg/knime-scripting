@@ -7,9 +7,9 @@ import org.knime.core.node.NodeView;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
 /**
- * <code>NodeFactory</code> for the "RSnippet" Node.
+ * <code>NodeFactory</code> for the "PythonSnippet" Node.
  *
- * @author Holger Brandl, Antje Janosch (MPI-CBG)
+ * @author Antje Janosch (MPI-CBG)
  */
 public class PythonSnippetV2NodeFactory extends NodeFactory<PythonSnippetV2NodeModel> {
 

@@ -5,21 +5,23 @@
     <name>Python Snippet (V2)</name>
 
     <shortDescription>
-        Executes a snippet with Python within KNIME.
+        Executes Python code.
     </shortDescription>
 
     <fullDescription>
         <intro>
             <p>
-                This node executes a snippet/script using Python. The script for Python can be selected from a
-                snippet template repository.
-                RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
-                is used to configure the Python code using a graphical user interface in a way that the user does not
-                need to know scripting in Python.
-                URL of the template file can be set in KNIME->Preferences->KNIME->Python Scripting
+                This node executes a Python script. A local Python installation is required as well
+                as the availability of the Python 'pandas'-package. Under "KNIME > Preferences > KNIME 
+                > Python Scriping" a Python2 and Python3 installation can be provided. Depending on the
+                preference settings either Python2 or Python3 will be used.
+                The nodes provides a simple editor for Python code as well as the possibility to load
+                and configure Python code via RGG-templates. RGG[1]-templates can be provided with templates files
+                and allow script configuration based on a graphical user interface.                
+                URLs of template files can be set in "KNIME > Preferences > KNIME > Python Scripting"
                 <br/>
-                The input data table from KNIME is converted to a dictionary and imported into Python as a variable
-                named "kIn". The output data table is sent back to KNIME as "pyOut".
+                The input data table from KNIME is provided to Python as pandas dataframe and is
+                named "kIn". The output data table is expected to be a pandas dataframe named "pyOut".
             </p>
             <p>
                 Script Editor:<br/>
@@ -34,41 +36,36 @@
                 Then configure the GUI according to your input data.
             </p>
             <p>
-                Output Options:<br/>
-                Specify the output table to avoid that the node shows a warning.
+                Open External:<br/>
+                According to preference settings under "KNIME > Preferences > KNIME > Python Scripting > Open In"
+                either a Jupyter notebook will be created ready to load and process KNIME data, or Python will be 
+                started via command line, loading the KNIME input table and providing the Python script at the clipboard.
             </p>
+
             <p>
-                IMPORTANT:<br/>
-                TThis node is using Python as backend, make sure that Python is installed locally or that 
-                the node can connect to the Python server is running somewhere accessible. Check the node 
-                configurations: KNIME->Preferences->KNIME->Python Scripting.<br/>
-                Further documentation can be found on the 
-                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Python-server-for-knime">Scripting integration Wiki (Python server)</a>
+	            <ul>
+	            	<li>[1] RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)</li>
+	            </ul>
             </p>
         </intro>
 
-        <option name="Script Editor/Unlink from Template">
-        	Gives access to the Python script after adaptation by the GUI.
+		<option name="Open external">If checked, Python will be opened externally, either as Jupyter notebook or via command line.
         </option>
-        <option name="Script Editor/Edit Template">
-        	Gives access to the RGG script.
+        <option name="Scipt Editor/Unlink from Template">Gives access to the Python script after adaptation by the GUI.
         </option>
-        <option name="Templates/Refresh">
-        	Loads again the template file.
+        <option name="Scipt Editor/Edit Template">Gives access to the RGG script.
         </option>
-        <option name="Templates/Gallery">
-        	Generate a temporary webpage shown in a browser which gives an overview about all available templates.
+        <option name="Templates/Refresh">Loads again the template file.
         </option>
-        <option name="Templates/Description,Source">
-        	Description explains what this snippet does. Source displays the RGG script.
+        <option name="Templates/Gallery">Generate a temporary webpage shown in a browser which gives an overview about
+            all available templates.
         </option>
-        <option name="Templates/Use this template">
-        	Click to load the GUI (or double-click onto the template)
+        <option name="Templates/Description,Source">Description explains what this snippet does. Source displays the RGG
+            script.
         </option>
-        <option name="Output Options/Add/Remove output columns">
-        	Specify the column names and types of the output table.
-            If this is not done then KNIME shows a warning, because the output table is not defined.
+        <option name="Templates/Use this template">Click to load the GUI (or double-click onto the template)
         </option>
+        
     </fullDescription>
 
     <ports>
