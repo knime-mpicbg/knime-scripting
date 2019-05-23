@@ -496,6 +496,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @throws KnimeScriptingException
 	 */
 	protected void runScript(ExecutionMonitor exec) throws KnimeScriptingException {
+		
+		// empty output from previous executions
+		m_stdOut.clear();
 			
 		try {
 			runScriptImpl(exec);

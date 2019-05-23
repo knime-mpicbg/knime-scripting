@@ -52,7 +52,8 @@ public class PythonSnippet22V2NodeFactory extends NodeFactory<PythonSnippet22V2N
     @Override
     public NodeDialogPane createNodeDialogPane() {
         return new PythonSnippet22V2NodeDialog(
-        		AbstractPythonScriptingV2NodeModel.CFG_SCRIPT_DFT, 
+        		//"pyOut = kIn.copy()", 
+        		PythonSnippet22V2NodeModel.DFT_SCRIPT,
         		PythonSnippet22V2NodeModel.nodeModelCfg);
     }
 }

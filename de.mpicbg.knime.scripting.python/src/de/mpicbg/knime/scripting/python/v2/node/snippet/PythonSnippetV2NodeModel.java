@@ -24,7 +24,7 @@ public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel
     			true,					// provide openIn
     			false);					// use chunks
     
-    private static final String DFT_SCRIPT = "pyOut = kIn.copy()";
+    public static final String DFT_SCRIPT = "pyOut = kIn.copy()";
 
     /**
      * constructor with node architecture configurations
