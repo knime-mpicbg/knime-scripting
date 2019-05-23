@@ -25,14 +25,10 @@
  */
 package de.mpicbg.knime.scripting.python.prefs;
 
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
-import de.mpicbg.knime.scripting.python.srv.CommandOutput;
-import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.Python;
-
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
+
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 
 
 public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -61,9 +57,13 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
     public static final String PY3 = "py3";
     
     public static final String JUPYTER_EXECUTABLE = "jupyter.exec";
-    public static final String JUPYTER_USE = "use.jupyter";
-    
+    public static final String JUPYTER_USE = "use.jupyter";   
     public static final boolean JUPYTER_USE_DFT = Boolean.FALSE;
+    
+    public static final String JUPYTER_MODE = "jupyter.mode";
+    public static final String JUPYTER_MODE_1 = "lab";
+    public static final String JUPYTER_MODE_2 = "notebook";
+    
     
     public static final String JUPYTER_FOLDER = "jupyter.folder";
 
@@ -89,6 +89,7 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(JUPYTER_EXECUTABLE, "");
         store.setDefault(JUPYTER_FOLDER, "");
         store.setDefault(JUPYTER_USE, JUPYTER_USE_DFT);
+        store.setDefault(JUPYTER_MODE, JUPYTER_MODE_1);
 
         store.setDefault(PYTHON_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Python/script-templates.txt\",true)");
         store.setDefault(PYTHON_PLOT_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Python/figure-templates.txt\",true)");

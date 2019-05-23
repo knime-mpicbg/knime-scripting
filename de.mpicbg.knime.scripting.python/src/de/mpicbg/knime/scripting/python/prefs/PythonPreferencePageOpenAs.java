@@ -26,6 +26,7 @@
 package de.mpicbg.knime.scripting.python.prefs;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
@@ -55,8 +56,15 @@ public class PythonPreferencePageOpenAs extends FieldEditorPreferencePage implem
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
         
+        final String[][] entries = new String[2][2];
+        entries[0][1] = PythonPreferenceInitializer.JUPYTER_MODE_1;
+        entries[0][0] = "lab (recommended)";
+        entries[1][1] = PythonPreferenceInitializer.JUPYTER_MODE_2;
+        entries[1][0] = "notebook";
+        
         addField(new BooleanFieldEditor(PythonPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook", parent));
         addField(new FileFieldEditor(PythonPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, parent));
+        addField(new ComboFieldEditor(PythonPreferenceInitializer.JUPYTER_MODE, "Jupyter mode", entries, parent));
         addField(new DirectoryFieldEditor(PythonPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", parent));
     }
 

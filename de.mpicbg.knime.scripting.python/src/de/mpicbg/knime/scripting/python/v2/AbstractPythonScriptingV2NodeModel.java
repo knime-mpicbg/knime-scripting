@@ -664,6 +664,16 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 	
 	/**
+	 * retrieve jupyter mode from preferences
+	 * 
+	 * @param preferences
+	 * @return
+	 */
+	protected String getJupyterMode(IPreferenceStore preferences) {	
+		return preferences.getString(PythonPreferenceInitializer.JUPYTER_MODE);
+	}
+	
+	/**
 	 * retrieve path to folder for temporary notebooks from preferences
 	 * 
 	 * @param preferences
@@ -859,6 +869,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	private void openAsNotebook(IPreferenceStore preferences) throws KnimeScriptingException {
 		
 		String jupyterLocation = getJupyterExecutable(preferences);
+		String jupyterMode = getJupyterMode(preferences);
 		
 		if(jupyterLocation.isEmpty())
 			throw new KnimeScriptingException("Path to jupyter executable is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
@@ -955,7 +966,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
 		
 		// 3) 
-		launchNotebook(jupyterLocation, nbFile);
+		launchNotebook(jupyterLocation, jupyterMode, nbFile);
 	}
 
 	/**
@@ -965,12 +976,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @param nbFile
 	 * @throws KnimeScriptingException
 	 */
-	private void launchNotebook(String jupyterLocation, Path nbFile) throws KnimeScriptingException {
+	private void launchNotebook(String jupyterLocation, String jupyterMode, Path nbFile) throws KnimeScriptingException {
 		
 		assert python != null;
 		
 		try {
-			python.executeCommand(new String[]{jupyterLocation, "notebook", nbFile.toString()}, false);
+			python.executeCommand(new String[]{jupyterLocation, jupyterMode, nbFile.toString()}, false);
 		} catch (Exception re) {
 			throw new KnimeScriptingException("Failed while launching Jupyter: " + re.getMessage());
 		}
