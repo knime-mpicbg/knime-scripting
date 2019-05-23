@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../icon/pythonicon.gif" type="Manipulator">
+<knimeNode icon="../../../icon/pythonicon.gif" type="Manipulator">
 
-    <name>Python Snippet 2:2 (V2)</name>
+    <name>Python Snippet 2:2</name>
 
     <shortDescription>
         Executes Python code.
@@ -38,12 +38,12 @@
             <p>
                 Open External:<br/>
                 According to preference settings under "KNIME > Preferences > KNIME > Python Scripting > Open In"
-                either a Jupyter notebook will be created ready to load and process KNIME data, or Python will be 
+                either a Jupyter notebook will be created and launched ready to load and process KNIME data, or Python will be 
                 started via command line, loading the KNIME input table and providing the Python script at the clipboard.
             </p>
 
             <p>
-				[1] RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
+	            [1] RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)         
             </p>
         </intro>
 
@@ -76,8 +76,8 @@
         <outPort index="0" name="Data table (pyOut1) returned from the snippet">
         	The data table that the snippet returns
         </outPort>
-        <outPort index="1" name="Data table (pyOut2) returned from the snippet">
-        	The data table that the snippet returns
+        <outPort index="1" name="Data table (pyOut2) returned from Python">
+        	The data table that the Python snippet returns
         </outPort>
     </ports>
 

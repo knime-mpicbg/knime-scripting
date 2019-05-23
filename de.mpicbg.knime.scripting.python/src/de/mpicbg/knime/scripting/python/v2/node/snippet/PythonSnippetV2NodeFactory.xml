@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="../../../icon/pythonicon.gif" type="Manipulator">
 
-    <name>Python Snippet (V2)</name>
+    <name>Python Snippet</name>
 
     <shortDescription>
         Executes Python code.
@@ -67,10 +67,10 @@
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data table">
+        <inPort index="0" name="Data table (kIn)">
         	A data table
         </inPort>
-        <outPort index="0" name="Data table returned from Python">
+        <outPort index="0" name="Data table (pyOut) returned from Python">
         	The data table that the Python snippet returns
         </outPort>
     </ports>
