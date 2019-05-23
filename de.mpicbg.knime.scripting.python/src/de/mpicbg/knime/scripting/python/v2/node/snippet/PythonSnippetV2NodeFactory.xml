@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../icon/pythonicon.gif" type="Manipulator">
+<knimeNode icon="../../../icon/pythonicon.gif" type="Manipulator">
 
     <name>Python Snippet (V2)</name>
 
@@ -38,7 +38,7 @@
             <p>
                 Open External:<br/>
                 According to preference settings under "KNIME > Preferences > KNIME > Python Scripting > Open In"
-                either a Jupyter notebook will be created ready to load and process KNIME data, or Python will be 
+                either a Jupyter notebook will be created and launched ready to load and process KNIME data, or Python will be 
                 started via command line, loading the KNIME input table and providing the Python script at the clipboard.
             </p>
 
@@ -70,8 +70,8 @@
         <inPort index="0" name="Data table">
         	A data table
         </inPort>
-        <outPort index="0" name="Data table returned from the snippet">
-        	The data table that the snippet returns
+        <outPort index="0" name="Data table returned from Python">
+        	The data table that the Python snippet returns
         </outPort>
     </ports>
 
