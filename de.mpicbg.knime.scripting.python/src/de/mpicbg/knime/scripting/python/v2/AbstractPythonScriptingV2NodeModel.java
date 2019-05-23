@@ -367,21 +367,25 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		int nOut = m_outPorts.size();
 		
-		// pull all python data tables
-		for(String out : m_outPorts.keySet()) {
-			transferToExec.setMessage("Pull table");
-			try {
-				double subProgress = 1.0/nOut;
-				PortObject outTable = null;
-				try {
-					outTable = pullTableFromPython(out, exec, subProgress);
-				} catch(IOException ioe) {
-					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
-				}				
-				m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
-			} finally {
-				deleteTempFiles();
+		try {
+		
+			// pull all python data tables
+			for(String out : m_outPorts.keySet()) {
+				transferToExec.setMessage("Pull table");
+				
+					double subProgress = 1.0/nOut;
+					PortObject outTable = null;
+					try {
+						outTable = pullTableFromPython(out, exec, subProgress);
+					} catch(IOException ioe) {
+						throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
+					}				
+					m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
+				
 			}
+		
+		} finally {
+			deleteTempFiles();
 		}
 		
 		PortObject[] ports = new PortObject[m_outPorts.size()];
@@ -607,20 +611,23 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 
 			// (4) add write-calls to script file
-			File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
-			String errorMessage = null;
-			if(f != null) {
-				try {
-					String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + PY_OUTVAR_BASE_NAME + ")\n";
-					Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
-				} catch(IOException ioe) {
-					errorMessage = ioe.getMessage();
+			for(String outLabel : m_outPorts.keySet()) {
+				File f = m_tempFiles.get(outLabel);
+				//File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
+				String errorMessage = null;
+				if(f != null) {
+					try {
+						String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")\n";
+						Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
+					} catch(IOException ioe) {
+						errorMessage = ioe.getMessage();
+					}
+				} else {
+					errorMessage = "Failed to write script file";				
 				}
-			} else {
-				errorMessage = "Failed to write script file";				
+				if(errorMessage != null)
+					throw new KnimeScriptingException(errorMessage);
 			}
-			if(errorMessage != null)
-				throw new KnimeScriptingException(errorMessage);
 		}
 	}
 
