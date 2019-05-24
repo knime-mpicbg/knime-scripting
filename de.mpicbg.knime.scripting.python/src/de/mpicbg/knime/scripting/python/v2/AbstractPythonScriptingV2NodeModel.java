@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -883,8 +884,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		// 1) load notebook template and copy as tempfile for modification
 		Path nbFile = null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm");
+
+		String timeString = LocalDateTime.now().format(formatter);
 		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/template_notebook.ipynb")) {
-			nbFile = Files.createTempFile(Paths.get(jupyterDirString), "notebookformat_", ".ipynb");
+			nbFile = Files.createTempFile(Paths.get(jupyterDirString), timeString + "_", ".ipynb");
 			Files.copy(utilsStream, nbFile, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to create notebook format file: " + ioe.getMessage());
