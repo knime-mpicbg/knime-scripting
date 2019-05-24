@@ -5,6 +5,7 @@ import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -12,6 +13,19 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 
 public class JupyterPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+
+	private FileFieldEditor ffe;
+	private JupyterKernelSpecsEditor jkse ;
+	
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		
+		super.propertyChange(event);
+			
+		if(event.getSource().equals(ffe) && ffe.isValid()) {
+			jkse.updateKernelSpecs(ffe.getStringValue());
+		}
+	}
 
 	public JupyterPreferencePage() {
 		super(FieldEditorPreferencePage.GRID);
@@ -31,10 +45,15 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         entries[1][1] = ScriptingPreferenceInitializer.JUPYTER_MODE_2;
         entries[1][0] = "notebook";
         
+        ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, parent);
+        jkse = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNELS, "Jupyter kernel specs - please assign", parent);
+        
         //addField(new BooleanFieldEditor(ScriptingPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook", parent));
-        addField(new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, parent));
+        addField(ffe);
+        addField(jkse);
         addField(new ComboFieldEditor(ScriptingPreferenceInitializer.JUPYTER_MODE, "Jupyter mode", entries, parent));
         addField(new DirectoryFieldEditor(ScriptingPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", parent));
+        
 	}
 
 	@Override

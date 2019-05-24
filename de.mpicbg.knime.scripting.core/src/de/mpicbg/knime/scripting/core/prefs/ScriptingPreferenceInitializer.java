@@ -19,6 +19,8 @@ public class ScriptingPreferenceInitializer extends AbstractPreferenceInitialize
     
     public static final String JUPYTER_FOLDER = "jupyter.folder";
 
+	public static final String JUPYTER_KERNELS = "jupyter.kernels";
+
 	@Override
 	public void initializeDefaultPreferences() {
 		
