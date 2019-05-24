@@ -38,7 +38,7 @@
     </extension>
 
     <extension point="org.eclipse.ui.preferencePages">
-        <page category="org.knime.workbench.ui.preferences"
+        <page category="de.mpicbg.knime.scripting.core.prefs.ScriptingPreferencePage"
               class="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
               id="de.mpicbg.knime.scripting.python.prefs.PythonPreferencePage"
               name="Python Scripting">
