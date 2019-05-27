@@ -1,5 +1,7 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
+import java.io.IOException;
+
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -11,6 +13,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 
 public class JupyterPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
@@ -23,7 +26,12 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		super.propertyChange(event);
 			
 		if(event.getSource().equals(ffe) && ffe.isValid()) {
-			jkse.updateKernelSpecs(ffe.getStringValue());
+			try {
+				jkse.updateKernelSpecs(ffe.getStringValue());
+			} catch (IOException | KnimeScriptingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -1,7 +1,18 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
@@ -10,6 +21,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 
 public class JupyterKernelSpecsEditor extends FieldEditor {
 	
@@ -115,7 +128,41 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		return 2;
 	}
 
-	public void updateKernelSpecs(String jupyterLocation) {
+	public void updateKernelSpecs(String jupyterLocation) throws IOException, KnimeScriptingException {
+		
+		m_kernelSpecs.clear();
+		
+		ProcessBuilder pb = new ProcessBuilder(jupyterLocation, "kernelspec", "list", "--json");
+		File outFile = Files.createTempFile("kernelspecs_", ".txt").toFile();
+		//File outFile = outPath.toFile();
+		
+		pb.redirectErrorStream(true);
+		pb.redirectOutput(Redirect.appendTo(outFile));
+		Process p = pb.start();
+				
+		try(JsonReader reader = Json.createReader(new FileReader(outFile))) {
+			JsonObject jsonObject = reader.readObject();
+			JsonObject kernelspecs = jsonObject.getJsonObject("kernelspecs");
+			
+			if(kernelspecs == null)
+				throw new KnimeScriptingException("failed to read JSON. Expected key \"kernelspecs\"");
+			
+			for(String key : kernelspecs.keySet()) {
+				String name = key;
+				JsonObject spec = kernelspecs.getJsonObject(name).getJsonObject("spec");
+				if(spec == null)
+					throw new KnimeScriptingException("failed to read JSON. Expected key \"spec\"");
+				String displayName = spec.getString("display_name");
+				String language = spec.getString("language");
+				
+				m_kernelSpecs.add(new JupyterKernelSpec(name, displayName, language));
+			}
+			
+		}
+		
+		if(outFile.exists())
+			outFile.delete();
+		
 		c_py2KernelCombo.add("test 1");
 		c_py2KernelCombo.add("test 2");
 		c_py2KernelCombo.update();
