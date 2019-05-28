@@ -5,10 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -39,7 +38,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     public JupyterKernelSpecsEditor(String name, String labelText,Composite parent) {
 		super(name, labelText, parent);
 		
-		m_kernelSpecs = new ArrayList<JupyterKernelSpec>();
+		m_kernelSpecs = new LinkedList<JupyterKernelSpec>();
 	}
     
 	@Override
@@ -128,9 +127,10 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		return 2;
 	}
 
-	public void updateKernelSpecs(String jupyterLocation) throws IOException, KnimeScriptingException {
+	public void updateKernelSpecs(String jupyterLocation) throws IOException, KnimeScriptingException, InterruptedException {
 		
-		m_kernelSpecs.clear();
+		// use temporary list to fill with new content
+		List<JupyterKernelSpec> kernelSpecs = new LinkedList<JupyterKernelSpec>();
 		
 		ProcessBuilder pb = new ProcessBuilder(jupyterLocation, "kernelspec", "list", "--json");
 		File outFile = Files.createTempFile("kernelspecs_", ".txt").toFile();
@@ -139,6 +139,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		pb.redirectErrorStream(true);
 		pb.redirectOutput(Redirect.appendTo(outFile));
 		Process p = pb.start();
+		p.waitFor(5, TimeUnit.SECONDS);
 				
 		try(JsonReader reader = Json.createReader(new FileReader(outFile))) {
 			JsonObject jsonObject = reader.readObject();
@@ -155,7 +156,8 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 				String displayName = spec.getString("display_name");
 				String language = spec.getString("language");
 				
-				m_kernelSpecs.add(new JupyterKernelSpec(name, displayName, language));
+				if(JupyterKernelSpec.isValidLanguage(language))
+					kernelSpecs.add(new JupyterKernelSpec(name, displayName, language));
 			}
 			
 		}
@@ -163,9 +165,72 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		if(outFile.exists())
 			outFile.delete();
 		
-		c_py2KernelCombo.add("test 1");
-		c_py2KernelCombo.add("test 2");
-		c_py2KernelCombo.update();
+		m_kernelSpecs.clear();
+		m_kernelSpecs.addAll(kernelSpecs);
+		
+		updateComboBoxes();	
+	}
+
+	private void updateComboBoxes() {
+		
+		int py2SelectedIdx = c_py2KernelCombo.getSelectionIndex();
+		int py3SelectedIdx = c_py3KernelCombo.getSelectionIndex();
+		int rSelectedIdx = c_rKernelCombo.getSelectionIndex();
+		String py2Spec = null;
+		if(py2SelectedIdx >= 0) py2Spec = c_py2KernelCombo.getItem(py2SelectedIdx);
+		String py3Spec = null;
+		if(py3SelectedIdx >= 0) py3Spec = c_py3KernelCombo.getItem(py3SelectedIdx);
+		String rSpec = null;
+		if(rSelectedIdx >= 0) rSpec = c_rKernelCombo.getItem(rSelectedIdx);
+		
+		c_py2KernelCombo.removeAll();
+		c_py3KernelCombo.removeAll();
+		c_rKernelCombo.removeAll();
+		
+		for(JupyterKernelSpec spec : m_kernelSpecs) {
+			
+			if(spec.getLanguage().equals(JupyterKernelSpec.PYTHON_LANG)) {
+				c_py2KernelCombo.add(spec.getDisplayName());
+				c_py3KernelCombo.add(spec.getDisplayName());
+			}
+			if(spec.getLanguage().equals(JupyterKernelSpec.R_LANG)) {
+				c_rKernelCombo.add(spec.getDisplayName());
+			}
+			
+		}
+		
+		if(py2SelectedIdx >= 0) {
+			int i = 0;
+			for(String item : c_py2KernelCombo.getItems()) {
+				if(item.equals(py2Spec))
+						c_py2KernelCombo.select(i);
+				i++;
+			}
+		}
+		if(c_py2KernelCombo.getSelectionIndex() == -1 && c_py2KernelCombo.getItemCount() > 0)
+			c_py2KernelCombo.select(0);
+		
+		if(py3SelectedIdx >= 0) {
+			int i = 0;
+			for(String item : c_py3KernelCombo.getItems()) {
+				if(item.equals(py3Spec))
+						c_py3KernelCombo.select(i);
+				i++;
+			}
+		}
+		if(c_py3KernelCombo.getSelectionIndex() == -1 && c_py3KernelCombo.getItemCount() > 0)
+			c_py3KernelCombo.select(0);
+		
+		if(rSelectedIdx >= 0) {
+			int i = 0;
+			for(String item : c_rKernelCombo.getItems()) {
+				if(item.equals(rSpec))
+						c_rKernelCombo.select(i);
+				i++;
+			}
+		}
+		if(c_rKernelCombo.getSelectionIndex() == -1 && c_rKernelCombo.getItemCount() > 0)
+			c_rKernelCombo.select(0);
 	}
 
 }

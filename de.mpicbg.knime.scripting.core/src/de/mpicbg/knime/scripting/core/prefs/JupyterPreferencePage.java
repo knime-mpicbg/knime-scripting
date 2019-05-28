@@ -28,7 +28,7 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		if(event.getSource().equals(ffe) && ffe.isValid()) {
 			try {
 				jkse.updateKernelSpecs(ffe.getStringValue());
-			} catch (IOException | KnimeScriptingException e) {
+			} catch (IOException | KnimeScriptingException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
