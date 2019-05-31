@@ -33,6 +33,9 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     private Combo c_rKernelCombo;
     
     private List<JupyterKernelSpec> m_kernelSpecs;
+    
+    private static final String DEFAULT_SEPERATOR = ";";
+    public static final String NO_SPEC = "< NO SELECTION >";
 
     
     public JupyterKernelSpecsEditor(String name, String labelText,Composite parent) {
@@ -106,8 +109,13 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 
 	@Override
 	protected void doLoad() {
-		// TODO Auto-generated method stub
+		String items = getPreferenceStore().getString(getPreferenceName());       
+        deserialzieJupyterSpecs(items);
+	}
 
+	private void deserialzieJupyterSpecs(String items) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -118,8 +126,31 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 
 	@Override
 	protected void doStore() {
-		// TODO Auto-generated method stub
+		// save everything to preference string
+        String tString = serializeJupyterSpecs();
+        if (tString != null)
+            getPreferenceStore().setValue(getPreferenceName(), tString);
+	}
+	
+	protected String serializeJupyterSpecs() {
+		StringBuilder prefString = new StringBuilder();
 
+        /*boolean firstEntry = true;
+        for (JupyterKernelSpec pref : m_kernelSpecs) {
+            if (!firstEntry) prefString.append(DEFAULT_SEPERATOR);
+            prefString.append("(");
+            prefString.append(pref.getName());
+            prefString.append(",");
+            prefString.append(pref.getDisplayName());
+            prefString.append(",");
+            prefString.append(pref.getLanguage());
+            prefString.append(")");
+            firstEntry = false;
+        }*/
+        // python 2 kernelspec
+		if(c_py2KernelCombo.getSelectionIndex() >= 0)
+
+        return prefString.toString(); 
 	}
 
 	@Override
@@ -186,6 +217,10 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		c_py2KernelCombo.removeAll();
 		c_py3KernelCombo.removeAll();
 		c_rKernelCombo.removeAll();
+		
+		c_py2KernelCombo.add(NO_SPEC);
+		c_py3KernelCombo.add(NO_SPEC);
+		c_rKernelCombo.add(NO_SPEC);
 		
 		for(JupyterKernelSpec spec : m_kernelSpecs) {
 			

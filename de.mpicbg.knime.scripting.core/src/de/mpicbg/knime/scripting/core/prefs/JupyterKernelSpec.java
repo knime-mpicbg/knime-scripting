@@ -21,6 +21,10 @@ public class JupyterKernelSpec {
 		m_language = language;
 	}
 	
+	public String getName() {
+		return m_name;
+	}
+	
 	public String getDisplayName() {
 		return m_displayName;
 	}
@@ -37,5 +41,6 @@ public class JupyterKernelSpec {
 	public String toString() {
 		return m_name + ": (" + m_displayName + ", " + m_language.toString() + ")";
 	}
+	
 	
 }
