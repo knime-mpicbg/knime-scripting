@@ -1,6 +1,17 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
@@ -19,6 +30,8 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 
 	private FileFieldEditor ffe;
 	private JupyterKernelSpecsEditor jkse ;
+		
+	private List<JupyterKernelSpec> m_kernelSpecs;
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
@@ -27,12 +40,55 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 			
 		if(event.getSource().equals(ffe) && ffe.isValid()) {
 			try {
-				jkse.updateKernelSpecs(ffe.getStringValue());
+				updateKernelSpecs(ffe.getStringValue());
+				jkse.updateComboBoxes(m_kernelSpecs);
 			} catch (IOException | KnimeScriptingException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	public void updateKernelSpecs(String jupyterLocation) throws IOException, KnimeScriptingException, InterruptedException {
+		
+		// use temporary list to fill with new content
+		List<JupyterKernelSpec> kernelSpecs = new LinkedList<JupyterKernelSpec>();
+		
+		ProcessBuilder pb = new ProcessBuilder(jupyterLocation, "kernelspec", "list", "--json");
+		File outFile = Files.createTempFile("kernelspecs_", ".txt").toFile();
+		//File outFile = outPath.toFile();
+		
+		pb.redirectErrorStream(true);
+		pb.redirectOutput(Redirect.appendTo(outFile));
+		Process p = pb.start();
+		p.waitFor(5, TimeUnit.SECONDS);
+				
+		try(JsonReader reader = Json.createReader(new FileReader(outFile))) {
+			JsonObject jsonObject = reader.readObject();
+			JsonObject kernelspecs = jsonObject.getJsonObject("kernelspecs");
+			
+			if(kernelspecs == null)
+				throw new KnimeScriptingException("failed to read JSON. Expected key \"kernelspecs\"");
+			
+			for(String key : kernelspecs.keySet()) {
+				String name = key;
+				JsonObject spec = kernelspecs.getJsonObject(name).getJsonObject("spec");
+				if(spec == null)
+					throw new KnimeScriptingException("failed to read JSON. Expected key \"spec\"");
+				String displayName = spec.getString("display_name");
+				String language = spec.getString("language");
+				
+				if(JupyterKernelSpec.isValidLanguage(language))
+					kernelSpecs.add(new JupyterKernelSpec(name, displayName, language));
+			}
+			
+		}
+		
+		if(outFile.exists())
+			outFile.delete();
+		
+		m_kernelSpecs.clear();
+		m_kernelSpecs.addAll(kernelSpecs);
 	}
 
 	public JupyterPreferencePage() {
@@ -41,6 +97,8 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 	    // Set the preference store for the preference page.
 	    IPreferenceStore store = ScriptingCoreBundleActivator.getDefault().getPreferenceStore();
 	    setPreferenceStore(store);
+	    
+	    m_kernelSpecs = new LinkedList<JupyterKernelSpec>();
 	}
 
 	@Override
@@ -54,7 +112,7 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         entries[1][0] = "notebook";
         
         ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, parent);
-        jkse = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNELS, "Jupyter kernel specs - please assign", parent);
+        jkse = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNELS, "Jupyter kernel specs - please assign", parent, JupyterKernelSpec.PYTHON_LANG);
         
         //addField(new BooleanFieldEditor(ScriptingPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook", parent));
         addField(ffe);
