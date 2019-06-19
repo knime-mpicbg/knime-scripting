@@ -16,10 +16,11 @@ public class ScriptingPreferenceInitializer extends AbstractPreferenceInitialize
     public static final String JUPYTER_MODE_1 = "lab";
     public static final String JUPYTER_MODE_2 = "notebook";
     
-    
     public static final String JUPYTER_FOLDER = "jupyter.folder";
 
-	public static final String JUPYTER_KERNELS = "jupyter.kernels";
+	public static final String JUPYTER_KERNEL_PY2 = "jupyter.py2.kernel";
+	public static final String JUPYTER_KERNEL_PY3 = "jupyter.py3.kernel";
+	public static final String JUPYTER_KERNEL_R = "jupyter.r.kernel";
 
 	@Override
 	public void initializeDefaultPreferences() {

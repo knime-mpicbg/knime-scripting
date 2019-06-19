@@ -51,25 +51,15 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
         c_top = parent;
         c_top.setLayoutData(gd);
         
-        c_group = new Composite(c_top, SWT.BORDER);
-
-        GridLayout newgd = new GridLayout(2, false);
-        c_group.setLayout(newgd);
-        c_group.setLayoutData(gd);
-
-        // set label
-        Label label = getLabelControl(c_group);
-        GridData labelData = new GridData();
-        labelData.horizontalSpan = numColumns;
-        label.setLayoutData(labelData);
-        
         // kernel spec combo
     
-        Label comboLabel = new Label(c_group, SWT.NONE);
+        Label comboLabel = new Label(c_top, SWT.NONE);
         comboLabel.setText("Select kernel");
-        comboLabel.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+        gd = new GridData(SWT.LEFT, SWT.TOP, false, false);
+        gd.horizontalSpan = numColumns - 1;
+        comboLabel.setLayoutData(gd);
         
-        c_kernelCombo = new Combo(c_group, SWT.READ_ONLY);
+        c_kernelCombo = new Combo(c_top, SWT.READ_ONLY);
         c_kernelCombo.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));     
 	}
 
