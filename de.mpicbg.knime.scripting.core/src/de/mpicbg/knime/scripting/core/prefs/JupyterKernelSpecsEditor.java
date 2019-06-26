@@ -13,8 +13,6 @@ import org.eclipse.swt.widgets.Label;
 public class JupyterKernelSpecsEditor extends FieldEditor {
 	
 	/* GUI-components */
-    private Composite c_top;
-    //private Composite c_group;
     private Combo c_kernelCombo;
     
     private final String m_language;
@@ -44,22 +42,14 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     	 * by default each component will use 1 column
     	 * GridData can be set to use more that one columns
     	 */
-		
-		GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
-        gd.horizontalSpan = numColumns;
-		   	
-        c_top = parent;
-        c_top.setLayoutData(gd);
-        
-        // kernel spec combo
-    
-        Label comboLabel = new Label(c_top, SWT.NONE);
+
+        Label comboLabel = new Label(parent, SWT.NONE);
         comboLabel.setText("Select kernel");
-        gd = new GridData(SWT.LEFT, SWT.TOP, false, false);
+        GridData gd = new GridData(SWT.LEFT, SWT.TOP, false, false);
         gd.horizontalSpan = 1;
         comboLabel.setLayoutData(gd);
         
-        c_kernelCombo = new Combo(c_top, SWT.READ_ONLY);
+        c_kernelCombo = new Combo(parent, SWT.READ_ONLY);
         gd = new GridData(SWT.FILL, SWT.TOP, true, false);
         gd.horizontalSpan = numColumns - 1;
         c_kernelCombo.setLayoutData(gd);     
