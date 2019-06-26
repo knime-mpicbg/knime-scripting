@@ -107,7 +107,7 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 
 	@Override
 	protected void createFieldEditors() {
-		Composite parent = getFieldEditorParent();
+		//Composite parent = getFieldEditorParent();
         
         final String[][] entries = new String[2][2];
         entries[0][1] = ScriptingPreferenceInitializer.JUPYTER_MODE_1;
@@ -115,18 +115,18 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         entries[1][1] = ScriptingPreferenceInitializer.JUPYTER_MODE_2;
         entries[1][0] = "notebook";
         
-        ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, parent);
-        jksePy2 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY2, "Python 2 kernelspec", parent, JupyterKernelSpec.PYTHON_LANG);
-        jksePy3 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY3, "Python 3 kernelspec", parent, JupyterKernelSpec.PYTHON_LANG);
-        jkseR = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_R, "R kernelspec", parent, JupyterKernelSpec.R_LANG);
+        ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, getFieldEditorParent());
+        jksePy2 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY2, "Python 2 kernelspec", getFieldEditorParent(), JupyterKernelSpec.PYTHON_LANG);
+        jksePy3 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY3, "Python 3 kernelspec", getFieldEditorParent(), JupyterKernelSpec.PYTHON_LANG);
+        jkseR = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_R, "R kernelspec", getFieldEditorParent(), JupyterKernelSpec.R_LANG);
         
         //addField(new BooleanFieldEditor(ScriptingPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook", parent));
         addField(ffe);
         addField(jksePy2);
         addField(jksePy3);
         addField(jkseR);
-        addField(new ComboFieldEditor(ScriptingPreferenceInitializer.JUPYTER_MODE, "Jupyter mode", entries, parent));
-        addField(new DirectoryFieldEditor(ScriptingPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", parent));
+        addField(new ComboFieldEditor(ScriptingPreferenceInitializer.JUPYTER_MODE, "Jupyter mode", entries, getFieldEditorParent()));
+        addField(new DirectoryFieldEditor(ScriptingPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", getFieldEditorParent()));
         
 	}
 

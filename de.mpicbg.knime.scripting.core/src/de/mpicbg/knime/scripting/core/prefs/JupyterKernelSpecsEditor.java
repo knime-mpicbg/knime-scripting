@@ -14,7 +14,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 	
 	/* GUI-components */
     private Composite c_top;
-    private Composite c_group;
+    //private Composite c_group;
     private Combo c_kernelCombo;
     
     private final String m_language;
@@ -32,7 +32,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     
 	@Override
 	protected void adjustForNumColumns(int numColumns) {
-		((GridData) c_top.getLayoutData()).horizontalSpan = numColumns;
+		((GridData) c_kernelCombo.getLayoutData()).horizontalSpan = numColumns-1;
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		
 		GridData gd = new GridData(SWT.FILL, SWT.TOP, true, false);
         gd.horizontalSpan = numColumns;
-    	
+		   	
         c_top = parent;
         c_top.setLayoutData(gd);
         
@@ -56,11 +56,13 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
         Label comboLabel = new Label(c_top, SWT.NONE);
         comboLabel.setText("Select kernel");
         gd = new GridData(SWT.LEFT, SWT.TOP, false, false);
-        gd.horizontalSpan = numColumns - 1;
+        gd.horizontalSpan = 1;
         comboLabel.setLayoutData(gd);
         
         c_kernelCombo = new Combo(c_top, SWT.READ_ONLY);
-        c_kernelCombo.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));     
+        gd = new GridData(SWT.FILL, SWT.TOP, true, false);
+        gd.horizontalSpan = numColumns - 1;
+        c_kernelCombo.setLayoutData(gd);     
 	}
 
 	@Override
