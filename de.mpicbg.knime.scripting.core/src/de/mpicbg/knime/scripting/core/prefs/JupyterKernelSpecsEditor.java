@@ -20,6 +20,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     
     //private static final String DEFAULT_SEPERATOR = ";";
     public static final String NO_SPEC = "< NO SELECTION >";
+    public static final String NO_SPEC_AVAILABLE = "< NO SPEC AVAILABLE >";
 
     
     public JupyterKernelSpecsEditor(String name, String labelText,Composite parent, String lang) {
@@ -44,7 +45,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     	 */
 
         Label comboLabel = new Label(parent, SWT.NONE);
-        comboLabel.setText("Select kernel");
+        comboLabel.setText(getLabelText());
         GridData gd = new GridData(SWT.LEFT, SWT.TOP, false, false);
         gd.horizontalSpan = 1;
         comboLabel.setLayoutData(gd);
@@ -112,34 +113,39 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 
 	public void updateComboBoxes(List<JupyterKernelSpec> kernelSpecs) {
 		
-		//m_kernelSpecs = kernelSpecs;
-		
-		int selectedIdx = c_kernelCombo.getSelectionIndex();
-
-		String spec = null;
-		if(selectedIdx >= 0) spec = c_kernelCombo.getItem(selectedIdx);
-				
-		c_kernelCombo.removeAll();		
-		c_kernelCombo.add(NO_SPEC);
-			
-		for(JupyterKernelSpec kSpec : kernelSpecs) {			
-			if(kSpec.getLanguage().equals(m_language)) {
-				String specString = kSpec.getDisplayName() + " (" + kSpec.getName() + ")";
-				c_kernelCombo.add(specString);	
-				c_kernelCombo.setData(specString, kSpec);
-			}
-		}
-		
-		if(selectedIdx >= 0) {
-			int i = 0;
-			for(String item : c_kernelCombo.getItems()) {
-				if(item.equals(spec))
-						c_kernelCombo.select(i);
-				i++;
-			}
-		}
-		if(c_kernelCombo.getSelectionIndex() == -1 && c_kernelCombo.getItemCount() > 0)
+		if(kernelSpecs == null) {
+			c_kernelCombo.removeAll();		
+			c_kernelCombo.add(NO_SPEC_AVAILABLE);
 			c_kernelCombo.select(0);
+		} else {
+		
+			int selectedIdx = c_kernelCombo.getSelectionIndex();
+	
+			String spec = null;
+			if(selectedIdx >= 0) spec = c_kernelCombo.getItem(selectedIdx);
+					
+			c_kernelCombo.removeAll();		
+			c_kernelCombo.add(NO_SPEC);
+				
+			for(JupyterKernelSpec kSpec : kernelSpecs) {			
+				if(kSpec.getLanguage().equals(m_language)) {
+					String specString = kSpec.getDisplayName() + " (" + kSpec.getName() + ")";
+					c_kernelCombo.add(specString);	
+					c_kernelCombo.setData(specString, kSpec);
+				}
+			}
+			
+			if(selectedIdx >= 0) {
+				int i = 0;
+				for(String item : c_kernelCombo.getItems()) {
+					if(item.equals(spec))
+							c_kernelCombo.select(i);
+					i++;
+				}
+			}
+			if(c_kernelCombo.getSelectionIndex() == -1 && c_kernelCombo.getItemCount() > 0)
+				c_kernelCombo.select(0);
+		}
 		
 	}
 

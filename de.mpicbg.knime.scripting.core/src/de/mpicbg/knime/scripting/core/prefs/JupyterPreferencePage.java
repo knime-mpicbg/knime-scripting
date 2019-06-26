@@ -18,8 +18,8 @@ import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.StringButtonFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -43,13 +43,23 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		if(event.getSource().equals(ffe) && ffe.isValid()) {
 			try {
 				updateKernelSpecs(ffe.getStringValue());
+				// valid location specs successfully loaded
 				jksePy2.updateComboBoxes(m_kernelSpecs);
 				jksePy3.updateComboBoxes(m_kernelSpecs);
 				jkseR.updateComboBoxes(m_kernelSpecs);
 			} catch (IOException | KnimeScriptingException | InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// valid location given but fails to get specs
+				jksePy2.updateComboBoxes(null);
+				jksePy3.updateComboBoxes(null);
+				jkseR.updateComboBoxes(null);
+				this.setErrorMessage(e.getMessage());
 			}
+		}
+		if(event.getSource().equals(ffe) && !ffe.isValid()) {
+			//no valid location
+			jksePy2.updateComboBoxes(null);
+			jksePy3.updateComboBoxes(null);
+			jkseR.updateComboBoxes(null);
 		}
 	}
 	
@@ -107,7 +117,6 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 
 	@Override
 	protected void createFieldEditors() {
-		//Composite parent = getFieldEditorParent();
         
         final String[][] entries = new String[2][2];
         entries[0][1] = ScriptingPreferenceInitializer.JUPYTER_MODE_1;
@@ -115,10 +124,12 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         entries[1][1] = ScriptingPreferenceInitializer.JUPYTER_MODE_2;
         entries[1][0] = "notebook";
         
-        ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, getFieldEditorParent());
+        ffe = new FileFieldEditor(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE, "Jupyter Executable", true, StringButtonFieldEditor.VALIDATE_ON_KEY_STROKE, getFieldEditorParent());
         jksePy2 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY2, "Python 2 kernelspec", getFieldEditorParent(), JupyterKernelSpec.PYTHON_LANG);
         jksePy3 = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY3, "Python 3 kernelspec", getFieldEditorParent(), JupyterKernelSpec.PYTHON_LANG);
         jkseR = new JupyterKernelSpecsEditor(ScriptingPreferenceInitializer.JUPYTER_KERNEL_R, "R kernelspec", getFieldEditorParent(), JupyterKernelSpec.R_LANG);
+           
+        DirectoryFieldEditor nffe = new DirectoryFieldEditor(ScriptingPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", getFieldEditorParent());
         
         //addField(new BooleanFieldEditor(ScriptingPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook", parent));
         addField(ffe);
@@ -126,7 +137,7 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         addField(jksePy3);
         addField(jkseR);
         addField(new ComboFieldEditor(ScriptingPreferenceInitializer.JUPYTER_MODE, "Jupyter mode", entries, getFieldEditorParent()));
-        addField(new DirectoryFieldEditor(ScriptingPreferenceInitializer.JUPYTER_FOLDER, "Notebook folder", getFieldEditorParent()));
+        addField(nffe);
         
 	}
 
