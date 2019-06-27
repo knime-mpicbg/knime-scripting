@@ -1,6 +1,9 @@
 package de.mpicbg.knime.scripting.core.prefs;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
@@ -16,12 +19,11 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     private Combo c_kernelCombo;
     
     private final String m_language;
-    //private List<JupyterKernelSpec> m_kernelSpecs;
     
-    //private static final String DEFAULT_SEPERATOR = ";";
-    public static final String NO_SPEC = "< NO SELECTION >";
-    public static final String NO_SPEC_AVAILABLE = "< NO SPEC AVAILABLE >";
+    private static final String NO_SPEC = "< NO SELECTION >";
+    private static final String NO_SPEC_AVAILABLE = "< FAILED TO LOAD SPECS >";
 
+    
     
     public JupyterKernelSpecsEditor(String name, String labelText,Composite parent, String lang) {
 		super(name, labelText, parent);
@@ -63,14 +65,34 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 	}
 
 	private void deserialzieJupyterSpecs(String items) {
-		// TODO Auto-generated method stub
 		
+		String[] singleItems = items.split(";");
+		
+		int len = singleItems.length;
+		
+		if(len == 1) {
+			// no specs available
+			updateComboBoxes(null);
+		} else {
+			int selectedIndex = Integer.parseInt(singleItems[0]);
+			List<JupyterKernelSpec> kernelSpecs = new LinkedList<JupyterKernelSpec>();
+			
+			for(int i = 1; i < len; i++) {
+				JupyterKernelSpec spec = JupyterKernelSpec.fromPrefString(singleItems[i]);
+				if(!spec.getName().equals(NO_SPEC))
+					kernelSpecs.add(spec);
+			}
+			
+			updateComboBoxes(kernelSpecs);
+			c_kernelCombo.select(selectedIndex);
+		}	
 	}
 
 	@Override
 	protected void doLoadDefault() {
-		// TODO Auto-generated method stub
-
+		c_kernelCombo.removeAll();		
+		c_kernelCombo.add(NO_SPEC_AVAILABLE);
+		c_kernelCombo.select(0);
 	}
 
 	@Override
@@ -85,17 +107,20 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		StringBuilder prefString = new StringBuilder();
 
 		int idx = c_kernelCombo.getSelectionIndex();
-		if(idx >= 0) {
-			String name = c_kernelCombo.getItem(idx);
-			if(!name.equals(NO_SPEC)) {			
+		
+		prefString.append(idx);
+		
+		for(int i = 0; i < c_kernelCombo.getItemCount(); i++) {
+			String name = c_kernelCombo.getItem(i);
+			if(!name.equals(NO_SPEC) && !name.equals(NO_SPEC_AVAILABLE)) {
+				prefString.append(";");
 				JupyterKernelSpec spec = (JupyterKernelSpec) c_kernelCombo.getData(name);
-	            prefString.append("(");
-	            prefString.append(spec.getName());
-	            prefString.append(",");
-	            prefString.append(spec.getDisplayName());
-	            prefString.append(",");
-	            prefString.append(spec.getLanguage());
-	            prefString.append(")");
+				prefString.append(spec.toPrefString());
+			}
+			if(name.equals(NO_SPEC)) {
+				prefString.append(";");
+				JupyterKernelSpec spec = new JupyterKernelSpec(NO_SPEC, "", "");
+				prefString.append(spec.toPrefString());
 			}
 		}
 
@@ -107,24 +132,20 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		return 2;
 	}
 
-
-		
-
-
 	public void updateComboBoxes(List<JupyterKernelSpec> kernelSpecs) {
 		
+		c_kernelCombo.removeAll();	
+		
 		if(kernelSpecs == null) {
-			c_kernelCombo.removeAll();		
+				
 			c_kernelCombo.add(NO_SPEC_AVAILABLE);
 			c_kernelCombo.select(0);
-		} else {
-		
+		} else {		
 			int selectedIdx = c_kernelCombo.getSelectionIndex();
 	
 			String spec = null;
 			if(selectedIdx >= 0) spec = c_kernelCombo.getItem(selectedIdx);
 					
-			c_kernelCombo.removeAll();		
 			c_kernelCombo.add(NO_SPEC);
 				
 			for(JupyterKernelSpec kSpec : kernelSpecs) {			
