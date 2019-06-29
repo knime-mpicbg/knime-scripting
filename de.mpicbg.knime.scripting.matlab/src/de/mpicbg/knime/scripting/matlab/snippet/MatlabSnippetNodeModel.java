@@ -100,6 +100,10 @@ public class MatlabSnippetNodeModel extends AbstractMatlabScriptingNodeModel {
 				outData = table.pullTableFromMatlabWorkspace(exec, matlabProxy, matlabWorkspaceType);				
 			}
 			
+			if (table.getBufferedDataTable().size() < 1) {
+				setWarningMessage("Script did not produce any output");
+			}
+			
     		// Housekeeping
 			exec.checkCanceled();
     		cleanup();
