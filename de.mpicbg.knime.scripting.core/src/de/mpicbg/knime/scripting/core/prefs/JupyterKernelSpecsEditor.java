@@ -2,13 +2,10 @@ package de.mpicbg.knime.scripting.core.prefs;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -20,7 +17,7 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
     
     private final String m_language;
     
-    private static final String NO_SPEC = "< NO SELECTION >";
+    public static final String NO_SPEC = "< NO SELECTION >";
     private static final String NO_SPEC_AVAILABLE = "< FAILED TO LOAD SPECS >";
 
     

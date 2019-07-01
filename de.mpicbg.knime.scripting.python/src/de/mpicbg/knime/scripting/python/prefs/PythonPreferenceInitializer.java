@@ -56,16 +56,9 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
     public static final String PY2 = "py2";
     public static final String PY3 = "py3";
     
-    public static final String JUPYTER_EXECUTABLE = "jupyter.exec";
     public static final String JUPYTER_USE = "use.jupyter";   
     public static final boolean JUPYTER_USE_DFT = Boolean.FALSE;
     
-    public static final String JUPYTER_MODE = "jupyter.mode";
-    public static final String JUPYTER_MODE_1 = "lab";
-    public static final String JUPYTER_MODE_2 = "notebook";
-    
-    
-    public static final String JUPYTER_FOLDER = "jupyter.folder";
 
     public static final String PYTHON_TEMPLATE_RESOURCES = "python.template.resources";
     public static final String PYTHON_PLOT_TEMPLATE_RESOURCES = "python.plot.template.resources";
@@ -86,10 +79,7 @@ public class PythonPreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PYTHON_USE_2, PY3);
         
-        store.setDefault(JUPYTER_EXECUTABLE, "");
-        store.setDefault(JUPYTER_FOLDER, "");
         store.setDefault(JUPYTER_USE, JUPYTER_USE_DFT);
-        store.setDefault(JUPYTER_MODE, JUPYTER_MODE_1);
 
         store.setDefault(PYTHON_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Python/script-templates.txt\",true)");
         store.setDefault(PYTHON_PLOT_TEMPLATE_RESOURCES, "(\"https://raw.githubusercontent.com/knime-mpicbg/scripting-templates/master/knime-scripting-templates/Python/figure-templates.txt\",true)");

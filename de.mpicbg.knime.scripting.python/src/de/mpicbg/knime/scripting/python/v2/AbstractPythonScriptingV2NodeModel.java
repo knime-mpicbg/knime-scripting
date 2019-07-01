@@ -71,8 +71,12 @@ import com.opencsv.CSVWriter;
 import de.mpicbg.knime.knutils.FileUtils;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.core.prefs.JupyterKernelSpec;
+import de.mpicbg.knime.scripting.core.prefs.JupyterKernelSpecsEditor;
+import de.mpicbg.knime.scripting.core.prefs.ScriptingPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
@@ -656,12 +660,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @return jupyter-exec-path
 	 */
 	protected String getJupyterExecutable(IPreferenceStore preferences) {
-		boolean useJupyter = preferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
-		String jupyterExecPath = "";
-		if(useJupyter)
-			jupyterExecPath = preferences.getString(PythonPreferenceInitializer.JUPYTER_EXECUTABLE);
-		
-		return jupyterExecPath;
+		return preferences.getString(ScriptingPreferenceInitializer.JUPYTER_EXECUTABLE);
 	}
 	
 	/**
@@ -671,7 +670,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @return
 	 */
 	protected String getJupyterMode(IPreferenceStore preferences) {	
-		return preferences.getString(PythonPreferenceInitializer.JUPYTER_MODE);
+		return preferences.getString(ScriptingPreferenceInitializer.JUPYTER_MODE);
 	}
 	
 	/**
@@ -681,7 +680,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @return
 	 */
 	protected String getJupyterFolder(IPreferenceStore preferences) {	
-		return preferences.getString(PythonPreferenceInitializer.JUPYTER_FOLDER);
+		return preferences.getString(ScriptingPreferenceInitializer.JUPYTER_FOLDER);
 	}
 
 
@@ -808,13 +807,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	private void openInPython(ExecutionContext exec) throws KnimeScriptingException {
 		
-		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-		boolean useJupyter = preferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
+		IPreferenceStore pythonPreferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+		boolean useJupyter = pythonPreferences.getBoolean(PythonPreferenceInitializer.JUPYTER_USE);
 		if(useJupyter) {
 			exec.setMessage("Try to open as noteboook (cannot be cancelled");
-			openAsNotebook(preferences);
+			openAsNotebook(pythonPreferences);
 		} else {
-			openViaCommandline(preferences);
+			openViaCommandline(pythonPreferences);
 		}
 		
 	}
@@ -864,23 +863,31 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * implementation 'Open external' as jupyter notebook <br/>
 	 * load template notebook and replace placeholders with pathes and script
 	 * 
-	 * @param preferences
+	 * @param pythonPreferences
 	 * @throws KnimeScriptingException
 	 */
-	private void openAsNotebook(IPreferenceStore preferences) throws KnimeScriptingException {
+	private void openAsNotebook(IPreferenceStore pythonPreferences) throws KnimeScriptingException {
 		
-		String jupyterLocation = getJupyterExecutable(preferences);
-		String jupyterMode = getJupyterMode(preferences);
+		IPreferenceStore jupyterPreferences = ScriptingCoreBundleActivator.getDefault().getPreferenceStore();
+		
+		String jupyterLocation = getJupyterExecutable(jupyterPreferences);
+		String jupyterMode = getJupyterMode(jupyterPreferences);
+		
+		String whichPy = pythonPreferences.getString(PythonPreferenceInitializer.PYTHON_USE_2);
+		JupyterKernelSpec jupyterKernel = getJupyterKernel(jupyterPreferences, whichPy);
+		
 		
 		if(jupyterLocation.isEmpty())
-			throw new KnimeScriptingException("Path to jupyter executable is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
+			throw new KnimeScriptingException("Path to jupyter executable is not set. Please configure under Preferences > KNIME > Community Scripting > JupyterSettings.");
+		if(jupyterKernel == null)
+			throw new KnimeScriptingException("No kernelspec available. Please configure under Preferences > KNIME > Community Scripting > JupyterSettings.");
 		
 		String version = isJupyterInstalled(jupyterLocation);
 		
 		// get jupyter path
-		String jupyterDirString = getJupyterFolder(preferences);
+		String jupyterDirString = getJupyterFolder(jupyterPreferences);
 		if(jupyterDirString.isEmpty())
-			throw new KnimeScriptingException("Path to jupyter folder is not set. Please configure under Preferences > KNIME > Python Scripting > Open As Notebook.");
+			throw new KnimeScriptingException("Path to jupyter folder is not set. Please configure under Preferences > KNIME > Community Scripting > JupyterSettings.");
 		
 		// 1) load notebook template and copy as tempfile for modification
 		Path nbFile = null;
@@ -900,6 +907,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		final String SCRIPT_PLACEHOLDER = "\"source\": [\n" + 
 				"    \"pyOut = kIn\"\n" + 
 				"   ]";
+		
+		final String kernelDisplayNamePlaceholder = "KERNEL_DISPLAY_NAME";
+		final String kernelLanguagePlaceholder = "KERNEL_LANGUAGE";
+		final String kernelNamePlaceholder = "KERNEL_NAME";
 		
 		/*
 		 * supposed to look like this
@@ -963,7 +974,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			content = new String(Files.readAllBytes(nbFile), charset);
 			content = content.replace(INPUT_PLACEHOLDER, loadInput);
 			content = content.replace(OUTPUT_PLACEHOLDER, saveOutput);
-			content = content.replace(SCRIPT_PLACEHOLDER, script);			
+			content = content.replace(SCRIPT_PLACEHOLDER, script);	
+			content = content.replace(kernelDisplayNamePlaceholder, jupyterKernel.getDisplayName());
+			content = content.replace(kernelLanguagePlaceholder, jupyterKernel.getLanguage());
+			content = content.replace(kernelNamePlaceholder, jupyterKernel.getName());
 			Files.write(nbFile, content.getBytes(charset));
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to modify notebook format file: " + ioe.getMessage());
@@ -972,6 +986,30 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		// 3) 
 		launchNotebook(jupyterLocation, jupyterMode, nbFile);
 	}
+
+	private JupyterKernelSpec getJupyterKernel(IPreferenceStore jupyterPreferences, String pythonVersion) {
+		
+		String kernelString = null;
+		if(pythonVersion.equals(PythonPreferenceInitializer.PY2))		
+			kernelString = jupyterPreferences.getString(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY2);
+		if(pythonVersion.equals(PythonPreferenceInitializer.PY3))
+			kernelString = jupyterPreferences.getString(ScriptingPreferenceInitializer.JUPYTER_KERNEL_PY3);
+		
+		if(kernelString == null) return null;
+		
+		String[] singleItems = kernelString.split(";");		
+		int len = singleItems.length;
+		
+		if(len > 1) {
+			int selectedIndex = Integer.parseInt(singleItems[0]);
+			JupyterKernelSpec spec = JupyterKernelSpec.fromPrefString(singleItems[selectedIndex + 1]);
+			if(!spec.getName().equals(JupyterKernelSpecsEditor.NO_SPEC))
+				return spec;
+		}	
+		
+		return null;
+	}
+
 
 	/**
 	 * launch jupyter notebook with notebookfile

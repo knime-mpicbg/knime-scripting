@@ -93,6 +93,9 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
         
         addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES, "Snippet template resources", cacheFolder, indexFile, parent));
         addField(new TemplateTableEditor(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES, "Plot template resource", cacheFolder, indexFile, parent));
+        
+        addField(new BooleanFieldEditor(PythonPreferenceInitializer.JUPYTER_USE, "'Open external' as Jupyter notebook (requires valid preference settings under KNIME > Community Scripting > Jupyter Settings)", parent));
+        
     }
 
 
