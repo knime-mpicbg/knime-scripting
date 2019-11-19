@@ -550,15 +550,18 @@ public class RUtils {
 	{
 		assert host != null;
 		// (Do not create new R objects in workspace before saving!)
+		
+		// Comment 2019-11: There should be no reason to divide between localhost and remote host
+		// for Windows10 with Linux-subsystem running the Rserve instance this if-else caused problems
 
-		if(host.equals("localhost") || host.equals("127.0.0.1")) {
-			// save workspace to local file
-			try {
-				connection.voidEval("save.image(file=\"" + rWorkspaceFile.getAbsolutePath().replace("\\", "/") + "\")");
-			} catch (RserveException e) {
-				throw new KnimeScriptingException("Failed to save R workspace: " + e.getMessage());
-			}
-		} else {
+		/*
+		 * if(host.equals("localhost") || host.equals("127.0.0.1")) { // save workspace
+		 * to local file try { connection.voidEval("save.image(file=\"" +
+		 * rWorkspaceFile.getAbsolutePath().replace("\\", "/") + "\")"); } catch
+		 * (RserveException e) { throw new
+		 * KnimeScriptingException("Failed to save R workspace: " + e.getMessage()); } }
+		 * else {
+		 */
 			// create temporary file name on server side 
 			String tempfile = null;
 			try {
@@ -593,7 +596,7 @@ public class RUtils {
 			} catch (REngineException | REXPMismatchException | IOException e) {
 				throw new KnimeScriptingException("Faile to transfer workspace file to localhost: " + e.getMessage());
 			}
-		}
+		//}
 	}
 
 	/**
