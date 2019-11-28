@@ -37,8 +37,6 @@ try:
 except:
     have_pandas = False
 
-have_pandas = False
-
 # For some large CSV files one may get the exception
 # Error: field larger than field limit (131072)
 # This is a quick and dirty solution to adapt the csv field_size_limit.

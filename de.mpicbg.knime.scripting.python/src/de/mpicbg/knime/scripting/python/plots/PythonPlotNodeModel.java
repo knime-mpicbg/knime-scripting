@@ -1,22 +1,23 @@
 package de.mpicbg.knime.scripting.python.plots;
 
-import de.mpicbg.knime.scripting.core.FlowVarUtils;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
-import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
-import de.mpicbg.knime.scripting.python.PythonTableConverter;
-import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-import de.mpicbg.knime.scripting.python.srv.CommandOutput;
-import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.PythonClient;
-import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
@@ -27,14 +28,16 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import de.mpicbg.knime.scripting.core.FlowVarUtils;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.PythonTableConverter;
+import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
+import de.mpicbg.knime.scripting.python.srv.CommandOutput;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.PythonClient;
+import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 
 
 /**
@@ -57,18 +60,13 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 	private static final String OVERWRITE_SETTING_NAME = "overwrite.ok";
     private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
-    private final String DEFAULT_PYTHON_PLOTCMD =""     
-		+"if have_pandas:\n" 
-		+"	df = pd.DataFrame.from_dict(kIn)\n"
-		+"	df.plot()\n"
-		+"else:\n"
-		+"	# find numeric columns\n"
-		+"	numericColumns = [k for k in columnTypes if columnTypes[k] in [IntType, FloatType]]\n"
-		+"	index = range(len(kIn[numericColumns[0]]))\n"
-		+"	# plot each column\n"
-		+"	for col in numericColumns:\n"
-		+"		plot(index, kIn[col], label=col)\n"
-		+"	legend()\n";
+    private final String DEFAULT_PYTHON_PLOTCMD = "" +     
+		"# the following import is not required, as the node take care of it \n" + 
+		"#import matplotlib.pyplot as plt\n" + 
+		"\n" + 
+		"X = range(10)\n" + 
+		"plt.plot(X, [x*x for x in X])\n" + 
+		"plt.show()";
 
     protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 

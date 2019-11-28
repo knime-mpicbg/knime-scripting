@@ -1,9 +1,13 @@
 package de.mpicbg.knime.scripting.python.plots;
 
-import de.mpicbg.knime.scripting.core.ImageClipper;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.Transparency;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
@@ -12,6 +16,11 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.PixelGrabber;
+
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+
+import de.mpicbg.knime.scripting.core.ImageClipper;
 
 
 /**
