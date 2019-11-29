@@ -577,7 +577,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * 
 	 * @throws KnimeScriptingException
 	 */
-	protected void prepareScript(File scriptFile,boolean useScript) throws KnimeScriptingException {
+	protected void prepareScript(File scriptFile, boolean useScript) throws KnimeScriptingException {
 		// CSV read/write functions
 		
 		// (1) write template script to script file

@@ -302,8 +302,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * replace flowvariable placeholders
      * </p>
      * 
-     * This method is usually just called from within the different execute implementations. Occassionally it is also
-     * called in the view implemntations.
+     * This method is usually just called from within the different execute implementations. 
+     * Occasionally it is also called in the view implementations.
      */
     public String prepareScript() {
 

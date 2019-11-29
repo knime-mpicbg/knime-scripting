@@ -305,8 +305,8 @@ public class RUtils {
 
     /**
      * write local workspace to remote workspace
-     * @param wsFile
-     * @param serverWSFile
+     * @param wsFile (source)
+     * @param serverWSFile (destination)
      * @param connection
      */
     private static void writeFile(File wsFile, File serverWSFile, RConnection connection) {
