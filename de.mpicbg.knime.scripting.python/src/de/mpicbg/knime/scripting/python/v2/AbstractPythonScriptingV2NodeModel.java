@@ -82,7 +82,8 @@ import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.Python;;
+import de.mpicbg.knime.scripting.python.srv.Python;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInpuMode.Flag;;
 
 /**
  * abstract model class for all python scripting nodes
@@ -123,6 +124,44 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_INT = "int64";
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
+    
+
+    /**
+     * WRITE:	serialize python input to file
+     * READ:	read serialized input from file
+     * 
+     * @author Antje Janosch
+     *
+     */
+    public static class PythonInpuMode {
+    	
+    	Flag flag;
+    	File file;
+    	
+        public enum Flag
+        {
+          READ, WRITE, IGNORE
+        }
+    	
+        public PythonInpuMode(File file, Flag flag) {
+        	this.flag = flag;
+        	this.file = file;
+        }
+        
+        Flag getFlag() {
+        	return this.flag;
+        }
+        
+        File getFile() {
+        	return this.file;
+        }
+        
+        public static PythonInpuMode ignoreFlag() {
+        	return new PythonInpuMode(null, Flag.IGNORE);
+        }
+    }
+    
+
     
     // date-time format exported by python
     public static final DateTimeFormatter PY_dateFormatter = initDateTime();
@@ -537,7 +576,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		// prepare script
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
 		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
-			prepareScript(scriptFile, true);
+			prepareScript(scriptFile, true, PythonInpuMode.ignoreFlag());
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		} 
@@ -577,7 +616,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * 
 	 * @throws KnimeScriptingException
 	 */
-	protected void prepareScript(File scriptFile, boolean useScript) throws KnimeScriptingException {
+	protected void prepareScript(File scriptFile, boolean useScript, PythonInpuMode flag) throws KnimeScriptingException {
+		
+		String kseMessage = "Failed to write script file: ";
 		// CSV read/write functions
 		
 		// (1) write template script to script file
@@ -585,34 +626,64 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			String pyScriptString = FileUtils.readFromRessource(utilsStream);
 			Files.write(scriptFile.toPath(), pyScriptString.getBytes(), StandardOpenOption.APPEND);
 		}catch(IOException ioe) {
-			throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
+			throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 		}
+		
+		Flag fl = flag.getFlag();
+		
+		// (2a) decide where to read the data from
+		if(!fl.equals(Flag.READ)) {
 	
-		// (2) add read-calls to script file
-		for(String inLabel : m_inPorts.keySet()) {
-			File f = m_tempFiles.get(inLabel);
-			String errorMessage = null;
-			if(f != null) {
+			boolean write = fl.equals(Flag.WRITE);
+			if(write) {
 				try {
-					String readCSVCmd = "\n\n" + inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")\n\n";
-					Files.write(scriptFile.toPath(), readCSVCmd.getBytes(), StandardOpenOption.APPEND);
+					String toScriptFile = "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
+					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
 				} catch(IOException ioe) {
-					errorMessage = ioe.getMessage();
-				}
-			} else {
-				errorMessage = "Failed to write script file";				
+					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
+				}	
 			}
-			if(errorMessage != null)
-				throw new KnimeScriptingException(errorMessage);
+				
+			// (2) add read-calls to script file
+			for(String inLabel : m_inPorts.keySet()) {
+				File f = m_tempFiles.get(inLabel);
+				String errorMessage = null;
+				if(f != null) {
+					try {						
+						String readCSVCmd = "\n\n" + inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")\n\n";
+						if(write) readCSVCmd = readCSVCmd + "s[\'" + inLabel + "\'] = " + inLabel + "\n";
+						
+						Files.write(scriptFile.toPath(), readCSVCmd.getBytes(), StandardOpenOption.APPEND);
+					} catch(IOException ioe) {
+						errorMessage = ioe.getMessage();
+					}
+				} else {
+					errorMessage = "tempory file error (NPE)";				
+				}
+				if(errorMessage != null)
+					throw new KnimeScriptingException(kseMessage, errorMessage);
+			}
+			
+			if(write) {
+				try {
+					String toScriptFile = "s.close()";
+					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
+				} catch(IOException ioe) {
+					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
+				}	
+			}
+			
 		}
-	
+		if(fl.equals(Flag.READ)) {
+			// add read from file call
+		}
 		
 		if(useScript) {
 			// (3) add user script to script file
 			try {
 				Files.write(scriptFile.toPath(), super.prepareScript().getBytes(), StandardOpenOption.APPEND);
 			} catch (IOException ioe) {
-				throw new KnimeScriptingException("Failed to write script file: " + ioe.getMessage());
+				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 			}
 
 			// (4) add write-calls to script file
@@ -628,10 +699,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						errorMessage = ioe.getMessage();
 					}
 				} else {
-					errorMessage = "Failed to write script file";				
+					errorMessage = "tempory file error (NPE)";				
 				}
 				if(errorMessage != null)
-					throw new KnimeScriptingException(errorMessage);
+					throw new KnimeScriptingException(kseMessage, errorMessage);
 			}
 		}
 	}
@@ -837,7 +908,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		} 
-		prepareScript(scriptFile, false);
+		prepareScript(scriptFile, false, PythonInpuMode.ignoreFlag());
 		scriptFile.setExecutable(true);
 		
 		

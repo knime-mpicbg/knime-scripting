@@ -8,4 +8,8 @@ public class KnimeScriptingException extends Exception {
 	public KnimeScriptingException(final String message) {
 		super(message);
 	}
+	
+	public KnimeScriptingException(final String preMessage, final String message) {
+		super(preMessage + message);
+	}
 }

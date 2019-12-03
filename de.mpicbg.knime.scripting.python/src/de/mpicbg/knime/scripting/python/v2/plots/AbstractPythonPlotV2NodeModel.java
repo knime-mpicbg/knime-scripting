@@ -35,6 +35,7 @@ import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInpuMode.Flag;
 
 public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2NodeModel {
 	
@@ -283,9 +284,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	}
 
 	@Override
-	protected void prepareScript(File scriptFile, boolean useScript) throws KnimeScriptingException {
-		// TODO Auto-generated method stub
-		super.prepareScript(scriptFile, useScript);
+	protected void prepareScript(File scriptFile, boolean useScript, PythonInpuMode flag) throws KnimeScriptingException {
+		File writeToFile = new File("/somepath");
+		super.prepareScript(scriptFile, useScript, new PythonInpuMode(writeToFile, Flag.WRITE));
 	}
 
 	/**

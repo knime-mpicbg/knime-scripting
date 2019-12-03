@@ -1,6 +1,7 @@
 import pandas as pd
 import platform
 import csv
+import shelve
 
 # Check for the correct version
 version = platform.python_version()
