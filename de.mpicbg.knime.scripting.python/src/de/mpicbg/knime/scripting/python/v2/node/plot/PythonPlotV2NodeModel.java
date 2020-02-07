@@ -39,6 +39,9 @@ public class PythonPlotV2NodeModel extends AbstractPythonPlotV2NodeModel{
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
 		super.executeImpl(inData, exec);
+		
+		super.prepareScriptFile();
+		super.runScript(exec);
 		PortObject[] outData = super.pullOutputFromPython(exec);
 		
 		return outData;

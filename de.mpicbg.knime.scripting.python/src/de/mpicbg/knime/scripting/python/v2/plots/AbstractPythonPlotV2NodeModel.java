@@ -2,13 +2,17 @@ package de.mpicbg.knime.scripting.python.v2.plots;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Writer;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -31,19 +35,23 @@ import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.rosuda.REngine.Rserve.RConnection;
 
+import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
-import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInpuMode.Flag;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode.Flag;
 
 public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2NodeModel {
 	
 	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
-    public BufferedImage m_image;						// image created by R
-    public File m_nodeImageFile;				// image file (internals)
-    protected File m_workspaceFile;			// workspace file (internals)
+    public BufferedImage m_image;				// image created by Python
+    
+	public File m_nodeImageFile;				// image file (temp-location => copy to internals)
+    protected File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
+    protected File m_shelveFile;				// file which stores the data needed to recreate the image (temp-location => copy to internals)	
 	
     /**
      * MODEL - SETTINGS
@@ -69,7 +77,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     public static final String CFG_IMGTYPE_DFT = "png";
     
     public static final String DEFAULT_PYTHON_PLOTCMD = "" +     
-		"# the following import is not required, as the node take care of it \n" + 
+		"# the following import is not required, as the node takes care of it \n" + 
 		"#import matplotlib.pyplot as plt\n" + 
 		"\n" + 
 		"X = range(10)\n" + 
@@ -77,7 +85,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		"plt.show()";
     
     public static final List<String> SUPPORTED_FORMATS = new LinkedList<String>(
-    		Arrays.asList("png", "jpeg", "svg", "pdf"));
+    		Arrays.asList("png", "jpeg", "svg", "pdf", "tif"));
 
 	public AbstractPythonPlotV2NodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
@@ -228,7 +236,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	            ImageIO.write(m_image, "png", fsOut);
 	            fsOut.close();
         	} catch (IOException e) {
-        		throw new KnimeScriptingException("Failed to sava image to file:\n" + e.getMessage());
+        		throw new KnimeScriptingException("Failed to save image to file:\n" + e.getMessage());
         	}
 
         }
@@ -277,16 +285,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
         m_image = createImage(script, getDefWidth(), getDefHeight(), getImageType());
     }
     
-    
+   
+
 	protected BufferedImage createImage(String script, int defWidth, int defHeight, String imageType) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	protected void prepareScript(File scriptFile, boolean useScript, PythonInpuMode flag) throws KnimeScriptingException {
-		File writeToFile = new File("/somepath");
-		super.prepareScript(scriptFile, useScript, new PythonInpuMode(writeToFile, Flag.WRITE));
 	}
 
 	/**
@@ -330,28 +333,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
         }
     }
     
-    public File getWSFile() {
-        return m_workspaceFile;
-    }
-    
 
 	
-    @Override
-    protected void saveInternals(File nodeDir, ExecutionMonitor executionMonitor) throws IOException, CanceledExecutionException {
-        if (m_workspaceFile != null) {
-            File f = new File(nodeDir, "pushtable.R");
-
-            Files.copy(m_workspaceFile.toPath(), f.toPath());
-        }
-
-        if (m_image != null) {
-            File imageFile = new File(nodeDir, "image.png");
-            
-            ImageIO.write(m_image, "png", imageFile);
-        }
-    }
     
-    @Override
+    
+/*    @Override
 	protected void reset() {
 		super.reset();
 		m_image = null;
@@ -366,18 +352,73 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			logger.debug("temporary R workspace file could not be deleted:\t" + e.getMessage());
 			e.printStackTrace();
 		}
-	}
+	}*/
 	
     /**
      * remove temporary workspace file if it exists
+     * @throws KnimeScriptingException 
      * @throws IOException if it fails to delete that file
      */
-    private void removeTempWorkspace() throws IOException {
+/*    private void removeTempWorkspace() throws IOException {
     	// delete temporary R workspace when node is configured
     	if(m_workspaceFile != null) {
     		if(m_workspaceFile.exists())
     			Files.delete(m_workspaceFile.toPath());
     		m_workspaceFile = null;
     	}
-    }
+    }	*/
+    
+	protected void prepareScriptFile() throws KnimeScriptingException {
+	
+		createTempFilesForPlot();
+		
+		String importString = "import matplotlib\n" + 
+				"matplotlib.use('Agg')\n" + 
+				"import matplotlib.pyplot as plt";
+		
+		try {
+			Files.write(m_pyScriptFile.toPath(), importString.getBytes(), StandardOpenOption.APPEND);
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
+		}
+		
+		super.prepareScriptFile(new PythonInputMode(m_shelveFile, PythonInputMode.Flag.WRITE));
+		
+		String plotString = 
+		
+		try {
+			Files.write(m_pyScriptFile.toPath(), plotString, StandardOpenOption.APPEND);
+		}
+	}
+
+	private void createTempFilesForPlot() throws KnimeScriptingException {
+		
+		// prepend a random string to each new file to make it easier to find corresponding temporary files
+    	String randomPart = Utils.generateRandomString(6);
+		
+		try {
+			m_pyScriptFile = File.createTempFile(randomPart + "_" + "pyScriptFile_knime2python_", ".py"); 
+			m_shelveFile = File.createTempFile(randomPart + "_" + "shelveFile_knime2python_", ".shelve"); 
+			m_nodeImageFile = File.createTempFile(randomPart + "_" + "image_knime2python_", "." + this.getImageType());
+		} catch (IOException ioe) {
+    		throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
+    	} finally {
+    		try {
+    			Files.deleteIfExists(m_pyScriptFile.toPath());
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    		try {
+    			Files.deleteIfExists(m_shelveFile.toPath());
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    		try {
+    			Files.deleteIfExists(m_nodeImageFile.toPath());
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    	}
+	}
+
 }

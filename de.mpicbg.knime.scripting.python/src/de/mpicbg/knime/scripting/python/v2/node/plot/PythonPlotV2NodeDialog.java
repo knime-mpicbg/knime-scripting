@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.python.v2.node.plot;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,7 @@ public class PythonPlotV2NodeDialog extends ScriptingNodeDialog {
 				fileSM, 
 				"pythonplot.output.file", 
 				JFileChooser.SAVE_DIALOG,
-				(String[])validExtensions.toArray()
+				validExtensions.toArray(new String[validExtensions.size()])
 				) {
 
 			// override this method to make the file-selection optional

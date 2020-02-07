@@ -83,7 +83,7 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
-import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInpuMode.Flag;;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode.Flag;;
 
 /**
  * abstract model class for all python scripting nodes
@@ -133,7 +133,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
      * @author Antje Janosch
      *
      */
-    public static class PythonInpuMode {
+    public static class PythonInputMode {
     	
     	Flag flag;
     	File file;
@@ -143,7 +143,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
           READ, WRITE, IGNORE
         }
     	
-        public PythonInpuMode(File file, Flag flag) {
+        public PythonInputMode(File file, Flag flag) {
         	this.flag = flag;
         	this.file = file;
         }
@@ -156,8 +156,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         	return this.file;
         }
         
-        public static PythonInpuMode ignoreFlag() {
-        	return new PythonInpuMode(null, Flag.IGNORE);
+        public static PythonInputMode ignoreFlag() {
+        	return new PythonInputMode(null, Flag.IGNORE);
         }
     }
     
@@ -536,6 +536,20 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		return bdc.getTable();
 	}
+	
+	protected void prepareScriptFile(PythonInputMode flag) throws KnimeScriptingException {
+		// prepare script
+		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
+		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
+			prepareScript(scriptFile, true, flag);
+		} catch(IOException ioe) {
+			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
+		}
+	}
+	
+	protected File getScriptFile() {
+		return m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
+	}
 
 	/**
 	 * execute python script and make sure that temp files are deleted if something goes wrong
@@ -549,7 +563,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		m_stdOut.clear();
 			
 		try {
-			runScriptImpl(exec);
+			runScriptImpl(exec, m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME));
 		} catch (KnimeScriptingException kse) {
 			deleteTempFiles();
 			throw kse;
@@ -565,23 +579,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	/**
 	 * main method to run the script (after pushing data and before pulling result data)
 	 * @param exec
+	 * @param scriptFile 
 	 * @throws KnimeScriptingException
 	 */
-	private void runScriptImpl(ExecutionMonitor exec) throws KnimeScriptingException {
+	private void runScriptImpl(ExecutionMonitor exec, File scriptFile) throws KnimeScriptingException {
 	
 		exec.setMessage("Evaluate Python-script (cannot be cancelled)");
 	
 		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
-	
-		// prepare script
-		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
-			prepareScript(scriptFile, true, PythonInpuMode.ignoreFlag());
-		} catch(IOException ioe) {
-			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-		} 
-	
-	
+
 		// run script
 	
 		// get executable
@@ -616,7 +622,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * 
 	 * @throws KnimeScriptingException
 	 */
-	protected void prepareScript(File scriptFile, boolean useScript, PythonInpuMode flag) throws KnimeScriptingException {
+	protected void prepareScript(File scriptFile, boolean useScript, PythonInputMode flag) throws KnimeScriptingException {
 		
 		String kseMessage = "Failed to write script file: ";
 		// CSV read/write functions
@@ -908,7 +914,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		} 
-		prepareScript(scriptFile, false, PythonInpuMode.ignoreFlag());
+		prepareScript(scriptFile, false, PythonInputMode.ignoreFlag());
 		scriptFile.setExecutable(true);
 		
 		

@@ -57,6 +57,7 @@ public class PythonSnippet22V2NodeModel extends AbstractPythonScriptingV2NodeMod
 			ExecutionContext exec) throws Exception {
 		
 		super.pushInputToPython(inData, exec);
+		super.prepareScriptFile(PythonInputMode.ignoreFlag());
 		super.runScript(exec);
 		PortObject[] outData = super.pullOutputFromPython(exec);
    
