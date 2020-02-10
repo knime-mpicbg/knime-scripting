@@ -98,9 +98,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * constants
 	 */
 	
-	public static final String PY_INVAR_BASE_NAME = "kIn";
-	public static final String PY_OUTVAR_BASE_NAME = "pyOut";
-	public static final String PY_SCRIPTVAR_BASE_NAME = "pyScript";
+	protected static final String PY_INVAR_BASE_NAME = "kIn";
+	protected static final String PY_OUTVAR_BASE_NAME = "pyOut";
+	protected static final String PY_SCRIPTVAR_BASE_NAME = "pyScript";
 	
 	/**
 	 * temp files and input/output ports
@@ -643,7 +643,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			boolean write = fl.equals(Flag.WRITE);
 			if(write) {
 				try {
-					String toScriptFile = "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
+					String toScriptFile = "\n\n"
+							+ "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
 					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
@@ -672,7 +673,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			
 			if(write) {
 				try {
-					String toScriptFile = "s.close()";
+					String toScriptFile = "s.close()\n\n";
 					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
@@ -834,7 +835,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
      * 
      * @throws KnimeScriptingException 
      */
-    protected void createTempFiles() throws KnimeScriptingException {
+    protected String createTempFiles() throws KnimeScriptingException {
         
     	m_tempFiles = new HashMap<String, File>();
     	
@@ -856,17 +857,30 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    	m_tempFiles.put(PY_SCRIPTVAR_BASE_NAME, scriptFile);
 	    	
     	} catch (IOException ioe) {
+    		removeTempFiles();
     		throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
-    	} finally {
-    		for(File f : m_tempFiles.values()) {
-    			if(f != null)
-					try {
-						Files.deleteIfExists(f.toPath());
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-    		}
-    	}
+    	} 
+    	
+    	return randomPart;
+    }
+    
+    protected boolean addTempFile(String label, File file) {
+    	return m_tempFiles.put(label, file) != null;
+    }
+    
+    protected File getTempFile(final String label) {
+    	return m_tempFiles.get(label);
+    }
+    
+    protected void removeTempFiles() {
+    	for(File f : m_tempFiles.values()) {
+			if(f != null)
+				try {
+					Files.deleteIfExists(f.toPath());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
     }
 
 	@Override

@@ -49,10 +49,14 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
     public BufferedImage m_image;				// image created by Python
     
-	public File m_nodeImageFile;				// image file (temp-location => copy to internals)
-    protected File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
-    protected File m_shelveFile;				// file which stores the data needed to recreate the image (temp-location => copy to internals)	
+	//public File m_nodeImageFile;				// image file (temp-location => copy to internals)
+    //protected File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
+    //protected File m_shelveFile;				// file which stores the data needed to recreate the image (temp-location => copy to internals)	
 	
+    private static final String SHELVEFILE_LABEL = "shelveFile";
+    private static final String IMGFILE_LABEL = "imgFile";
+    
+    
     /**
      * MODEL - SETTINGS
      */
@@ -311,8 +315,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     }
     
     public BufferedImage getImage() {
+    	
+    	File nodeImgFile = getTempFile(AbstractPythonPlotV2NodeModel.IMGFILE_LABEL);
+    	
         try {
-            if (m_image == null && m_nodeImageFile != null && m_nodeImageFile.isFile()) {
+            if (m_image == null && nodeImgFile != null && nodeImgFile.isFile()) {
                 logger.warn("Restoring image from disk. This might take a few seconds...");
                 deserializeImage();
             }
@@ -328,8 +335,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	 * @throws IOException
 	 */
 	protected void deserializeImage() throws IOException {
-        if (m_nodeImageFile.isFile()) {
-        		m_image = ImageIO.read(m_nodeImageFile);
+		
+		File nodeImgFile = getTempFile(AbstractPythonPlotV2NodeModel.IMGFILE_LABEL);
+		
+        if (nodeImgFile.isFile()) {
+        		m_image = ImageIO.read(nodeImgFile);
         }
     }
     
@@ -370,28 +380,33 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     
 	protected void prepareScriptFile() throws KnimeScriptingException {
 	
-		createTempFilesForPlot();
+		createTempFiles();
+		
+		File pyScriptFile = getTempFile(AbstractPythonScriptingV2NodeModel.PY_SCRIPTVAR_BASE_NAME);
+		File shelveFile = getTempFile(AbstractPythonPlotV2NodeModel.SHELVEFILE_LABEL);
 		
 		String importString = "import matplotlib\n" + 
 				"matplotlib.use('Agg')\n" + 
 				"import matplotlib.pyplot as plt";
 		
 		try {
-			Files.write(m_pyScriptFile.toPath(), importString.getBytes(), StandardOpenOption.APPEND);
+			Files.write(pyScriptFile.toPath(), importString.getBytes(), StandardOpenOption.APPEND);
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
 		}
 		
-		super.prepareScriptFile(new PythonInputMode(m_shelveFile, PythonInputMode.Flag.WRITE));
+		super.prepareScriptFile(new PythonInputMode(shelveFile, PythonInputMode.Flag.WRITE));
 		
-		String plotString = 
+		String plotString = "";
 		
 		try {
-			Files.write(m_pyScriptFile.toPath(), plotString, StandardOpenOption.APPEND);
+			Files.write(pyScriptFile.toPath(), plotString.getBytes(), StandardOpenOption.APPEND);
+		} catch (IOException ioe) {
+			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
 		}
 	}
 
-	private void createTempFilesForPlot() throws KnimeScriptingException {
+	/*private void createTempFilesForPlot() throws KnimeScriptingException {
 		
 		// prepend a random string to each new file to make it easier to find corresponding temporary files
     	String randomPart = Utils.generateRandomString(6);
@@ -419,6 +434,22 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     			e.printStackTrace();
     		}
     	}
+	}*/
+
+	@Override
+	protected String createTempFiles() throws KnimeScriptingException {
+		// TODO Auto-generated method stub
+		String randomPart = super.createTempFiles();
+		
+		try {
+			File shelveFile = File.createTempFile(randomPart + "_" + SHELVEFILE_LABEL + "_knime2python_", ".csv");
+			addTempFile(SHELVEFILE_LABEL, shelveFile);
+		} catch (IOException ioe) {
+			removeTempFiles();
+	    	throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
+		}
+		
+		return randomPart;
 	}
 
 }
