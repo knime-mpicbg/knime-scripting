@@ -106,9 +106,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * temp files and input/output ports
 	 */
 	
+	private String m_randomPart;
+	
 	Map<String, File> m_tempFiles;
 	Map<String, PortObject> m_inPorts;
-	Map<String, PortObject> m_outPorts;
+	Map<String, PortObject> m_outPorts;		// knime tables only
 
 	// python executor
     protected Python python;
@@ -409,30 +411,34 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		exec.setMessage("Python snippet finished - pull data from Python");
 		ExecutionMonitor transferToExec = exec.createSubProgress(1.0/2);
 		
-		int nOut = m_outPorts.size();
+		int nOut = getNrOutPorts();
 		
-		try {
+		String[] outTableLabels = m_outPorts.keySet().toArray(new String[m_outPorts.size()]);
 		
-			// pull all python data tables
-			for(String out : m_outPorts.keySet()) {
+		int outTableCounter = 0;
+		
+		PortObject[] ports = new PortObject[nOut];
+		
+		// for each output port
+		for(int i = 0; i < getNrOutPorts(); i++) {
+			PortType pType = this.getOutPortType(i);
+			
+			if(pType.equals(BufferedDataTable.TYPE)) {
 				transferToExec.setMessage("Pull table");
-				
-					double subProgress = 1.0/nOut;
-					PortObject outTable = null;
-					try {
-						outTable = pullTableFromPython(out, exec, subProgress);
-					} catch(IOException ioe) {
-						throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
-					}				
-					m_outPorts.replace(out, outTable);	// delete reference to input table after successful transfer
-				
+				String label = outTableLabels[outTableCounter];
+				double subProgress = 1.0/nOut;
+				PortObject outTable = null;
+				try {
+					outTable = pullTableFromPython(label, exec, subProgress);
+				} catch(IOException ioe) {
+					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
+				} finally {
+					deleteTempFiles();
+				}
+				ports[i] = outTable;
 			}
-		
-		} finally {
-			deleteTempFiles();
 		}
 		
-		PortObject[] ports = new PortObject[m_outPorts.size()];
 		return m_outPorts.values().toArray(ports);
 	}
 
@@ -537,7 +543,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return bdc.getTable();
 	}
 	
-	protected void prepareScriptFile(PythonInputMode flag) throws KnimeScriptingException {
+	/*protected void prepareScriptFile(PythonInputMode flag) throws KnimeScriptingException {
 		// prepare script
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
 		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
@@ -545,7 +551,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		} catch(IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		}
-	}
+	}*/
 	
 	protected File getScriptFile() {
 		return m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
@@ -622,7 +628,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * 
 	 * @throws KnimeScriptingException
 	 */
-	protected void prepareScript(File scriptFile, boolean useScript, PythonInputMode flag) throws KnimeScriptingException {
+	protected void prepareScript(BufferedWriter scriptFileWriter, boolean useScript, PythonInputMode flag) throws KnimeScriptingException {
 		
 		String kseMessage = "Failed to write script file: ";
 		// CSV read/write functions
@@ -630,7 +636,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		// (1) write template script to script file
 		try (InputStream utilsStream = getClass().getClassLoader().getResourceAsStream("/de/mpicbg/knime/scripting/python/scripts/PythonCSVUtils2.py")) {
 			String pyScriptString = FileUtils.readFromRessource(utilsStream);
-			Files.write(scriptFile.toPath(), pyScriptString.getBytes(), StandardOpenOption.APPEND);
+			scriptFileWriter.write(pyScriptString);
 		}catch(IOException ioe) {
 			throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 		}
@@ -643,9 +649,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			boolean write = fl.equals(Flag.WRITE);
 			if(write) {
 				try {
-					String toScriptFile = "\n\n"
-							+ "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
-					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
+					scriptFileWriter.newLine();
+					scriptFileWriter.newLine();
+					
+					String toScriptFile = "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
+					scriptFileWriter.write(toScriptFile);
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 				}	
@@ -656,11 +664,19 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				File f = m_tempFiles.get(inLabel);
 				String errorMessage = null;
 				if(f != null) {
-					try {						
-						String readCSVCmd = "\n\n" + inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")\n\n";
-						if(write) readCSVCmd = readCSVCmd + "s[\'" + inLabel + "\'] = " + inLabel + "\n";
+					try {	
+						scriptFileWriter.newLine();
+						scriptFileWriter.newLine();
 						
-						Files.write(scriptFile.toPath(), readCSVCmd.getBytes(), StandardOpenOption.APPEND);
+						String readCSVCmd = inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")";
+						scriptFileWriter.write(readCSVCmd);
+						scriptFileWriter.newLine();
+						
+						if(write) {
+							readCSVCmd = "s[\'" + inLabel + "\'] = " + inLabel;
+							scriptFileWriter.write(readCSVCmd);
+							scriptFileWriter.newLine();
+						}
 					} catch(IOException ioe) {
 						errorMessage = ioe.getMessage();
 					}
@@ -673,8 +689,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			
 			if(write) {
 				try {
-					String toScriptFile = "s.close()\n\n";
-					Files.write(scriptFile.toPath(), toScriptFile.getBytes(), StandardOpenOption.APPEND);
+					String toScriptFile = "s.close()";
+					scriptFileWriter.write(toScriptFile);
+					scriptFileWriter.newLine();
+					scriptFileWriter.newLine();
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 				}	
@@ -688,7 +706,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(useScript) {
 			// (3) add user script to script file
 			try {
-				Files.write(scriptFile.toPath(), super.prepareScript().getBytes(), StandardOpenOption.APPEND);
+				scriptFileWriter.write(super.prepareScript());
 			} catch (IOException ioe) {
 				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 			}
@@ -700,8 +718,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				String errorMessage = null;
 				if(f != null) {
 					try {
-						String writeCSVCmd = "\n\nwrite_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")\n";
-						Files.write(scriptFile.toPath(), writeCSVCmd.getBytes(), StandardOpenOption.APPEND);
+						scriptFileWriter.newLine();
+						scriptFileWriter.newLine();
+						
+						String writeCSVCmd = "write_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")";
+						scriptFileWriter.write(writeCSVCmd);
+						scriptFileWriter.newLine();
+						
 					} catch(IOException ioe) {
 						errorMessage = ioe.getMessage();
 					}
@@ -763,22 +786,26 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 
 	/**
-	 * fill outport-map with ouput names based on number of outputs <br/>
+	 * fill outport-map with output names based on number of table outputs <br/>
 	 * map-values will be null
 	 */
 	private void createOutPortMapping() {
 		int nOut = this.getNrOutPorts();
 		
 		m_outPorts = new LinkedHashMap<String, PortObject>();
+		int tableCounter = 0;
 		
 		for(int i = 0; i < nOut; i++) {
-			String variableName = PY_OUTVAR_BASE_NAME + (nOut > 1 ? (i + 1) : "");
-			m_outPorts.put(variableName, null);
+			PortType type = this.getOutPortType(i);
+			if(type.equals(BufferedDataTable.TYPE)) {
+				String variableName = PY_OUTVAR_BASE_NAME + (nOut > 1 ? (i + 1) : "");
+				m_outPorts.put(variableName, null);
+			}
 		}	
 	}
 
 	/**
-	 * deletees all temporary files
+	 * deletes all temporary files
 	 */
 	private void deleteTempFiles() {
 		
@@ -835,33 +862,31 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
      * 
      * @throws KnimeScriptingException 
      */
-    protected String createTempFiles() throws KnimeScriptingException {
+    protected void createTempFiles() throws KnimeScriptingException {
         
     	m_tempFiles = new HashMap<String, File>();
     	
     	// prepend a random string to each new file to make it easier to find corresponding temporary files
-    	String randomPart = Utils.generateRandomString(6);
+    	//String randomPart = Utils.generateRandomString(6);
     	
     	try {
 	    	// Create a new set
 	    	for(String label : m_inPorts.keySet()) {
-	    		File tempFile = File.createTempFile(randomPart + "_" + label + "_knime2python_", ".csv");
+	    		File tempFile = File.createTempFile(m_randomPart + "_" + label + "_knime2python_", ".csv");
 	    		m_tempFiles.put(label, tempFile);
 	    	}
 	    	for(String label : m_outPorts.keySet()) {
-	    		File tempFile = File.createTempFile(randomPart + "_" + label + "_python2knime_", ".csv");
+	    		File tempFile = File.createTempFile(m_randomPart + "_" + label + "_python2knime_", ".csv");
 	    		m_tempFiles.put(label, tempFile);
 	    	}
 	
-	    	File scriptFile = File.createTempFile(randomPart + "_analyze_", ".py");
+	    	File scriptFile = File.createTempFile(m_randomPart + "_analyze_", ".py");
 	    	m_tempFiles.put(PY_SCRIPTVAR_BASE_NAME, scriptFile);
 	    	
     	} catch (IOException ioe) {
     		removeTempFiles();
     		throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
     	} 
-    	
-    	return randomPart;
     }
     
     protected boolean addTempFile(String label, File file) {
@@ -871,6 +896,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     protected File getTempFile(final String label) {
     	return m_tempFiles.get(label);
     }
+    
+    protected String getRandomPart() {
+		return m_randomPart;
+	}
     
     protected void removeTempFiles() {
     	for(File f : m_tempFiles.values()) {
@@ -885,6 +914,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		m_randomPart = Utils.generateRandomString(6);
 		pushInputToPython(inData, exec);	
 		return null;
 	}
@@ -921,14 +951,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(pythonExecPath.isEmpty())
 			throw new KnimeScriptingException("Path to python executable is not set. Please configure under Preferences > KNIME > Python Scripting.");
 
-		// add shebang to enable execution of py-script
+		
 		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
-			writer.write("#! " + pythonExecPath + " -i\n");
-		} catch(IOException ioe) {
+			
+		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(scriptFile, true))) {
+			// add shebang to enable execution of py-script
+			scriptWriter.write("#! " + pythonExecPath + " -i\n");
+			
+			prepareScript(scriptWriter, false, PythonInputMode.ignoreFlag());
+		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-		} 
-		prepareScript(scriptFile, false, PythonInputMode.ignoreFlag());
+		}
+		
 		scriptFile.setExecutable(true);
 		
 		
@@ -1229,6 +1263,16 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		DataTableSpec tSpec = new DataTableSpec("Result from R", cSpecArray);
 		
 		return tSpec;
+	}
+
+
+	protected void prepareScriptFile() throws KnimeScriptingException {
+		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(getScriptFile(), true))) {
+			prepareScript(scriptWriter, true, PythonInputMode.ignoreFlag());
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
+		}
 	}
 
 }
