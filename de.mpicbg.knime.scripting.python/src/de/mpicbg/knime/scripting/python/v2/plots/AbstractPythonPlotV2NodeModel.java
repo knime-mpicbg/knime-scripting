@@ -24,10 +24,12 @@ import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
@@ -49,7 +51,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	
     private static final String SHELVEFILE_LABEL = "shelveFile";
     private static final String IMGFILE_LABEL = "imgFile";
-    
     
     /**
      * MODEL - SETTINGS
@@ -73,6 +74,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     
     public static final String CFG_IMGTYPE = "figure.ouput.type";
     public static final String CFG_IMGTYPE_DFT = "png";
+
     
     public static final String DEFAULT_PYTHON_PLOTCMD = "" +     
 		"# the following import is not required, as the node takes care of it \n" + 
@@ -85,16 +87,19 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     public static final List<String> SUPPORTED_FORMATS = new LinkedList<String>(
     		Arrays.asList("png", "jpeg", "svg", "pdf", "tif"));
 
+    
+    
+    
 	public AbstractPythonPlotV2NodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
 		
+		this.addModelSetting(CFG_DPI, createDpiSM());
 		this.addModelSetting(CFG_HEIGHT, createHeightSM());
-        this.addModelSetting(CFG_WIDTH, createWidthSM());
-        this.addModelSetting(CFG_DPI, createDpiSM());
-        this.addModelSetting(CFG_IMGTYPE, createImgTypeSM());
-        this.addModelSetting(CFG_OUTFILE, createOutputFileSM());
-        this.addModelSetting(CFG_OVERWRITE, createOverwriteSM());
-        this.addModelSetting(CFG_WRITE, createWriteFileSM());
+		this.addModelSetting(CFG_WIDTH, createWidthSM());
+		this.addModelSetting(CFG_IMGTYPE, createImgTypeSM());
+		this.addModelSetting(CFG_OUTFILE, createOutputFileSM());
+		this.addModelSetting(CFG_OVERWRITE, createOverwriteSM());
+		this.addModelSetting(CFG_WRITE, createWriteFileSM());
 	}
 	
 	/**
@@ -153,6 +158,33 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return new SettingsModelIntegerBounded(CFG_DPI, CFG_DPI_DFT, 0, Integer.MAX_VALUE);
 	}
 	
+	protected int getConfigDpi() {
+		return ((SettingsModelIntegerBounded) getModelSetting(CFG_DPI)).getIntValue();
+	}
+	
+	protected int getConfigWidth() {
+		return ((SettingsModelIntegerBounded) getModelSetting(CFG_WIDTH)).getIntValue();
+	}
+	
+	protected int getConfigHeight() {
+		return ((SettingsModelIntegerBounded) getModelSetting(CFG_HEIGHT)).getIntValue();
+	}
+	
+	protected String getConfigOutFileName() {
+		return ((SettingsModelString) getModelSetting(CFG_OUTFILE)).getStringValue();
+	}
+	
+	protected String getConfigImgFormat() {
+		return ((SettingsModelString) getModelSetting(CFG_IMGTYPE)).getStringValue();
+	}
+	
+	protected boolean getConfigWriteFlag() {
+		return ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
+	}
+	
+	protected boolean getConfigOverwriteFlag() {
+		return ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
+	}
 	
 
 	/**
@@ -311,28 +343,29 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     	Files.copy(Paths.get(shelvePath), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
 	}
 
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		PortObjectSpec[] specs = super.configure(inSpecs);
+		
+		String format = getConfigImgFormat();
+		String outFile = getConfigOutFileName();
+		boolean write = getConfigWriteFlag();
+		
+		if(outFile != null && write) {
+			String ext = FilenameUtils.getExtension(outFile);
+			if(!ext.equals(format))
+				this.setWarningMessage("Plot Export Settings: Selected file format '" + format + "' vs. file extension '" + ext +"'");
+		}
+		
+		return specs;
+	}
+
 	protected BufferedImage createImage(String script, int defWidth, int defHeight, String imageType) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/**
-	 * @return image height (pixels)
-	 */
-    public int getDefHeight() {
-        return ((SettingsModelIntegerBounded) getModelSetting(CFG_HEIGHT)).getIntValue();
-    }
 
-    /**
-     * @return image width (pixels)
-     */
-    public int getDefWidth() {
-    	return ((SettingsModelIntegerBounded) getModelSetting(CFG_WIDTH)).getIntValue();
-    }
-    
-    public String getImageType() {
-    	return ((SettingsModelString) getModelSetting(CFG_IMGTYPE)).getStringValue();
-    }
     
     public BufferedImage getImage() {
     	
@@ -400,12 +433,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     
 	@Override
 	protected void prepareScriptFile() throws KnimeScriptingException {
-	
-		int width = ((SettingsModelIntegerBounded)getModelSetting(CFG_WIDTH)).getIntValue();
-		int height = ((SettingsModelIntegerBounded)getModelSetting(CFG_HEIGHT)).getIntValue();
-		int dpi = ((SettingsModelIntegerBounded)getModelSetting(CFG_DPI)).getIntValue();
-		String imgFormat = ((SettingsModelString)getModelSetting(CFG_IMGTYPE)).getStringValue();
-		boolean writeImageToFile = ((SettingsModelBoolean) getModelSetting(CFG_WRITE))
+		
+		int width = getConfigWidth();
+		int height = getConfigHeight();
+		int dpi = getConfigDpi();
+		String imgFormat = getConfigImgFormat();
 		
 		double width_inch = (double)width/(double)dpi;
 		double height_inch = (double)height/(double)dpi;
@@ -425,13 +457,24 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			scriptWriter.newLine();
 			scriptWriter.newLine();
 			
+			String writeImageToFile = "";
+			// if image should be exported as file
+			if(getConfigWriteFlag() && getConfigOutFileName() != null) {
+				String destination = getConfigOutFileName();
+				boolean overwrite = getConfigOverwriteFlag();
+				if(!overwrite) {
+					if(new File(destination).exists())
+						throw new KnimeScriptingException("Plot file already exists and may not be overwritten. Please check output settings.");
+				}
+				writeImageToFile = "plt.savefig(\"" + destination + "\", format=\"" + imgFormat + "\")\n";	
+			}
+			
 			String plotString = "F = plt.gcf()\n" + 
 					"\n" + 
 					"F.set_dpi(" + dpi + ")\n" + 
 					"F.set_size_inches(" + width_inch + "," + height_inch + ")\n" + 
 					"\n" + 
-					// we need to save at the destination location here: "plt.savefig(\"" + getTempFile(IMGFILE_LABEL) + "\", format=\"" + imgFormat + "\")\n" + 
-					// this temp-plot is created for node port and view
+					writeImageToFile +
 					"plt.savefig(\"" + m_nodeImageFile + "\", format=\"png\")\n" +
 					"plt.close()";
 			scriptWriter.write(plotString);

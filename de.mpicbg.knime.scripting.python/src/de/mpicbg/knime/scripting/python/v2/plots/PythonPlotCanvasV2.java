@@ -32,7 +32,7 @@ public class PythonPlotCanvasV2 extends JPanel {
     	this.m_plotModel = plotModel;
     	
         setFocusable(true);
-        setPreferredSize(new Dimension(m_plotModel.getDefWidth(), m_plotModel.getDefHeight()));
+        setPreferredSize(new Dimension(m_plotModel.getConfigWidth(), m_plotModel.getConfigHeight()));
 
         baseImage = toBufferedImage(m_plotModel.getImage());
 
