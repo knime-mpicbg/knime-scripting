@@ -45,12 +45,15 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
     public BufferedImage m_image;				// image created by Python(not required?)
     
-	private File m_nodeImageFile;				// image file (temp-location => copy to internals)
+	private File m_nodeImageFile;				// image file (png, temp-location => copy to internals)
     private File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
-    private File m_shelveFile;				// file which stores the data needed to recreate the image (temp-location => copy to internals)	
+    private File m_shelveFile;					// file which stores the data needed to recreate the image (temp-location => copy to internals)	
 	
     private static final String SHELVEFILE_LABEL = "shelveFile";
     private static final String IMGFILE_LABEL = "imgFile";
+    
+    private static final int EXECUTION_MODE = 0;
+    private static final int REPAINT_MODE = 1;
     
     /**
      * MODEL - SETTINGS
@@ -195,15 +198,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
      */
 	@Override
 	protected PortObject[] pullOutputFromPython(ExecutionContext exec) throws KnimeScriptingException, CanceledExecutionException {
-		
-		// 1) //copy temp files to internal
-		// - image
-		// - shelve file
-		// 2) create internal script reading data from shelve file
-		// 3) create image port
-		
-		// note: deletes temp files - do everything using temp files before
-		
+				
 		PortObject[] outPorts = super.pullOutputFromPython(exec);
 		
 		for(int i = 0; i < getNrOutPorts(); i++) {
@@ -324,11 +319,21 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	@Override
 	protected void loadInternals(File internDir, ExecutionMonitor exec) throws IOException, CanceledExecutionException {
 		
-		m_nodeImageFile = internDir.toPath().resolve("image.png").toFile();
-		m_shelveFile = internDir.toPath().resolve("shelve.db").toFile();
+		File internalImgfile = internDir.toPath().resolve("image.png").toFile();
+		File internalShelveFile = internDir.toPath().resolve("shelve.db").toFile();
 		
-		if(!m_nodeImageFile.canRead() || !m_shelveFile.canRead())
+		if(!internalImgfile.canRead() || !internalShelveFile.canRead())
 			throw new IOException("Failed to load node internals. Files missing or without read access.");
+		
+		try {
+			createTempFiles(true);
+		} catch (KnimeScriptingException kse) {
+			throw new IOException(kse.getMessage());
+		}
+		
+		//copy to temp location
+		Files.copy(internalImgfile.toPath(), m_nodeImageFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(internalShelveFile.toPath(), m_shelveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	@Override
@@ -341,6 +346,14 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		Path shelveInternal = internDir.toPath().resolve("shelve.db");  
 		String shelvePath = m_shelveFile.getAbsolutePath() + ".db";
     	Files.copy(Paths.get(shelvePath), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
+    	
+    	// create script for recreating the image
+    	int dpi = getConfigDpi();
+    	try {
+			createScriptFor(REPAINT_MODE, dpi, (double)getConfigWidth()/dpi, (double)getConfigHeight()/dpi);
+		} catch (KnimeScriptingException kse) {
+			throw new IOException(kse);
+		}
 	}
 
 	@Override
@@ -360,6 +373,38 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return specs;
 	}
 
+	@Override
+	protected void onDispose() {
+		super.onDispose();
+		removeTempFiles();
+	}
+	
+	@Override
+	protected void removeTempFiles() {
+		
+		super.removeTempFiles();
+		
+		if(m_nodeImageFile != null)
+			try {
+				Files.deleteIfExists(m_nodeImageFile.toPath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		if(m_pyScriptFile != null)
+			try {
+				Files.deleteIfExists(m_pyScriptFile.toPath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		if(m_shelveFile != null)
+			try {
+				String shelvePath = m_shelveFile.getAbsolutePath() + ".db";
+				Files.deleteIfExists(Paths.get(shelvePath));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+
 	protected BufferedImage createImage(String script, int defWidth, int defHeight, String imageType) {
 		// TODO Auto-generated method stub
 		return null;
@@ -368,8 +413,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
     
     public BufferedImage getImage() {
-    	
-    	//File nodeImgFile = getTempFile(AbstractPythonPlotV2NodeModel.IMGFILE_LABEL);
     	
         try {
             if (m_image == null && m_nodeImageFile != null && m_nodeImageFile.isFile()) {
@@ -389,62 +432,42 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	 */
 	protected void deserializeImage() throws IOException {
 		
-		//File nodeImgFile = getTempFile(AbstractPythonPlotV2NodeModel.IMGFILE_LABEL);
-		
         if (m_nodeImageFile.isFile()) {
-        		m_image = ImageIO.read(m_nodeImageFile);
+        	m_image = ImageIO.read(m_nodeImageFile);
         }
     }
+  
     
-
-	
-    
-    
-/*    @Override
+    @Override
 	protected void reset() {
 		super.reset();
-		m_image = null;
+		
+		removeTempFiles();
 	}
     
-	@Override
-	protected void onDispose() {
-		super.onDispose();
-		try {
-			removeTempWorkspace();
-		} catch (IOException e) {
-			logger.debug("temporary R workspace file could not be deleted:\t" + e.getMessage());
-			e.printStackTrace();
-		}
-	}*/
-	
-    /**
-     * remove temporary workspace file if it exists
-     * @throws KnimeScriptingException 
-     * @throws IOException if it fails to delete that file
-     */
-/*    private void removeTempWorkspace() throws IOException {
-    	// delete temporary R workspace when node is configured
-    	if(m_workspaceFile != null) {
-    		if(m_workspaceFile.exists())
-    			Files.delete(m_workspaceFile.toPath());
-    		m_workspaceFile = null;
-    	}
-    }	*/
-    
+
 	@Override
 	protected void prepareScriptFile() throws KnimeScriptingException {
 		
 		int width = getConfigWidth();
 		int height = getConfigHeight();
 		int dpi = getConfigDpi();
-		String imgFormat = getConfigImgFormat();
 		
 		double width_inch = (double)width/(double)dpi;
 		double height_inch = (double)height/(double)dpi;
 		
-		createTempFiles(imgFormat);
+		createTempFiles(false);
+		
+		createScriptFor(EXECUTION_MODE, dpi, width_inch, height_inch);
+
+	}
+
+	private void createScriptFor(int mode, int dpi, double width_inch, double height_inch)
+			throws KnimeScriptingException {
 		
 		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(getScriptFile(), true))) {
+			
+			// additional imports
 			String importString = "import matplotlib\n" + 
 					"matplotlib.use('Agg')\n" + 
 					"import matplotlib.pyplot as plt";
@@ -452,21 +475,27 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			scriptWriter.write(importString);
 			scriptWriter.newLine();
 			
-			super.prepareScript(scriptWriter, true, new PythonInputMode(m_shelveFile, PythonInputMode.Flag.WRITE));
+			// basic imports, defintions, script
+			if(mode == EXECUTION_MODE)
+				super.prepareScript(scriptWriter, true, new PythonInputMode(m_shelveFile, PythonInputMode.Flag.WRITE));
+			else
+				super.prepareScript(scriptWriter, true, new PythonInputMode(m_shelveFile, PythonInputMode.Flag.READ));
 			
 			scriptWriter.newLine();
 			scriptWriter.newLine();
+			
+			// plots for view and (optional) export
 			
 			String writeImageToFile = "";
 			// if image should be exported as file
-			if(getConfigWriteFlag() && getConfigOutFileName() != null) {
+			if(mode == EXECUTION_MODE && getConfigWriteFlag() && getConfigOutFileName() != null) {
 				String destination = getConfigOutFileName();
 				boolean overwrite = getConfigOverwriteFlag();
 				if(!overwrite) {
 					if(new File(destination).exists())
 						throw new KnimeScriptingException("Plot file already exists and may not be overwritten. Please check output settings.");
 				}
-				writeImageToFile = "plt.savefig(\"" + destination + "\", format=\"" + imgFormat + "\")\n";	
+				writeImageToFile = "plt.savefig(\"" + destination + "\", format=\"" + getConfigImgFormat() + "\")\n";	
 			}
 			
 			String plotString = "F = plt.gcf()\n" + 
@@ -482,12 +511,13 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
 		}
-
 	}
 
-	protected void createTempFiles(String imgFormat) throws KnimeScriptingException {
+	protected void createTempFiles(boolean internal) throws KnimeScriptingException {
 		
-		String randomPart = getRandomPart();
+		// if called during execution => get random string from parent class
+		// if called when loading internals => set random string to "internal"
+		String randomPart = internal ? "internal" : getRandomPart();
 		
 		try {
 			Path shelveFile = Files.createTempFile(randomPart + "_" + SHELVEFILE_LABEL + "_knime2python_", ".csv");
@@ -495,7 +525,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			m_shelveFile = shelveFile.toFile();
 			//addTempFile(SHELVEFILE_LABEL, shelveFile.toFile());
 			
-			Path imgFile = Files.createTempFile(randomPart + "_" + IMGFILE_LABEL + "_img2knime_", "." + imgFormat);
+			Path imgFile = Files.createTempFile(randomPart + "_" + IMGFILE_LABEL + "_img2knime_", ".png");
 			Files.deleteIfExists(imgFile);
 			m_nodeImageFile = imgFile.toFile();
 			//addTempFile(IMGFILE_LABEL, imgFile.toFile());

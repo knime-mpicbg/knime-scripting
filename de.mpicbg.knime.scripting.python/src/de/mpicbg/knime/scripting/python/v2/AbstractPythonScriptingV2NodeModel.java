@@ -107,7 +107,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	private String m_randomPart;
 	
-	Map<String, File> m_tempFiles;
+	Map<String, File> m_tempFiles = new HashMap<String, File>();;
 	Map<String, PortObject> m_inPorts;
 	Map<String, PortObject> m_outPorts;		// knime tables only
 

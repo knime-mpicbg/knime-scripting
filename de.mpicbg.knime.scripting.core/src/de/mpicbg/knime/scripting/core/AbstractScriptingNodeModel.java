@@ -209,7 +209,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         SettingsModelBoolean openInSetting = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
         if(openInSetting != null)
         	if(openInSetting.getBooleanValue())
-        		this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
+        		this.setWarningMessage("The node is configured to open the input data externally.\nExecution will fail after that");
 
         return null;
 	}
