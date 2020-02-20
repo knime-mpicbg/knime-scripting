@@ -19,6 +19,7 @@ Bundle-ActivationPolicy: lazy
 Export-Package: 
  de.mpicbg.knime.scripting.core,
  de.mpicbg.knime.scripting.core.exceptions,
+ de.mpicbg.knime.scripting.core.panels,
  de.mpicbg.knime.scripting.core.prefs,
  de.mpicbg.knime.scripting.core.rgg,
  de.mpicbg.knime.scripting.core.rgg.wizard,

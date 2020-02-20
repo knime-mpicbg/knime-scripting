@@ -2,6 +2,7 @@ package de.mpicbg.knime.scripting.python.v2.node.plot;
 
 import org.knime.core.node.NodeView;
 
+import de.mpicbg.knime.scripting.core.panels.ScriptingPlotPanel;
 import de.mpicbg.knime.scripting.python.v2.plots.AbstractPythonPlotV2NodeModel;
 import de.mpicbg.knime.scripting.python.v2.plots.PythonPlotCanvasV2;
 
@@ -21,14 +22,23 @@ public class PythonPlotV2NodeView<PythonPlotModel extends AbstractPythonPlotV2No
     }
 
     private void updateView(PythonPlotModel nodeModel) {
-        // not yet implemented
-    	/*if (nodeModel.getWSFile() == null) {
-            nodeModel.setPlotWarning();
-            return;
-        }*/
 
-        PythonPlotCanvasV2 plotCanvas = new PythonPlotCanvasV2(nodeModel);
-        setComponent(plotCanvas);
+   
+        /*JPanel backgroundPanel = new JPanel();
+        backgroundPanel.setLayout(new OverlayLayout(backgroundPanel));
+        
+        JPanel showText = new JPanel();
+        showText.setLayout(new BorderLayout());
+        JLabel tf = new JLabel("this is an example");
+        tf.setOpaque(false);      
+        showText.add(tf, BorderLayout.SOUTH);
+        showText.setOpaque(false);
+
+        backgroundPanel.add(showText);
+        backgroundPanel.add(plotCanvas);*/
+        
+    	PythonPlotCanvasV2 plotCanvas = new PythonPlotCanvasV2(nodeModel);
+        setComponent(new ScriptingPlotPanel(plotCanvas));
     }
 
 	@Override

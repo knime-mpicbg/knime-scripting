@@ -43,8 +43,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	
 	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
-    public BufferedImage m_image;				// image created by Python(not required?)
-    
 	private File m_nodeImageFile;				// image file (png, temp-location => copy to internals)
     private File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
     private File m_shelveFile;					// file which stores the data needed to recreate the image (temp-location => copy to internals)	
@@ -223,52 +221,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return outPorts;
 	}
 	
-	/**
-	 * method writes image to file
-	 * @throws KnimeScriptingException
-	 */
-	protected void saveFigureAsFile() throws KnimeScriptingException {
-		boolean enableFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
-        // no need to save image to file ?
-        if(!enableFileOutput) return;
-        
-        assert m_image != null;
-        
-        String fileName = ((SettingsModelString) getModelSetting(CFG_OUTFILE)).getStringValue();
-        boolean overwriteFileOutput = ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
-        
-        if(fileName == null) return;
-        if(fileName.length() == 0) return;
-
-        fileName = prepareOutputFileName(fileName);
-        
-        // the plot should be written to file
-        if (!fileName.isEmpty()) {
-        	File imageFile = new File(fileName);
-        	// check if the file already exists but should not be overwritten
-        	if(imageFile.exists()) {
-        		if(!overwriteFileOutput)
-        			throw new KnimeScriptingException("Overwrite file is disabled but image file '" + fileName + "' already exsists.");
-        	} else {
-        		try {
-        			imageFile.createNewFile();
-        		} catch(IOException e) {
-        			throw new KnimeScriptingException("Output file '" + fileName + "' cannot be created. Please check the output path! (" + e.getMessage() + ")");
-        		}
-        	}
-
-        	FileOutputStream fsOut = null;
-        	try {
-	            fsOut = new FileOutputStream(new File(fileName));
-	            ImageIO.write(m_image, "png", fsOut);
-	            fsOut.close();
-        	} catch (IOException e) {
-        		throw new KnimeScriptingException("Failed to save image to file:\n" + e.getMessage());
-        	}
-
-        }
-	}
-	
     /**
      * replace placeholders in filename with appropriate values
      * @param fileName
@@ -296,25 +248,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
         return fileName;
     }
-	
-	/**
-     * Creates a figure using the R-variable in the current connection's workspace as input.
-	 * @throws IOException 
-     * @throws KnimeScriptingException 
-     */
-    protected void createInternals() throws KnimeScriptingException {
-
-        // copy temp-image
-    	/*File imgFile = super.getTempFile(IMGFILE_LABEL);
-    	
-    	Files.copy(imgFile.toPath(), target, options)
-
-        // create the image
-        String script = prepareScript();
-        m_image = createImage(script, getDefWidth(), getDefHeight(), getImageType());*/
-    }
-    
-   
+	   
 
 	@Override
 	protected void loadInternals(File internDir, ExecutionMonitor exec) throws IOException, CanceledExecutionException {
@@ -342,10 +276,8 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		Path imgInternal = internDir.toPath().resolve("image.png");// + FilenameUtils.getExtension(m_nodeImageFile.toString()));  	
     	Files.copy(m_nodeImageFile.toPath(), imgInternal, StandardCopyOption.REPLACE_EXISTING);
     	
-    	// note: opening the shelve file with python adds a '.db' to the filename
 		Path shelveInternal = internDir.toPath().resolve("shelve.db");  
-		String shelvePath = m_shelveFile.getAbsolutePath() + ".db";
-    	Files.copy(Paths.get(shelvePath), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
+    	Files.copy(m_shelveFile.toPath(), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
     	
     	// create script for recreating the image
     	int dpi = getConfigDpi();
@@ -398,46 +330,31 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			}
 		if(m_shelveFile != null)
 			try {
-				String shelvePath = m_shelveFile.getAbsolutePath() + ".db";
-				Files.deleteIfExists(Paths.get(shelvePath));
+				Files.deleteIfExists(m_shelveFile.toPath());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 	}
 
-	protected BufferedImage createImage(String script, int defWidth, int defHeight, String imageType) {
+	protected BufferedImage createImage(int defWidth, int defHeight) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
     
-    public BufferedImage getImage() {
+    public BufferedImage getImage() throws IOException {
     	
-        try {
-            if (m_image == null && m_nodeImageFile != null && m_nodeImageFile.isFile()) {
-                logger.warn("Restoring image from disk. This might take a few seconds...");
-                deserializeImage();
-            }
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+    	BufferedImage image = null;
+    	
+    	if (m_nodeImageFile != null && m_nodeImageFile.isFile()) {
+    		logger.warn("Restoring image from disk. This might take a few seconds...");
+    		image = ImageIO.read(m_nodeImageFile);
+    	}
 
-        return m_image;
+        return image;
     }
-    
-	/**
-	 * read image from file
-	 * @throws IOException
-	 */
-	protected void deserializeImage() throws IOException {
-		
-        if (m_nodeImageFile.isFile()) {
-        	m_image = ImageIO.read(m_nodeImageFile);
-        }
-    }
-  
-    
+ 
     @Override
 	protected void reset() {
 		super.reset();
@@ -520,7 +437,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		String randomPart = internal ? "internal" : getRandomPart();
 		
 		try {
-			Path shelveFile = Files.createTempFile(randomPart + "_" + SHELVEFILE_LABEL + "_knime2python_", ".csv");
+			Path shelveFile = Files.createTempFile(randomPart + "_" + SHELVEFILE_LABEL + "_knime2python_", ".db");
 			Files.deleteIfExists(shelveFile);
 			m_shelveFile = shelveFile.toFile();
 			//addTempFile(SHELVEFILE_LABEL, shelveFile.toFile());

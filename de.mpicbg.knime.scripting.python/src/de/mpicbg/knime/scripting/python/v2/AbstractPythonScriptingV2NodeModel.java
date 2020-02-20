@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -647,11 +648,19 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 			boolean write = fl.equals(Flag.WRITE);
 			if(write) {
+				
+				File shelveFile = flag.getFile();
+				assert shelveFile != null;
+				
+				// remove .db extension as this is added automatically by the python shelve.open call 
+				// to the given name
+				String shelveFilePath = FilenameUtils.removeExtension(shelveFile.getAbsolutePath());
+				
 				try {
 					scriptFileWriter.newLine();
 					scriptFileWriter.newLine();
 					
-					String toScriptFile = "s = shelve.open(\"" + flag.getFile().toPath() + "\")";
+					String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
 					scriptFileWriter.write(toScriptFile);
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());

@@ -1,18 +1,12 @@
 package de.mpicbg.knime.scripting.python.v2.plots;
 
-import de.mpicbg.knime.scripting.core.ImageClipper;
-import de.mpicbg.knime.scripting.python.v2.plots.AbstractPythonPlotV2NodeModel;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.awt.image.PixelGrabber;
+import java.io.IOException;
+
+import org.knime.core.node.NodeModel;
+
+import de.mpicbg.knime.scripting.core.panels.ScriptingPlotCanvas;
 
 
 /**
@@ -21,55 +15,27 @@ import java.awt.image.PixelGrabber;
  * @author Holger Brandl, Antje Janosch
  */
 @SuppressWarnings("serial")
-public class PythonPlotCanvasV2 extends JPanel {
+public class PythonPlotCanvasV2 extends ScriptingPlotCanvas<NodeModel> {
 	
-	private BufferedImage baseImage;
-    private BufferedImage scaledImage;
     private AbstractPythonPlotV2NodeModel m_plotModel;
     
     public PythonPlotCanvasV2(AbstractPythonPlotV2NodeModel plotModel) {
     	
     	this.m_plotModel = plotModel;
-    	
-        setFocusable(true);
-        setPreferredSize(new Dimension(m_plotModel.getConfigWidth(), m_plotModel.getConfigHeight()));
-
-        baseImage = toBufferedImage(m_plotModel.getImage());
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                if (!isVisible()) {
-                    return;
-                }
-
-                BufferedImage bufImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
-                bufImage.createGraphics();
-                AffineTransform at = AffineTransform.getScaleInstance((double) getWidth() / baseImage.getWidth(null),
-                        (double) getHeight() / baseImage.getHeight(null));
-
-                AffineTransformOp op = new AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR);
-                scaledImage = op.filter(baseImage, null);
-            }
-        });
 
         // add clipboard copy paste
-        addKeyListener(new KeyAdapter() {
+        /*addKeyListener(new KeyAdapter() {
 
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_C && e.isMetaDown())
-                    new ImageClipper().copyToClipboard(PythonPlotCanvasV2.this.baseImage);
+                    new ImageClipper().copyToClipboard(PythonPlotCanvasV2.this.m_baseImage);
             }
-        });
-
-
+        });*/
     }
 
-    public void paint(Graphics g) {
-        g.drawImage(scaledImage != null ? scaledImage : baseImage, 0, 0, null);
-    }
 
-    public static BufferedImage toBufferedImage(Image image) {
+
+    /*public static BufferedImage toBufferedImage(Image image) {
 
         if (image instanceof BufferedImage) {
             return (BufferedImage) image;
@@ -137,5 +103,30 @@ public class PythonPlotCanvasV2 extends JPanel {
 
         // Get the image's color model
         return pg.getColorModel().hasAlpha();
-    }
+    }*/
+
+	@Override
+	protected BufferedImage recreateImageImpl(int width, int height) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected Dimension getPlotDimensionsFromModel() {
+		return new Dimension(m_plotModel.getConfigWidth(), m_plotModel.getConfigHeight());
+	}
+
+	@Override
+	protected BufferedImage getBaseImageFromModel() {
+		try {
+			return m_plotModel.getImage();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+
 }
