@@ -1,10 +1,13 @@
 package de.mpicbg.knime.scripting.python.v2.plots;
 
+import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
@@ -268,6 +272,13 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		//copy to temp location
 		Files.copy(internalImgfile.toPath(), m_nodeImageFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		Files.copy(internalShelveFile.toPath(), m_shelveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		
+		Path inKeys = internDir.toPath().resolve("inputKeys.csv");
+		try( FileReader reader = new FileReader(inKeys.toFile()); BufferedReader br = new BufferedReader(reader); ) {
+			String[] keys = br.readLine().split(",");
+			
+			super.setInputKeys(Arrays.asList(keys));
+		}
 	}
 
 	@Override
@@ -279,13 +290,20 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		Path shelveInternal = internDir.toPath().resolve("shelve.db");  
     	Files.copy(m_shelveFile.toPath(), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
     	
+    	Path inKeys = internDir.toPath().resolve("inputKeys.csv");
+    	List<String> inList = super.getInputKeys();
+    	try( FileWriter writer = new FileWriter(inKeys.toFile()); ) {
+    		writer.write(String.join(",", inList));
+    		writer.flush();
+    		writer.close();
+    	}
     	// create script for recreating the image
-    	int dpi = getConfigDpi();
+    	/*int dpi = getConfigDpi();
     	try {
 			createScriptFor(REPAINT_MODE, dpi, (double)getConfigWidth()/dpi, (double)getConfigHeight()/dpi);
 		} catch (KnimeScriptingException kse) {
 			throw new IOException(kse);
-		}
+		}*/
 	}
 
 	@Override
@@ -375,14 +393,14 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		
 		createTempFiles(false);
 		
-		createScriptFor(EXECUTION_MODE, dpi, width_inch, height_inch);
+		createScriptFor(getScriptFile(), m_nodeImageFile, EXECUTION_MODE, dpi, width_inch, height_inch);
 
 	}
 
-	private void createScriptFor(int mode, int dpi, double width_inch, double height_inch)
+	private void createScriptFor(File scriptFile, File imgFile, int mode, int dpi, double width_inch, double height_inch)
 			throws KnimeScriptingException {
 		
-		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(getScriptFile(), true))) {
+		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(scriptFile, true))) {
 			
 			// additional imports
 			String importString = "import matplotlib\n" + 
@@ -421,7 +439,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 					"F.set_size_inches(" + width_inch + "," + height_inch + ")\n" + 
 					"\n" + 
 					writeImageToFile +
-					"plt.savefig(\"" + m_nodeImageFile + "\", format=\"png\")\n" +
+					"plt.savefig(\"" + imgFile.getAbsolutePath() + "\", format=\"png\")\n" +
 					"plt.close()";
 			scriptWriter.write(plotString);
 			
@@ -451,6 +469,47 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			removeTempFiles();
 	    	throw new KnimeScriptingException("Failed to create temporary files: " + ioe.getMessage());
 		}
+	}
+
+	public BufferedImage getRecreatedImage(int width, int height) throws IOException, KnimeScriptingException{
+		
+		Path recreateScriptFile = null;
+		Path recreatedImageFile = null;
+		BufferedImage recreatedImage = null;
+		
+    	int dpi = getConfigDpi();
+    	
+    	try {
+    		// create temp files - Python script to repaint image, image file
+			recreateScriptFile = Files.createTempFile("knime2python_recreateScript", ".py");
+			recreatedImageFile = Files.createTempFile("knime2python_recreatedImage", ".png");
+			
+			createScriptFor(recreateScriptFile.toFile(), recreatedImageFile.toFile(), REPAINT_MODE, dpi, (double)width/dpi, (double)height/dpi);
+			
+	    	// run python script
+			runScriptImpl(recreateScriptFile.toFile());
+			
+			recreatedImage = ImageIO.read(recreatedImageFile.toFile());
+			
+		} finally {
+			// delete temp files if they exist
+			if(recreatedImageFile != null) {
+				try {
+					Files.deleteIfExists(recreatedImageFile);
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+				}
+			}
+			if(recreateScriptFile != null) {
+				try {
+					Files.deleteIfExists(recreateScriptFile);
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+				}
+			}
+		}
+    	
+		return recreatedImage;
 	}
 
 }

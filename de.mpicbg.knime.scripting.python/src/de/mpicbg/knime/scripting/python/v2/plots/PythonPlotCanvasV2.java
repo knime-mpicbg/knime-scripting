@@ -6,13 +6,14 @@ import java.io.IOException;
 
 import org.knime.core.node.NodeModel;
 
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.panels.ScriptingPlotCanvas;
 
 
 /**
  * A renderer which allows to display Python plots. 
  *
- * @author Holger Brandl, Antje Janosch
+ * @author Antje Janosch
  */
 @SuppressWarnings("serial")
 public class PythonPlotCanvasV2 extends ScriptingPlotCanvas<NodeModel> {
@@ -107,7 +108,11 @@ public class PythonPlotCanvasV2 extends ScriptingPlotCanvas<NodeModel> {
 
 	@Override
 	protected BufferedImage recreateImageImpl(int width, int height) {
-		// TODO Auto-generated method stub
+		try {
+			return m_plotModel.getRecreatedImage(width, height);
+		} catch (IOException | KnimeScriptingException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 

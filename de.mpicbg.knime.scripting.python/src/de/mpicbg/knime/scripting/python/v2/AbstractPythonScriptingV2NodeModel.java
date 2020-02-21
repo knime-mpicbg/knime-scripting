@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -111,6 +112,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	Map<String, File> m_tempFiles = new HashMap<String, File>();;
 	Map<String, PortObject> m_inPorts;
 	Map<String, PortObject> m_outPorts;		// knime tables only
+	
+	List<String> m_inKeys = new ArrayList<String>();
 
 	// python executor
     protected Python python;
@@ -259,6 +262,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 		
+		m_inKeys.clear();
+		m_inKeys.addAll(m_inPorts.keySet());
 	}
 	
 	/**
@@ -569,7 +574,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		m_stdOut.clear();
 			
 		try {
-			runScriptImpl(exec, m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME));
+			exec.setMessage("Evaluate Python-script (cannot be cancelled)");
+			runScriptImpl(m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME));
 		} catch (KnimeScriptingException kse) {
 			deleteTempFiles();
 			throw kse;
@@ -588,10 +594,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * @param scriptFile 
 	 * @throws KnimeScriptingException
 	 */
-	private void runScriptImpl(ExecutionMonitor exec, File scriptFile) throws KnimeScriptingException {
-	
-		exec.setMessage("Evaluate Python-script (cannot be cancelled)");
-	
+	protected void runScriptImpl(File scriptFile) throws KnimeScriptingException {
+
 		IPreferenceStore preferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
 
 		// run script
@@ -601,6 +605,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(pythonExecPath.isEmpty())
 			throw new KnimeScriptingException("Path to python executable is not set. Please configure under Preferences > KNIME > Python Scripting.");
 	
+		// necessary to have an instance for recreating the view image
+		if(python == null)
+			python = new LocalPythonClient();
+		
 		CommandOutput output;
 		try {
 			output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
@@ -708,7 +716,48 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			
 		}
 		if(fl.equals(Flag.READ)) {
-			// add read from file call
+			
+			File shelveFile = flag.getFile();
+			assert shelveFile != null;
+			
+			// remove .db extension as this is added automatically by the python shelve.open call 
+			// to the given name
+			String shelveFilePath = FilenameUtils.removeExtension(shelveFile.getAbsolutePath());
+			
+			try {
+				scriptFileWriter.newLine();
+				scriptFileWriter.newLine();
+				
+				String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
+				scriptFileWriter.write(toScriptFile);
+			} catch(IOException ioe) {
+				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
+			}	
+			
+			for(String inKey : m_inKeys) {
+				try {
+					scriptFileWriter.newLine();
+					scriptFileWriter.newLine();
+					
+					String readCSVCmd = inKey + " = s['" + inKey + "']";
+					scriptFileWriter.write(readCSVCmd);
+					scriptFileWriter.newLine();
+					
+				} catch (IOException ioe) {
+					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
+				}
+		
+			}
+			String toScriptFile = "s.close()";
+			try {
+				scriptFileWriter.write(toScriptFile);
+				scriptFileWriter.newLine();
+				scriptFileWriter.newLine();
+			} catch (IOException ioe) {
+				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
+			}
+			
+			
 		}
 		
 		if(useScript) {
@@ -719,28 +768,31 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 			}
 
-			// (4) add write-calls to script file
-			for(String outLabel : m_outPorts.keySet()) {
-				File f = m_tempFiles.get(outLabel);
-				//File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
-				String errorMessage = null;
-				if(f != null) {
-					try {
-						scriptFileWriter.newLine();
-						scriptFileWriter.newLine();
-						
-						String writeCSVCmd = "write_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")";
-						scriptFileWriter.write(writeCSVCmd);
-						scriptFileWriter.newLine();
-						
-					} catch(IOException ioe) {
-						errorMessage = ioe.getMessage();
+			if(!fl.equals(Flag.READ)) {
+				
+				// (4) add write-calls to script file
+				for(String outLabel : m_outPorts.keySet()) {
+					File f = m_tempFiles.get(outLabel);
+					//File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
+					String errorMessage = null;
+					if(f != null) {
+						try {
+							scriptFileWriter.newLine();
+							scriptFileWriter.newLine();
+
+							String writeCSVCmd = "write_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")";
+							scriptFileWriter.write(writeCSVCmd);
+							scriptFileWriter.newLine();
+
+						} catch(IOException ioe) {
+							errorMessage = ioe.getMessage();
+						}
+					} else {
+						errorMessage = "tempory file error (NPE)";				
 					}
-				} else {
-					errorMessage = "tempory file error (NPE)";				
+					if(errorMessage != null)
+						throw new KnimeScriptingException(kseMessage, errorMessage);
 				}
-				if(errorMessage != null)
-					throw new KnimeScriptingException(kseMessage, errorMessage);
 			}
 		}
 	}
@@ -1281,6 +1333,16 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			ioe.printStackTrace();
 			throw new KnimeScriptingException("Failed to write script file: ", ioe.getMessage());
 		}
+	}
+
+
+	protected List<String> getInputKeys() {
+		return m_inKeys;
+	}
+
+
+	public void setInputKeys(List<String> keyList) {
+		m_inKeys = keyList;
 	}
 
 }
