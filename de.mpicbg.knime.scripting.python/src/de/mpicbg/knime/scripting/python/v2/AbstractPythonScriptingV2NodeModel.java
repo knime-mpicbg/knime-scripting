@@ -109,11 +109,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	private String m_randomPart;
 	
-	Map<String, File> m_tempFiles = new HashMap<String, File>();;
-	Map<String, PortObject> m_inPorts;
-	Map<String, PortObject> m_outPorts;		// knime tables only
+	private Map<String, File> m_tempFiles = new HashMap<String, File>();;
+	private Map<String, PortObject> m_inPorts;
+	private Map<String, PortObject> m_outPorts;		// knime tables only
 	
-	List<String> m_inKeys = new ArrayList<String>();
+	private List<String> m_inKeys = new ArrayList<>();
 
 	// python executor
     protected Python python;
@@ -262,7 +262,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 		
-		m_inKeys.clear();
+		m_inKeys.clear();;
 		m_inKeys.addAll(m_inPorts.keySet());
 	}
 	
@@ -444,7 +444,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 		
-		return m_outPorts.values().toArray(ports);
+		//return m_outPorts.values().toArray(ports);
+		return ports;
 	}
 
 
@@ -1067,7 +1068,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(jupyterKernel == null)
 			throw new KnimeScriptingException("No kernelspec available. Please configure under Preferences > KNIME > Community Scripting > JupyterSettings.");
 		
-		String version = isJupyterInstalled(jupyterLocation);
+		isJupyterInstalled(jupyterLocation);
 		
 		// get jupyter path
 		String jupyterDirString = getJupyterFolder(jupyterPreferences);

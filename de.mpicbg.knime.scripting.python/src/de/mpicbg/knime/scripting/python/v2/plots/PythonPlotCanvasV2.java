@@ -23,15 +23,6 @@ public class PythonPlotCanvasV2 extends ScriptingPlotCanvas<NodeModel> {
     public PythonPlotCanvasV2(AbstractPythonPlotV2NodeModel plotModel) {
     	
     	this.m_plotModel = plotModel;
-
-        // add clipboard copy paste
-        /*addKeyListener(new KeyAdapter() {
-
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_C && e.isMetaDown())
-                    new ImageClipper().copyToClipboard(PythonPlotCanvasV2.this.m_baseImage);
-            }
-        });*/
     }
 
 

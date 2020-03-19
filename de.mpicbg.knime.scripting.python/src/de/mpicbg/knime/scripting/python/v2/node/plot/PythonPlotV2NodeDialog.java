@@ -61,13 +61,12 @@ public class PythonPlotV2NodeDialog extends ScriptingNodeDialog {
 			@SuppressWarnings("rawtypes")
 			@Override
 			protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-				try {
-					super.validateSettingsBeforeSave();
-				} catch (InvalidSettingsException ise) {
-					JComboBox fileComboBox = ((JComboBox) ((JPanel) getComponentPanel().getComponent(0)).getComponent(0));
-					final String file = fileComboBox.getEditor().getItem().toString();
-					((SettingsModelString) getModel()).setStringValue((file == null || file.trim().length() == 0) ? "" : file);
-				}
+				super.validateSettingsBeforeSave();
+				JComboBox fileComboBox = ((JComboBox) ((JPanel) getComponentPanel().getComponent(0)).getComponent(0));
+				final String file = fileComboBox.getEditor().getItem().toString();
+				// if there is an empty string the settings model should get "null" as this is no file location
+				((SettingsModelString) getModel()).setStringValue((file == null || file.trim().length() == 0) ? null : file);
+
 			}
 
 		};

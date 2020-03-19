@@ -1,23 +1,18 @@
 package de.mpicbg.knime.scripting.python.v2.plots;
 
-import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,7 +33,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 
-import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
@@ -191,6 +185,14 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
 	}
 	
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDefaultScript(String defaultScript) {
+        return super.getDefaultScript(DEFAULT_PYTHON_PLOTCMD);
+    }
+	
 
 	/**
      * {@inheritDoc}
@@ -225,33 +227,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return outPorts;
 	}
 	
-    /**
-     * replace placeholders in filename with appropriate values
-     * @param fileName
-     * @return final filename
-     */
-    private String prepareOutputFileName(String fileName) {
-    	
-    	final String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
-        // process flow-variables
-        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
 
-        // replace wildcards
-
-        // 1) date
-        fileName = fileName.replace("$$DATE$$", TODAY);
-
-        // 2) user
-        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
-
-        // 3) workspace dir
-        if (fileName.contains("$$WS$$")) {
-            String wsLocation = getFlowVariable("knime.workspace");
-            fileName = fileName.replace("$$WS$$", wsLocation);
-        }
-
-        return fileName;
-    }
 	   
 
 	@Override
@@ -277,7 +253,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		try( FileReader reader = new FileReader(inKeys.toFile()); BufferedReader br = new BufferedReader(reader); ) {
 			String[] keys = br.readLine().split(",");
 			
-			super.setInputKeys(Arrays.asList(keys));
+			super.setInputKeys(new ArrayList<String>(Arrays.asList(keys)));
 		}
 	}
 
@@ -297,13 +273,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     		writer.flush();
     		writer.close();
     	}
-    	// create script for recreating the image
-    	/*int dpi = getConfigDpi();
-    	try {
-			createScriptFor(REPAINT_MODE, dpi, (double)getConfigWidth()/dpi, (double)getConfigHeight()/dpi);
-		} catch (KnimeScriptingException kse) {
-			throw new IOException(kse);
-		}*/
 	}
 
 	@Override
@@ -353,13 +322,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 				e.printStackTrace();
 			}
 	}
-
-	protected BufferedImage createImage(int defWidth, int defHeight) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
     
     public BufferedImage getImage() throws IOException {
     	
@@ -424,7 +386,10 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			String writeImageToFile = "";
 			// if image should be exported as file
 			if(mode == EXECUTION_MODE && getConfigWriteFlag() && getConfigOutFileName() != null) {
+				
 				String destination = getConfigOutFileName();
+				destination = prepareOutputFileName(destination);
+				
 				boolean overwrite = getConfigOverwriteFlag();
 				if(!overwrite) {
 					if(new File(destination).exists())

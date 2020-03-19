@@ -111,7 +111,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         writer.write("F.set_size_inches(" + width + "," + height + ")");
     }
 
-    private String prepareOutputFileName() {
+    /*private String prepareOutputFileName() {
         String fileName = propOutputFile.getStringValue();
 
         // process flow-variables
@@ -132,7 +132,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         }
 
         return fileName;
-    }
+    }*/
 
     public int getDefHeight() {
         return propHeight.getIntValue();
@@ -214,7 +214,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         image = PythonPlotCanvas.toBufferedImage(new ImageIcon(imageFile.getClientPath()).getImage());
 
         // Write the image to a file if desired
-        String fileName = prepareOutputFileName();
+        String fileName = prepareOutputFileName(propOutputFile.getStringValue());
         if (!fileName.isEmpty()) {
             if (!propOverwriteFile.getBooleanValue() && new File(fileName).exists()) {
                 throw new RuntimeException("Image file '" + fileName + "' already exists, enable overwrite to replace it");

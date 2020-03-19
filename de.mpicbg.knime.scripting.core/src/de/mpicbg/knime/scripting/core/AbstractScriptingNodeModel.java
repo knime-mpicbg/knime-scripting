@@ -3,7 +3,9 @@ package de.mpicbg.knime.scripting.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -388,5 +390,33 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         ScriptTemplate scriptTemplate = new ScriptTemplate();
         scriptTemplate.setTemplate(unparsedTemplate);
         return scriptTemplate;
+    }
+	
+    /**
+     * replace placeholders in filename with appropriate values
+     * @param fileName
+     * @return final filename
+     */
+    protected String prepareOutputFileName(String fileName) {
+    	
+    	final String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
+        // process flow-variables
+        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
+
+        // replace wildcards
+
+        // 1) date
+        fileName = fileName.replace("$$DATE$$", TODAY);
+
+        // 2) user
+        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
+
+        // 3) workspace dir
+        if (fileName.contains("$$WS$$")) {
+            String wsLocation = getFlowVariable("knime.workspace");
+            fileName = fileName.replace("$$WS$$", wsLocation);
+        }
+
+        return fileName;
     }
 }
