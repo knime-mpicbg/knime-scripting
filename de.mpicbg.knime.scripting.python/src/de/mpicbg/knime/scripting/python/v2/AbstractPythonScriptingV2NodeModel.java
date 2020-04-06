@@ -60,7 +60,9 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 import com.opencsv.CSVParser;
@@ -288,9 +290,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		Map<String, Integer> columnsIndicees = new LinkedHashMap<String, Integer>();
 		columnsIndicees.put("Row ID", -1);
-		
-		List<String> droppedColumns = new LinkedList<String>();
-	    
+
 	    /*
 	     * go through columns, if supported type, add their name and python type to the lists
 	     */
@@ -298,22 +298,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    	DataColumnSpec cSpec = inSpec.getColumnSpec(i);
 	    	DataType dType = cSpec.getType();
 	    	String cName = cSpec.getName();
-	    	boolean transfer = false;
 	    	
 	    	if(dType.getCellClass().equals(BooleanCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_BOOL);   
 	    		columnsIndicees.put(cName, i);
-	    		transfer = true;
 	    	}
 	    	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_INT);  
 	    		columnsIndicees.put(cName, i);
-	    		transfer = true;
 	    	}
 	    	if(dType.getCellClass().equals(DoubleCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_FLOAT); 
 	    		columnsIndicees.put(cName, i);
-	    		transfer = true;
 	    	}
 	    	if(dType.getCellClass().equals(LocalTimeCell.class) ||
 	    		dType.getCellClass().equals(LocalDateCell.class) ||
@@ -321,25 +317,14 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    	{
 	    		supportedColumns.put(cName, PY_TYPE_DATETIME);  
 	    		columnsIndicees.put(cName, i);
-	    		transfer = true;
 	    	}
 	    	if(dType.getCellClass().equals(StringCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_OBJECT);  
 	    		columnsIndicees.put(cName, i);
-	    		transfer = true;
 	    	}	
 	    	
-	    	if(!transfer) {
-	    		droppedColumns.add(cName);
-	    	}
 	    }
-	    
-	    if(!droppedColumns.isEmpty()) {
-	    	this.setWarningMessage("Unsupported data types. The following columns will not be transfered: " + 
-		    		 String.join(",",droppedColumns));
-	    }
-	    	
-	    
+	   	    
 		Writer writer;
 		try {
 			writer = Files.newBufferedWriter(tempFile.toPath());
@@ -645,6 +630,66 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	}
 	
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+		super.configure(inSpecs);
+		
+		// check input data tables for unsupported column types to throw a warning
+		List<String> droppedColumns;
+		List<String> warnings = new LinkedList<>();
+		
+		int inSpecIdx = 0;
+		for (PortObjectSpec inSpec : inSpecs) {
+			if (inSpec != null) 
+				if(inSpec instanceof DataTableSpec) {
+					DataTableSpec tableSpec = (DataTableSpec) inSpec;
+					droppedColumns = new LinkedList<String>();
+					
+					for(int i = 0; i < tableSpec.getNumColumns(); i++) {
+						boolean transfer = false;
+						DataColumnSpec cSpec = tableSpec.getColumnSpec(i);
+						DataType dType = cSpec.getType();
+						String cName = cSpec.getName();
+				    	
+				    	if(dType.getCellClass().equals(BooleanCell.class)) {
+				    		transfer = true;
+				    	}
+				    	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+				    		transfer = true;
+				    	}
+				    	if(dType.getCellClass().equals(DoubleCell.class)) {
+				    		transfer = true;
+				    	}
+				    	if(dType.getCellClass().equals(LocalTimeCell.class) ||
+				    		dType.getCellClass().equals(LocalDateCell.class) ||
+				    		dType.getCellClass().equals(LocalDateTimeCell.class)) 
+				    	{
+				    		transfer = true;
+				    	}
+				    	if(dType.getCellClass().equals(StringCell.class)) {
+				    		transfer = true;
+				    	}	
+				    	
+				    	if(!transfer) {
+				    		droppedColumns.add(cName);
+				    	}
+					}
+					
+				    if(!droppedColumns.isEmpty()) {
+			    	warnings.add("Unsupported data types at input " + inSpecIdx + ". The following columns will not be transfered: " + 
+				    		 String.join(",",droppedColumns));
+				    }
+				}
+			inSpecIdx ++;
+		}
+		
+		if(!warnings.isEmpty())
+			this.setWarningMessage(String.join("\n", warnings));
+		
+		return null; 
+	}
+
+
 	/**
 	 * load template with methods to read data from KNIME and write result back as CSV <br/>
 	 * extend by call these methods with the temporary files
