@@ -68,4 +68,4 @@ def write_csv(csv_filename, pdf):
 	
 	# append data
 	with openf(csv_filename, 'ab') as f:
-		pyOut.to_csv(f, header=False, date_format='%Y-%m-%d_%H:%M:%S')
+		pyOut.to_csv(f, header=False, date_format='%Y-%m-%d_%H:%M:%S', line_terminator = '\r\n')

@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -39,6 +40,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.BooleanCell;
@@ -71,6 +73,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
+//import antlr.StringUtils;
 import de.mpicbg.knime.knutils.FileUtils;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
@@ -368,8 +371,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    					columnValues.add(val ? "1" : "0");
 	    				}
 	    				if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
-	    					int val = ((IntValue) cell).getIntValue();
-	    					columnValues.add(Integer.toString(val));
+	    					//int val = ((IntValue) cell).getIntValue();
+	    					//columnValues.add(Integer.toString(val));
+	    					long val = ((LongValue) cell).getLongValue();
+	    					columnValues.add(Long.toString(val));
 	    				}
 	    				if(dType.getCellClass().equals(DoubleCell.class)) {
 	    					double val = ((DoubleValue) cell).getDoubleValue();
@@ -439,13 +444,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				try {
 					outTable = pullTableFromPython(label, exec, subProgress);
 				} catch(IOException ioe) {
-					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
-				} finally {
 					deleteTempFiles();
-				}
+					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
+				} 
 				ports[i] = outTable;
+				outTableCounter++;
 			}
 		}
+		
+		deleteTempFiles();
 		
 		//return m_outPorts.values().toArray(ports);
 		return ports;
@@ -490,7 +497,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		BufferedDataContainer bdc = null;
 		
 		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
-				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
+				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser).withKeepCarriageReturn(true)
 						.build()) {
 			
 			String[] columnNames = null;
@@ -501,6 +508,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			// 2. line = column types
 			int lineCount = 0;
 			for(String[] line : reader) {
+				
+				// remove carriage return from last entry
+				line[line.length - 1] = StringUtils.chop(line[line.length - 1]);
+				
 				if(lineCount == 0) {
 					columnNames = line;
 					lineCount ++;
@@ -528,6 +539,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					if(value.isEmpty())
 						dataCells.add(DataType.getMissingCell());
 					else {
+						System.out.println(value);
 						DataType dType = columns.get(col);
 						DataCell  addCell = createCell(value, dType);
 						dataCells.add(addCell);
@@ -1323,6 +1335,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
 		if(dType.equals(DoubleCellFactory.TYPE)) {
 			try {
+				if(value.equals("inf"))
+					return new DoubleCell(Double.POSITIVE_INFINITY);
+				if(value.equals("-inf"))
+					return new DoubleCell(Double.NEGATIVE_INFINITY);
+				
 				double d = Double.parseDouble(value);
 				return new DoubleCell(d);
 			} catch (NumberFormatException nfe) {
