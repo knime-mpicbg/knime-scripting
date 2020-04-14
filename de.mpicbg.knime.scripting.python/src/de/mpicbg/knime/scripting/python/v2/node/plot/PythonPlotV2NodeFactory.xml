@@ -68,7 +68,10 @@
         	Click to load the GUI (or double-click onto the template)
         </option>
         <option name="Output Options/File Type">
-        	Select .png or .jpeg
+        	If the image is saved as a file, it is saved with the given file format
+        </option>
+        <option name="Output DPI">
+        	If the image is saved as a file, the image is created with the given resolution
         </option>
         <option name="Output Options/Width, Height">
         	Width and height of the plot in pixels, which is also used when the
@@ -85,16 +88,16 @@
 
     <ports>
         <inPort index="0" name="Data table">
-        	A table which should be visualized with Python.
+        	A table with data which should be visualized with Python.
         </inPort>
-        <outPort index="0" name="Python plot as in image in KNIME">
-        	The generated Python plot as image column
+        <outPort index="0" name="Python plot">
+        	The generated Python plot as image (png)
         </outPort>
     </ports>
 
     <views>
         <view index="0" name="Python plot">
-        	The generated Python plot. Can be can be rescaled and replotted by double-clicking.
+        	The generated Python plot (png). Can be can be rescaled and recreated by double-clicking.
         </view>
     </views>
 
