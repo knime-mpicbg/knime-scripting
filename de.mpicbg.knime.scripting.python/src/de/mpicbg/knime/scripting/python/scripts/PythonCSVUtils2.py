@@ -32,7 +32,7 @@ def read_csv(csv_filename):
 		try:
 			pdf = pdf.astype(subtypes)
 		except:
-			print("Read KNIME data as pandas data frame: failed to convert {}".format(subtypes))
+			print("Read KNIME data as pandas data frame: failed to convert {}. Keep as {}".format(subtypes, pdf[list(subtypes.keys())[0]].dtypes))
 			pass
 	return pdf
 
@@ -68,4 +68,4 @@ def write_csv(csv_filename, pdf):
 	
 	# append data
 	with openf(csv_filename, 'ab') as f:
-		pyOut.to_csv(f, header=False, date_format='%Y-%m-%d_%H:%M:%S', line_terminator = '\r\n')
+		pyOut.to_csv(f, header=False, date_format='%Y-%m-%dT%H:%M:%S.%f', line_terminator = '\r\n')

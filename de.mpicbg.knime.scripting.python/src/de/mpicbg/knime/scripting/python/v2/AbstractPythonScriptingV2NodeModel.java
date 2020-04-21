@@ -17,7 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -135,6 +137,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
     
+    // date-time format send to Python
+    private final DateTimeFormatter TO_PY_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter TO_PY_DATETIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.nnnnnnnnn");
+    private final DateTimeFormatter TO_PY_TIME = DateTimeFormatter.ofPattern("HH:mm:ss.nnnnnnnnn");
+    
+    // date-time format exported by Python %Y-%m-%dT%H:%M:%S.%f (microsecond precision, not yet possible to return nanosecond precision)
+    private final DateTimeFormatter PY_dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+    
+    
 
     /**
      * WRITE:	serialize python input to file
@@ -173,8 +184,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     
 
     
-    // date-time format exported by python
-    public static final DateTimeFormatter PY_dateFormatter = initDateTime();
+    
     
     // store sdtout messages from pythin script execution
     private List<String> m_stdOut = new LinkedList<String>();
@@ -204,29 +214,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 */
 	public AbstractPythonScriptingV2NodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
-	}
-	
-	/**
-	 * init date/time formatter
-	 * 
-	 * @return {@link DateTimeFormatter}
-	 */
-	private static DateTimeFormatter initDateTime() {
-		DateTimeFormatterBuilder dateBuilder = new DateTimeFormatterBuilder();
-		
-		dateBuilder.appendValue(ChronoField.YEAR);
-		dateBuilder.appendLiteral('-');
-		dateBuilder.appendValue(ChronoField.MONTH_OF_YEAR);
-		dateBuilder.appendLiteral('-');
-		dateBuilder.appendValue(ChronoField.DAY_OF_MONTH);
-		dateBuilder.appendLiteral('_');
-		dateBuilder.appendValue(ChronoField.HOUR_OF_DAY);
-		dateBuilder.appendLiteral(':');
-		dateBuilder.appendValue(ChronoField.MINUTE_OF_HOUR);
-		dateBuilder.appendLiteral(':');
-		dateBuilder.appendValue(ChronoField.SECOND_OF_MINUTE);
-		
-		return dateBuilder.toFormatter();
 	}
 
 	
@@ -302,26 +289,34 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    	DataType dType = cSpec.getType();
 	    	String cName = cSpec.getName();
 	    	
-	    	if(dType.getCellClass().equals(BooleanCell.class)) {
+	    	Class<? extends DataCell> cellClass = dType.getCellClass();
+	    	
+	    	//numeric classes
+	    	if(cellClass.equals(BooleanCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_BOOL);   
 	    		columnsIndicees.put(cName, i);
 	    	}
-	    	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+	    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_INT);  
 	    		columnsIndicees.put(cName, i);
 	    	}
-	    	if(dType.getCellClass().equals(DoubleCell.class)) {
+	    	if(cellClass.equals(DoubleCell.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_FLOAT); 
 	    		columnsIndicees.put(cName, i);
 	    	}
-	    	if(dType.getCellClass().equals(LocalTimeCell.class) ||
-	    		dType.getCellClass().equals(LocalDateCell.class) ||
-	    		dType.getCellClass().equals(LocalDateTimeCell.class)) 
+	    	
+	    	// date/time classes
+	    	if(cellClass.equals(LocalDateTimeCell.class) ||
+	    			cellClass.equals(LocalDateCell.class) ||
+	    			cellClass.equals(LocalTimeCell.class))	    	
 	    	{
 	    		supportedColumns.put(cName, PY_TYPE_DATETIME);  
 	    		columnsIndicees.put(cName, i);
+	    		continue;
 	    	}
-	    	if(dType.getCellClass().equals(StringCell.class)) {
+	    	
+	    	// string compatible classes
+	    	if(dType.isCompatible(StringValue.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_OBJECT);  
 	    		columnsIndicees.put(cName, i);
 	    	}	
@@ -380,15 +375,29 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    					double val = ((DoubleValue) cell).getDoubleValue();
 	    					columnValues.add(Double.toString(val));
 	    				}
-	    				if(dType.getCellClass().equals(StringCell.class)) {
-	    					String val = ((StringValue) cell).getStringValue();
-	    					columnValues.add(val);
-	    					continue;
-	    				}
-	    				if(dType.isCompatible(StringValue.class)) {
-	    					String val = ((StringValue) cell).getStringValue();
-	    					columnValues.add(val);
-	    				}
+	    				
+	    				Class<? extends DataCell> cellClass = dType.getCellClass();
+    					
+    					if(cellClass.equals(LocalDateCell.class)) {
+    						LocalDate date = ((LocalDateCell) cell).getLocalDate();
+    						columnValues.add(date.format(TO_PY_DATE));
+    						continue;
+    					}
+    					if(cellClass.equals(LocalTimeCell.class)) {
+    						LocalTime time = ((LocalTimeCell) cell).getLocalTime();
+    						columnValues.add(time.format(TO_PY_TIME));
+    						continue;
+    					}
+    					if(cellClass.equals(LocalDateTimeCell.class)) {
+    						LocalDateTime datetime = ((LocalDateTimeCell) cell).getLocalDateTime();
+    						columnValues.add(datetime.format(TO_PY_DATETIME));
+    						continue;
+    					}
+	    				
+    					if(dType.isCompatible(StringValue.class)) {
+    						String val = ((StringValue) cell).getStringValue();
+    						columnValues.add(val);
+    					}
 	    			}
 	    		}
 	    	}
@@ -662,23 +671,25 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						DataColumnSpec cSpec = tableSpec.getColumnSpec(i);
 						DataType dType = cSpec.getType();
 						String cName = cSpec.getName();
+						
+						Class<? extends DataCell> cellClass = dType.getCellClass();
 				    	
-				    	if(dType.getCellClass().equals(BooleanCell.class)) {
+				    	if(cellClass.equals(BooleanCell.class)) {
 				    		transfer = true;
 				    	}
-				    	if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
+				    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) {
 				    		transfer = true;
 				    	}
-				    	if(dType.getCellClass().equals(DoubleCell.class)) {
+				    	if(cellClass.equals(DoubleCell.class)) {
 				    		transfer = true;
 				    	}
-				    	if(dType.getCellClass().equals(LocalTimeCell.class) ||
-				    		dType.getCellClass().equals(LocalDateCell.class) ||
-				    		dType.getCellClass().equals(LocalDateTimeCell.class)) 
+				    	if(cellClass.equals(LocalTimeCell.class) ||
+				    		cellClass.equals(LocalDateCell.class) ||
+				    		cellClass.equals(LocalDateTimeCell.class)) 
 				    	{
 				    		transfer = true;
 				    	}
-				    	if(dType.getCellClass().equals(StringCell.class)) {
+				    	if(dType.isCompatible(StringValue.class)) {
 				    		transfer = true;
 				    	}	
 				    	
@@ -1374,7 +1385,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	private DataType getKnimeDataType(String cType) {
 		
 		// need to get data type from the factory as there
-		// is LocalDateTimeCell has no public type available
+		// is LocalDateTimeCell which has no public type available
 		
 		switch(cType) {
 		case PY_TYPE_OBJECT: return StringCellFactory.TYPE;
