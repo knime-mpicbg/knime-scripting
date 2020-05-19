@@ -47,7 +47,7 @@ def write_csv(csv_filename, pdf):
 	pyOut = pdf.select_dtypes(include)
 	exportTypes = pyOut.dtypes.apply(lambda x: x.name).tolist()
 	
-		# make duration columns to isoformat string
+	# make duration columns to isoformat string
 	durationColumns = list(pyOut.select_dtypes(include=['timedelta64[ns]']))
 
 	for col in durationColumns:
@@ -60,8 +60,8 @@ def write_csv(csv_filename, pdf):
 	header = header.insert(0, "Row ID") 
 	
 	types = []
-    types.append("INDEX")
-    types = types + exportTypes
+	types.append("INDEX")
+	types = types + exportTypes
 		
 
 	csv_file = openf(csv_filename, 'wb')
