@@ -17,12 +17,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -41,7 +41,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
@@ -55,10 +54,13 @@ import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
+import org.knime.core.data.time.duration.DurationCell;
+import org.knime.core.data.time.duration.DurationCellFactory;
 import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
 import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.period.PeriodCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -135,6 +137,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_FLOAT = "float64";
     public static final String PY_TYPE_INT = "int64";
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
+    public static final String PY_TYPE_TIMEDELTA = "timedelta64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
     
     // date-time format send to Python
@@ -315,6 +318,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    		continue;
 	    	}
 	    	
+	    	// period / duration classes
+	    	if(cellClass.equals(DurationCell.class) || cellClass.equals(PeriodCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_TIMEDELTA);
+	    		columnsIndicees.put(cName, i);
+	    		continue;
+	    	}
+	    	
 	    	// string compatible classes
 	    	if(dType.isCompatible(StringValue.class)) {
 	    		supportedColumns.put(cName, PY_TYPE_OBJECT);  
@@ -393,7 +403,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     						columnValues.add(datetime.format(TO_PY_DATETIME));
     						continue;
     					}
-	    				
+	    				if(cellClass.equals(DurationCell.class)) {
+	    					Duration duration = ((DurationCell) cell).getDuration();	
+	    					//columnValues.add(Long.toString(duration.toNanos()));
+	    					columnValues.add(duration.toString());
+	    					continue;
+	    				}
+	    				if(cellClass.equals(PeriodCell.class)) {
+	    					Period period = ((PeriodCell) cell).getPeriod();
+	    					columnValues.add(period.toString());
+	    					continue;
+	    				}
+    					
     					if(dType.isCompatible(StringValue.class)) {
     						String val = ((StringValue) cell).getStringValue();
     						columnValues.add(val);
@@ -674,28 +695,29 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						
 						Class<? extends DataCell> cellClass = dType.getCellClass();
 				    	
-				    	if(cellClass.equals(BooleanCell.class)) {
+				    	if(cellClass.equals(BooleanCell.class)) 
 				    		transfer = true;
-				    	}
-				    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) {
+
+				    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) 
 				    		transfer = true;
-				    	}
-				    	if(cellClass.equals(DoubleCell.class)) {
+
+				    	if(cellClass.equals(DoubleCell.class)) 
 				    		transfer = true;
-				    	}
+
 				    	if(cellClass.equals(LocalTimeCell.class) ||
 				    		cellClass.equals(LocalDateCell.class) ||
 				    		cellClass.equals(LocalDateTimeCell.class)) 
-				    	{
 				    		transfer = true;
-				    	}
-				    	if(dType.isCompatible(StringValue.class)) {
+				   
+				    	if(cellClass.equals(DurationCell.class) ||
+				    			cellClass.equals(PeriodCell.class))
+				    			transfer = true;
+				    	if(dType.isCompatible(StringValue.class)) 
 				    		transfer = true;
-				    	}	
 				    	
-				    	if(!transfer) {
+				    	if(!transfer) 
 				    		droppedColumns.add(cName);
-				    	}
+				 
 					}
 					
 				    if(!droppedColumns.isEmpty()) {
@@ -1372,6 +1394,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		if(dType.equals(LocalDateTimeCellFactory.TYPE)) {		
 			return LocalDateTimeCellFactory.create(value, PY_dateFormatter);
 		}
+		if(dType.equals(DurationCellFactory.TYPE)) {
+			return DurationCellFactory.create(Duration.parse(value));
+		}
 		
 		return null;
 	}
@@ -1393,6 +1418,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		case PY_TYPE_FLOAT: return DoubleCellFactory.TYPE;
 		case PY_TYPE_INT: return IntCellFactory.TYPE;
 		case PY_TYPE_DATETIME: return LocalDateTimeCellFactory.TYPE;
+		case PY_TYPE_TIMEDELTA: return DurationCellFactory.TYPE;
 		default: return null;
 		}
 	}

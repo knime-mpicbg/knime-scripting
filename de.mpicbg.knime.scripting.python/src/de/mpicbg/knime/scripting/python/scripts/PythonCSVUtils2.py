@@ -25,12 +25,14 @@ def read_csv(csv_filename):
 	for k in typesdf:
 		types[k] = typesdf.iloc[0][k]
 		
-	#pdf_final = pdf.copy()
 	# try to apply column types, pass if it fails
 	for col in typesdf:
 		subtypes = {k:v for k,v in types.items() if k in [col]}
 		try:
-			pdf = pdf.astype(subtypes)
+			if subtypes[col] == 'timedelta64[ns]':
+				pdf[col] = pd.to_timedelta(pdf[col], unit='ns')
+			else:
+				pdf = pdf.astype(subtypes)
 		except:
 			print("Read KNIME data as pandas data frame: failed to convert {}. Keep as {}".format(subtypes, pdf[list(subtypes.keys())[0]].dtypes))
 			pass
@@ -40,10 +42,16 @@ def read_csv(csv_filename):
 def write_csv(csv_filename, pdf):
 
 	# need to filter dataframe for supported types
-	include=['object','bool','float','int','datetime64[ns]']
+	include=['object','bool','float','int','datetime64[ns]', 'timedelta64[ns]']
 	exclude = pdf.select_dtypes(exclude=include).columns.tolist()
 	pyOut = pdf.select_dtypes(include)
+	exportTypes = pyOut.dtypes.apply(lambda x: x.name).tolist()
 	
+		# make duration columns to isoformat string
+	durationColumns = list(pyOut.select_dtypes(include=['timedelta64[ns]']))
+
+	for col in durationColumns:
+		pyOut[col] = pyOut[col].apply(lambda x: x.isoformat())
 	
 	if len(exclude) > 0:
 		print("Column(s) with unsupported data type(s) will not be returned to KNIME: {}".format(', '.join(exclude)))
@@ -52,9 +60,8 @@ def write_csv(csv_filename, pdf):
 	header = header.insert(0, "Row ID") 
 	
 	types = []
-	types.append("INDEX")
-	for col in pyOut:
-		types.append(pyOut[col].dtype.name)
+    types.append("INDEX")
+    types = types + exportTypes
 		
 
 	csv_file = openf(csv_filename, 'wb')
