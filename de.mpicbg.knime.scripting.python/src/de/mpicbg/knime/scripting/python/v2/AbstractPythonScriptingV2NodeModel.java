@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -50,8 +51,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.LongCell.LongCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.data.time.duration.DurationCell;
@@ -135,7 +136,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     public static final String PY_TYPE_OBJECT = "object";
     public static final String PY_TYPE_BOOL= "bool";
     public static final String PY_TYPE_FLOAT = "float64";
-    public static final String PY_TYPE_INT = "int64";
+    public static final String PY_TYPE_LONG = "int64";
     public static final String PY_TYPE_DATETIME = "datetime64[ns]";
     public static final String PY_TYPE_TIMEDELTA = "timedelta64[ns]";
     public static final String PY_TYPE_INDEX = "INDEX";
@@ -299,8 +300,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    		supportedColumns.put(cName, PY_TYPE_BOOL);   
 	    		columnsIndicees.put(cName, i);
 	    	}
-	    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) {
-	    		supportedColumns.put(cName, PY_TYPE_INT);  
+	    	if(cellClass.equals(IntCell.class)) {
+	    		supportedColumns.put(cName, PY_TYPE_LONG);  
 	    		columnsIndicees.put(cName, i);
 	    	}
 	    	if(cellClass.equals(DoubleCell.class)) {
@@ -527,7 +528,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		BufferedDataContainer bdc = null;
 		
 		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
-				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser).withKeepCarriageReturn(true)
+				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
+				//.withKeepCarriageReturn(true)
 						.build()) {
 			
 			String[] columnNames = null;
@@ -569,7 +571,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					if(value.isEmpty())
 						dataCells.add(DataType.getMissingCell());
 					else {
-						System.out.println(value);
+						//System.out.println(value);
 						DataType dType = columns.get(col);
 						DataCell  addCell = createCell(value, dType);
 						dataCells.add(addCell);
@@ -698,7 +700,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				    	if(cellClass.equals(BooleanCell.class)) 
 				    		transfer = true;
 
-				    	if(cellClass.equals(IntCell.class) || cellClass.equals(LongCell.class)) 
+				    	if(cellClass.equals(IntCell.class)) 
 				    		transfer = true;
 
 				    	if(cellClass.equals(DoubleCell.class)) 
@@ -1091,6 +1093,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException, CanceledExecutionException {
+		m_randomPart = Utils.generateRandomString(6);
 		pushInputToPython(inData, exec);
 		openInPython(exec);
 	}
@@ -1379,10 +1382,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				throw new KnimeScriptingException(nfe.getMessage());
 			}
 		}
-		if(dType.equals(IntCellFactory.TYPE)) {
+		if(dType.equals(LongCellFactory.TYPE)) {
 			try {
-				int i = Integer.parseInt(value);
-				return new IntCell(i);
+				long i = Long.parseLong(value);
+				return new LongCell(i);
 			} catch (NumberFormatException nfe) {
 				throw new KnimeScriptingException(nfe.getMessage());
 			}
@@ -1395,7 +1398,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			return LocalDateTimeCellFactory.create(value, PY_dateFormatter);
 		}
 		if(dType.equals(DurationCellFactory.TYPE)) {
-			return DurationCellFactory.create(Duration.parse(value));
+			try {
+				Duration d = Duration.parse(value);
+				return DurationCellFactory.create(d);
+			} catch (DateTimeParseException dtpe) {
+				return DataType.getMissingCell();
+			}
 		}
 		
 		return null;
@@ -1416,7 +1424,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		case PY_TYPE_OBJECT: return StringCellFactory.TYPE;
 		case PY_TYPE_BOOL: return BooleanCellFactory.TYPE;
 		case PY_TYPE_FLOAT: return DoubleCellFactory.TYPE;
-		case PY_TYPE_INT: return IntCellFactory.TYPE;
+		case PY_TYPE_LONG: return LongCellFactory.TYPE;
 		case PY_TYPE_DATETIME: return LocalDateTimeCellFactory.TYPE;
 		case PY_TYPE_TIMEDELTA: return DurationCellFactory.TYPE;
 		default: return null;
@@ -1438,7 +1446,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		DataColumnSpec[] cSpecArray = new DataColumnSpec[cSpecList.size()];
 		cSpecArray = cSpecList.toArray(cSpecArray);
 		
-		DataTableSpec tSpec = new DataTableSpec("Result from R", cSpecArray);
+		DataTableSpec tSpec = new DataTableSpec("Result from Python", cSpecArray);
 		
 		return tSpec;
 	}
@@ -1462,6 +1470,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	public void setInputKeys(List<String> keyList) {
 		m_inKeys = keyList;
 	}
+	
 
 }
 

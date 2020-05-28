@@ -65,7 +65,7 @@ def write_csv(csv_filename, pdf):
 		
 
 	csv_file = openf(csv_filename, 'wb')
-	csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+	csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', lineterminator = '\r\n', escapechar = "\\", doublequote=False, quoting=csv.QUOTE_NONNUMERIC)
 
 	# First write the column headers and data types
 	csv_writer.writerow(header)
@@ -75,4 +75,4 @@ def write_csv(csv_filename, pdf):
 	
 	# append data
 	with openf(csv_filename, 'ab') as f:
-		pyOut.to_csv(f, header=False, date_format='%Y-%m-%dT%H:%M:%S.%f', line_terminator = '\r\n')
+		pyOut.to_csv(f, header=False, date_format='%Y-%m-%dT%H:%M:%S.%f', line_terminator = '\r\n', escapechar = "\\", doublequote=False, quoting=csv.QUOTE_NONNUMERIC)
