@@ -529,7 +529,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
 				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
-				//.withKeepCarriageReturn(true)
+						.withKeepCarriageReturn(true)
 						.build()) {
 			
 			String[] columnNames = null;

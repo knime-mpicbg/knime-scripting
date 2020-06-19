@@ -13,8 +13,14 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
+import com.opencsv.ICSVParser;
+import com.opencsv.ICSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -28,7 +34,15 @@ public class PythonTableConverter {
     public static BufferedDataTable convertCSVToTable(ExecutionContext exec, File pyOutFile, NodeLogger logger) throws RuntimeException {
         try {
         	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
-            CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\0');
+        	final CSVParser parser =
+        			new CSVParserBuilder().withQuoteChar('\0').withSeparator(',').build();
+        	final CSVReader reader =
+        			new CSVReaderBuilder(new BufferedReader(new FileReader(pyOutFile)))
+        			.withCSVParser(parser)
+        			.build();
+        	
+        	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
+            //CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\0');
 
             String[] columnNames = reader.readNext();
             String[] columnTypes = reader.readNext();
@@ -97,9 +111,9 @@ public class PythonTableConverter {
             container.close();
 
             return container.getTable();
-        } catch (IOException e) {
+        } catch (IOException | CsvValidationException e) {
             throw new RuntimeException(e);
-        }
+        } 
     }
 
     private static String removeQuotes(String string) {
@@ -136,7 +150,8 @@ public class PythonTableConverter {
      */
     public static void convertTableToCSV(ExecutionContext exec, BufferedDataTable inputTable, File kInFile, NodeLogger logger) throws RuntimeException {
         try {
-            CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
+            //CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
+        	CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"', ICSVParser.DEFAULT_ESCAPE_CHARACTER, ICSVWriter.DEFAULT_LINE_END);
             DataTableSpec tableSpec = inputTable.getDataTableSpec();
 
             List<String> columnNames = getColumnNames(tableSpec);
