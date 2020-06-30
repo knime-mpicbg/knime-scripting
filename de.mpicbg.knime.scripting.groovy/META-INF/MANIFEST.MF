@@ -8,6 +8,7 @@ Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
  org.knime.base;bundle-version="[3.5.0,5.0.0)",
+ org.knime.product;bundle-version="3.6.0",
  de.mpicbg.knime.knutils;bundle-version="[4.0.0,5.0.0)",
  de.mpicbg.knime.scripting.libs;bundle-version="3.2.0",
  de.mpicbg.knime.scripting.core;bundle-version="[4.0.0,5.0.0)"
