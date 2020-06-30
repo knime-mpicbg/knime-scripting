@@ -345,7 +345,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    CSVWriter csvWriter = new CSVWriter(writer,
 	            CSVWriter.DEFAULT_SEPARATOR,
 	            CSVWriter.DEFAULT_QUOTE_CHARACTER,
-	            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+	            //CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+	            '\\',
 	            CSVWriter.DEFAULT_LINE_END);
 	    
 	    String[] columnNames = supportedColumns.keySet().toArray(new String[supportedColumns.size()]);
@@ -529,7 +530,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
 				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
-						.withKeepCarriageReturn(true)
+						//.withKeepCarriageReturn(true)
 						.build()) {
 			
 			String[] columnNames = null;
@@ -542,7 +543,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			for(String[] line : reader) {
 				
 				// remove carriage return from last entry
-				line[line.length - 1] = StringUtils.chop(line[line.length - 1]);
+				//line[line.length - 1] = StringUtils.chop(line[line.length - 1]);
 				
 				if(lineCount == 0) {
 					columnNames = line;

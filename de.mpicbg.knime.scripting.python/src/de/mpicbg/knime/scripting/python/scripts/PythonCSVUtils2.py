@@ -17,7 +17,7 @@ def openf(filename, mode, **kwargs):
 #
 def read_csv(csv_filename):
 	# read data with column headers, row ids and infer data types
-	pdf = pd.read_csv(csv_filename, skiprows = [1], sep = ',', header = 0, index_col = 0)
+	pdf = pd.read_csv(csv_filename, skiprows = [1], sep = ',', header = 0, index_col = 0, escapechar = '\\', na_values = 'NaN')
 	# extract expected data types
 	typesdf = pd.read_csv(csv_filename, sep=',', nrows = 1)
 	typesdf = typesdf.drop('Row ID', axis = 1)
