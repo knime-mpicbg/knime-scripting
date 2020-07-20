@@ -2,22 +2,22 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.python.feature"
       label="KNIME Python Scripting extension"
-      version="3.3.000.qualifier"
-      provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)">
+      version="4.0.000.qualifier"
+      provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/HCS-Tools/wiki">
-      Node Collection for KNIME to develop and execute Python scripts and templates.
+      This feature contains nodes of the "Python Scripting" community extension.
    </description>
 
    <copyright>
-      Copyright (c) 2014, Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
+      Copyright (c) 2014, Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany
   All rights reserved.
    </copyright>
 
-   <license url="http://opensource.org/licenses/BSD-3-Clause">
-      3-clause BSD
-   
-      Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+   <license url="https://opensource.org/licenses/BSD-3-Clause">
+BSD-3-Clause License
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 

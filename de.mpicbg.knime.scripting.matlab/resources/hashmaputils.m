@@ -205,13 +205,17 @@ function [kIn, columnMapping] = loadhashmap(filePath, dataType)
     	case 'dataset'
         	index = 1:length(kIn);
         	index = cellstr(num2str(index(:)));
-        	kIn = set(kIn, 'ObsNames', index);
-        	kIn = set(kIn, 'VarDescription', columnNames);
+            kIn = set(kIn, 'VarDescription', columnNames);
+            if all(cellfun(@(x) ~isempty(x), index))
+            	kIn = set(kIn, 'ObsNames', index);
+            end
     	case 'table'
     		index = 1:size(kIn, 1);
         	index = cellstr(num2str(index(:)));
         	kIn.Properties.VariableDescriptions = columnNames;
-        	kIn.Properties.RowNames = index;
+            if all(cellfun(@(x) ~isempty(x), index))
+                kIn.Properties.RowNames = index;
+            end
     end
     
     % Keep the mapping between unique variable names and knime column names

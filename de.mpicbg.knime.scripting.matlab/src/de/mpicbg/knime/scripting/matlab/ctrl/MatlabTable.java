@@ -25,6 +25,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
@@ -182,12 +183,14 @@ public class MatlabTable {
     	List<Attribute> colAttributes = createColumnAttributeList(this.hash);
     	
         // Get the number of samples (rows)
-        int numSamples = -1;
+        int numSamples = 0;
         Object colData = this.hash.get(colAttributes.get(0).getName());
-        if (colData.getClass().isArray()) {        	
-        	numSamples = Array.getLength(colData);
-        } else if (colData != null){
-        	numSamples = 1;
+        if (colData != null) {
+	        if (colData.getClass().isArray()) {        	
+	        	numSamples = Array.getLength(colData);
+	        } else {
+	        	numSamples = 1;
+	        }
         }
 //        else if (firstAttribute.getType().isCompatible(DoubleValue.class)) {
 //            numSamples = ((double[]) colData).length;
@@ -198,15 +201,16 @@ public class MatlabTable {
 //        } colData.getClass().
 
         // create the cell matrix
-        assert numSamples > 0;
         int columnLength = numSamples;
         DataCell[][] cells = new DataCell[numSamples][colAttributes.size()];
 
         for (int colIndex = 0; colIndex < colAttributes.size(); colIndex++) {
             Attribute columnAttribute = colAttributes.get(colIndex);
             Object curColumn = this.hash.get(columnAttribute.getName());
-
-            if (columnAttribute.getType().isCompatible(DoubleValue.class)) {
+            
+            if (curColumn == null) {
+            	// fall through
+            } else if (columnAttribute.getType().isCompatible(DoubleValue.class)) {
             	if (curColumn.getClass().isArray()) {
             		double[] doubleColumn = (double[]) curColumn;
                     for (int rowIndex = 0; rowIndex < doubleColumn.length; rowIndex++) {
