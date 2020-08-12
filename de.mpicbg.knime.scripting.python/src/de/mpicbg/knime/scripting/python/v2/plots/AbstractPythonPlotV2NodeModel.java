@@ -76,7 +76,8 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
     
     public static final String DEFAULT_PYTHON_PLOTCMD = "" +     
-		"# the following import is not required, as the node takes care of it \n" + 
+		"# the following tow lines are only required in 'open external' mode \n" + 
+    	"#%matplotlib inline\n" +
 		"#import matplotlib.pyplot as plt\n" + 
 		"\n" + 
 		"X = range(10)\n" + 
@@ -338,7 +339,6 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     @Override
 	protected void reset() {
 		super.reset();
-		
 		removeTempFiles();
 	}
     
@@ -475,6 +475,13 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		}
     	
 		return recreatedImage;
+	}
+
+	@Override
+	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
+		
+		removeTempFiles();
+		return super.executeImpl(inData, exec);
 	}
 
 }

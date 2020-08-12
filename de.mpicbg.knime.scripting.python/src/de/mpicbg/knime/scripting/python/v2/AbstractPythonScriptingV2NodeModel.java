@@ -253,7 +253,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				pushTableToPython((BufferedDataTable) inTable, in, m_tempFiles.get(in), transferExec);
 				m_inPorts.replace(in, null);	// delete reference to input table after successful transfer
 			} catch (KnimeScriptingException kse) {
-				deleteTempFiles();
+				removeTempFiles();
 				throw kse;
 			}
 		}
@@ -476,7 +476,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				try {
 					outTable = pullTableFromPython(label, exec, subProgress);
 				} catch(IOException ioe) {
-					deleteTempFiles();
+					removeTempFiles();
 					throw new KnimeScriptingException("Failed to read table: " + ioe.getMessage());
 				} 
 				ports[i] = outTable;
@@ -484,7 +484,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 		
-		deleteTempFiles();
+		//removeTempFiles();
 		
 		//return m_outPorts.values().toArray(ports);
 		return ports;
@@ -597,15 +597,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return bdc.getTable();
 	}
 	
-	/*protected void prepareScriptFile(PythonInputMode flag) throws KnimeScriptingException {
-		// prepare script
-		File scriptFile = m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
-		try (Writer writer = new BufferedWriter(new FileWriter(scriptFile))) {
-			prepareScript(scriptFile, true, flag);
-		} catch(IOException ioe) {
-			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
-		}
-	}*/
 	
 	protected File getScriptFile() {
 		return m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
@@ -626,7 +617,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			exec.setMessage("Evaluate Python-script (cannot be cancelled)");
 			runScriptImpl(m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME));
 		} catch (KnimeScriptingException kse) {
-			deleteTempFiles();
+			removeTempFiles();
 			throw kse;
 		}
 		
@@ -965,7 +956,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		int nOut = this.getNrOutPorts();
 		
 		m_outPorts = new LinkedHashMap<String, PortObject>();
-		int tableCounter = 0;
 		
 		for(int i = 0; i < nOut; i++) {
 			PortType type = this.getOutPortType(i);
@@ -974,21 +964,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				m_outPorts.put(variableName, null);
 			}
 		}	
-	}
-
-	/**
-	 * deletes all temporary files
-	 */
-	private void deleteTempFiles() {
-		
-		for(File tempFile : m_tempFiles.values()) {
-			if(tempFile != null)
-				try {
-					Files.deleteIfExists(tempFile.toPath());
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-		}
 	}
 	
 	/**
@@ -1036,6 +1011,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
      */
     protected void createTempFiles() throws KnimeScriptingException {
         
+    	// make sure existing files are deleted (from 'Open External e.g.)
+    	removeTempFiles();
     	m_tempFiles = new HashMap<String, File>();
     	
     	// prepend a random string to each new file to make it easier to find corresponding temporary files
@@ -1061,7 +1038,14 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     	} 
     }
     
-    protected boolean addTempFile(String label, File file) {
+    @Override
+	protected void onDispose() {
+		super.onDispose();
+		removeTempFiles();
+	}
+
+
+	protected boolean addTempFile(String label, File file) {
     	return m_tempFiles.put(label, file) != null;
     }
     
@@ -1133,11 +1117,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			
 			prepareScript(scriptWriter, false, PythonInputMode.ignoreFlag());
 		} catch (IOException ioe) {
+			removeTempFiles();
 			throw new KnimeScriptingException("Failed to prepare script: " + ioe.getMessage());
 		}
 		
 		scriptFile.setExecutable(true);
-		
 		
 		// on Mac open new Terminal and execute python-script
 		if (Utils.isMacOSPlatform()) {
@@ -1205,6 +1189,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		final String SCRIPT_PLACEHOLDER = "\"source\": [\n" + 
 				"    \"pyOut = kIn\"\n" + 
 				"   ]";
+		final String CLEANUP_PLACEHOLDER = "\"os.remove(r\\\"/path/to/tempfiles\\\")\"";
 		
 		final String kernelDisplayNamePlaceholder = "KERNEL_DISPLAY_NAME";
 		final String kernelLanguagePlaceholder = "KERNEL_LANGUAGE";
@@ -1266,12 +1251,31 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}		
 		script = script + String.join(",\n", lineList) + "\n   ]";
 		
+		/*
+		 * supposed to look like this
+		 * "os.remove(r\"***filename***\")",
+		 * "os.remove(r\"***otherfilename***\")"
+		 */
+
+		List<String> cleanupList = new LinkedList<String>();
+		for(String tempFile : m_tempFiles.keySet()) {
+			File f = m_tempFiles.get(tempFile);
+			if(f != null) {	
+				String current = "\"" + "os.remove(r\\\"" + f.getPath() +"\\\")\\n\"";
+				cleanupList.add(current);
+			} else {
+				throw new KnimeScriptingException("Failed to write script file");				
+			}
+		}
+		String cleanup = String.join(",\n", cleanupList);
+		
 		Charset charset = StandardCharsets.UTF_8;
 		String content;
 		try {
 			content = new String(Files.readAllBytes(nbFile), charset);
 			content = content.replace(INPUT_PLACEHOLDER, loadInput);
 			content = content.replace(OUTPUT_PLACEHOLDER, saveOutput);
+			content = content.replace(CLEANUP_PLACEHOLDER, cleanup);
 			content = content.replace(SCRIPT_PLACEHOLDER, script);	
 			content = content.replace(kernelDisplayNamePlaceholder, jupyterKernel.getDisplayName());
 			content = content.replace(kernelLanguagePlaceholder, jupyterKernel.getLanguage());
