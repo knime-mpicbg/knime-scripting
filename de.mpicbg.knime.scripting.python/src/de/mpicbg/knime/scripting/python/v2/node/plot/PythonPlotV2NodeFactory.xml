@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="../../python-logo-generic.png" type="Visualizer">
 
-    <name>Python Plot (V2)</name>
+    <name>Python Plot</name>
 
     <shortDescription>
         Creates plot with Python within KNIME. (TODO: adapt)
