@@ -395,8 +395,15 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 					if(new File(destination).exists())
 						throw new KnimeScriptingException("Plot file already exists and may not be overwritten. Please check output settings.");
 				}
+				
+				if(isWindowsPlatform)
+					destination  = destination.replace('\\', '/');
 				writeImageToFile = "plt.savefig(\"" + destination + "\", format=\"" + getConfigImgFormat() + "\")\n";	
 			}
+			
+			String imgFilename = imgFile.getAbsolutePath();
+			if(isWindowsPlatform)
+				imgFilename  = imgFilename.replace('\\', '/');
 			
 			String plotString = "F = plt.gcf()\n" + 
 					"\n" + 
@@ -404,7 +411,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 					"F.set_size_inches(" + width_inch + "," + height_inch + ")\n" + 
 					"\n" + 
 					writeImageToFile +
-					"plt.savefig(\"" + imgFile.getAbsolutePath() + "\", format=\"png\")\n" +
+					"plt.savefig(\"" + imgFilename + "\", format=\"png\")\n" +
 					"plt.close()";
 			scriptWriter.write(plotString);
 			

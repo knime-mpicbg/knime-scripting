@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -78,7 +77,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
 
-//import antlr.StringUtils;
 import de.mpicbg.knime.knutils.FileUtils;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
@@ -94,7 +92,7 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
-import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode.Flag;;
+import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode.Flag;
 
 /**
  * abstract model class for all python scripting nodes
@@ -104,6 +102,8 @@ import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.Py
  *
  */
 public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScriptingNodeModel {
+	
+	protected final boolean isWindowsPlatform= Utils.isWindowsPlatform();
 	
 	/**
 	 * constants
@@ -650,8 +650,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			python = new LocalPythonClient();
 		
 		CommandOutput output;
+		String[] command;		
+		
 		try {
-			output = python.executeCommand(new String[]{pythonExecPath, scriptFile.getCanonicalPath()});
+			if(isWindowsPlatform)
+				command = new String[] {"powershell.exe", "-Command", pythonExecPath, scriptFile.getCanonicalPath()};
+			else 
+				command = new String[] {pythonExecPath, scriptFile.getCanonicalPath()};
+			output = python.executeCommand(command);
+			
 		} catch (IOException ioe) {
 			throw new KnimeScriptingException("Failed to load script file: " + ioe);
 		} catch (RuntimeException re) {
@@ -771,6 +778,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					scriptFileWriter.newLine();
 					scriptFileWriter.newLine();
 					
+					if(isWindowsPlatform)
+						shelveFilePath  = shelveFilePath.replace('\\', '/');
+					
 					String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
 					scriptFileWriter.write(toScriptFile);
 				} catch(IOException ioe) {
@@ -787,7 +797,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						scriptFileWriter.newLine();
 						scriptFileWriter.newLine();
 						
-						String readCSVCmd = inLabel + " = read_csv(r\"" + f.getCanonicalPath() + "\")";
+						String filename = f.getCanonicalPath();
+						if(isWindowsPlatform)
+							filename  = filename.replace('\\', '/');
+						
+						String readCSVCmd = inLabel + " = read_csv(r\"" + filename + "\")";
 						scriptFileWriter.write(readCSVCmd);
 						scriptFileWriter.newLine();
 						
@@ -830,6 +844,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			try {
 				scriptFileWriter.newLine();
 				scriptFileWriter.newLine();
+				
+				if(isWindowsPlatform)
+					shelveFilePath  = shelveFilePath.replace('\\', '/');
 				
 				String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
 				scriptFileWriter.write(toScriptFile);
@@ -882,8 +899,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						try {
 							scriptFileWriter.newLine();
 							scriptFileWriter.newLine();
+							
+							String filename = f.getCanonicalPath();
+							if(isWindowsPlatform)
+								filename  = filename.replace('\\', '/');
 
-							String writeCSVCmd = "write_csv(r\"" + f.getCanonicalPath() + "\"," + outLabel + ")";
+							String writeCSVCmd = "write_csv(r\"" + filename + "\"," + outLabel + ")";
 							scriptFileWriter.write(writeCSVCmd);
 							scriptFileWriter.newLine();
 
@@ -1128,9 +1149,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			String[] commandLine = new String[]{"open", "-a", "Terminal", scriptFile.getPath()};
 			python.executeCommand(commandLine, false);
 		}
-		// TODO: implement for Windows 
-		if (Utils.isWindowsPlatform())
-			throw new KnimeScriptingException("Windows not yet supported");
+		// TODO: implement for  
+		if (isWindowsPlatform) {
+			String[] commandLine = new String[]{"powershell.exe", "-Command", pythonExecPath, scriptFile.getPath()};
+			python.executeCommand(commandLine, false);
+			//throw new KnimeScriptingException(" not yet supported");
+		}
 		
 		// copy the script in the clipboard
 		String actualScript = super.prepareScript();
@@ -1205,7 +1229,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		for(String inLabel : m_inPorts.keySet()) {
 			File f = m_tempFiles.get(inLabel);
 			if(f != null) {	
-				String current = "\"" + inLabel + " = read_csv(r\\\"" + f.getPath() +"\\\")\\n\"";
+				
+				String filename = f.getPath();
+				if(isWindowsPlatform)
+					filename  = filename.replace('\\', '/');
+				
+				String current = "\"" + inLabel + " = read_csv(r\\\"" + filename +"\\\")\\n\"";
 				loadInputList.add(current);
 			} else {
 				throw new KnimeScriptingException("Failed to write script file");				
@@ -1223,7 +1252,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		for(String outLabel : m_outPorts.keySet()) {
 			File f = m_tempFiles.get(outLabel);
 			if(f != null) {	
-				String current = "\"write_csv(r\\\"" + f.getPath() +"\\\"," + outLabel+ ")\\n\"";
+				String filename = f.getPath();
+				if(isWindowsPlatform)
+					filename  = filename.replace('\\', '/');
+				
+				String current = "\"write_csv(r\\\"" + filename +"\\\"," + outLabel+ ")\\n\"";
 				saveOutputList.add(current);
 			} else {
 				throw new KnimeScriptingException("Failed to write script file");				
@@ -1261,7 +1294,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		for(String tempFile : m_tempFiles.keySet()) {
 			File f = m_tempFiles.get(tempFile);
 			if(f != null) {	
-				String current = "\"" + "os.remove(r\\\"" + f.getPath() +"\\\")\\n\"";
+				String filename = f.getPath();
+				if(isWindowsPlatform)
+					filename  = filename.replace('\\', '/');				
+				
+				String current = "\"" + "os.remove(r\\\"" + filename +"\\\")\\n\"";
 				cleanupList.add(current);
 			} else {
 				throw new KnimeScriptingException("Failed to write script file");				
@@ -1323,9 +1360,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	private void launchNotebook(String jupyterLocation, String jupyterMode, Path nbFile) throws KnimeScriptingException {
 		
 		assert python != null;
+		String[] command;		
 		
 		try {
-			python.executeCommand(new String[]{jupyterLocation, jupyterMode, nbFile.toString()}, false);
+			if(isWindowsPlatform)
+				command = new String[] {"powershell.exe", "-Command", jupyterLocation, jupyterMode, nbFile.toString()};
+			else 
+				command = new String[] {jupyterLocation, jupyterMode, nbFile.toString()};
+			python.executeCommand(command);
+			//python.executeCommand(new String[]{jupyterLocation, jupyterMode, nbFile.toString()}, false);
 		} catch (Exception re) {
 			throw new KnimeScriptingException("Failed while launching Jupyter: " + re.getMessage());
 		}
@@ -1345,8 +1388,15 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		String outString = ""; 
 		
 		CommandOutput output;
+		String[] command;		
+		
 		try {
-			output = python.executeCommand(new String[]{jupyterLocation, "notebook", "--version"});
+			if(isWindowsPlatform)
+				command = new String[] {"powershell.exe", "-Command", jupyterLocation, "notebook", "--version"};
+			else 
+				command = new String[] {jupyterLocation, "notebook", "--version"};
+			output = python.executeCommand(command);	
+			//output = python.executeCommand(new String[]{});
 		} catch (Exception re) {
 			throw new KnimeScriptingException("Failed while checking for Jupyter Version: " + re.getMessage());
 		}

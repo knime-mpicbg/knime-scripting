@@ -25,28 +25,26 @@
  */
 package de.mpicbg.knime.scripting.python.prefs;
 
-import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
-import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
-import de.mpicbg.knime.scripting.python.srv.CommandOutput;
-import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.Python;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.FileFieldEditor;
-import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.PathEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
-import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+
+import de.mpicbg.knime.knutils.Utils;
+import de.mpicbg.knime.scripting.core.prefs.TemplateTableEditor;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.srv.CommandOutput;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.Python;
 
 
 /**
@@ -112,8 +110,14 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
 		
 		// try to get python path
 		CommandOutput output;
+		String[] command;		
+		
 		try {
-			output = python.executeCommand(new String[]{"which","python"});
+			if(Utils.isWindowsPlatform())
+				command = new String[] {"powershell.exe", "-Command","where.exe", "python"};
+			else 
+				command = new String[] {"which","python"};
+			output = python.executeCommand(command);
 		} catch (Exception re) {
 			return null;
 		}
@@ -129,8 +133,14 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
 	private String getPythonVersion(String pythonLocationGuessed) {
 		// try to get python version
 		CommandOutput output;
+		String[] command;		
+		
 		try {
-			output = python.executeCommand(new String[]{pythonLocationGuessed,"--version"});
+			if(Utils.isWindowsPlatform())
+				command = new String[] {"powershell.exe", "-Command", pythonLocationGuessed, "--version"};
+			else 
+				command = new String[] {pythonLocationGuessed,"--version"};
+			output = python.executeCommand(command);
 		} catch (Exception re) {
 			return null;
 		}

@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -23,6 +22,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
+import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 
@@ -68,9 +68,14 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		// use temporary list to fill with new content
 		List<JupyterKernelSpec> kernelSpecs = new LinkedList<JupyterKernelSpec>();
 		
-		ProcessBuilder pb = new ProcessBuilder(jupyterLocation, "kernelspec", "list", "--json");
+		ProcessBuilder pb = new ProcessBuilder();
+		
+		if(Utils.isWindowsPlatform()) {
+			pb.command("powershell.exe", "-Command", jupyterLocation, "kernelspec", "list", "--json");
+		} else {
+			pb.command(jupyterLocation, "kernelspec", "list", "--json");
+		}
 		File outFile = Files.createTempFile("kernelspecs_", ".txt").toFile();
-		//File outFile = outPath.toFile();
 		
 		pb.redirectErrorStream(true);
 		pb.redirectOutput(Redirect.appendTo(outFile));
