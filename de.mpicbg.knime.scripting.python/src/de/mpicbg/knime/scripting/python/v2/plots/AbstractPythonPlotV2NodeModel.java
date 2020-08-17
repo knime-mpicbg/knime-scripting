@@ -43,9 +43,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
 	private File m_nodeImageFile;				// image file (png, temp-location => copy to internals)
     private File m_pyScriptFile;				// file contains python code to recreate the image (temp-location => copy to internals)
-    private File m_shelveFile;					// file which stores the data needed to recreate the image (temp-location => copy to internals)	
+    private File m_pickleFile;					// file which stores the data needed to recreate the image (temp-location => copy to internals)	
 	
-    private static final String SHELVEFILE_LABEL = "shelveFile";
+    private static final String PICKLEFILE_LABEL = "pickleFile";
     private static final String IMGFILE_LABEL = "imgFile";
     
     private static final int EXECUTION_MODE = 0;
@@ -235,9 +235,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 	protected void loadInternals(File internDir, ExecutionMonitor exec) throws IOException, CanceledExecutionException {
 		
 		File internalImgfile = internDir.toPath().resolve("image.png").toFile();
-		File internalShelveFile = internDir.toPath().resolve("shelve.db").toFile();
+		File internalPickleFile = internDir.toPath().resolve("pickle.p").toFile();
 		
-		if(!internalImgfile.canRead() || !internalShelveFile.canRead())
+		if(!internalImgfile.canRead() || !internalPickleFile.canRead())
 			throw new IOException("Failed to load node internals. Files missing or without read access.");
 		
 		try {
@@ -248,7 +248,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		
 		//copy to temp location
 		Files.copy(internalImgfile.toPath(), m_nodeImageFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-		Files.copy(internalShelveFile.toPath(), m_shelveFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(internalPickleFile.toPath(), m_pickleFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		
 		Path inKeys = internDir.toPath().resolve("inputKeys.csv");
 		try( FileReader reader = new FileReader(inKeys.toFile()); BufferedReader br = new BufferedReader(reader); ) {
@@ -264,8 +264,8 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		Path imgInternal = internDir.toPath().resolve("image.png");// + FilenameUtils.getExtension(m_nodeImageFile.toString()));  	
     	Files.copy(m_nodeImageFile.toPath(), imgInternal, StandardCopyOption.REPLACE_EXISTING);
     	
-		Path shelveInternal = internDir.toPath().resolve("shelve.db");  
-    	Files.copy(m_shelveFile.toPath(), shelveInternal, StandardCopyOption.REPLACE_EXISTING);
+		Path pickleInternal = internDir.toPath().resolve("pickle.p");  
+    	Files.copy(m_pickleFile.toPath(), pickleInternal, StandardCopyOption.REPLACE_EXISTING);
     	
     	Path inKeys = internDir.toPath().resolve("inputKeys.csv");
     	List<String> inList = super.getInputKeys();
@@ -316,9 +316,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		if(m_shelveFile != null)
+		if(m_pickleFile != null)
 			try {
-				Files.deleteIfExists(m_shelveFile.toPath());
+				Files.deleteIfExists(m_pickleFile.toPath());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -374,9 +374,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			
 			// basic imports, defintions, script
 			if(mode == EXECUTION_MODE)
-				super.prepareScript(scriptWriter, true, new PythonInputMode(m_shelveFile, PythonInputMode.Flag.WRITE));
+				super.prepareScript(scriptWriter, true, new PythonInputMode(m_pickleFile, PythonInputMode.Flag.WRITE));
 			else
-				super.prepareScript(scriptWriter, true, new PythonInputMode(m_shelveFile, PythonInputMode.Flag.READ));
+				super.prepareScript(scriptWriter, true, new PythonInputMode(m_pickleFile, PythonInputMode.Flag.READ));
 			
 			scriptWriter.newLine();
 			scriptWriter.newLine();
@@ -427,9 +427,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		String randomPart = internal ? "internal" : getRandomPart();
 		
 		try {
-			Path shelveFile = Files.createTempFile(randomPart + "_" + SHELVEFILE_LABEL + "_knime2python_", ".db");
-			Files.deleteIfExists(shelveFile);
-			m_shelveFile = shelveFile.toFile();
+			Path pickleFile = Files.createTempFile(randomPart + "_" + PICKLEFILE_LABEL + "_knime2python_", ".p");
+			Files.deleteIfExists(pickleFile);
+			m_pickleFile = pickleFile.toFile();
 			//addTempFile(SHELVEFILE_LABEL, shelveFile.toFile());
 			
 			Path imgFile = Files.createTempFile(randomPart + "_" + IMGFILE_LABEL + "_img2knime_", ".png");

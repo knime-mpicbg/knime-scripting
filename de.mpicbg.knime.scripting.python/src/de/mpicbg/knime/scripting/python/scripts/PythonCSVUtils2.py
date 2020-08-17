@@ -1,7 +1,7 @@
 import pandas as pd
 import platform
 import csv
-import shelve
+import pickle
 
 # Check for the correct version
 version = platform.python_version()

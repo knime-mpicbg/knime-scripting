@@ -767,21 +767,22 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			boolean write = fl.equals(Flag.WRITE);
 			if(write) {
 				
-				File shelveFile = flag.getFile();
-				assert shelveFile != null;
+				File pickleFile = flag.getFile();
+				assert pickleFile != null;
 				
-				// remove .db extension as this is added automatically by the python shelve.open call 
+				// remove .db extension as this is added automatically by the python pickle.open call 
 				// to the given name
-				String shelveFilePath = FilenameUtils.removeExtension(shelveFile.getAbsolutePath());
+				String pickleFilePath = pickleFile.getAbsolutePath();
 				
 				try {
 					scriptFileWriter.newLine();
 					scriptFileWriter.newLine();
 					
 					if(isWindowsPlatform)
-						shelveFilePath  = shelveFilePath.replace('\\', '/');
+						pickleFilePath  = pickleFilePath.replace('\\', '/');
 					
-					String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
+					//String toScriptFile = "s = shelve.open(\"" + pickleFilePath + "\")";
+					String toScriptFile = "with open('" + pickleFilePath + "', 'wb') as pfile:\n";
 					scriptFileWriter.write(toScriptFile);
 				} catch(IOException ioe) {
 					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
@@ -801,12 +802,14 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						if(isWindowsPlatform)
 							filename  = filename.replace('\\', '/');
 						
+						if(write) scriptFileWriter.write("\t");
 						String readCSVCmd = inLabel + " = read_csv(r\"" + filename + "\")";
 						scriptFileWriter.write(readCSVCmd);
 						scriptFileWriter.newLine();
 						
 						if(write) {
-							readCSVCmd = "s[\'" + inLabel + "\'] = " + inLabel;
+							//readCSVCmd = "s[\'" + inLabel + "\'] = " + inLabel;
+							readCSVCmd = "\tpickle.dump(" + inLabel + ", pfile)";
 							scriptFileWriter.write(readCSVCmd);
 							scriptFileWriter.newLine();
 						}
@@ -819,36 +822,26 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				if(errorMessage != null)
 					throw new KnimeScriptingException(kseMessage, errorMessage);
 			}
-			
-			if(write) {
-				try {
-					String toScriptFile = "s.close()";
-					scriptFileWriter.write(toScriptFile);
-					scriptFileWriter.newLine();
-					scriptFileWriter.newLine();
-				} catch(IOException ioe) {
-					throw new KnimeScriptingException(kseMessage, ioe.getMessage());
-				}	
-			}
-			
+	
 		}
 		if(fl.equals(Flag.READ)) {
 			
-			File shelveFile = flag.getFile();
-			assert shelveFile != null;
+			File pickleFile = flag.getFile();
+			assert pickleFile != null;
 			
-			// remove .db extension as this is added automatically by the python shelve.open call 
+			// remove .db extension as this is added automatically by the python pickle.open call 
 			// to the given name
-			String shelveFilePath = FilenameUtils.removeExtension(shelveFile.getAbsolutePath());
+			String pickleFilePath = pickleFile.getAbsolutePath();
 			
 			try {
 				scriptFileWriter.newLine();
 				scriptFileWriter.newLine();
 				
 				if(isWindowsPlatform)
-					shelveFilePath  = shelveFilePath.replace('\\', '/');
+					pickleFilePath  = pickleFilePath.replace('\\', '/');
 				
-				String toScriptFile = "s = shelve.open(\"" + shelveFilePath + "\")";
+				//String toScriptFile = "s = shelve.open(\"" + pickleFilePath + "\")";
+				String toScriptFile = "with open('" + pickleFilePath + "', 'rb') as pfile:";
 				scriptFileWriter.write(toScriptFile);
 			} catch(IOException ioe) {
 				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
@@ -857,9 +850,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			for(String inKey : m_inKeys) {
 				try {
 					scriptFileWriter.newLine();
-					scriptFileWriter.newLine();
+					//scriptFileWriter.newLine();
 					
-					String readCSVCmd = inKey + " = s['" + inKey + "']";
+					//String readCSVCmd = inKey + " = s['" + inKey + "']";
+					String readCSVCmd = "\t" + inKey + "= pickle.load(pfile)";
 					scriptFileWriter.write(readCSVCmd);
 					scriptFileWriter.newLine();
 					
@@ -868,16 +862,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				}
 		
 			}
-			String toScriptFile = "s.close()";
-			try {
-				scriptFileWriter.write(toScriptFile);
-				scriptFileWriter.newLine();
-				scriptFileWriter.newLine();
-			} catch (IOException ioe) {
-				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
-			}
-			
-			
+				
 		}
 		
 		if(useScript) {
