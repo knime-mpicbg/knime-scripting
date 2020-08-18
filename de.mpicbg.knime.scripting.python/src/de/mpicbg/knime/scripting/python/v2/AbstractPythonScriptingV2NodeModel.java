@@ -1352,7 +1352,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				command = new String[] {"powershell.exe", "-Command", jupyterLocation, jupyterMode, nbFile.toString()};
 			else 
 				command = new String[] {jupyterLocation, jupyterMode, nbFile.toString()};
-			python.executeCommand(command);
+			python.executeCommand(command, false);
 			//python.executeCommand(new String[]{jupyterLocation, jupyterMode, nbFile.toString()}, false);
 		} catch (Exception re) {
 			throw new KnimeScriptingException("Failed while launching Jupyter: " + re.getMessage());
