@@ -43,7 +43,7 @@ def read_csv(csv_filename):
 def write_csv(csv_filename, pdf):
 
 	# need to filter dataframe for supported types
-	include=['object','bool','float','int','datetime64[ns]', 'timedelta64[ns]']
+	include=['object','bool','number','datetime64[ns]', 'timedelta64[ns]']
 	exclude = pdf.select_dtypes(exclude=include).columns.tolist()
 	pyOut = pdf.select_dtypes(include)
 	exportTypes = pyOut.dtypes.apply(lambda x: x.name).tolist()
