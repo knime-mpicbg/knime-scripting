@@ -5,6 +5,7 @@ import pickle
 
 # Check for the correct version
 version = platform.python_version()
+pandasversion = pd.__version__
 
 # open() function for py2/3
 def openf(filename, mode, **kwargs):
@@ -29,7 +30,7 @@ def read_csv(csv_filename):
 	for col in typesdf:
 		subtypes = {k:v for k,v in types.items() if k in [col]}
 		try:
-			if subtypes[col] == 'timedelta64[ns]':
+			if subtypes[col] == 'timedelta64[ns]' and pandasversion[:1] == '1':
 				pdf[col] = pd.to_timedelta(pdf[col], unit='ns')
 			else:
 				pdf = pdf.astype(subtypes)
