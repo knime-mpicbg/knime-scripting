@@ -42,6 +42,12 @@
               factory-class="de.mpicbg.knime.scripting.python.v2.node.openinpython.OpenInPythonV2NodeFactory"
               hidden="false">
         </node>
+        <node
+              category-path="/community/python"
+              deprecated="false"
+              factory-class="de.mpicbg.knime.scripting.python.v2.node.source.PythonSourceV2NodeFactory"
+              hidden="false">
+        </node>
     </extension>
 
     <extension point="org.knime.workbench.repository.categories">
