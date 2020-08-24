@@ -17,8 +17,7 @@ public class PythonPlotV2NodeView<PythonPlotModel extends AbstractPythonPlotV2No
     public PythonPlotV2NodeView(final PythonPlotModel nodeModel) {
         super(nodeModel);
 
-        updateView(nodeModel);
-
+        //updateView(nodeModel);
     }
 
     private void updateView(PythonPlotModel nodeModel) {
