@@ -81,8 +81,7 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		"#import matplotlib.pyplot as plt\n" + 
 		"\n" + 
 		"X = range(10)\n" + 
-		"plt.plot(X, [x*x for x in X])\n" + 
-		"plt.show()";
+		"plt.plot(X, [x*x for x in X])\n";
     
     public static final List<String> SUPPORTED_FORMATS = new LinkedList<String>(
     		Arrays.asList("png", "jpeg", "svg", "pdf", "tif"));
@@ -339,7 +338,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     @Override
 	protected void reset() {
 		super.reset();
-		removeTempFiles();
+		//removeTempFiles();	
+		// would make problems when 'open external' as 
+		// temp files would be removed too early
 	}
     
 
