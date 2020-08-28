@@ -10,29 +10,51 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+/**
+ * Eclipse preferences field editor for {@link JupyterKernelSpec}
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class JupyterKernelSpecsEditor extends FieldEditor {
 	
 	/* GUI-components */
     private Combo c_kernelCombo;
     
+    /** language for which the editor should provide specs */
     private final String m_language;
     
+    /** constant for de-selection */
     public static final String NO_SPEC = "< NO SELECTION >";
+    /** constant for communicating failure in loading specs */
     private static final String NO_SPEC_AVAILABLE = "< FAILED TO LOAD SPECS >";
 
     
-    
+    /**
+     * constructor
+     * 
+     * @param name of the preference
+     * @param labelText of the field editor
+     * @param parent composite
+     * @param lang - language of the spec
+     */
     public JupyterKernelSpecsEditor(String name, String labelText,Composite parent, String lang) {
 		super(name, labelText, parent);
 		
 		m_language = lang;
 	}
     
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void adjustForNumColumns(int numColumns) {
 		((GridData) c_kernelCombo.getLayoutData()).horizontalSpan = numColumns-1;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void doFillIntoGrid(Composite parent, int numColumns) {
 		
@@ -55,12 +77,20 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
         c_kernelCombo.setLayoutData(gd);     
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void doLoad() {
 		String items = getPreferenceStore().getString(getPreferenceName());       
         deserialzieJupyterSpecs(items);
 	}
 
+	/**
+	 * deserialize specs from preference string and update field editor
+	 * 
+	 * @param items - preference string
+	 */
 	private void deserialzieJupyterSpecs(String items) {
 		
 		String[] singleItems = items.split(";");
@@ -85,6 +115,9 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		}	
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void doLoadDefault() {
 		c_kernelCombo.removeAll();		
@@ -92,6 +125,9 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
 		c_kernelCombo.select(0);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void doStore() {
 		// save everything to preference string
@@ -100,6 +136,10 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
             getPreferenceStore().setValue(getPreferenceName(), tString);
 	}
 	
+	/**
+	 * create preference string from field editor content
+	 * @return preference string
+	 */
 	protected String serializeJupyterSpecs() {
 		StringBuilder prefString = new StringBuilder();
 
@@ -124,11 +164,18 @@ public class JupyterKernelSpecsEditor extends FieldEditor {
         return prefString.toString(); 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int getNumberOfControls() {
 		return 2;
 	}
 
+	/**
+	 * update content based on a list of kernel specs
+	 * @param kernelSpecs
+	 */
 	public void updateComboBoxes(List<JupyterKernelSpec> kernelSpecs) {
 		
 		c_kernelCombo.removeAll();	

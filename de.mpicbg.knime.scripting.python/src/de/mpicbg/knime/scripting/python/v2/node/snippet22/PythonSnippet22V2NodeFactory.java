@@ -4,10 +4,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
-
 /**
- * <code>NodeFactory</code> for the "PythonSnippet" Node.
+ * <code>NodeFactory</code> for the "PythonSnippet 2:2" Node.
  *
  * @author Antje Janosch (MPI-CBG)
  */
@@ -52,7 +50,6 @@ public class PythonSnippet22V2NodeFactory extends NodeFactory<PythonSnippet22V2N
     @Override
     public NodeDialogPane createNodeDialogPane() {
         return new PythonSnippet22V2NodeDialog(
-        		//"pyOut = kIn.copy()", 
         		PythonSnippet22V2NodeModel.DFT_SCRIPT,
         		PythonSnippet22V2NodeModel.nodeModelCfg);
     }

@@ -8,14 +8,14 @@ import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
 /**
- * Node Model for Python Snippet node
+ * Node Model for 'Python Snippet 2:2' node
  * 
  * @author Antje Janosch
  *
  */
 public class PythonSnippet22V2NodeModel extends AbstractPythonScriptingV2NodeModel {
     
-	// node architecture
+	/** node architecture */
     public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
     			createPorts(2), 		// 1 input table
     			createPorts(2), 		// 1 output table

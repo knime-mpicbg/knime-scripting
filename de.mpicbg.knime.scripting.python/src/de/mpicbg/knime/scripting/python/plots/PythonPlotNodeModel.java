@@ -8,8 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -28,7 +26,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 
-import de.mpicbg.knime.scripting.core.FlowVarUtils;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
@@ -58,7 +55,6 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 	private static final String FIGURE_HEIGHT_SETTING_NAME = "figure.height";
 	private static final String OUTPUT_FILE_SETTING_NAME = "figure.output.file";
 	private static final String OVERWRITE_SETTING_NAME = "overwrite.ok";
-    private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
 
     private final String DEFAULT_PYTHON_PLOTCMD = "" +     
 		"# the following import is not required, as the node take care of it \n" + 
@@ -111,28 +107,6 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         writer.write("F.set_size_inches(" + width + "," + height + ")");
     }
 
-    /*private String prepareOutputFileName() {
-        String fileName = propOutputFile.getStringValue();
-
-        // process flow-variables
-        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
-
-        // replace wildcards
-
-        // 1) date
-        fileName = fileName.replace("$$DATE$$", TODAY);
-
-        // 2) user
-        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
-
-        // 3) workspace dir
-        if (fileName.contains("$$WS$$")) {
-            String wsLocation = getFlowVariable("knime.workspace");
-            fileName = fileName.replace("$$WS$$", wsLocation);
-        }
-
-        return fileName;
-    }*/
 
     public int getDefHeight() {
         return propHeight.getIntValue();

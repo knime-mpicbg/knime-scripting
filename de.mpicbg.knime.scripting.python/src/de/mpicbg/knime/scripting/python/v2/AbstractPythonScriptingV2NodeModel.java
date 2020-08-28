@@ -94,7 +94,7 @@ import de.mpicbg.knime.scripting.python.srv.Python;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.PythonInputMode.Flag;
 
 /**
- * abstract model class for all python scripting nodes
+ * abstract model class for all python scripting nodes (version 2)
  * take care of data transfer methods from/to python
  * 
  * @author Antje Janosch
@@ -102,12 +102,12 @@ import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel.Py
  */
 public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScriptingNodeModel {
 	
+	/** true, if running on a Windows OS */
 	protected final boolean isWindowsPlatform= Utils.isWindowsPlatform();
 	
 	/**
 	 * constants
-	 */
-	
+	 */	
 	protected static final String PY_INVAR_BASE_NAME = "kIn";
 	protected static final String PY_OUTVAR_BASE_NAME = "pyOut";
 	protected static final String PY_SCRIPTVAR_BASE_NAME = "pyScript";
@@ -116,13 +116,19 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * temp files and input/output ports
 	 */
 	
+	/** String with random characters to create temp files with a common part */
 	private String m_randomPart;
 	
-	private Map<String, File> m_tempFiles = new HashMap<String, File>();;
+	/** map of temporary files and their assigned label as key */
+	private Map<String, File> m_tempFiles = new HashMap<String, File>();
+	
 	private Map<String, PortObject> m_inPorts;
 	private Map<String, PortObject> m_outPorts;		// knime tables only
 	
 	private List<String> m_inKeys = new ArrayList<>();
+	
+	// store sdtout messages from Python script execution
+    private List<String> m_stdOut = new LinkedList<String>();
 
 	// python executor
     protected Python python;
@@ -183,16 +189,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         public static PythonInputMode ignoreFlag() {
         	return new PythonInputMode(null, Flag.IGNORE);
         }
-    }
-    
-
+    } 
     
     
-    
-    // store sdtout messages from pythin script execution
-    private List<String> m_stdOut = new LinkedList<String>();
     
     /**
+     * constructor
+     * 
 	 * @param inPorts
 	 * @param outPorts
 	 * @param columnSupport
@@ -201,8 +204,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		super(inPorts, outPorts, columnSupport);
 	}
 
-
 	/**
+	 * constructor
 	 * 
 	 * @param inPorts
 	 * @param outPorts
@@ -213,6 +216,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	/**
 	 * constructor with node configuration object
+	 * 
 	 * @param nodeModelConfig
 	 */
 	public AbstractPythonScriptingV2NodeModel(ScriptingModelConfig nodeModelConfig) {
@@ -221,7 +225,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 
 	
 	/**
-	 * main method to push available input to Python
+	 * main method to push available inputs to Python
 	 * 
 	 * @param inData
 	 * @param exec
@@ -263,6 +267,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	/**
 	 * write one KNIME table to temporary CSV file
+	 * 
 	 * @param inTable
 	 * @param varName
 	 * @param tempFile
@@ -357,6 +362,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    
 	    long nRows = inTable.size();
 	    
+	    /*
+	     * write KNIME table content row by row, column by column to CSV
+	     */
 	    int currentRowIdx = 1;
 	    for(DataRow row : inTable) {
 	    	List<String> columnValues = new LinkedList<String>();
@@ -377,8 +385,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	    					columnValues.add(val ? "1" : "0");
 	    				}
 	    				if(dType.getCellClass().equals(IntCell.class) || dType.getCellClass().equals(LongCell.class)) {
-	    					//int val = ((IntValue) cell).getIntValue();
-	    					//columnValues.add(Integer.toString(val));
 	    					long val = ((LongValue) cell).getLongValue();
 	    					columnValues.add(Long.toString(val));
 	    				}
@@ -406,7 +412,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     					}
 	    				if(cellClass.equals(DurationCell.class)) {
 	    					Duration duration = ((DurationCell) cell).getDuration();	
-	    					//columnValues.add(Long.toString(duration.toNanos()));
 	    					columnValues.add(duration.toString());
 	    					continue;
 	    				}
@@ -483,9 +488,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 		}
 		
-		//removeTempFiles();
-		
-		//return m_outPorts.values().toArray(ports);
 		return ports;
 	}
 
@@ -529,7 +531,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		
 		try (BufferedReader br = Files.newBufferedReader(tempFile.toPath(), StandardCharsets.UTF_8);
 				CSVReader reader = new CSVReaderBuilder(br).withCSVParser(parser)
-						//.withKeepCarriageReturn(true)
 						.build()) {
 			
 			String[] columnNames = null;
@@ -540,9 +541,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			// 2. line = column types
 			int lineCount = 0;
 			for(String[] line : reader) {
-				
-				// remove carriage return from last entry
-				//line[line.length - 1] = StringUtils.chop(line[line.length - 1]);
 				
 				if(lineCount == 0) {
 					columnNames = line;
@@ -571,7 +569,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					if(value.isEmpty())
 						dataCells.add(DataType.getMissingCell());
 					else {
-						//System.out.println(value);
 						DataType dType = columns.get(col);
 						DataCell  addCell = createCell(value, dType);
 						dataCells.add(addCell);
@@ -596,7 +593,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return bdc.getTable();
 	}
 	
-	
+	/**
+	 * returns the file of the Python script
+	 * 
+	 * @return {@see File}
+	 */
 	protected File getScriptFile() {
 		return m_tempFiles.get(PY_SCRIPTVAR_BASE_NAME);
 	}
@@ -672,6 +673,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		super.configure(inSpecs);
@@ -761,10 +765,10 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		Flag fl = flag.getFlag();
 		
 		// (2a) decide where to read the data from
-		if(!fl.equals(Flag.READ)) {
+		if(!fl.equals(Flag.READ)) {	// read data from CSV and if required write to pickle
 	
 			boolean write = fl.equals(Flag.WRITE);
-			if(write) {
+			if(write) {		// open pickle to write data that has been read from CSV
 				
 				File pickleFile = flag.getFile();
 				assert pickleFile != null;
@@ -780,7 +784,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 					if(isWindowsPlatform)
 						pickleFilePath  = pickleFilePath.replace('\\', '/');
 					
-					//String toScriptFile = "s = shelve.open(\"" + pickleFilePath + "\")";
 					String toScriptFile = "with open('" + pickleFilePath + "', 'wb') as pfile:\n";
 					scriptFileWriter.write(toScriptFile);
 				} catch(IOException ioe) {
@@ -807,7 +810,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 						scriptFileWriter.newLine();
 						
 						if(write) {
-							//readCSVCmd = "s[\'" + inLabel + "\'] = " + inLabel;
 							readCSVCmd = "\tpickle.dump(" + inLabel + ", pfile)";
 							scriptFileWriter.write(readCSVCmd);
 							scriptFileWriter.newLine();
@@ -823,7 +825,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 			}
 	
 		}
-		if(fl.equals(Flag.READ)) {
+		if(fl.equals(Flag.READ)) {	// read data from pickle file
 			
 			File pickleFile = flag.getFile();
 			assert pickleFile != null;
@@ -839,7 +841,6 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				if(isWindowsPlatform)
 					pickleFilePath  = pickleFilePath.replace('\\', '/');
 				
-				//String toScriptFile = "s = shelve.open(\"" + pickleFilePath + "\")";
 				String toScriptFile = "with open('" + pickleFilePath + "', 'rb') as pfile:";
 				scriptFileWriter.write(toScriptFile);
 			} catch(IOException ioe) {
@@ -872,12 +873,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 				throw new KnimeScriptingException(kseMessage, ioe.getMessage());
 			}
 
+			// (4) add write calls to script file
 			if(!fl.equals(Flag.READ)) {
 				
-				// (4) add write-calls to script file
 				for(String outLabel : m_outPorts.keySet()) {
 					File f = m_tempFiles.get(outLabel);
-					//File f = m_tempFiles.get(PY_OUTVAR_BASE_NAME);
 					String errorMessage = null;
 					if(f != null) {
 						try {
@@ -1018,10 +1018,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
         
     	// make sure existing files are deleted (from 'Open External e.g.)
     	removeTempFiles();
-    	m_tempFiles = new HashMap<String, File>();
-    	
-    	// prepend a random string to each new file to make it easier to find corresponding temporary files
-    	//String randomPart = Utils.generateRandomString(6);
+    	m_tempFiles = new HashMap<String, File>();  
     	
     	try {
 	    	// Create a new set
@@ -1043,25 +1040,48 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
     	} 
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
 	protected void onDispose() {
 		super.onDispose();
 		removeTempFiles();
 	}
 
-
+    /**
+     * adds a temp file to the temp file map
+     * 
+     * @param label
+     * @param file
+     * @return
+     */
 	protected boolean addTempFile(String label, File file) {
     	return m_tempFiles.put(label, file) != null;
     }
     
+	/**
+	 * retrieve temp file based on its label
+	 * 
+	 * @param label
+	 * @return {@link File}
+	 */
     protected File getTempFile(final String label) {
     	return m_tempFiles.get(label);
     }
     
+    /**
+     * retrieve current random string
+     * 
+     * @return {@link String}
+     */
     protected String getRandomPart() {
 		return m_randomPart;
 	}
     
+    /**
+     * deletes all temporary files stored in temp file map
+     */
     protected void removeTempFiles() {
     	for(File f : m_tempFiles.values()) {
 			if(f != null)
@@ -1073,6 +1093,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
 		m_randomPart = Utils.generateRandomString(6);
@@ -1080,6 +1103,9 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return null;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void openIn(PortObject[] inData, ExecutionContext exec)
 			throws KnimeScriptingException, CanceledExecutionException {
@@ -1088,6 +1114,12 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		openInPython(exec);
 	}
 	
+	/**
+	 * implementation of the 'Open external' mode
+	 * 
+	 * @param exec
+	 * @throws KnimeScriptingException
+	 */
 	private void openInPython(ExecutionContext exec) throws KnimeScriptingException {
 		
 		IPreferenceStore pythonPreferences = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
@@ -1102,7 +1134,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 
 	/**
-	 * implementation to 'Open external' via commandline
+	 * implementation of 'Open external' via commandline
 	 * 
 	 * @param preferences
 	 * @throws KnimeScriptingException
@@ -1150,7 +1182,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	}
 
 	/**
-	 * implementation 'Open external' as jupyter notebook <br/>
+	 * implementation of 'Open external' as jupyter notebook <br/>
 	 * load template notebook and replace placeholders with pathes and script
 	 * 
 	 * @param pythonPreferences
@@ -1310,6 +1342,13 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		launchNotebook(jupyterLocation, jupyterMode, nbFile);
 	}
 
+	/**
+	 * return appropriate Jupyter kernel spec based on selected Python and preference settings
+	 * 
+	 * @param jupyterPreferences
+	 * @param pythonVersion
+	 * @return {@link JupyterKernelSpec}
+	 */
 	private JupyterKernelSpec getJupyterKernel(IPreferenceStore jupyterPreferences, String pythonVersion) {
 		
 		String kernelString = null;
@@ -1339,6 +1378,7 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * 
 	 * @param jupyterLocation
 	 * @param nbFile
+	 * 
 	 * @throws KnimeScriptingException
 	 */
 	private void launchNotebook(String jupyterLocation, String jupyterMode, Path nbFile) throws KnimeScriptingException {
@@ -1363,7 +1403,8 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	 * check whether jupyter version can be obtained
 	 * 
 	 * @param jupyterLocation
-	 * @return
+	 * @return String with Jupyter version if successfull, exception thrown otherwise
+	 * 
 	 * @throws KnimeScriptingException
 	 */
 	private String isJupyterInstalled(String jupyterLocation) throws KnimeScriptingException {
@@ -1490,7 +1531,11 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		return tSpec;
 	}
 
-
+	/**
+	 * write script to file for normal pushing of Python snippets
+	 * 
+	 * @throws KnimeScriptingException
+	 */
 	protected void prepareScriptFile() throws KnimeScriptingException {
 		try(BufferedWriter scriptWriter = new BufferedWriter(new FileWriter(getScriptFile(), true))) {
 			prepareScript(scriptWriter, true, PythonInputMode.ignoreFlag());
@@ -1500,12 +1545,18 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 		}
 	}
 
-
+	/**
+	 * @return list of input keys
+	 */
 	protected List<String> getInputKeys() {
 		return m_inKeys;
 	}
 
-
+	/**
+	 * sets list of input keys
+	 * 
+	 * @param keyList
+	 */
 	public void setInputKeys(List<String> keyList) {
 		m_inKeys = keyList;
 	}

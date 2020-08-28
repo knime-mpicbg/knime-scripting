@@ -10,9 +10,15 @@ import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
+/**
+ * Node Model for 'Open in Python' node
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class OpenInPythonV2NodeModel extends AbstractPythonScriptingV2NodeModel {
 
-
+	/** scripting node model configuration */
 	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
 			createPorts(3, 2,3), 	// 3 inputs, input 2 and 3 optional
 			createPorts(0), 		// no output

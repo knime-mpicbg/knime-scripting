@@ -162,6 +162,12 @@ public class Utils {
         return null;
     }
     
+    /**
+     * create a string with random alphanumeric characters (upper + lowe case) of a certain length
+     * 
+     * @param length
+     * @return generated String
+     */
     public static String generateRandomString(int length) {
     	String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     	             + "abcdefghijklmnopqrstuvwxyz"

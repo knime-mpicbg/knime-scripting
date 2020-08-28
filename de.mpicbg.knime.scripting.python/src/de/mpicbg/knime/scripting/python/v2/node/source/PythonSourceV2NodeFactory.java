@@ -6,6 +6,11 @@ import org.knime.core.node.NodeView;
 
 import de.mpicbg.knime.scripting.python.v2.node.snippet22.PythonSnippet22V2NodeDialog;
 
+/**
+ * <code>NodeFactory</code> for the "Python Source" Node.
+ *
+ * Antje Janosch (MPI-CBG)
+ */
 public class PythonSourceV2NodeFactory extends NodeFactory<PythonSourceV2NodeModel> {
 
 	@Override

@@ -6,7 +6,13 @@ import de.mpicbg.knime.scripting.core.panels.ScriptingPlotPanel;
 import de.mpicbg.knime.scripting.python.v2.plots.AbstractPythonPlotV2NodeModel;
 import de.mpicbg.knime.scripting.python.v2.plots.PythonPlotCanvasV2;
 
-
+/**
+ * Node View of 'Python Plot' node
+ * 
+ * @author Antje Janosch
+ *
+ * @param <PythonPlotModel>
+ */
 public class PythonPlotV2NodeView<PythonPlotModel extends AbstractPythonPlotV2NodeModel> extends NodeView<PythonPlotModel> {
 
     /**
@@ -16,28 +22,38 @@ public class PythonPlotV2NodeView<PythonPlotModel extends AbstractPythonPlotV2No
      */
     public PythonPlotV2NodeView(final PythonPlotModel nodeModel) {
         super(nodeModel);
-
-        //updateView(nodeModel);
     }
 
+    /**
+     * set canvas with updated node model data
+     * 
+     * @param nodeModel
+     */
     private void updateView(PythonPlotModel nodeModel) {
         
     	PythonPlotCanvasV2 plotCanvas = new PythonPlotCanvasV2(nodeModel);
         setComponent(new ScriptingPlotPanel(plotCanvas));
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void onClose() {
-		// TODO Auto-generated method stub
-		
+		// nothing to do here
 	}
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void onOpen() {
-		// TODO Auto-generated method stub
-		
+		// nothing to do here
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void modelChanged() {
         //  retrieve the new model from your nodemodel and

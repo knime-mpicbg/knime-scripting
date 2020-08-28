@@ -4,8 +4,12 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-import de.mpicbg.knime.scripting.core.ScriptingOpenInDialog;
-
+/**
+ * Node Factory for 'Open in Python' node
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class OpenInPythonV2NodeFactory extends NodeFactory<OpenInPythonV2NodeModel> {
 
 	@Override

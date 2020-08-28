@@ -26,15 +26,29 @@ import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 
+/**
+ * preference page for jupyter settings
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class JupyterPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
+	/** editor to hold the jupyter installation path */
 	private FileFieldEditor ffe;
+	/** field editor to hold the python 2 kernel list */
 	private JupyterKernelSpecsEditor jksePy2 ;
+	/** field editor to hold the python 3 kernel list */
 	private JupyterKernelSpecsEditor jksePy3 ;
+	/** field editor to hold the R kernel list */
 	private JupyterKernelSpecsEditor jkseR ;
 		
+	/** list of kernel specs */
 	private List<JupyterKernelSpec> m_kernelSpecs;
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		
@@ -63,6 +77,14 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		}
 	}
 	
+	/**
+	 * based on a changed jupyter location path => update available kernel specs
+	 * 
+	 * @param jupyterLocation
+	 * @throws IOException
+	 * @throws KnimeScriptingException
+	 * @throws InterruptedException
+	 */
 	public void updateKernelSpecs(String jupyterLocation) throws IOException, KnimeScriptingException, InterruptedException {
 		
 		// use temporary list to fill with new content
@@ -70,6 +92,7 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		
 		ProcessBuilder pb = new ProcessBuilder();
 		
+		// create json with kernel specs
 		if(Utils.isWindowsPlatform()) {
 			pb.command("powershell.exe", "-Command", jupyterLocation, "kernelspec", "list", "--json");
 		} else {
@@ -110,6 +133,9 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 		m_kernelSpecs.addAll(kernelSpecs);
 	}
 
+	/**
+	 * constructor
+	 */
 	public JupyterPreferencePage() {
 		super(FieldEditorPreferencePage.GRID);
 
@@ -120,6 +146,9 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
 	    m_kernelSpecs = new LinkedList<JupyterKernelSpec>();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void createFieldEditors() {
         
@@ -146,9 +175,12 @@ public class JupyterPreferencePage extends FieldEditorPreferencePage implements 
         
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void init(IWorkbench workbench) {
-		// TODO Auto-generated method stub
+		// nothing to do here
 		
 	}
 

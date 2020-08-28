@@ -7,9 +7,14 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
+/**
+ * <code>NodeModel</code> for the "Python Source" Node.
+ *
+ * Antje Janosch (MPI-CBG)
+ */
 public class PythonSourceV2NodeModel extends AbstractPythonScriptingV2NodeModel {
 	
-	// node architecture
+	/** node architecture */
     public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
     			createPorts(0), 		// 0 input table
     			createPorts(1), 		// 1 output table

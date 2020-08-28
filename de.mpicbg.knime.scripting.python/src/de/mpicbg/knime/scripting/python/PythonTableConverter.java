@@ -29,8 +29,22 @@ import java.util.List;
 /**
  * Parser to convert KNIME table to something the 
  * Python interpreter can work with
+ * 
+ * note: this class works with Python nodes version 1
+ * 
  */
 public class PythonTableConverter {
+	
+	/**
+	 * read CSV and return KNIME table
+	 * 
+	 * @param exec
+	 * @param pyOutFile		- CSV from Python
+	 * @param logger
+	 * @return	KNIME table
+	 * 
+	 * @throws RuntimeException
+	 */
     public static BufferedDataTable convertCSVToTable(ExecutionContext exec, File pyOutFile, NodeLogger logger) throws RuntimeException {
         try {
         	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
@@ -116,12 +130,24 @@ public class PythonTableConverter {
         } 
     }
 
+    /**
+     * remove first and last character of a string
+     * 
+     * @param string
+     * @return
+     */
     private static String removeQuotes(String string) {
     	if(string == null) return null;
     	if(string.length() < 2) return null;
     	return string.substring(1, string.length()-1);
 	}
 
+    /**
+     * from KNIME tablespec retrieve list of column names
+     * 
+     * @param tableSpec
+     * @return
+     */
 	private static List<String> getColumnNames(DataTableSpec tableSpec) {
         List<String> colNames = new ArrayList<String>();
         for (DataColumnSpec colSpec : tableSpec) {
@@ -130,6 +156,12 @@ public class PythonTableConverter {
         return colNames;
     }
 
+	/**
+	 * from KNIME tablespec retrieve list of column data types
+	 * 
+	 * @param tableSpec
+	 * @return
+	 */
     private static List<DataType> getColumnTypes(DataTableSpec tableSpec) {
         List<DataType> colTypes = new ArrayList<DataType>();
         for (DataColumnSpec colSpec : tableSpec) {

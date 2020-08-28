@@ -37,6 +37,12 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
 
+/**
+ * Abstract Node Model class for Python Plot nodes 
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2NodeModel {
 	
 	protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
@@ -86,9 +92,11 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     public static final List<String> SUPPORTED_FORMATS = new LinkedList<String>(
     		Arrays.asList("png", "jpeg", "svg", "pdf", "tif"));
 
-    
-    
-    
+    /**
+     * constructor
+     *     
+     * @param nodeModelConfig
+     */
 	public AbstractPythonPlotV2NodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
 		
@@ -157,30 +165,58 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return new SettingsModelIntegerBounded(CFG_DPI, CFG_DPI_DFT, 0, Integer.MAX_VALUE);
 	}
 	
+	/**
+	 * get setting model: DPI
+	 * @return dpi
+	 */
 	protected int getConfigDpi() {
 		return ((SettingsModelIntegerBounded) getModelSetting(CFG_DPI)).getIntValue();
 	}
 	
+	/**
+	 * get setting model: image width
+	 * @return image width
+	 */
 	protected int getConfigWidth() {
 		return ((SettingsModelIntegerBounded) getModelSetting(CFG_WIDTH)).getIntValue();
 	}
 	
+	/**
+	 * get setting model: image height
+	 * @return image height
+	 */
 	protected int getConfigHeight() {
 		return ((SettingsModelIntegerBounded) getModelSetting(CFG_HEIGHT)).getIntValue();
 	}
 	
+	/**
+	 * get setting model: output file path
+	 * @return path as string
+	 */
 	protected String getConfigOutFileName() {
 		return ((SettingsModelString) getModelSetting(CFG_OUTFILE)).getStringValue();
 	}
 	
+	/**
+	 * get setting model: image format
+	 * @return image format
+	 */
 	protected String getConfigImgFormat() {
 		return ((SettingsModelString) getModelSetting(CFG_IMGTYPE)).getStringValue();
 	}
 	
+	/**
+	 * get settings model: write image to file?
+	 * @return true, if yes
+	 */
 	protected boolean getConfigWriteFlag() {
 		return ((SettingsModelBoolean) getModelSetting(CFG_WRITE)).getBooleanValue();
 	}
 	
+	/**
+	 * get settings model: overwrite image?
+	 * @return true, if yes
+	 */
 	protected boolean getConfigOverwriteFlag() {
 		return ((SettingsModelBoolean) getModelSetting(CFG_OVERWRITE)).getBooleanValue();
 	}
@@ -226,10 +262,10 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		
 		return outPorts;
 	}
-	
-
 	   
-
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void loadInternals(File internDir, ExecutionMonitor exec) throws IOException, CanceledExecutionException {
 		
@@ -257,6 +293,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void saveInternals(File internDir, ExecutionMonitor exec) throws IOException, CanceledExecutionException {
 	
@@ -275,6 +314,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
     	}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		PortObjectSpec[] specs = super.configure(inSpecs);
@@ -292,12 +334,18 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return specs;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void onDispose() {
 		super.onDispose();
 		removeTempFiles();
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void removeTempFiles() {
 		
@@ -323,6 +371,12 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			}
 	}
     
+	/**
+	 * read image from image file
+	 * 
+	 * @return {@link BufferedImage}
+	 * @throws IOException
+	 */
     public BufferedImage getImage() throws IOException {
     	
     	BufferedImage image = null;
@@ -335,6 +389,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
         return image;
     }
  
+    /**
+     * {@inheritDoc}
+     */
     @Override
 	protected void reset() {
 		super.reset();
@@ -343,7 +400,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		// temp files would be removed too early
 	}
     
-
+    /**
+     * prepare script for plots (additional stuff, like writing pickle file) - execution mode
+     */
 	@Override
 	protected void prepareScriptFile() throws KnimeScriptingException {
 		
@@ -360,6 +419,18 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 
 	}
 
+	/**
+	 * implementation of script preparation for plots
+	 * 
+	 * @param scriptFile	- file to write to
+	 * @param imgFile		- output file
+	 * @param mode			- execution or repaint mode
+	 * @param dpi			- dpi
+	 * @param width_inch	- image width
+	 * @param height_inch	- image height
+	 * 
+	 * @throws KnimeScriptingException
+	 */
 	private void createScriptFor(File scriptFile, File imgFile, int mode, int dpi, double width_inch, double height_inch)
 			throws KnimeScriptingException {
 		
@@ -421,6 +492,12 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		}
 	}
 
+	/**
+	 * create additional temporary files
+	 * 
+	 * @param internal
+	 * @throws KnimeScriptingException
+	 */
 	protected void createTempFiles(boolean internal) throws KnimeScriptingException {
 		
 		// if called during execution => get random string from parent class
@@ -431,12 +508,10 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 			Path pickleFile = Files.createTempFile(randomPart + "_" + PICKLEFILE_LABEL + "_knime2python_", ".p");
 			Files.deleteIfExists(pickleFile);
 			m_pickleFile = pickleFile.toFile();
-			//addTempFile(SHELVEFILE_LABEL, shelveFile.toFile());
 			
 			Path imgFile = Files.createTempFile(randomPart + "_" + IMGFILE_LABEL + "_img2knime_", ".png");
 			Files.deleteIfExists(imgFile);
 			m_nodeImageFile = imgFile.toFile();
-			//addTempFile(IMGFILE_LABEL, imgFile.toFile());
 			
 		} catch (IOException ioe) {
 			removeTempFiles();
@@ -444,6 +519,16 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		}
 	}
 
+	/**
+	 * recreate image by rerunning the script
+	 * 
+	 * @param width		- image width
+	 * @param height	- image height
+	 * @return {@link BufferedImage}
+	 * 
+	 * @throws IOException
+	 * @throws KnimeScriptingException
+	 */
 	public BufferedImage getRecreatedImage(int width, int height) throws IOException, KnimeScriptingException{
 		
 		Path recreateScriptFile = null;
@@ -485,6 +570,9 @@ public class AbstractPythonPlotV2NodeModel extends AbstractPythonScriptingV2Node
 		return recreatedImage;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected PortObject[] executeImpl(PortObject[] inData, ExecutionContext exec) throws Exception {
 		

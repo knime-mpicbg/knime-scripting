@@ -33,6 +33,7 @@ public class PythonServer implements Python {
     protected PythonServer(boolean local) {
     }
 
+    @Override
     public File createTempFile(String prefix, String suffix) {
         File tempFile = null;
         try {
@@ -44,10 +45,12 @@ public class PythonServer implements Python {
         return tempFile;
     }
 
+    @Override
     public String getFilePath(File file) {
         return file.getAbsolutePath();
     }
 
+    @Override
     public boolean deleteFile(File file) {
         return file != null ? file.delete() : true;
     }
@@ -57,6 +60,7 @@ public class PythonServer implements Python {
     	return executeCommand(command, true);
 	}
 
+    @Override
 	public CommandOutput executeCommand(String[] command, boolean waitFor) {
         try {
             return exec(command, waitFor);
@@ -92,34 +96,31 @@ public class PythonServer implements Python {
         return new CommandOutput(outputGobbler, errorGobbler);
     }
 
+    @Override
     public int openFile(File file) throws IOException {
         return map.add(file);
     }
 
-    ;
-
+    @Override
     public byte[] readFile(int descriptor) throws IOException {
         ServerFile file = map.get(descriptor);
         return file.read();
     }
 
-    ;
-
+    @Override
     public void writeFile(int descriptor, byte[] bytes) throws IOException {
         ServerFile file = map.get(descriptor);
         file.write(bytes);
     }
 
-    ;
-
+    @Override
     public void closeFile(int descriptor) throws IOException {
         ServerFile file = map.get(descriptor);
         file.close();
         map.remove(descriptor);
     }
 
-    ;
-
+  
     public static void main(String[] args) {
         if (args.length == 0) new PythonServer(DEFAULT_PORT);
         else {

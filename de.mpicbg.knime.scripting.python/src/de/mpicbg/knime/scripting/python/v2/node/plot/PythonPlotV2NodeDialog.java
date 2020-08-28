@@ -28,12 +28,32 @@ import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.v2.plots.AbstractPythonPlotV2NodeModel;
 
+/**
+ * 
+ * Node Dialog class for 'Python Plot' node
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class PythonPlotV2NodeDialog extends ScriptingNodeDialog {
 	
+	/**
+	 * constructor
+	 * 
+	 * @param defaultScript
+	 * @param enableTemplateRepository
+	 */
 	public PythonPlotV2NodeDialog(String defaultScript, boolean enableTemplateRepository) {
 		this(defaultScript, enableTemplateRepository, true);
 	}
 	
+	/**
+	 * constructor
+	 * 
+	 * @param defaultScript
+	 * @param enableTemplateRepository
+	 * @param enableOpenExternal
+	 */
 	public PythonPlotV2NodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
 		super(defaultScript, new PythonColumnSupport(), enableTemplateRepository, enableOpenExternal, true);
 		
@@ -88,11 +108,21 @@ public class PythonPlotV2NodeDialog extends ScriptingNodeDialog {
 		closeCurrentGroup();
 	}
 
+	/**
+	 * retrieve python plot templates
+	 * 
+	 * {@inheritDoc}
+	 */
 	@Override
 	public String getTemplatesFromPreferences() {
 		return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES);
 	}
 
+	/**
+	 * get template cache folder for this bundle
+	 * 
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected Path getTemplateCachePath() {
 		Bundle bundle = FrameworkUtil.getBundle(getClass());

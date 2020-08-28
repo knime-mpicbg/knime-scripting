@@ -7,6 +7,13 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 
+/**
+ * Scripting Preference page
+ * does not contain any settings but is parent of further scripting preference pages
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class ScriptingPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
 	public ScriptingPreferencePage() {
@@ -18,15 +25,20 @@ public class ScriptingPreferencePage extends FieldEditorPreferencePage implement
 	    setDescription("Expand the tree to edit preferences for a specific feature.");
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void createFieldEditors() {
-		
+		// nothing to do here
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void init(IWorkbench workbench) {
-		// TODO Auto-generated method stub
-		
+		// nothing to do here
 	}
 
 }

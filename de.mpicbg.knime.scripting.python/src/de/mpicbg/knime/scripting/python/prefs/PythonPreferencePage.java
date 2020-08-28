@@ -1,28 +1,3 @@
-/*
- * ------------------------------------------------------------------------
- *
- *  Copyright (C) 2003 - 2010
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
- *  Website: http://www.knime.org; Email: contact@knime.org
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License, version 2, as 
- *  published by the Free Software Foundation.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * ------------------------------------------------------------------------
- * 
- * History
- *   19.09.2007 (thiel): created
- */
 package de.mpicbg.knime.scripting.python.prefs;
 
 import java.nio.file.Path;
@@ -46,14 +21,14 @@ import de.mpicbg.knime.scripting.python.srv.CommandOutput;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
 
-
 /**
  * @author Tom Haux (MPI-CBG), Antje Janosch (MPI-CBG)
  */
 public class PythonPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-	private final String pythonLocationGuessed;
-	private final String pythonVersionGuessed;
+	// might be useful to get a first guess of Python settings - not yet used (2020-08)
+	//private final String pythonLocationGuessed;
+	//private final String pythonVersionGuessed;
 	
 	private final Python python = new LocalPythonClient();
 	
@@ -62,13 +37,15 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
      */
     public PythonPreferencePage() {
         super(GRID);
-        pythonLocationGuessed = guessPythonLocation();
-        pythonVersionGuessed = getPythonVersion(pythonLocationGuessed);
+        //pythonLocationGuessed = guessPythonLocation();
+        //pythonVersionGuessed = getPythonVersion(pythonLocationGuessed);
         
         setPreferenceStore(PythonScriptingBundleActivator.getDefault().getPreferenceStore());
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void createFieldEditors() {
         Composite parent = getFieldEditorParent();
@@ -96,15 +73,18 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
         
     }
 
-
-
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void init(final IWorkbench workbench) {
-       
+       // nothing to do here
     }
     
     /**
      * delivers the python version
-     * @return
+     * 
+     * @return Python executable path as string
      */
 	private String guessPythonLocation() {
 		
@@ -129,7 +109,12 @@ public class PythonPreferencePage extends FieldEditorPreferencePage implements I
 		return null;
 	}
 
-
+	/**
+	 * based on a python executable, get its version
+	 * 
+	 * @param pythonLocationGuessed
+	 * @return Python version as string
+	 */
 	private String getPythonVersion(String pythonLocationGuessed) {
 		// try to get python version
 		CommandOutput output;

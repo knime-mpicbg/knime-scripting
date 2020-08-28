@@ -15,7 +15,7 @@ import de.mpicbg.knime.scripting.python.v2.AbstractPythonScriptingV2NodeModel;
  */
 public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel {
     
-	// node architecture
+	/** node architecture */
     public static final ScriptingModelConfig nodeModelCfg = new ScriptingModelConfig(
     			createPorts(1), 		// 1 input table
     			createPorts(1), 		// 1 output table
@@ -57,7 +57,7 @@ public class PythonSnippetV2NodeModel extends AbstractPythonScriptingV2NodeModel
 			ExecutionContext exec) throws Exception {
 		
 		super.executeImpl(inData, exec);
-		//super.pushInputToPython(inData, exec);
+		
 		super.prepareScriptFile();
 		super.runScript(exec);
 		PortObject[] outData = super.pullOutputFromPython(exec);

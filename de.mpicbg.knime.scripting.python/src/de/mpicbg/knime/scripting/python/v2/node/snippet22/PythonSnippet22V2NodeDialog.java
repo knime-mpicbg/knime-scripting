@@ -15,7 +15,7 @@ import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 
 
 /**
- * <code>NodeDialog</code> for the "Python Snippet" Node.
+ * <code>NodeDialog</code> for the "Python Snippet 2:2" Node.
  *
  * Antje Janosch (MPI-CBG)
  */
@@ -53,6 +53,9 @@ public class PythonSnippet22V2NodeDialog extends ScriptingNodeDialog {
         return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected Path getTemplateCachePath() {
 		Bundle bundle = FrameworkUtil.getBundle(getClass());

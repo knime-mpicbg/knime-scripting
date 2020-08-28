@@ -10,8 +10,16 @@ import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.v2.plots.AbstractPythonPlotV2NodeModel;
 
+/**
+ * 
+ * Node Model class for 'Python Plot' node
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class PythonPlotV2NodeModel extends AbstractPythonPlotV2NodeModel{
 
+	/** node model configuration */
 	private static ScriptingModelConfig nodeModelConfig = new ScriptingModelConfig(
 			createPorts(1), 	// 1 input
 			createPorts(1, ImagePortObject.TYPE, ImagePortObject.class), 		// no output
@@ -20,6 +28,9 @@ public class PythonPlotV2NodeModel extends AbstractPythonPlotV2NodeModel{
 			true, 					// open in functionality
 			true);					// use chunk settings
 
+	/**
+	 * constructor
+	 */
     public PythonPlotV2NodeModel() {
         super(nodeModelConfig);
     }

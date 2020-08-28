@@ -6,7 +6,11 @@ import org.knime.core.node.NodeView;
 
 
 /**
+ * 
+ * Node Factory class for 'Python Plot' node
+ * 
  * @author Antje Janosch
+ *
  */
 public class PythonPlotV2NodeFactory extends NodeFactory<PythonPlotV2NodeModel> {
 
@@ -33,14 +37,8 @@ public class PythonPlotV2NodeFactory extends NodeFactory<PythonPlotV2NodeModel> 
         return true;
     }
 
-
     @Override
     public NodeDialogPane createNodeDialogPane() {
         return new PythonPlotV2NodeDialog(PythonPlotV2NodeFactory.this.createNodeModel().getDefaultScript(""), true);
-    }
-
-
-    protected boolean enableTemplateRepository() {
-        return true;
     }
 }

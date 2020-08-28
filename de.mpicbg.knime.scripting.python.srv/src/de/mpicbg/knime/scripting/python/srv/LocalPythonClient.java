@@ -19,14 +19,17 @@ public class LocalPythonClient implements Python {
     public LocalPythonClient() {
     }
 
+    @Override
     public File createTempFile(String prefix, String suffix) {
         return server.createTempFile(prefix, suffix);
     }
 
+    @Override
     public String getFilePath(File file) {
         return server.getFilePath(file);
     }
 
+    @Override
     public boolean deleteFile(File file) {
         return server.deleteFile(file);
     }
@@ -36,23 +39,28 @@ public class LocalPythonClient implements Python {
 		return server.executeCommand(command, true);
 	}
 
+    @Override
 	public CommandOutput executeCommand(String[] command, boolean waitFor) {
         return server.executeCommand(command, waitFor);
     }
 
-    public int openFile(File file) throws IOException {
-        return server.openFile(file);
-    }
-
+    @Override
     public byte[] readFile(int descriptor) throws IOException {
         return server.readFile(descriptor);
     }
 
+    @Override
     public void writeFile(int descriptor, byte[] bytes) throws IOException {
         server.writeFile(descriptor, bytes);
     }
 
+    @Override
     public void closeFile(int descriptor) throws IOException {
         server.closeFile(descriptor);
+    }
+
+	@Override
+    public int openFile(File file) throws IOException {
+        return server.openFile(file);
     }
 }

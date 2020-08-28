@@ -53,6 +53,9 @@ public class PythonSnippetV2NodeDialog extends ScriptingNodeDialog {
         return PythonScriptingBundleActivator.getDefault().getPreferenceStore().getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES);
     }
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected Path getTemplateCachePath() {
 		Bundle bundle = FrameworkUtil.getBundle(getClass());

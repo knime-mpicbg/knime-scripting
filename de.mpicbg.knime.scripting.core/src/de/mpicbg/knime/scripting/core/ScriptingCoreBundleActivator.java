@@ -1,16 +1,7 @@
 package de.mpicbg.knime.scripting.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.NodeLogger;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 
 public class ScriptingCoreBundleActivator extends AbstractUIPlugin {
 

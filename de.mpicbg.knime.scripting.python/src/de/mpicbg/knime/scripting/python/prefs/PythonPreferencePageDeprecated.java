@@ -20,6 +20,9 @@ public class PythonPreferencePageDeprecated extends FieldEditorPreferencePage im
         setPreferenceStore(PythonScriptingBundleActivator.getDefault().getPreferenceStore());
 	}
 
+    /**
+     * {@inheritDoc}
+     */
 	@Override
 	protected void createFieldEditors() {
 		Composite parent = getFieldEditorParent();
@@ -32,10 +35,12 @@ public class PythonPreferencePageDeprecated extends FieldEditorPreferencePage im
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void init(IWorkbench workbench) {
-		// TODO Auto-generated method stub
-		
+		// nothing to do here		
 	}
 
 }

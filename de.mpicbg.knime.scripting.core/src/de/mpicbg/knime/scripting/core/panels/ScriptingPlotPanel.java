@@ -1,7 +1,6 @@
 package de.mpicbg.knime.scripting.core.panels;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -13,16 +12,29 @@ import javax.swing.OverlayLayout;
 
 import org.knime.core.node.NodeModel;
 
-
+/**
+ * Panel to provide the plot view of scripting nodes
+ * Provides Dimension information a procedures to reproduce the image after rescaling
+ * 
+ * @author Antje Janosch
+ *
+ */
 public class ScriptingPlotPanel extends JPanel {
 	
 	private static final long serialVersionUID = 1L;
 	
+	/** flag to mark whether image is in recreation process */
 	private boolean isReCreatingImage = false;
-	
+	/** panel which contains the image */
 	private ScriptingPlotCanvas<NodeModel> m_plotPanel;
+	/** label which contains the dimensions */
 	private JLabel label;
 
+	/**
+	 * constructor 
+	 * 
+	 * @param plotPanel
+	 */
 	public ScriptingPlotPanel(ScriptingPlotCanvas<NodeModel> plotPanel) {
 		
 		this.m_plotPanel = plotPanel;
@@ -36,7 +48,7 @@ public class ScriptingPlotPanel extends JPanel {
         JPanel showText = new JPanel();
         showText.setLayout(new BorderLayout());
         
-        label = new JLabel("test text");
+        label = new JLabel("");
         label.setOpaque(false);      
         showText.add(label, BorderLayout.SOUTH);
         showText.setOpaque(false);
@@ -90,6 +102,9 @@ public class ScriptingPlotPanel extends JPanel {
 
 	}
 	
+	/**
+	 * update dimension label
+	 */
     private void setDimensionLabel() {
     	label.setText(getWidth() + " x " + getHeight());
     }
