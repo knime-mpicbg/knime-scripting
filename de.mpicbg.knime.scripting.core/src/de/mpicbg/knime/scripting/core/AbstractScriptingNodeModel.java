@@ -1,15 +1,14 @@
 package de.mpicbg.knime.scripting.core;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -23,8 +22,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 import de.mpicbg.knime.knutils.AbstractNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
@@ -209,7 +206,7 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         SettingsModelBoolean openInSetting = ((SettingsModelBoolean) this.getModelSetting(OPEN_IN));
         if(openInSetting != null)
         	if(openInSetting.getBooleanValue())
-        		this.setWarningMessage("The node is configured to open the input data externally\n.Execution will fail after that");
+        		this.setWarningMessage("The node is configured to open the input data externally.\nExecution will fail after that");
 
         return null;
 	}
@@ -302,8 +299,8 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
      * replace flowvariable placeholders
      * </p>
      * 
-     * This method is usually just called from within the different execute implementations. Occassionally it is also
-     * called in the view implemntations.
+     * This method is usually just called from within the different execute implementations. 
+     * Occasionally it is also called in the view implementations.
      */
     public String prepareScript() {
 
@@ -388,5 +385,33 @@ public abstract class AbstractScriptingNodeModel extends AbstractNodeModel {
         ScriptTemplate scriptTemplate = new ScriptTemplate();
         scriptTemplate.setTemplate(unparsedTemplate);
         return scriptTemplate;
+    }
+	
+    /**
+     * replace placeholders in filename with appropriate values
+     * @param fileName
+     * @return final filename
+     */
+    protected String prepareOutputFileName(String fileName) {
+    	
+    	final String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
+        // process flow-variables
+        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
+
+        // replace wildcards
+
+        // 1) date
+        fileName = fileName.replace("$$DATE$$", TODAY);
+
+        // 2) user
+        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
+
+        // 3) workspace dir
+        if (fileName.contains("$$WS$$")) {
+            String wsLocation = getFlowVariable("knime.workspace");
+            fileName = fileName.replace("$$WS$$", wsLocation);
+        }
+
+        return fileName;
     }
 }

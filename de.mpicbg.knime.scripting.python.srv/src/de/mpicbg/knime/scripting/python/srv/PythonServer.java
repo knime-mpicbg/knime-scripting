@@ -33,6 +33,7 @@ public class PythonServer implements Python {
     protected PythonServer(boolean local) {
     }
 
+    @Override
     public File createTempFile(String prefix, String suffix) {
         File tempFile = null;
         try {
@@ -44,17 +45,25 @@ public class PythonServer implements Python {
         return tempFile;
     }
 
+    @Override
     public String getFilePath(File file) {
         return file.getAbsolutePath();
     }
 
+    @Override
     public boolean deleteFile(File file) {
         return file != null ? file.delete() : true;
     }
 
-    public CommandOutput executeCommand(String[] command) {
+    @Override
+	public CommandOutput executeCommand(String[] command) {
+    	return executeCommand(command, true);
+	}
+
+    @Override
+	public CommandOutput executeCommand(String[] command, boolean waitFor) {
         try {
-            return exec(command);
+            return exec(command, waitFor);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -64,10 +73,11 @@ public class PythonServer implements Python {
      * Run an external command and return any output it generates.
      *
      * @param cmd
+     * @param waitFor 
      * @return
      * @throws InterruptedException
      */
-    private CommandOutput exec(String[] cmd) throws Exception {
+    private CommandOutput exec(String[] cmd, boolean waitFor) throws Exception {
         Process proc = null;
         proc = Runtime.getRuntime().exec(cmd);
 
@@ -81,39 +91,36 @@ public class PythonServer implements Python {
         outputGobbler.start();
 
         // Wait for the command process to complete
-        proc.waitFor();
+        if(waitFor) proc.waitFor();
 
         return new CommandOutput(outputGobbler, errorGobbler);
     }
 
+    @Override
     public int openFile(File file) throws IOException {
         return map.add(file);
     }
 
-    ;
-
+    @Override
     public byte[] readFile(int descriptor) throws IOException {
         ServerFile file = map.get(descriptor);
         return file.read();
     }
 
-    ;
-
+    @Override
     public void writeFile(int descriptor, byte[] bytes) throws IOException {
         ServerFile file = map.get(descriptor);
         file.write(bytes);
     }
 
-    ;
-
+    @Override
     public void closeFile(int descriptor) throws IOException {
         ServerFile file = map.get(descriptor);
         file.close();
         map.remove(descriptor);
     }
 
-    ;
-
+  
     public static void main(String[] args) {
         if (args.length == 0) new PythonServer(DEFAULT_PORT);
         else {

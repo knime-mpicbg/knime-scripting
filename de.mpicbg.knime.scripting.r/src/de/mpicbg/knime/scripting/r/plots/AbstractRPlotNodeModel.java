@@ -344,31 +344,7 @@ public abstract class AbstractRPlotNodeModel extends AbstractRScriptingNodeModel
 		return img;
 	}
 
-    /**
-     * replace placeholders in filename with appropriate values
-     * @param fileName
-     * @return final filename
-     */
-    private String prepareOutputFileName(String fileName) {
-        // process flow-variables
-        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
 
-        // replace wildcards
-
-        // 1) date
-        fileName = fileName.replace("$$DATE$$", TODAY);
-
-        // 2) user
-        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
-
-        // 3) workspace dir
-        if (fileName.contains("$$WS$$")) {
-            String wsLocation = getFlowVariable("knime.workspace");
-            fileName = fileName.replace("$$WS$$", wsLocation);
-        }
-
-        return fileName;
-    }
 
     /**
      * @return file handle for temporary workspace file

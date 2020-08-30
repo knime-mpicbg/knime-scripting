@@ -1,7 +1,6 @@
 package de.mpicbg.knime.scripting.python;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
+
 import de.mpicbg.knime.knutils.InputTableAttribute;
 
 import org.knime.core.data.*;
@@ -14,6 +13,15 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+import com.opencsv.ICSVParser;
+import com.opencsv.ICSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,12 +29,34 @@ import java.util.List;
 /**
  * Parser to convert KNIME table to something the 
  * Python interpreter can work with
+ * 
+ * note: this class works with Python nodes version 1
+ * 
  */
 public class PythonTableConverter {
+	
+	/**
+	 * read CSV and return KNIME table
+	 * 
+	 * @param exec
+	 * @param pyOutFile		- CSV from Python
+	 * @param logger
+	 * @return	KNIME table
+	 * 
+	 * @throws RuntimeException
+	 */
     public static BufferedDataTable convertCSVToTable(ExecutionContext exec, File pyOutFile, NodeLogger logger) throws RuntimeException {
         try {
         	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
-            CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\0');
+        	final CSVParser parser =
+        			new CSVParserBuilder().withQuoteChar('\0').withSeparator(',').build();
+        	final CSVReader reader =
+        			new CSVReaderBuilder(new BufferedReader(new FileReader(pyOutFile)))
+        			.withCSVParser(parser)
+        			.build();
+        	
+        	// csv reader needs to read quotes to get the difference of "nan" versus nan (python representation of missing values)
+            //CSVReader reader = new CSVReader(new BufferedReader(new FileReader(pyOutFile)), ',', '\0');
 
             String[] columnNames = reader.readNext();
             String[] columnTypes = reader.readNext();
@@ -95,17 +125,29 @@ public class PythonTableConverter {
             container.close();
 
             return container.getTable();
-        } catch (IOException e) {
+        } catch (IOException | CsvValidationException e) {
             throw new RuntimeException(e);
-        }
+        } 
     }
 
+    /**
+     * remove first and last character of a string
+     * 
+     * @param string
+     * @return
+     */
     private static String removeQuotes(String string) {
     	if(string == null) return null;
     	if(string.length() < 2) return null;
     	return string.substring(1, string.length()-1);
 	}
 
+    /**
+     * from KNIME tablespec retrieve list of column names
+     * 
+     * @param tableSpec
+     * @return
+     */
 	private static List<String> getColumnNames(DataTableSpec tableSpec) {
         List<String> colNames = new ArrayList<String>();
         for (DataColumnSpec colSpec : tableSpec) {
@@ -114,6 +156,12 @@ public class PythonTableConverter {
         return colNames;
     }
 
+	/**
+	 * from KNIME tablespec retrieve list of column data types
+	 * 
+	 * @param tableSpec
+	 * @return
+	 */
     private static List<DataType> getColumnTypes(DataTableSpec tableSpec) {
         List<DataType> colTypes = new ArrayList<DataType>();
         for (DataColumnSpec colSpec : tableSpec) {
@@ -134,7 +182,8 @@ public class PythonTableConverter {
      */
     public static void convertTableToCSV(ExecutionContext exec, BufferedDataTable inputTable, File kInFile, NodeLogger logger) throws RuntimeException {
         try {
-            CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
+            //CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"');
+        	CSVWriter writer = new CSVWriter(new BufferedWriter(new FileWriter(kInFile)), ',', '\"', ICSVParser.DEFAULT_ESCAPE_CHARACTER, ICSVWriter.DEFAULT_LINE_END);
             DataTableSpec tableSpec = inputTable.getDataTableSpec();
 
             List<String> columnNames = getColumnNames(tableSpec);

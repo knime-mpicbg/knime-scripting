@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class StreamGobbler extends Thread {
     InputStream is;
-    List<String> output = new ArrayList<String>();
+    List<String> output = new LinkedList<String>();
 
     public StreamGobbler(InputStream is) {
         this.is = is;

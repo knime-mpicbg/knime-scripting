@@ -1,20 +1,26 @@
 package de.mpicbg.knime.knutils;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.node.*;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 
 /**
@@ -75,7 +81,7 @@ public abstract class AbstractNodeModel extends NodeModel {
         if (optionalPortsIds.length > 0) {
             for (int portId : optionalPortsIds) {
                 if ((portId - 1) < numPorts) {
-                    portTypes[portId - 1] = new PortType(portDataClass, true);
+                    portTypes[portId - 1] = PortTypeRegistry.getInstance().getPortType(portDataClass, true); //new PortType(portDataClass, true);
                 }
             }
         }

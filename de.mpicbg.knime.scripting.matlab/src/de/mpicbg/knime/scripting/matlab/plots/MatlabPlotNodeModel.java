@@ -189,27 +189,6 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
     public Image getImage() {
         return image;
     }
-
-    /**
-     * Generate an plot image output file name
-     * 
-     * @return File name
-     */
-    private String prepareOutputFileName() {
-        String fileName = getOutputFilePath();
-        // process flow-variables
-        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
-        // 1) date
-        fileName = fileName.replace("$$DATE$$", TODAY);
-        // 2) user
-        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
-        // 3) workspace dir
-        if (fileName.contains("$$WS$$")) {
-            String wsLocation = getFlowVariable("knime.workspace");
-            fileName = fileName.replace("$$WS$$", wsLocation);
-        }
-        return fileName;
-    }
     
     /**
      * Create the plot width setting
@@ -327,7 +306,7 @@ public class MatlabPlotNodeModel extends AbstractMatlabScriptingNodeModel {
 	        image = MatlabPlotCanvas.toBufferedImage(new ImageIcon(plotFile.getPath()).getImage());
 	
 	        // Prepare the image file for KNIME to display
-	        String fileName = prepareOutputFileName();
+	        String fileName = prepareOutputFileName(getOutputFilePath());
 	        if (!fileName.isEmpty()) {
 	            if (!getOverwriteFlag() && new File(fileName).exists()) {
 	                throw new RuntimeException("Overwrite file is disabled but image file '" + fileName + "' already exists");

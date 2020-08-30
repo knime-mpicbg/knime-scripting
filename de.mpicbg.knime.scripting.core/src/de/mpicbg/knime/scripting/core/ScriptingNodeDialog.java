@@ -90,7 +90,15 @@ public abstract class ScriptingNodeDialog extends DefaultNodeSettingsPane {
      */
     private ScriptTemplate hardwiredTemplate;
 	
-
+    /**
+     * uses a scripting model config object to set which dialog components are needed
+     * 
+     * @param defaultScript
+     * @param smc		{@link ScriptingModelConfig}
+     */
+    public ScriptingNodeDialog(String defaultScript, ScriptingModelConfig smc) {
+    	this(defaultScript, smc.getColSupport(), smc.useScriptSettings(), smc.useOpenIn(), smc.useChunkSettings());
+    }
 
     /**
      * New pane for configuring ScriptedNode node dialog

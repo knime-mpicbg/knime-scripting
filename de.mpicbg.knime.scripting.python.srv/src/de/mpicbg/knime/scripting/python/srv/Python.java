@@ -5,7 +5,7 @@ import java.io.IOException;
 
 
 /**
- * Remote interface to python. The used implmentation depends on the current context and is configurable by the user.
+ * Remote interface to python. The used implementation depends on the current context and is configurable by the user.
  *
  * @author Tom Haux
  */
@@ -20,6 +20,8 @@ public interface Python {
 
     public boolean deleteFile(File file);
 
+    public CommandOutput executeCommand(String[] command, boolean waitFor);
+    
     public CommandOutput executeCommand(String[] command);
 
     public int openFile(File file) throws IOException;

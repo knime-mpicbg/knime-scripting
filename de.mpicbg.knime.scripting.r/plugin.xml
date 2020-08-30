@@ -117,7 +117,7 @@
     <extension
             point="org.eclipse.ui.preferencePages">
         <page
-                category="org.knime.workbench.ui.preferences"
+                category="de.mpicbg.knime.scripting.core.prefs.ScriptingPreferencePage"
                 class="de.mpicbg.knime.scripting.r.prefs.RPreferencePage"
                 id="de.mpicbg.tds.knime.scripting.r.prefs.RPreferencePage"
                 name="R-Scripting">

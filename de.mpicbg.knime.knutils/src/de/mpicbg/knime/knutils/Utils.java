@@ -1,5 +1,8 @@
 package de.mpicbg.knime.knutils;
 
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
@@ -157,6 +160,22 @@ public class Utils {
             return new DateAndTimeCell(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
         } */
         return null;
+    }
+    
+    /**
+     * create a string with random alphanumeric characters (upper + lowe case) of a certain length
+     * 
+     * @param length
+     * @return generated String
+     */
+    public static String generateRandomString(int length) {
+    	String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    	             + "abcdefghijklmnopqrstuvwxyz"
+    	             + "0123456789";
+    	String str = new Random().ints(length, 0, chars.length())
+    	                         .mapToObj(i -> "" + chars.charAt(i))
+    	                         .collect(Collectors.joining());
+    	return str;
     }
 
 

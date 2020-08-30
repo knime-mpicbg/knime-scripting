@@ -1,15 +1,17 @@
 package de.mpicbg.knime.scripting.python.plots;
 
-import de.mpicbg.knime.scripting.core.FlowVarUtils;
-import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
-import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
-import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
-import de.mpicbg.knime.scripting.python.PythonTableConverter;
-import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
-import de.mpicbg.knime.scripting.python.srv.CommandOutput;
-import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
-import de.mpicbg.knime.scripting.python.srv.PythonClient;
-import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
@@ -24,13 +26,15 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.python.AbstractPythonScriptingNodeModel;
+import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
+import de.mpicbg.knime.scripting.python.PythonTableConverter;
+import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
+import de.mpicbg.knime.scripting.python.srv.CommandOutput;
+import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
+import de.mpicbg.knime.scripting.python.srv.PythonClient;
+import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 
 
 /**
@@ -51,8 +55,14 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
 	private static final String FIGURE_HEIGHT_SETTING_NAME = "figure.height";
 	private static final String OUTPUT_FILE_SETTING_NAME = "figure.output.file";
 	private static final String OVERWRITE_SETTING_NAME = "overwrite.ok";
-    private static String TODAY = new SimpleDateFormat("yyMMdd").format(new Date(System.currentTimeMillis()));
-    private final String DEFAULT_PYTHON_PLOTCMD = "plot(kIn)";
+
+    private final String DEFAULT_PYTHON_PLOTCMD = "" +     
+		"# the following import is not required, as the node take care of it \n" + 
+		"#import matplotlib.pyplot as plt\n" + 
+		"\n" + 
+		"X = range(10)\n" + 
+		"plt.plot(X, [x*x for x in X])\n" + 
+		"plt.show()";
 
     protected static final ImagePortObjectSpec IM_PORT_SPEC = new ImagePortObjectSpec(PNGImageContent.TYPE);
 
@@ -97,28 +107,6 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         writer.write("F.set_size_inches(" + width + "," + height + ")");
     }
 
-    private String prepareOutputFileName() {
-        String fileName = propOutputFile.getStringValue();
-
-        // process flow-variables
-        fileName = FlowVarUtils.replaceFlowVars(fileName, this);
-
-        // replace wildcards
-
-        // 1) date
-        fileName = fileName.replace("$$DATE$$", TODAY);
-
-        // 2) user
-        fileName = fileName.replace("$$USER$$", System.getProperty("user.name"));
-
-        // 3) workspace dir
-        if (fileName.contains("$$WS$$")) {
-            String wsLocation = getFlowVariable("knime.workspace");
-            fileName = fileName.replace("$$WS$$", wsLocation);
-        }
-
-        return fileName;
-    }
 
     public int getDefHeight() {
         return propHeight.getIntValue();
@@ -200,7 +188,7 @@ public class PythonPlotNodeModel extends AbstractPythonScriptingNodeModel {
         image = PythonPlotCanvas.toBufferedImage(new ImageIcon(imageFile.getClientPath()).getImage());
 
         // Write the image to a file if desired
-        String fileName = prepareOutputFileName();
+        String fileName = prepareOutputFileName(propOutputFile.getStringValue());
         if (!fileName.isEmpty()) {
             if (!propOverwriteFile.getBooleanValue() && new File(fileName).exists()) {
                 throw new RuntimeException("Image file '" + fileName + "' already exists, enable overwrite to replace it");
