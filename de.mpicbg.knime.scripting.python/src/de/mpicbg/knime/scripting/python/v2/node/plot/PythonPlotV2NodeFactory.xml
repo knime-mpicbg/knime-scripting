@@ -5,90 +5,96 @@
     <name>Python Plot</name>
 
     <shortDescription>
-        Creates plot with Python within KNIME. (TODO: adapt)
+        Executes Python code and delivers a plot image to KNIME
     </shortDescription>
 
     <fullDescription>
+    
+    	<!-- Goes for all Python nodes -->
+    
         <intro>
             <p>
-                This node creates plots using Python. The script for Python can be selected from a plot
-                template repository.
-                RGG (<a href="http://rgg.r-forge.r-project.org/index.html">R GUI Generator</a>)
-                is used to configure the Python code using a graphical user interface in a way that the user does not
-                need to know scripting in Python.
-                URL of the template file can be set in KNIME->Preferences->KNIME->Python Scripting.
-                <br/>
-                The input data table from KNIME is converted to a dictionary and imported into Python as a variable
-                named "kIn". The plot from Python is sent back to KNIME as the output.
+            The node executes Python code. There are two ways to
+            configure which code will be executed:
+
+            <ol>
+            	<li>Select (Templates Tab; double-click or "Use this template") and configure a Python template from the template repository.</li>
+            	<li>Write you own Python code (Script Editor Tab)</li>
+            </ol>
             </p>
-            <p>
-                Script Editor:<br/>
-                Copy, cut or paste and Python code to the editor and/or select the columns from your data table. If a
-                template is loaded used the GUI to adapt the script to the input data.
-            </p>
-            <p>
-                Templates:<br/>
-                Select a plot template from the template repository (double-click or "Use this template") to use that
-                script and see the GUI.
-                The description shows you an example plot than can be done using this template.
-                Then configure the GUI according to your input data.
-            </p>
-            <p>
-                Output Options:<br/>
-                Specify the image dimensions of the plot and the type and location where to save that image.
-            </p>
-            <p>
-                IMPORTANT:<br/>
-                This node is using Python as backend, make sure that Python is installed locally or that 
-                the node can connect to the Python server is running somewhere accessible. Check the node 
-                configurations: KNIME->Preferences->KNIME->Python Scripting.<br/>
-                Further documentation can be found on the 
-                <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Python-server-for-knime">Scripting integration Wiki (Python server)</a>
-            </p>
+            <p>The Python installation which is used for execution can be set in the Preferences under <b>KNIME > Community Scripting > Python Scripting</b>. The settings allow to switch between a Python2 and Python3 installation. They further provide to set template resources (URLs or file locations) for either plot and snippet respectively.</p>
+            <p>Further, the node can be executed in an <b>'Open External'</b> mode (checkbox at the Script Editor Tab) which then would push the KNIME data to Python for troubleshooting or prototyping (either as a Jupyter notebook or via command line).</p>
+            <p>For detailed information check out the <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Python-Integration"> Wiki Page </a></p>
         </intro>
 
-        <option name="Script Editor/Unlink from Template">
-        	Gives access to the Python script after adaptation by the GUI.
+		<!-- Goes for all Python nodes which provide templates -->
+        
+        <tab name="Templates">
+        <option name="Templates/Refresh">Loads again the template file(s).
         </option>
-        <option name="Script Editor/Edit Template">
-        	Gives access to the RGG script.
-        </option>
-        <option name="Templates/Refresh">
-        	Loads again the template file.
-        </option>
-        <option name="Templates/Gallery">
-        	Generate a temporary webpage shown in a browser which gives an overview about
+        <option name="Templates/Gallery">Generate a temporary webpage shown in a browser which gives an overview about
             all available templates.
         </option>
-        <option name="Templates/Description,Source">
-        	Description shows some plot options and an example plot. Source
-            displays the RGG script.
+        <option name="Templates/Description,Source">Description explains what this snippet does. Source displays the RGG
+            script.
+        </option><option name="Templates/Use this template">Click to load the GUI (or double-click onto the template)
         </option>
-        <option name="Templates/Use this template">
-        	Click to load the GUI (or double-click onto the template)
+        </tab>
+        
+        <!-- Goes for all Python nodes which allows scripting -->
+		
+		<tab name="Script Editor">
+        <option name="Open external">If checked, Python will be opened externally, either as Jupyter notebook or via command line.
         </option>
-        <option name="Output Options/File Type">
+        <option name="Scipt Editor/Unlink from Template">Gives access to the Python script after adaptation by the GUI.
+        </option>
+        <option name="Scipt Editor/Edit Template">Gives access to the RGG script to adapt the GUI of a template.
+        </option>
+        </tab>
+        
+         <!-- Goes for all Python plot nodes -->
+        
+        <tab name="Output Options">
+        <option name="File Type">
         	If the image is saved as a file, it is saved with the given file format
         </option>
-        <option name="Output DPI">
-        	If the image is saved as a file, the image is created with the given resolution
-        </option>
-        <option name="Output Options/Width, Height">
-        	Width and height of the plot in pixels, which is also used when the
+        <option name="Width, Height">
+        	Width and height of the plot view in pixels, which is also used when the
             images is saved as a file.
         </option>
-        <option name="Output Options/Selected File">
+        <option name="DPI">
+        	If the image is saved as a file, the image is created with the given resolution
+        </option>
+        
+        <option name="Selected File">
         	Set the file name to save the plot as an image.
             <br/>
-            The following place holders are supported: $$DATE$$ for the current date, $$USER$$ for the username, $$WS$$
-            for the workspace directory, and FLOWVAR(variablename) to use flow
-            variable values in the file name.
+            The following place holders are supported: 
+            <ul>
+            <li>$$DATE$$ for the current date,</li>
+            <li>$$USER$$ for the user name,</li>
+            <li>$$WS$$ for the workspace directory, and</li>
+            <li>FLOWVAR(variable name) to use flow
+            variable values in the file name.</li>
+            </ul>
+            If this field is empty, no file will be created
         </option>
+        
+        <option name="Write image to file">
+        	If unchecked, no file export is generated; only the node view
+        </option>
+        <option name="Overwrite existing file">
+        	If checked, existing files will be overwritten <br/>
+        	If unchecked, an error will be thrown if the file already exists
+        </option>
+        </tab>
+        
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data table">
-        	A table with data which should be visualized with Python.
+        <inPort index="0" name="Data table (kIn)">
+        	A data table<br/>
+        	Provided as pandas data frame named <b>kIn</b> in Python.
         </inPort>
         <outPort index="0" name="Python plot">
         	The generated Python plot as image (png)
@@ -97,7 +103,7 @@
 
     <views>
         <view index="0" name="Python plot">
-        	The generated Python plot (png). Can be can be rescaled and recreated by double-clicking.
+        	The generated Python plot (png). The view be can be rescaled and recreated by double-clicking.
         </view>
     </views>
 

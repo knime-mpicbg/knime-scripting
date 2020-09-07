@@ -26,7 +26,7 @@ public class PythonPlotV2NodeModel extends AbstractPythonPlotV2NodeModel{
 			new PythonColumnSupport(), 	
 			true, 					// use script
 			true, 					// open in functionality
-			true);					// use chunk settings
+			false);					// use chunk settings
 
 	/**
 	 * constructor
