@@ -13,8 +13,8 @@
                 This node opens a local Python session and pushes the data table from KNIME into Python. 
                 Depending on the preference settings under <b>KNIME > Community Scripting > Python Scripting</b> the node either
                 <ul>
-                <li>starts Python via <b>command line</b> and executes the Python script to load KNIME tables into Python as pandas dataframe.</li>
-                <li>Otherwise <b>Jupyter</b> is started which loads a notebook to load the KNIME data.</li>
+                <li>starts Python via command line and executes the Python script to load KNIME tables into Python as pandas dataframe.</li>
+                <li>Otherwise Jupyter is started which loads a notebook to load the KNIME data.</li>
                 </ul>
                 <br/>
                 The input data table is sent to Python as a pandas data frame named "kIn". If the optional input ports are used then
