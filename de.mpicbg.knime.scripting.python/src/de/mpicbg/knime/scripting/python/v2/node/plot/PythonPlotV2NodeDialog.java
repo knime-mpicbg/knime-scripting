@@ -55,7 +55,8 @@ public class PythonPlotV2NodeDialog extends ScriptingNodeDialog {
 	 * @param enableOpenExternal
 	 */
 	public PythonPlotV2NodeDialog(String defaultScript, boolean enableTemplateRepository, boolean enableOpenExternal) {
-		super(defaultScript, new PythonColumnSupport(), enableTemplateRepository, enableOpenExternal, true);
+		//super(defaultScript, new PythonColumnSupport(), enableTemplateRepository, enableOpenExternal, true);
+		super(defaultScript, PythonPlotV2NodeModel.nodeModelConfig);
 		
 		final SettingsModelString fileSM = AbstractPythonPlotV2NodeModel.createOutputFileSM();
 		final SettingsModelBoolean overwriteSM = AbstractPythonPlotV2NodeModel.createOverwriteSM();

@@ -4,26 +4,38 @@
     <name>Open in Python</name>
 
     <shortDescription>
-        TODO
+        Opens a Python session and imports KNIME data
     </shortDescription>
 
     <fullDescription>
         <intro>
             <p>
                 This node opens a local Python session and pushes the data table from KNIME into Python. 
+                Depending on the preference settings under <b>KNIME > Community Scripting > Python Scripting</b> the node either
+                <ul>
+                <li>starts Python via command line and executes the Python script to load KNIME tables into Python as pandas dataframe.</li>
+                <li>Otherwise Jupyter is started which loads a notebook to load the KNIME data.</li>
+                </ul>
                 <br/>
                 The input data table is sent to Python as a pandas data frame named "kIn". If the optional input ports are used then
-                data frames are named "kIn1", "kIn2" and "kIn3".
+                data frames are named "kIn1", "kIn2" and "kIn3".<br/>
             </p>
+            <p>For detailed information check out the <a href="https://github.com/knime-mpicbg/knime-scripting/wiki/Python-Integration"> Wiki Page </a></p>
         </intro>   
     </fullDescription>
 
     <ports>
-        <inPort index="0" name="Data table">A data table to be pushed to Python
+        <inPort index="0" name="Data table">
+        	A data table<br/>
+			Provided as pandas data frame named <b>kIn or kIn1</b> in Python.
         </inPort>
-        <inPort index="1" name="Optional data table 1">First optional data table to be pushed to Python
+        <inPort index="1" name="Optional data table 1">
+			A data table<br/>
+        	Provided as pandas data frame named <b>kIn2</b> in Python.
         </inPort>
-        <inPort index="2" name="Optional data table 2">Second optional data table to be pushed to Python
+        <inPort index="2" name="Optional data table 2">
+        	A data table<br/>
+        	Provided as pandas data frame named <b>kIn3</b> in Python.
         </inPort>
     </ports>
 

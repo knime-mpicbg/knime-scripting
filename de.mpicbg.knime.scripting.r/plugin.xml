@@ -5,84 +5,90 @@
     <extension point="org.knime.workbench.repository.nodes">
         <node
               category-path="/community/r"
-              factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.RSnippetNodeFactory"/>
 
         <node
               category-path="/community/r"
-              factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"
-              id="de.mpicbg.tds.knime.scripting.r.OpenInRNodeFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.openinr.OpenInRNodeFactory2"/>
 
         <node
               category-path="/community/r"
-              factory-class="de.mpicbg.knime.scripting.r.node.plot.RPlotNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.RPlotNodeFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.plot.RPlotNodeFactory"/>
 
         <node
               category-path="/community/r"
-              factory-class="de.mpicbg.knime.scripting.r.node.snippet21.RSnippetNodeFactory21"
-              id="de.mpicbg.tds.knime.scripting.r.RSnippetNodeFactory21"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.snippet21.RSnippetNodeFactory21"/>
 
         <!-- register the generic R nodes -->
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeFactory2"
-              id="de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.snippet.GenericRSnippetNodeFactory2"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.source.GenericRSnippetSourceFactory2"
-              id="de.mpicbg.knime.scripting.r.node.generic.source.GenericRSnippetSourceFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.source.GenericRSnippetSourceFactory2"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.openinr.GenericOpenInRNodeFactory2"
-              id="de.mpicbg.knime.scripting.r.node.generic.openinr.GenericOpenInRNodeFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.openinr.GenericOpenInRNodeFactory2"/>
 
         <node
               category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttogeneric.ConvertToGenericRFactory2"
-              id="de.mpicbg.tds.knime.scripting.r.gnode.generic.converttogeneric.ConvertToGenericRFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttogeneric.ConvertToGenericRFactory2"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"
-              id="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.converttotable.ConvertToTableNodeFactory2"/>
 
         <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.node.generic.plot.GenericRPlotFactory2"
-              id="de.mpicbg.knime.scripting.r.node.generic.plot.GenericRPlotFactory2"/>
+              factory-class="de.mpicbg.knime.scripting.r.node.generic.plot.GenericRPlotFactory2"/>
 
 
         <!-- utils -->
         <node category-path="/community/r/utils"
-              factory-class="de.mpicbg.knime.scripting.r.utils.FixColumnsNamesNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.utils.FixColumnsNamesNodeFactory"/>
+              factory-class="de.mpicbg.knime.scripting.r.utils.FixColumnsNamesNodeFactory"/>
               
-        <!-- deprecated nodes 
-        
-        >> replaced by version 2
-        <node category-path="/community/r/genericr"
+		<!-- deprecated nodes -->
+              
+        <node
+              category-path="/community/r/"
+              deprecated="true"
+              factory-class="de.mpicbg.knime.scripting.r.OpenInRNodeFactory"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
+              factory-class="de.mpicbg.knime.scripting.r.generic.ConvertToGenericRFactory"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
+              factory-class="de.mpicbg.knime.scripting.r.generic.GenericRSnippetFactory"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericRSnippetSourceFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRSnippetSourceFactory"/> 
-              
-       	<node category-path="/community/r/genericr"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
+              factory-class="de.mpicbg.knime.scripting.r.misc.RPlotWithImPortNodeFactory"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
               factory-class="de.mpicbg.knime.scripting.r.generic.ConvertToTableFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.ConvertToTableFactory"/>
-              
-        <node category-path="/community/r/genericr"
+              hidden="false">
+        </node>
+        <node
+              category-path="/community/r/"
+              deprecated="true"
               factory-class="de.mpicbg.knime.scripting.r.generic.GenericOpenInRNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericOpenInRNodeFactory"/>
-              
-        <node category-path="/community/r/genericr"
-              factory-class="de.mpicbg.knime.scripting.r.generic.GenericRPlotFactory"
-              id="de.mpicbg.tds.knime.scripting.r.genericr.GenericRPlotFactory"/>
-
-		>> not needed anymore
-        <node category-path="/community/r/utils"
-              factory-class="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"
-              id="de.mpicbg.tds.knime.scripting.r.RPlotWithImPortNodeFactory"/> 
-              
-        -->
-
-
+              hidden="false">
+        </node>
 
 
     </extension>
@@ -142,6 +148,12 @@
              specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2"
              specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2$SpecSerializer">
        </portType>
+    </extension>
+    <extension
+          point="org.knime.core.NodeFactoryClassMapper">
+       <NodeFactoryClassMapper
+             classMapper="de.mpicbg.knime.scripting.r.RScriptingNodeFactoryClassMapper">
+       </NodeFactoryClassMapper>
     </extension>
 
     <!-- disabled because it looks the same as the r-extenion splash icon from the knime r-extension -->
