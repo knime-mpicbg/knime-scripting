@@ -3,7 +3,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ManifestVersion: 2
 Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
-Bundle-Version: 4.0.000.qualifier
+Bundle-Version: 4.2.000.qualifier
 Bundle-ClassPath: matlabsnippet.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
@@ -11,11 +11,11 @@ Bundle-Localization: plugin
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
  org.apache.commons.io;bundle-version="2.5.0",
- org.knime.base;bundle-version="[3.5.0,5.0.0)",
- org.knime.product;bundle-version="3.6.0",
- de.mpicbg.knime.knutils;bundle-version="[4.0.0,5.0.0)",
- de.mpicbg.knime.scripting.libs;bundle-version="3.2.0",
- de.mpicbg.knime.scripting.core;bundle-version="[4.0.0,5.0.0)"
+ org.knime.base;bundle-version="[4.4.0,5.0.0)",
+ org.knime.product;bundle-version="[4.4.0,5.0.0)",
+ de.mpicbg.knime.knutils;bundle-version="[4.2.0,5.0.0)",
+ de.mpicbg.knime.scripting.libs;bundle-version="[4.2.0,5.0.0)",
+ de.mpicbg.knime.scripting.core;bundle-version="[4.2.0,5.0.0)"
 Export-Package: de.mpicbg.knime.scripting.matlab;
   uses:="de.mpicbg.knime.scripting.core,
    de.mpicbg.knime.scripting.matlab.ctrl,
