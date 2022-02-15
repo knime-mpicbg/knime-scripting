@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+	<feature id="de.mpicbg.tds.knime.scripting.r.feature" version="0.0.0">
+		<category name="community-scripting" />
+	</feature>
+	<feature id="de.mpicbg.tds.knime.scripting.python.feature" version="0.0.0">
+		<category name="community-scripting" />
+	</feature>
+	<feature id="de.mpicbg.tds.knime.scripting.matlab.feature" version="0.0.0">
+		<category name="community-scripting" />
+	</feature>
+	<feature id="de.mpicbg.tds.knime.scripting.groovy.feature" version="0.0.0">
+		<category name="community-scripting" />
+	</feature>
+	
+	<category-def name="community-scripting" label="Build artifacts from community-scripting">
+		<description>Build artifacts from community-scripting</description>
+	</category-def>
+
+</site>

@@ -6,7 +6,7 @@
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
-      This feature contains nodes of the "R Scripting" community extension.
+      This feature contains nodes of the &quot;R Scripting&quot; community extension.
    </description>
 
    <copyright>
@@ -14,8 +14,8 @@
   All rights reserved.
    </copyright>
 
-<license url="https://opensource.org/licenses/BSD-3-Clause">
-BSD-3-Clause License
+   <license url="https://opensource.org/licenses/BSD-3-Clause">
+      BSD-3-Clause License
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 

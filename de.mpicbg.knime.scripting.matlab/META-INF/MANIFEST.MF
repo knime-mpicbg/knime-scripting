@@ -3,7 +3,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ManifestVersion: 2
 Bundle-Name: MatlabSnippet-Node extension for KNIME Workbench
 Bundle-SymbolicName: de.mpicbg.knime.scripting.matlab; singleton:=true
-Bundle-Version: 4.2.000.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-ClassPath: matlabsnippet.jar
 Bundle-Activator: de.mpicbg.knime.scripting.matlab.MatlabScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
