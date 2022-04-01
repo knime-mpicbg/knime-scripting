@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Core library for KNIME-scripting integrations
 Bundle-SymbolicName: de.mpicbg.knime.scripting.core;singleton:=true
-Bundle-Version: 4.2.000.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-ClassPath: scriptingcore.jar
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin

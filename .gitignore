@@ -2,12 +2,19 @@
 *.DS_Store
 
 # Eclipse production
-/*/bin
 /.metadata
 .settings
-target
 
 # UML diagrams
 *.ucls
 # Matlab autosave
 *.m~
+
+*.jar
+!**/lib/*.jar
+
+# build
+**/bin/
+**/target/
+**/build/
+**/.flattened-pom.xml

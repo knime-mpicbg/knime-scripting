@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Libraries used by de.mpicbg.knime.scripting.xxx
 Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
-Bundle-Version: 4.2.000.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.ui;bundle-version="3.1.0"
 Bundle-ClassPath: .,
@@ -19,7 +19,6 @@ Bundle-ClassPath: .,
  lib/RGG.jar,
  lib/swing-layout-1.0.3.jar,
  lib/swing-worker-1.1.jar,
- lib/xercesImpl.jar,
  lib/xstream-1.3.1.jar,
  lib/asm-3.2.jar,
  lib/asm-analysis-3.2.jar,

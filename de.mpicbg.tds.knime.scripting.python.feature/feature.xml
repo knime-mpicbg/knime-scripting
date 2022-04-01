@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.python.feature"
       label="KNIME Python Scripting extension"
-      version="4.1.001.qualifier"
+      version="4.2.000.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/HCS-Tools/wiki">
@@ -36,9 +36,31 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&
          unpack="false"/>
 
    <plugin
+         id="de.mpicbg.knime.knutils"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="de.mpicbg.knime.scripting.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="de.mpicbg.knime.scripting.libs"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="de.mpicbg.knime.scripting.python.srv"
          download-size="0"
          install-size="0"
-         version="0.0.0"/>
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>

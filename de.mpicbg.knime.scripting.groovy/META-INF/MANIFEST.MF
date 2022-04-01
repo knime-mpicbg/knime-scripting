@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy scripting node
 Bundle-SymbolicName: de.mpicbg.knime.scripting.groovy; singleton:=true
-Bundle-Version: 4.2.000.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-Activator: de.mpicbg.knime.scripting.groovy.GroovyScriptingBundleActivator
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
@@ -14,7 +14,6 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
  de.mpicbg.knime.scripting.core;bundle-version="[4.2.0,5.0.0)"
 Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.groovy
-Import-Package: de.mpicbg.knime.scripting.core
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ClassPath: groovyscripting.jar
 
