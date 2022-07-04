@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ManifestVersion: 2
 Bundle-Name: Server for the Python scripting integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.python.srv; singleton:=true

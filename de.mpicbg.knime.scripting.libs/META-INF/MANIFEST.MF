@@ -3,11 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Libraries used by de.mpicbg.knime.scripting.xxx
 Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
 Bundle-Version: 4.2.0.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.ui;bundle-version="3.1.0"
 Bundle-ClassPath: .,
  lib/beansbinding-1.2.1.jar,
- lib/commons-collections-3.2.jar,
  lib/commons-configuration-1.2.jar,
  lib/commons-logging-1.1.jar,
  lib/commons-lang-2.2.jar,
@@ -19,16 +18,15 @@ Bundle-ClassPath: .,
  lib/RGG.jar,
  lib/swing-layout-1.0.3.jar,
  lib/swing-worker-1.1.jar,
- lib/xstream-1.3.1.jar,
  lib/asm-3.2.jar,
  lib/asm-analysis-3.2.jar,
  lib/asm-commons-3.2.jar,
  lib/asm-tree-3.2.jar,
  lib/asm-util-3.2.jar,
- lib/commons-io-2.4.jar,
  lib/antlr-2.7.7.jar,
  lib/REngine_1.8-6.jar,
- lib/Rserve_1.8-6.jar
+ lib/Rserve_1.8-6.jar,
+ lib/xstream-1.4.19.jar
 Export-Package: antlr,
  at.ac.arcs.rgg,
  com.thoughtworks.xstream,

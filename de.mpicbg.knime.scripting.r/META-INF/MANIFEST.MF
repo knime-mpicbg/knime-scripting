@@ -59,6 +59,6 @@ Export-Package: de.mpicbg.knime.scripting.r;
    de.mpicbg.knime.scripting.core,
    javax.swing",
  de.mpicbg.knime.scripting.r.port;uses:="org.rosuda.REngine.Rserve,org.knime.core.node,org.knime.core.node.port"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 
