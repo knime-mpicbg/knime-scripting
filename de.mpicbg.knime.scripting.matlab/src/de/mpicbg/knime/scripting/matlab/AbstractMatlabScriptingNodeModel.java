@@ -1,6 +1,7 @@
 package de.mpicbg.knime.scripting.matlab;
 
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabConnector;
 import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 import de.mpicbg.knime.scripting.matlab.ctrl.MatlabCode;
@@ -10,10 +11,18 @@ import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * This abstract class holds the static variables for conventions (default script, input
@@ -164,6 +173,31 @@ public abstract class AbstractMatlabScriptingNodeModel extends AbstractScripting
 			}
 		});
     }
+    
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+		
+		if(!MatlabScriptingBundleActivator.hasTemplateCacheLoaded) {
+			try {
+				Bundle bundle = FrameworkUtil.getBundle(getClass());
+		        
+		        List<String> preferenceStrings = new ArrayList<String>();
+		        IPreferenceStore prefStore = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
+		        preferenceStrings.add(prefStore.getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES));
+		        preferenceStrings.add(prefStore.getString(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES));
+				
+				ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+			
+		    } catch(Exception e) {
+		    	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+		    	logger.coding(e.getMessage());
+		    }
+			MatlabScriptingBundleActivator.hasTemplateCacheLoaded = true;
+		}
+		
+		return super.configure(inSpecs);
+	}
 
 
     

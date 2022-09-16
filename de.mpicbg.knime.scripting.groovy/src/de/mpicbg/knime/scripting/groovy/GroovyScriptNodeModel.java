@@ -14,10 +14,17 @@ import java.util.List;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.groovy.prefs.GroovyScriptingPreferenceInitializer;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -101,6 +108,33 @@ public class GroovyScriptNodeModel extends AbstractScriptingNodeModel {
     public GroovyScriptNodeModel() {
         super(nodeModelConfig);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+		
+		if(!GroovyScriptingBundleActivator.hasTemplateCacheLoaded) {
+			try {
+				Bundle bundle = FrameworkUtil.getBundle(getClass());
+		        
+		        List<String> preferenceStrings = new ArrayList<String>();
+		        IPreferenceStore prefStore = GroovyScriptingBundleActivator.getDefault().getPreferenceStore();
+		        preferenceStrings.add(prefStore.getString(GroovyScriptingPreferenceInitializer.GROOVY_TEMPLATE_RESOURCES));
+				
+				ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+			
+		    } catch(Exception e) {
+		    	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+		    	logger.coding(e.getMessage());
+		    }
+			GroovyScriptingBundleActivator.hasTemplateCacheLoaded = true;
+		}
+		
+		return super.configure(inSpecs);
+	}
     
     @Override
     /**

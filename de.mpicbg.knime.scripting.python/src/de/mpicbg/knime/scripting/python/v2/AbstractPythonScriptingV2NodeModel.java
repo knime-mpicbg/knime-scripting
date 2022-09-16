@@ -66,9 +66,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
@@ -85,6 +88,7 @@ import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.prefs.JupyterKernelSpec;
 import de.mpicbg.knime.scripting.core.prefs.JupyterKernelSpecsEditor;
 import de.mpicbg.knime.scripting.core.prefs.ScriptingPreferenceInitializer;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.PythonColumnSupport;
 import de.mpicbg.knime.scripting.python.PythonScriptingBundleActivator;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
@@ -679,6 +683,25 @@ public abstract class AbstractPythonScriptingV2NodeModel extends AbstractScripti
 	@Override
 	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 		super.configure(inSpecs);
+		
+		// update template cache for the first configure call in that KNIME session
+		if(!PythonScriptingBundleActivator.hasTemplateCacheLoaded) {
+			try {
+				Bundle bundle = FrameworkUtil.getBundle(getClass());
+		        
+		        List<String> preferenceStrings = new ArrayList<String>();
+		        IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+		        preferenceStrings.add(prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES));
+		        preferenceStrings.add(prefStore.getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES));
+				
+				ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+			
+		    } catch(Exception e) {
+		    	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+		    	logger.coding(e.getMessage());
+		    }
+			PythonScriptingBundleActivator.hasTemplateCacheLoaded = true;
+		}
 		
 		// check input data tables for unsupported column types to throw a warning
 		List<String> droppedColumns;

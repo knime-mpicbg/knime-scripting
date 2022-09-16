@@ -14,7 +14,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.r.prefs.RPreferenceInitializer;
 
 
@@ -34,6 +33,11 @@ public class R4KnimeBundleActivator extends AbstractUIPlugin {
 
     // The shared instance.
     private static R4KnimeBundleActivator plugin;
+    
+    /**
+     * set to true if there has been one attempt to load the template cache
+     */
+    public static boolean hasTemplateCacheLoaded = false;
 
 
     /**
@@ -42,34 +46,6 @@ public class R4KnimeBundleActivator extends AbstractUIPlugin {
     public R4KnimeBundleActivator() {
         super();
         plugin = this;
-    }
-
-
-    /**
-     * This method is called upon plug-in activation.
-     *
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be started
-     */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-        
-        // get bundle and template prefstrings and load them into template cache
-        try {
-        	
-        	Bundle bundle = FrameworkUtil.getBundle(getClass());
-	        
-	        List<String> preferenceStrings = new ArrayList<String>();
-	        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
-	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
-	        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
-	        
-	        ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
-        } catch(Exception e) {
-        	NodeLogger logger = NodeLogger.getLogger("scripting template init");
-        	logger.coding(e.getMessage());
-        }
     }
 
 

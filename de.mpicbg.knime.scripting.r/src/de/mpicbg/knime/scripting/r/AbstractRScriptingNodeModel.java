@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -34,8 +36,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.FlowVariable;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPDouble;
 import org.rosuda.REngine.REXPGenericVector;
@@ -56,6 +61,7 @@ import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.ScriptingModelConfig;
 import de.mpicbg.knime.scripting.core.TemplateCache;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.r.data.RDataColumn;
 import de.mpicbg.knime.scripting.r.data.RDataFrameContainer;
 import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeDialog;
@@ -146,6 +152,31 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 	 */
 	public AbstractRScriptingNodeModel(ScriptingModelConfig nodeModelConfig) {
 		super(nodeModelConfig);
+	}
+	
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+		
+		if(!R4KnimeBundleActivator.hasTemplateCacheLoaded) {
+			try {
+				Bundle bundle = FrameworkUtil.getBundle(getClass());
+		        
+		        List<String> preferenceStrings = new ArrayList<String>();
+		        IPreferenceStore prefStore = R4KnimeBundleActivator.getDefault().getPreferenceStore();
+		        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_SNIPPET_TEMPLATES));
+		        preferenceStrings.add(prefStore.getString(RPreferenceInitializer.R_PLOT_TEMPLATES));
+				
+				ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+			
+		    } catch(Exception e) {
+		    	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+		    	logger.coding(e.getMessage());
+		    }
+			R4KnimeBundleActivator.hasTemplateCacheLoaded = true;
+		}
+		
+		return super.configure(inSpecs);
 	}
 
 	/**

@@ -4,18 +4,8 @@
  */
 package de.mpicbg.knime.scripting.matlab;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.core.node.NodeLogger;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-
-import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
-import de.mpicbg.knime.scripting.matlab.prefs.MatlabPreferenceInitializer;
 
 
 /**
@@ -32,6 +22,11 @@ public class MatlabScriptingBundleActivator extends AbstractUIPlugin {
 
     /** The shared instance */
     private static MatlabScriptingBundleActivator plugin;
+    
+    /**
+     * set to true if there has been one attempt to load the template cache
+     */
+    public static boolean hasTemplateCacheLoaded = false;
 
 
     /**
@@ -39,34 +34,6 @@ public class MatlabScriptingBundleActivator extends AbstractUIPlugin {
      */
     public MatlabScriptingBundleActivator() {
         plugin = this;
-    }
-
-
-    /**
-     * This method is called upon plug-in activation.
-     *
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be started
-     */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-
-        // get bundle and template prefstrings and load them into template cache
-        try {
-
-        	Bundle bundle = FrameworkUtil.getBundle(getClass());
-
-        	List<String> preferenceStrings = new ArrayList<String>();
-        	IPreferenceStore prefStore = MatlabScriptingBundleActivator.getDefault().getPreferenceStore();
-        	preferenceStrings.add(prefStore.getString(MatlabPreferenceInitializer.MATLAB_TEMPLATE_RESOURCES));
-        	preferenceStrings.add(prefStore.getString(MatlabPreferenceInitializer.MATLAB_PLOT_TEMPLATE_RESOURCES));
-
-        	ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
-        } catch(Exception e) {
-        	NodeLogger logger = NodeLogger.getLogger("scripting template init");
-        	logger.coding(e.getMessage());
-        }
     }
 
 

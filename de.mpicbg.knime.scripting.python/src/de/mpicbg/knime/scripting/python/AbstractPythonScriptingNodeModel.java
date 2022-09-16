@@ -4,6 +4,7 @@ import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.AbstractScriptingNodeModel;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
 import de.mpicbg.knime.scripting.core.rgg.TemplateUtils;
+import de.mpicbg.knime.scripting.core.utils.ScriptingUtils;
 import de.mpicbg.knime.scripting.python.prefs.PythonPreferenceInitializer;
 import de.mpicbg.knime.scripting.python.srv.LocalPythonClient;
 import de.mpicbg.knime.scripting.python.srv.Python;
@@ -12,14 +13,20 @@ import de.mpicbg.knime.scripting.python.srv.PythonTempFile;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public abstract class AbstractPythonScriptingNodeModel extends AbstractScriptingNodeModel {
@@ -35,6 +42,31 @@ public abstract class AbstractPythonScriptingNodeModel extends AbstractScripting
     protected AbstractPythonScriptingNodeModel(PortType[] inPorts, PortType[] outports) {
         super(inPorts, outports, new PythonColumnSupport());
     }
+    
+	@Override
+	protected PortObjectSpec[] configure(PortObjectSpec[] inSpecs)
+			throws InvalidSettingsException {
+		
+		if(!PythonScriptingBundleActivator.hasTemplateCacheLoaded) {
+			try {
+				Bundle bundle = FrameworkUtil.getBundle(getClass());
+		        
+		        List<String> preferenceStrings = new ArrayList<String>();
+		        IPreferenceStore prefStore = PythonScriptingBundleActivator.getDefault().getPreferenceStore();
+		        preferenceStrings.add(prefStore.getString(PythonPreferenceInitializer.PYTHON_TEMPLATE_RESOURCES));
+		        preferenceStrings.add(prefStore.getString(PythonPreferenceInitializer.PYTHON_PLOT_TEMPLATE_RESOURCES));
+				
+				ScriptingUtils.loadTemplateCache(preferenceStrings, bundle);
+			
+		    } catch(Exception e) {
+		    	NodeLogger logger = NodeLogger.getLogger("scripting template init");
+		    	logger.coding(e.getMessage());
+		    }
+			PythonScriptingBundleActivator.hasTemplateCacheLoaded = true;
+		}
+		
+		return super.configure(inSpecs);
+	}
 
     protected void prepareScript(Writer writer, boolean useScript) throws IOException {
         // CSV read/write functions
