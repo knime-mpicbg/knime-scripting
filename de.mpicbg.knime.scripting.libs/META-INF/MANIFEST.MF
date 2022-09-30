@@ -4,7 +4,8 @@ Bundle-Name: Libraries used by de.mpicbg.knime.scripting.xxx
 Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
 Bundle-Version: 4.2.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-17
-Require-Bundle: org.eclipse.ui;bundle-version="3.1.0"
+Require-Bundle: org.eclipse.ui;bundle-version="3.1.0",
+ org.apache.commons.collections;bundle-version="3.2.2"
 Bundle-ClassPath: .,
  lib/groovy-1.7.1.jar,
  lib/matconsolectl-4.5.0-20160702.113049-5.jar,
@@ -20,7 +21,6 @@ Bundle-ClassPath: .,
  lib/commons-logging-1.1.jar,
  lib/commons-lang-2.2.jar,
  lib/beansbinding-1.2.1.jar,
- lib/commons-collections-3.2.jar,
  lib/commons-configuration-1.2.jar,
  lib/jakarta-regexp.jar,
  lib/jakarta-oro-2.0.8.jar,
