@@ -12,7 +12,7 @@
 	<properties>
 		<revision>1.0.0</revision>
 		<changelist>-SNAPSHOT</changelist>
-		<knime.version>4.6</knime.version>
+		<knime.version>nightly</knime.version>
 		<tycho.version>2.7.3</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
