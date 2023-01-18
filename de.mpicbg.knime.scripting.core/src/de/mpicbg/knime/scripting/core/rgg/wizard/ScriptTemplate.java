@@ -143,6 +143,7 @@ public class ScriptTemplate implements Cloneable {
      */
     public static ScriptTemplate fromXML(String serializedTemplate) {
     	XStream xStream = new XStream(new DomDriver());
+    	xStream.allowTypes(new Class[] {de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate.class});
         xStream.setClassLoader(ScriptTemplate.class.getClassLoader());
         return (ScriptTemplate) xStream.fromXML(serializedTemplate);
     }
@@ -153,6 +154,7 @@ public class ScriptTemplate implements Cloneable {
      */
     public String toXML() {
     	XStream xStream = new XStream(new DomDriver());
+    	xStream.allowTypes(new Class[] {de.mpicbg.knime.scripting.core.rgg.wizard.ScriptTemplate.class});
         xStream.setClassLoader(ScriptTemplate.class.getClassLoader());
         return xStream.toXML(this);
     }
