@@ -540,6 +540,8 @@ public abstract class AbstractRScriptingNodeModel extends AbstractScriptingNodeM
 				}
 			} else {
 				logger.info("Ommit column " + cName + "; data type not supported");
+				// remove one column from data frame specification
+				rDFC.setNumCols(rDFC.getNumCols() - 1);
 			}
 		}
 

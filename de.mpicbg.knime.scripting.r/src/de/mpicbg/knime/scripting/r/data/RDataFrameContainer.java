@@ -356,5 +356,21 @@ public class RDataFrameContainer {
 	public boolean hasRows() {
 		return m_numRows > 0;
 	}
+
+	/**
+	 * @return number of columns
+	 */
+	public int getNumCols() {
+		return m_numCols;
+	}
+
+	/**
+	 * set number of columns
+	 * @param m_numCols
+	 */
+	public void setNumCols(int m_numCols) {
+		this.m_numCols = m_numCols;
+	}
+	
 	
 }
