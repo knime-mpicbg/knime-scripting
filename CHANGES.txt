@@ -1,4 +1,22 @@
 ======================================================================================================
+2023-01-24
+VERSION		v4.3.0
+
+INTERNAL
+
+* update to Java17
+* replace xstream library with a new version due to failing dependency check
+* fix class loading issues for RGG
+
+SCRIPTING
+* R nodes will not end up with failed transfer for tables with a single column of unsupported data type. Instead an empty table will be transfered
+* #109: KNIME Analytics Platform prompts for proxy user and password on startup
+
+CHANGES BEFORE v4.3.0
+
+* Python nodes version 2 with a lot of changes anf features
+
+======================================================================================================
 2019-06-20
 VERSION		v4.0.0
 

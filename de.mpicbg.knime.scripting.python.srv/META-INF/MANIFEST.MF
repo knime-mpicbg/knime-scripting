@@ -3,7 +3,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ManifestVersion: 2
 Bundle-Name: Server for the Python scripting integration for KNIME
 Bundle-SymbolicName: de.mpicbg.knime.scripting.python.srv; singleton:=true
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.3.0.qualifier
 Export-Package: com.opencsv,
  com.opencsv.enums,
  com.opencsv.exceptions,

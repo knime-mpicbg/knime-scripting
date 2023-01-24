@@ -2,18 +2,18 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Core library for KNIME-scripting integrations
 Bundle-SymbolicName: de.mpicbg.knime.scripting.core;singleton:=true
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.3.0.qualifier
 Bundle-ClassPath: scriptingcore.jar
 Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG)
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
- org.knime.workbench.repository;bundle-version="[3.5.0,5.0.0)",
- org.knime.base;bundle-version="[3.5.0,5.0.0)",
- de.mpicbg.knime.knutils;bundle-version="[4.0.0,5.0.0)",
+ org.knime.workbench.repository;bundle-version="[4.6.0,5.0.0)",
+ org.knime.base;bundle-version="[4.6.0,5.0.0)",
+ de.mpicbg.knime.knutils;bundle-version="[4.3.0,5.0.0)",
  org.apache.commons.lang3;bundle-version="3.2.1",
  org.apache.commons.logging;bundle-version="1.1.1",
- de.mpicbg.knime.scripting.libs;bundle-version="3.2.0",
+ de.mpicbg.knime.scripting.libs;bundle-version="4.3.0",
  org.json;bundle-version="20140107.0.0"
 Bundle-ActivationPolicy: lazy
 Export-Package: 

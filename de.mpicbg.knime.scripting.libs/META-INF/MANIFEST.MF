@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Libraries used by de.mpicbg.knime.scripting.xxx
 Bundle-SymbolicName: de.mpicbg.knime.scripting.libs;singleton:=true
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.3.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.eclipse.ui;bundle-version="3.1.0",
  org.apache.commons.collections;bundle-version="3.2.2"

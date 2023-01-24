@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.r.feature"
       label="KNIME R Scripting extension"
-      version="4.2.000.qualifier"
+      version="4.3.000.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
