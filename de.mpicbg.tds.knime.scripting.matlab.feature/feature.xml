@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.matlab.feature"
       label="KNIME Matlab Scripting extension"
-      version="4.3.000.qualifier"
+      version="5.0.000.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">

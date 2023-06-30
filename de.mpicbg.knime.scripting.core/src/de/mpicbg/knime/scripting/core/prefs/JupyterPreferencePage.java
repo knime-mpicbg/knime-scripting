@@ -9,9 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.json.Json;
+/*import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
+import javax.json.JsonReader;*/
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -25,6 +25,9 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import de.mpicbg.knime.knutils.Utils;
 import de.mpicbg.knime.scripting.core.ScriptingCoreBundleActivator;
 import de.mpicbg.knime.scripting.core.exceptions.KnimeScriptingException;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 
 /**
  * preference page for jupyter settings
