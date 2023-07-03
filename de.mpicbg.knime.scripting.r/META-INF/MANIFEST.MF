@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
  org.knime.base;bundle-version="[5.1.0,6.0.0)",
  org.knime.product;bundle-version="[5.1.0,6.0.0)",
  de.mpicbg.knime.knutils;bundle-version="[5.0.0,6.0.0)",
- de.mpicbg.knime.scripting.libs;bundle-version="[4.3.0,5.0.0)",
+ de.mpicbg.knime.scripting.libs;bundle-version="[5.1.0,6.0.0)",
  de.mpicbg.knime.scripting.core;bundle-version="[5.0.0,6.0.0)"
 Export-Package: de.mpicbg.knime.scripting.r;
   uses:="org.osgi.framework,

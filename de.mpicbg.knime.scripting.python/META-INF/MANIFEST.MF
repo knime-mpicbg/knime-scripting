@@ -18,7 +18,7 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.apache.commons.io;bundle-version="2.6.0",
  de.mpicbg.knime.knutils;bundle-version="[5.0.0,6.0.0)",
  de.mpicbg.knime.scripting.core;bundle-version="[5.0.0,6.0.0)",
- de.mpicbg.knime.scripting.python.srv;bundle-version="[4.3.0,5.0.0)";visibility:=reexport
+ de.mpicbg.knime.scripting.python.srv;bundle-version="[5.1.0,6.0.0)";visibility:=reexport
 Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.python
 
