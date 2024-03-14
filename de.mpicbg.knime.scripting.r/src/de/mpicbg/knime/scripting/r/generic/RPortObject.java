@@ -52,6 +52,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.util.FileUtil;
 import org.rosuda.REngine.Rserve.RConnection;
 
@@ -69,9 +70,9 @@ import de.mpicbg.knime.scripting.r.node.snippet.RSnippetNodeModel;
 public class RPortObject implements PortObject {
 
     /**
-     * Convenience access member for <code>new PortType(RPortObject.class)</code>.
+     * Convenience access member for <code>PortTypeRegistry.getInstance().getPortType(RPortObject.class)</code>.
      */
-    public static final PortType TYPE = new PortType(RPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(RPortObject.class);
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(RPortObject.class);
@@ -122,37 +123,7 @@ public class RPortObject implements PortObject {
      */
     public static PortObjectSerializer<RPortObject>
     getPortObjectSerializer() {
-        return new PortObjectSerializer<RPortObject>() {
-            /** {@inheritDoc} */
-            @Override
-            public void savePortObject(final RPortObject portObject,
-                                       final PortObjectZipOutputStream out,
-                                       final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                out.putNextEntry(new ZipEntry("knime.R"));
-                FileInputStream fis = new FileInputStream(portObject.m_fileR);
-                FileUtil.copy(fis, out);
-                fis.close();
-                out.close();
-            }
-
-
-            /** {@inheritDoc} */
-            @Override
-            public RPortObject loadPortObject(
-                    final PortObjectZipInputStream in,
-                    final PortObjectSpec spec,
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                in.getNextEntry();
-                File fileR = File.createTempFile("~knime", ".R");
-                FileOutputStream fos = new FileOutputStream(fileR);
-                FileUtil.copy(in, fos);
-                in.close();
-                fos.close();
-                return new RPortObject(fileR);
-            }
-        };
+        return new RPortObjectSerializer();
     }
 
 
@@ -267,4 +238,36 @@ public class RPortObject implements PortObject {
     public int hashCode() {
         return m_fileR.hashCode();
     }
+
+
+	public static final class RPortObjectSerializer extends PortObjectSerializer<RPortObject> {
+		/** {@inheritDoc} */
+		@Override
+		public void savePortObject(final RPortObject portObject,
+		                           final PortObjectZipOutputStream out,
+		                           final ExecutionMonitor exec)
+		        throws IOException, CanceledExecutionException {
+		    out.putNextEntry(new ZipEntry("knime.R"));
+		    FileInputStream fis = new FileInputStream(portObject.m_fileR);
+		    FileUtil.copy(fis, out);
+		    fis.close();
+		    out.close();
+		}
+	
+		/** {@inheritDoc} */
+		@Override
+		public RPortObject loadPortObject(
+		        final PortObjectZipInputStream in,
+		        final PortObjectSpec spec,
+		        final ExecutionMonitor exec)
+		        throws IOException, CanceledExecutionException {
+		    in.getNextEntry();
+		    File fileR = File.createTempFile("~knime", ".R");
+		    FileOutputStream fos = new FileOutputStream(fileR);
+		    FileUtil.copy(in, fos);
+		    in.close();
+		    fos.close();
+		    return new RPortObject(fileR);
+		}
+	}
 }

@@ -60,24 +60,7 @@ public final class RPortObjectSpec implements PortObjectSpec {
      */
     public static PortObjectSpecSerializer<RPortObjectSpec>
     getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<RPortObjectSpec>() {
-            /** {@inheritDoc} */
-            @Override
-            public RPortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in)
-                    throws IOException {
-                return INSTANCE;
-            }
-
-
-            /** {@inheritDoc} */
-            @Override
-            public void savePortObjectSpec(final RPortObjectSpec portObjectSpec,
-                                           final PortObjectSpecZipOutputStream out)
-                    throws IOException {
-
-            }
-        };
+        return new RPortObjectSpecSerializerSerializer();
     }
 
 
@@ -87,6 +70,25 @@ public final class RPortObjectSpec implements PortObjectSpec {
     public JComponent[] getViews() {
         return new JComponent[]{};
     }
+
+
+	public static final class RPortObjectSpecSerializerSerializer extends PortObjectSpecSerializer<RPortObjectSpec> {
+		/** {@inheritDoc} */
+		@Override
+		public RPortObjectSpec loadPortObjectSpec(
+		        final PortObjectSpecZipInputStream in)
+		        throws IOException {
+		    return INSTANCE;
+		}
+	
+		/** {@inheritDoc} */
+		@Override
+		public void savePortObjectSpec(final RPortObjectSpec portObjectSpec,
+		                               final PortObjectSpecZipOutputStream out)
+		        throws IOException {
+	
+		}
+	}
 
 
     // just used to debug the port visualization
