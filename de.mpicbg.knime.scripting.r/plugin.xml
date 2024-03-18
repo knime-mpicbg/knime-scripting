@@ -142,11 +142,20 @@
        <portType
              color="#000000"
              hidden="false"
-             name="de.mpicbg.knime.scripting.r.port.RPortType2"
+             name="R Scripting (MPI-CBG)"
              objectClass="de.mpicbg.knime.scripting.r.port.RPortObject2"
              objectSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSerializer2"
              specClass="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2"
              specSerializer="de.mpicbg.knime.scripting.r.port.RPortObjectSpec2$SpecSerializer">
+       </portType>
+       <portType
+             color="#000000"
+             hidden="true"
+             name="R Scripting (MPI-CBG) (deprecated)"
+             objectClass="de.mpicbg.knime.scripting.r.generic.RPortObject"
+             objectSerializer="de.mpicbg.knime.scripting.r.generic.RPortObject$RPortObjectSerializer"
+             specClass="de.mpicbg.knime.scripting.r.generic.RPortObjectSpec"
+             specSerializer="de.mpicbg.knime.scripting.r.generic.RPortObjectSpec$RPortObjectSpecSerializerSerializer">
        </portType>
     </extension>
     <extension
