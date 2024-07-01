@@ -10,14 +10,14 @@ Bundle-Vendor: Max Planck Institute of Molecular Cell Biology and Genetics (MPI-
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)",
  org.eclipse.ui;bundle-version="[3.107.0,4.0.0)",
- org.knime.workbench.repository;bundle-version="[5.1.0,6.0.0)",
- org.knime.base;bundle-version="[5.1.0,6.0.0)",
- org.knime.product;bundle-version="[5.1.0,6.0.0)",
- org.knime.time;bundle-version="[5.1.0,6.0.0)",
+ org.knime.workbench.repository;bundle-version="[5.3.0,6.0.0)",
+ org.knime.base;bundle-version="[5.3.0,6.0.0)",
+ org.knime.product;bundle-version="[5.3.0,6.0.0)",
+ org.knime.time;bundle-version="[5.3.0,6.0.0)",
  org.apache.commons.lang3;bundle-version="3.3.1",
  org.apache.commons.commons-io;bundle-version="2.15.1",
- de.mpicbg.knime.knutils;bundle-version="[5.0.0,6.0.0)",
- de.mpicbg.knime.scripting.core;bundle-version="[5.0.0,6.0.0)",
+ de.mpicbg.knime.knutils;bundle-version="[5.3.0,6.0.0)",
+ de.mpicbg.knime.scripting.core;bundle-version="[5.3.0,6.0.0)",
  de.mpicbg.knime.scripting.python.srv;bundle-version="[5.1.0,6.0.0)";visibility:=reexport
 Bundle-ActivationPolicy: lazy
 Export-Package: de.mpicbg.knime.scripting.python
