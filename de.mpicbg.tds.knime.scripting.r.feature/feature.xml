@@ -2,7 +2,7 @@
 <feature
       id="de.mpicbg.tds.knime.scripting.r.feature"
       label="KNIME R Scripting extension"
-      version="5.3.0.qualifier"
+      version="5.4.0.qualifier"
       provider-name="Max Planck Institute of Molecular Cell Biology and Genetics (MPI-CBG), Dresden, Germany">
 
    <description url="https://github.com/knime-mpicbg/knime-scripting/wiki">
@@ -30,30 +30,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&
 
    <plugin
          id="de.mpicbg.knime.scripting.r"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="de.mpicbg.knime.knutils"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="de.mpicbg.knime.scripting.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="de.mpicbg.knime.scripting.libs"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>
