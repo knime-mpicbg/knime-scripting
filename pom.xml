@@ -13,7 +13,7 @@
 		<revision>1.0.0</revision>
 		<changelist>-SNAPSHOT</changelist>
 		<knime.version>nightly</knime.version>
-		<tycho.version>2.7.5</tycho.version>
+		<tycho.version>4.0.13</tycho.version>
 		<tycho.extras.version>${tycho.version}</tycho.extras.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -137,14 +137,14 @@
 			<plugin>
 				<!-- This plugin configuration block is only needed if the repository contains plug-ins that don't have any sources. If it is omitted
 		 		Tycho will complain. -->
-				<groupId>org.eclipse.tycho.extras</groupId>
-				<artifactId>tycho-source-feature-plugin</artifactId>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>source-feature</id>
+						<id>plugin-source</id>
 						<phase>package</phase>
 						<goals>
-							<goal>source-feature</goal>
+							<goal>plugin-source</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -165,9 +165,9 @@
 				<artifactId>tycho-packaging-plugin</artifactId>
 				<dependencies>
 					<dependency>
-						<groupId>org.eclipse.tycho.extras</groupId>
+						<groupId>org.eclipse.tycho</groupId>
 						<artifactId>tycho-buildtimestamp-jgit</artifactId>
-						<version>${tycho.extras.version}</version>
+						<version>${tycho.version}</version>
 					</dependency>
 				</dependencies>
 				<configuration>
@@ -212,18 +212,6 @@
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-source-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>plugin-source</id>
-						<goals>
-							<goal>plugin-source</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 
 			<!-- The following is required if source bundles are to be included -->
 			<plugin>
